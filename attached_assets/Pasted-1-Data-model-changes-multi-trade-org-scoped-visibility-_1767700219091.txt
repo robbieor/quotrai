@@ -1,0 +1,202 @@
+1) Data model changes (multi-trade, org-scoped visibility)
+Trade types (enum)
+
+Start with:
+
+electrician
+
+plumber
+
+carpentry_joinery
+
+Keep it extendable (you’ll add more later).
+
+Tables / fields
+organizations
+
+Add:
+
+trade_type (text) — required
+
+optional later: trade_types (text[]) if you ever allow multi-trade orgs
+
+templates
+
+Make templates global (shared catalog), but filter by trade:
+
+trade_type (text) — required
+
+status (active/inactive)
+
+country (IE)
+
+version / is_current
+
+definition_json (jsonb) (or normalized lines if you prefer)
+
+template_versions (optional but recommended)
+
+template_id
+
+version
+
+definition_json
+
+is_current
+
+Data integrity rule: quotes must reference template_version_id so history is immutable.
+
+2) Signup flow change (trade selection + enforcement)
+Where it happens
+
+During onboarding (first run after creating an org), force:
+
+Company name
+
+Country (IE for now)
+
+Trade type (dropdown)
+
+Save → redirect to dashboard
+
+Enforcement rules
+
+If organizations.trade_type is null → block app usage and route to onboarding
+
+Every template query must include WHERE templates.trade_type = org.trade_type
+
+3) Template visibility logic (server-side, not just UI)
+
+You want this enforced at database/RLS or server middleware so users can’t hack the UI and fetch other templates.
+
+A) Server-side API filter (minimum)
+
+All template endpoints accept orgId and the backend resolves trade type:
+
+GET /templates → returns templates for org’s trade only
+
+GET /templates/:id → only if template.trade_type matches org.trade_type
+
+B) Row Level Security (best practice if you’re on Supabase)
+
+Policy idea:
+
+user can select templates where trade_type = (select trade_type from organizations where id = current_org_id())
+
+If you’re not using Supabase, implement the same check in your API layer.
+
+4) UI behavior
+Template Library page
+
+Show:
+
+Category filters (Callout, Compliance, Install, Projects, Contracts)
+
+Search
+
+“Recommended” group per trade
+
+But only load templates filtered for their trade type.
+
+Create Quote flow
+
+Step 1: Choose template
+Step 2: Template loads with prefilled line items + optional add-ons
+Step 3: Save quote (stamp the template version)
+
+5) Seed templates per trade (same structure, different library)
+
+You said “same approach” across all trades — perfect. Keep the template schema identical, just swap content.
+
+Electrician (your 10 from earlier)
+
+Trade: electrician
+
+Plumber (starter 10)
+
+Trade: plumber
+
+Callout (standard)
+
+Emergency callout
+
+Leak detection / diagnostic
+
+Blocked drain (tiered)
+
+Boiler service
+
+Boiler install/replace
+
+Bathroom fit (project lite)
+
+Hot water cylinder install
+
+Pump replacement
+
+Annual maintenance contract
+
+Carpentry & Joinery (starter 10)
+
+Trade: carpentry_joinery
+
+Callout (small repairs)
+
+Emergency (secure property)
+
+Door hanging/repair
+
+Skirting/architrave install
+
+Kitchen fitting (labour only + options)
+
+Custom wardrobe/cabinet build
+
+Flooring install (tiered by material)
+
+Decking/pergola
+
+Stair/banister repair
+
+Annual maintenance contract
+
+Key: identical pricing mechanics (package + adders / hourly + callout / fixed per unit).
+
+6) Edge cases (handle now so you don’t refactor later)
+Trade type change
+
+Decide rule now:
+
+Default: allow admin to change trade type only if no quotes exist OR with an “I understand templates will change” warning.
+
+Better: store trade_type_at_creation in quotes for reporting consistency.
+
+Multi-trade companies (later)
+
+Future-proof by:
+
+Using templates.trade_type and organizations.trade_types[]
+
+Filter becomes templates.trade_type = ANY(org.trade_types)
+
+But for v1, keep single-select.
+
+7) Build checklist (fastest path in Replit)
+
+Add trade_type to organizations + update org creation
+
+Add trade_type to templates
+
+Update onboarding UI to capture trade type
+
+Update all template queries to filter by org trade type
+
+Add authorization check on GET template/:id
+
+Seed templates for 3 trades
+
+Add tests (at least 2)
+
+Org plumber cannot fetch electrician templates
+
+Quote created stores template_version_id (or snapshot JSON)

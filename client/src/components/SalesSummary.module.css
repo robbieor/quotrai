@@ -1,0 +1,120 @@
+/* SalesSummary - Jony Ive Style: Strict 8px grid, harmonious proportions */
+.container {
+    background-color: var(--color-surface);
+    border-radius: 12px;
+    border: 1px solid #000000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.seeAll {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dashboard-accent-teal);
+    text-decoration: none;
+}
+
+.seeAll:hover {
+    text-decoration: underline;
+}
+
+.section {
+    padding: 16px 0 8px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.section:last-child {
+    border-bottom: none;
+}
+
+.sectionHeader {
+    padding: 0 24px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sectionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.itemList {
+    display: flex;
+    flex-direction: column;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.item:hover {
+    background-color: var(--color-background-root);
+}
+
+.itemLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.count {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.chevron {
+    color: var(--color-text-disabled);
+}
+
+.actionButton {
+    margin: 12px 24px 20px;
+    height: 40px;
+    border: 1px solid var(--dashboard-accent-teal);
+    background: transparent;
+    color: var(--dashboard-accent-teal);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.actionButton:hover {
+    background-color: rgba(13, 148, 136, 0.04);
+}

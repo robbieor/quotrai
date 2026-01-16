@@ -1,0 +1,70 @@
+Create a mobile-first invoicing and business intelligence platform for Irish tradespeople (electricians, plumbers, HVAC) called "TradeStack".
+
+CORE FEATURES NEEDED:
+
+1. RECEIPT SCANNING & EXPENSE TRACKING
+- Camera/upload interface for receipt photos
+- AI-powered OCR extraction (vendor, amount, date, items, category)
+- Store receipts in Supabase Storage
+- Categorize expenses automatically
+- Link expenses to specific jobs
+
+2. INVOICE CREATION
+- Client management (add/edit/search clients)
+- Line item builder (description, quantity, rate, total)
+- Automatic calculations (subtotal, VAT, total)
+- PDF generation with professional template
+- Email/WhatsApp sharing
+- Payment tracking (sent, paid, overdue)
+- Irish VAT rates support (23%, 13.5%, 9%, 0%)
+
+3. SIMPLE DASHBOARD
+- This week revenue vs last week
+- This week expenses vs last week
+- Profit margin
+- Outstanding invoices (aging)
+- Recent activity feed
+- Quick actions (scan receipt, create invoice)
+
+4. AUTHENTICATION
+- Email/password signup and login
+- Supabase Auth integration
+- User profile management
+- Secure session handling
+
+TECHNICAL REQUIREMENTS:
+
+- Mobile-first responsive design (primarily phone users)
+- React frontend with modern UI (Tailwind CSS)
+- Supabase backend (PostgreSQL database, Auth, Storage)
+- Google AI Studio integration for receipt OCR
+- Progressive Web App (PWA) capabilities
+- Fast, clean, professional interface
+- Works well on mobile browsers
+
+DATABASE SCHEMA NEEDED:
+
+- users (via Supabase Auth)
+- user_profiles (business name, phone, address, VAT number)
+- clients (name, email, phone, address, payment terms)
+- expenses (date, vendor, amount, category, receipt_image_url, job_id)
+- invoices (invoice_number, client_id, date, due_date, subtotal, vat, total, status, paid_date)
+- invoice_items (invoice_id, description, quantity, rate, amount)
+- jobs (optional for linking expenses and invoices)
+
+UI/UX PRIORITIES:
+
+1. Large, thumb-friendly buttons (mobile first)
+2. Minimal text input (camera, dropdowns, smart defaults)
+3. Clear visual feedback (loading states, success messages)
+4. Fast navigation (bottom tab bar)
+5. Professional but approachable aesthetic
+6. Irish currency (€) and date formats
+
+START WITH:
+- Basic authentication (signup/login)
+- Receipt scanning interface (camera input)
+- Simple expense list view
+- Dashboard with placeholder data
+
+Create the project structure, install dependencies, set up Supabase connection, and build the initial screens for authentication and receipt scanning.

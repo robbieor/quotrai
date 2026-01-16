@@ -1,0 +1,108 @@
+Build a mobile-first time tracking web application for Irish electricians with GPS geolocation and Eircode integration.
+
+## TECH STACK
+- Frontend: React 18+ with TypeScript
+- Styling: Tailwind CSS with mobile-first approach
+- Backend: Node.js/Express API
+- Database: PostgreSQL (Supabase recommended)
+- Maps: Leaflet.js with OpenStreetMap tiles
+- Geolocation: Browser Geolocation API + OpenCage Geocoding API (supports Eircode)
+- State Management: Zustand for timer state
+- Authentication: JWT with refresh tokens
+
+## DATABASE SCHEMA
+
+```sql
+-- Users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20),
+  default_hourly_rate DECIMAL(10, 2) DEFAULT 45.00,
+  eircode VARCHAR(8),
+  home_address TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Clients table
+CREATE TABLE clients (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20),
+  email VARCHAR(255),
+  address TEXT,
+  eircode VARCHAR(8),
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  geofence_radius INTEGER DEFAULT 100, -- meters
+  default_hourly_rate DECIMAL(10, 2),
+  notes TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Time entries table
+CREATE TABLE time_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  
+  -- Clock in data
+  clock_in_time TIMESTAMP NOT NULL,
+  clock_in_lat DECIMAL(10, 8),
+  clock_in_lng DECIMAL(11, 8),
+  clock_in_address TEXT,
+  clock_in_eircode VARCHAR(8),
+  clock_in_accuracy DECIMAL(10, 2), -- GPS accuracy in meters
+  
+  -- Clock out data
+  clock_out_time TIMESTAMP,
+  clock_out_lat DECIMAL(10, 8),
+  clock_out_lng DECIMAL(11, 8),
+  clock_out_address TEXT,
+  clock_out_eircode VARCHAR(8),
+  clock_out_accuracy DECIMAL(10, 2),
+  
+  -- Calculated fields
+  total_minutes INTEGER,
+  break_minutes INTEGER DEFAULT 0,
+  billable_minutes INTEGER,
+  hourly_rate DECIMAL(10, 2) NOT NULL,
+  total_amount DECIMAL(10, 2),
+  
+  -- Metadata
+  is_billable BOOLEAN DEFAULT true,
+  status VARCHAR(20) DEFAULT 'active', -- active, completed, invoiced
+  work_description TEXT,
+  completion_notes TEXT,
+  was_on_site BOOLEAN, -- within geofence
+  distance_from_site DECIMAL(10, 2), -- meters
+  
+  -- Audit
+  manually_adjusted BOOLEAN DEFAULT false,
+  adjustment_reason TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Breaks table (for tracking multiple breaks per shift)
+CREATE TABLE time_entry_breaks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  time_entry_id UUID REFERENCES time_entries(id) ON DELETE CASCADE,
+  break_start TIMESTAMP NOT NULL,
+  break_end TIMESTAMP,
+  duration_minutes INTEGER,
+  is_paid BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_time_entries_user_date ON time_entries(user_id, clock_in_time DESC);
+CREATE INDEX idx_time_entries_client ON time_entries(client_id);
+CREATE INDEX idx_time_entries_status ON time_entries(status);
+CREATE INDEX idx_clients_user ON clients(user_id);

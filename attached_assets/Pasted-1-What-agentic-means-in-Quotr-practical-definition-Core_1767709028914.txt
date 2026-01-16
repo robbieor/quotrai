@@ -1,0 +1,253 @@
+1) What “agentic” means in Quotr (practical definition)
+Core jobs the agent should execute
+
+Create quote from template + a few parameters
+
+Convert quote → invoice (or quote → job → invoice)
+
+Create / update client quickly
+
+Add line items (materials, labour, callout) and optional add-ons
+
+Schedule job (optional)
+
+Take payment / mark paid (depends on payments integration)
+
+Input style you want
+
+Slash commands (fast + deterministic)
+
+Structured chat (agent asks 1–2 follow-ups max)
+
+Examples:
+
+/quote callout "Mary O'Brien" today 2pm fault-finding
+
+/invoice from quote Q-1023 due 14d
+
+/client add "ACME Property" email accounts@acme.ie phone 08... address ...
+
+/quote eicr "John Murphy" 3-bed rental rush
+
+2) Architecture: don’t let the “agent” touch the DB directly
+
+Use a tool-based workflow:
+
+UI → Agent Router → Tools → Draft → Confirm → Commit
+
+Tools are your normal backend functions (createClient, createQuoteDraft, priceQuote, createInvoice, etc.)
+
+Agent returns a Draft Plan + a diff of what will be written
+
+User confirms (or you auto-confirm only for low-risk actions)
+
+This avoids hallucinated writes and keeps auditability.
+
+3) Command system (deterministic layer)
+A) Slash commands (recommended for speed + reliability)
+
+Implement a command parser with intents:
+
+/client add …
+
+/quote …
+
+/invoice …
+
+/pay …
+
+/job schedule …
+
+/search …
+
+Rule: if command parses cleanly → execute without LLM.
+Only invoke the LLM when:
+
+missing required fields
+
+ambiguous template selection
+
+freeform description needs mapping to line items/options
+
+B) “Natural language” as a fallback
+
+If user types:
+
+“Quote for a CU upgrade for Sarah in Dundrum, include surge protection”
+
+LLM maps to:
+
+template: Consumer Unit Upgrade
+
+customer: Sarah (create or match)
+
+add-ons: surge protection
+
+location: Dundrum (store in job/quote notes)
+
+Then you show the draft.
+
+4) Data integrity controls (non-negotiable)
+Always store:
+
+created_by_user_id
+
+created_via = manual | agent | import
+
+agent_session_id
+
+template_version_id (immutable)
+
+pricing_snapshot on quote/invoice lines (never recalc later)
+
+Guardrails
+
+Agent cannot change:
+
+VAT rate unless user explicitly says so
+
+locked pricing blocks unless it records override_reason
+
+Any discount over X% requires confirmation
+
+Any action that sends to client (email/SMS) requires confirmation
+
+5) The “Toolbox” your agent needs (backend functions)
+
+Implement these first; the agent just orchestrates them.
+
+Clients
+
+findClient(query)
+
+createClient(payload)
+
+updateClient(id, payload)
+
+Templates
+
+listTemplates(tradeType)
+
+getTemplate(templateId)
+
+recommendTemplate(tradeType, description) (can be rules-based initially)
+
+Quotes
+
+createQuoteDraft(orgId, clientId, templateVersionId)
+
+applyOptions(quoteDraftId, selectedOptionIds)
+
+addLineItem(quoteDraftId, item)
+
+priceQuote(quoteDraftId) (VAT, totals, discounts)
+
+finalizeQuote(quoteDraftId) → writes quote + quote_lines
+
+Invoices
+
+createInvoiceFromQuote(quoteId)
+
+createInvoiceDraft(clientId, lines)
+
+finalizeInvoice(invoiceDraftId)
+
+Audit
+
+logAgentAction(actionType, payload, result, userId, orgId)
+
+6) UX pattern: “Draft mode” + 1-click confirm
+
+When the agent completes a command, show a draft card:
+
+Draft Quote – Consumer Unit Upgrade
+
+Client: Sarah Byrne
+
+Template: CU Upgrade v1
+
+Add-ons: Surge protection
+
+Total: €___ (incl VAT)
+
+Notes: …
+Buttons:
+
+Confirm & Save
+
+Edit
+
+Cancel
+
+This makes the agent feel instant, while keeping control.
+
+7) Minimal command spec (you can ship this fast)
+/quote
+
+Syntax
+
+/quote <template_or_keyword> "<client>" [when] [notes] [options...]
+
+Examples:
+
+/quote callout "Mary O'Brien" today 2pm fault finding
+
+/quote eicr "John Murphy" 3-bed rental include minor remedials
+
+/quote ev "Declan Ryan" include load management +10m cable
+
+/invoice
+
+/invoice from quote <quoteNumber> [due 14d]
+
+/invoice quick "<client>" "<description>" <amount> (fallback)
+
+/client
+
+/client add "Name" email x phone y address z
+
+/client find "Name"
+
+/add
+
+(while a draft is open)
+
+/add labour 2h
+
+/add material "RCBO" 1 45
+
+/add discount 5% reason "repeat customer"
+
+8) “Agent memory” inside the session (not global)
+
+For speed, store ephemeral context:
+
+current org
+
+last client
+
+last template used
+
+current draft quote/invoice id
+
+So user can do:
+
+“same client as last time”
+
+“add surge protection”
+
+“make it emergency rate”
+
+9) Implementation order (best ROI)
+
+Slash command parser for /client, /quote, /invoice
+
+Draft quote workflow (create draft → price → confirm → finalize)
+
+Template recommendation (simple rules first)
+
+Add-ons / options selection from natural language
+
+Audit log + override reasons
+
+Natural language chat as a wrapper over commands
