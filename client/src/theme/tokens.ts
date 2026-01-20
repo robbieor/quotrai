@@ -28,9 +28,13 @@ export const colors = {
     warning: '#D97706',
     error: '#DC2626',
 
-    // Background & Surface
+    // Background & Surface - 3-level elevation system
     background: '#F5F5F5',
-    surface: '#FFFFFF',
+    surface: {
+        canvas: '#F5F5F5',      // Page background
+        DEFAULT: '#FFFFFF',      // Cards, panels, content
+        elevated: '#FFFFFF',     // Modals, right rail, assistant
+    },
 
     // Borders
     border: {
@@ -130,13 +134,14 @@ export const radius = {
 } as const;
 
 // =============================================================================
-// SHADOWS - Minimal, No card shadows
+// SHADOWS - 3-level elevation system
 // =============================================================================
 
 export const shadows = {
     none: 'none',
-    fab: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    // Removed card shadows per guidelines
+    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',           // Normal cards, content panels
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',       // Elevated panels, modals, dropdowns
+    fab: '0 2px 4px rgba(0, 0, 0, 0.1)',           // FAB only
 } as const;
 
 // =============================================================================
@@ -223,7 +228,9 @@ export const cssVariables = `
   
   /* Background & Surface */
   --color-background: ${colors.background};
-  --color-surface: ${colors.surface};
+  --color-surface-canvas: ${colors.surface.canvas};
+  --color-surface: ${colors.surface.DEFAULT};
+  --color-surface-elevated: ${colors.surface.elevated};
   
   /* Borders */
   --color-border: ${colors.border.DEFAULT};
@@ -290,6 +297,8 @@ export const cssVariables = `
   
   /* Shadows */
   --shadow-none: ${shadows.none};
+  --shadow-sm: ${shadows.sm};
+  --shadow-md: ${shadows.md};
   --shadow-fab: ${shadows.fab};
   
   /* Transitions */

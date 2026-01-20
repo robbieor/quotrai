@@ -1,13 +1,11 @@
-/* Card Component Styles - Per design_guidelines.md */
-/* Note: NO SHADOWS as per guidelines */
+/* Card Component Styles - Modern SaaS Elevation */
 
 .card {
     background-color: var(--color-surface);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
-    border: 1px solid var(--color-border);
-    box-shadow: none;
-    /* Explicitly no shadow per guidelines */
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Section card variant - slightly thicker border */
