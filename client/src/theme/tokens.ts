@@ -34,6 +34,7 @@ export const colors = {
         canvas: '#F5F5F5',      // Page background
         DEFAULT: '#FFFFFF',      // Cards, panels, content
         elevated: '#FFFFFF',     // Modals, right rail, assistant
+        navigation: '#031418',   // Dark Sidebar/TopBar background
     },
 
     // Borders
@@ -231,6 +232,7 @@ export const cssVariables = `
   --color-surface-canvas: ${colors.surface.canvas};
   --color-surface: ${colors.surface.DEFAULT};
   --color-surface-elevated: ${colors.surface.elevated};
+  --color-surface-navigation: ${colors.surface.navigation};
   
   /* Borders */
   --color-border: ${colors.border.DEFAULT};

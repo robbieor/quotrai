@@ -1,7 +1,7 @@
 .topBar {
     height: 72px;
-    background-color: var(--dashboard-topbar-bg);
-    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface-navigation);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     padding: 0 var(--spacing-xl);
@@ -20,20 +20,20 @@
 .greeting {
     font-size: 16px;
     font-weight: 700;
-    color: var(--color-text);
+    color: #ffffff;
     letter-spacing: -0.01em;
 }
 
 .date {
     font-size: 13px;
-    color: var(--color-text-secondary);
+    color: #94a3b8;
 }
 
 .searchContainer {
     display: flex;
     align-items: center;
-    background-color: var(--color-background-root);
-    border: 1px solid transparent;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-lg);
     padding: 0 var(--spacing-md);
     height: 44px;
@@ -44,9 +44,9 @@
 }
 
 .searchContainerFocused {
-    border-color: var(--dashboard-accent-teal);
-    background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.05);
+    border-color: var(--color-primary-light);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(61, 143, 163, 0.1);
 }
 
 .searchInput {
@@ -54,17 +54,17 @@
     border: none;
     background: transparent;
     font-size: 14px;
-    color: var(--color-text);
+    color: #f8fafc;
     outline: none;
 }
 
 .shortcutHint {
-    background-color: var(--color-background-tertiary);
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 11px;
     font-weight: 700;
-    color: var(--color-text-secondary);
+    color: #94a3b8;
     letter-spacing: 0.05em;
 }
 
@@ -82,16 +82,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f8fafc;
-    border: none;
-    color: var(--color-text-secondary);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
     position: relative;
 }
 
 .iconButton:hover {
-    background-color: var(--color-background-secondary);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .profileButton {
@@ -107,7 +108,7 @@
 }
 
 .profileButton:hover {
-    background-color: var(--color-background-secondary);
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .avatar {
@@ -130,13 +131,13 @@
 .profileName {
     font-size: 14px;
     font-weight: 500;
-    color: var(--color-text);
+    color: #ffffff;
     display: block;
 }
 
 .profileRole {
     font-size: 12px;
-    color: var(--color-text-secondary);
+    color: #94a3b8;
     display: block;
 }
 
@@ -267,5 +268,5 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--dashboard-topbar-bg);
+    border: 2px solid var(--color-surface-navigation);
 }

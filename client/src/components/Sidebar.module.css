@@ -2,12 +2,12 @@
 
 .sidebar {
     width: 260px;
-    background: var(--dashboard-sidebar-bg);
+    background: var(--color-surface-navigation);
     height: 100vh;
     display: flex;
     flex-direction: column;
     transition: width var(--transition-slow);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -22,8 +22,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    min-height: 68px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 72px;
 }
 
 .logoRow {
@@ -173,7 +173,7 @@
 
 .footer {
     padding: var(--spacing-md);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .logoutButton {

@@ -1,22 +1,59 @@
-/* Premium Enterprise Dashboard - CaptivateIQ inspired */
-.dashboard {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    padding-bottom: 48px;
-    animation: fadeIn 0.4s ease-out;
+/* Staggered assembly animation */
+.metricsGrid>*:nth-child(1) {
+    animation-delay: 0.1s;
 }
 
-@keyframes fadeIn {
+.metricsGrid>*:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.metricsGrid>*:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.metricsGrid>*:nth-child(4) {
+    animation-delay: 0.25s;
+}
+
+.leftColumn>*:nth-child(1) {
+    animation-delay: 0.3s;
+}
+
+.leftColumn>*:nth-child(2) {
+    animation-delay: 0.35s;
+}
+
+.rightColumn>*:nth-child(1) {
+    animation-delay: 0.3s;
+}
+
+.rightColumn>*:nth-child(2) {
+    animation-delay: 0.35s;
+}
+
+.metricsGrid>*,
+.leftColumn>*,
+.rightColumn>* {
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUpFade {
     from {
         opacity: 0;
-        transform: translateY(12px);
+        transform: translateY(20px);
     }
 
     to {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-bottom: 48px;
 }
 
 .metricsGrid {
@@ -62,17 +99,14 @@
     gap: 28px;
 }
 
-/* Glassmorphism Card */
+/* Glassmorphism Card - Elevated for "Investability" */
 .card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--color-surface);
     border-radius: var(--radius-xl);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--color-border-subtle);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04),
-        0 1px 2px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--shadow-sm);
     transition: all var(--transition-normal);
 }
 

@@ -1,16 +1,14 @@
 /* Premium MetricCard - Enterprise SaaS styling */
 .card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--color-surface);
     border-radius: var(--radius-xl);
     padding: 24px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--color-border-subtle);
     display: flex;
     flex-direction: column;
     gap: 16px;
     transition: all var(--transition-normal);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--shadow-sm);
     min-height: 160px;
     position: relative;
     overflow: hidden;
@@ -29,9 +27,9 @@
 }
 
 .card:hover {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
-    border-color: rgba(13, 148, 136, 0.15);
+    border-color: var(--color-primary-light);
 }
 
 .card:hover::before {

@@ -37,23 +37,39 @@ function SummarySection({ title, items, actionLabel, viewAllPath, onAction, onIt
                 </a>
             </div>
             <div className={styles.itemList}>
-                {items.map((item, idx) => (
-                    <div
-                        key={idx}
-                        className={styles.item}
-                        onClick={() => onItemClick(item.status)}
-                        style={{ cursor: "pointer" }}
-                    >
-                        <div className={styles.itemLeft}>
-                            <div className={styles.statusDot} style={{ backgroundColor: item.color }} />
-                            <span className={styles.label}>{item.label}</span>
+                {items.map((item, idx) => {
+                    const maxCount = Math.max(...items.map(i => i.count), 1);
+                    const percentage = (item.count / maxCount) * 100;
+
+                    return (
+                        <div
+                            key={idx}
+                            className={styles.item}
+                            onClick={() => onItemClick(item.status)}
+                            style={{ cursor: "pointer" }}
+                        >
+                            <div className={styles.itemRow}>
+                                <div className={styles.itemLeft}>
+                                    <div className={styles.statusDot} style={{ backgroundColor: item.color }} />
+                                    <span className={styles.label}>{item.label}</span>
+                                </div>
+                                <div className={styles.itemLeft}>
+                                    <span className={styles.count}>{item.count}</span>
+                                    <ChevronRight size={16} className={styles.chevron} />
+                                </div>
+                            </div>
+                            <div className={styles.progressBarContainer}>
+                                <div
+                                    className={styles.progressBar}
+                                    style={{
+                                        width: `${percentage}%`,
+                                        backgroundColor: item.color
+                                    }}
+                                />
+                            </div>
                         </div>
-                        <div className={styles.itemLeft}>
-                            <span className={styles.count}>{item.count}</span>
-                            <ChevronRight size={16} className={styles.chevron} />
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
             <button className={styles.actionButton} onClick={onAction}>
                 {actionLabel}

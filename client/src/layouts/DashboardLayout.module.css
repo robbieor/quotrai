@@ -1,7 +1,7 @@
 .layout {
     display: flex;
     min-height: 100vh;
-    background-color: var(--color-background-root);
+    background-color: var(--color-surface-canvas);
 }
 
 .mainContent {

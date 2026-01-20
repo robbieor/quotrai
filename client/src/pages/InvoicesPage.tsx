@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, FileText, Send, CheckCircle, XCircle, X, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, Send, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Modal } from "../components/ui/Modal";
+import { Button } from "../components/ui/Button";
 import DataTable from "../components/DataTable";
 import type { Column } from "../components/DataTable";
 import type { Invoice, Client } from "../types";
@@ -236,86 +238,90 @@ export default function InvoicesPage() {
                 <DataTable columns={columns} data={filtered} emptyMessage="No invoices yet. Create your first invoice!" />
             )}
 
-            {showModal && (
-                <div className={styles.modalOverlay} onClick={closeModal}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h2>{editingInvoice ? "Edit Invoice" : "Create Invoice"}</h2>
-                            <button className={styles.closeBtn} onClick={closeModal}><X size={20} /></button>
+
+
+            {/* Create/Edit Modal */}
+            <Modal
+                isOpen={showModal}
+                onClose={closeModal}
+                title={editingInvoice ? "Edit Invoice" : "Create Invoice"}
+                maxWidth={800}
+                footer={
+                    <>
+                        <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+                        <Button
+                            onClick={handleSubmit}
+                            loading={createMutation.isPending || updateMutation.isPending}
+                            disabled={!clientId}
+                        >
+                            {editingInvoice ? "Update Invoice" : "Create Invoice"}
+                        </Button>
+                    </>
+                }
+            >
+                <div className={styles.modalForm}>
+                    <div className={styles.formSection}>
+                        <label className={styles.label}>Client *</label>
+                        <ClientSelector value={clientId} onChange={(id) => setClientId(id)} />
+                    </div>
+
+                    <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Invoice Date</label>
+                            <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} className={styles.input} />
                         </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Due Date</label>
+                            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={styles.input} />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Status</label>
+                            <select value={status} onChange={(e) => setStatus(e.target.value as any)} className={styles.input}>
+                                <option value="draft">Draft</option>
+                                <option value="sent">Sent</option>
+                                <option value="paid">Paid</option>
+                            </select>
+                        </div>
+                    </div>
 
-                        <form onSubmit={handleSubmit} className={styles.modalForm}>
-                            <div className={styles.formSection}>
-                                <label className={styles.label}>Client *</label>
-                                <ClientSelector value={clientId} onChange={(id) => setClientId(id)} />
-                            </div>
+                    <div className={styles.formSection}>
+                        <label className={styles.label}>Line Items</label>
+                        <LineItemsEditor items={items} onChange={setItems} />
+                    </div>
 
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Invoice Date</label>
-                                    <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} className={styles.input} />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Due Date</label>
-                                    <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={styles.input} />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Status</label>
-                                    <select value={status} onChange={(e) => setStatus(e.target.value as any)} className={styles.input}>
-                                        <option value="draft">Draft</option>
-                                        <option value="sent">Sent</option>
-                                        <option value="paid">Paid</option>
-                                    </select>
-                                </div>
-                            </div>
+                    <div className={styles.formRow}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Discount (€)</label>
+                            <input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} className={styles.input} step="0.01" />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>VAT Rate</label>
+                            <select value={vatRate} onChange={(e) => setVatRate(e.target.value)} className={styles.input}>
+                                <option value="0">0%</option>
+                                <option value="0.09">9%</option>
+                                <option value="0.135">13.5%</option>
+                                <option value="0.23">23%</option>
+                            </select>
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>PO Number</label>
+                            <input type="text" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} className={styles.input} placeholder="Optional" />
+                        </div>
+                    </div>
 
-                            <div className={styles.formSection}>
-                                <label className={styles.label}>Line Items</label>
-                                <LineItemsEditor items={items} onChange={setItems} />
-                            </div>
+                    <div className={styles.formSection}>
+                        <label className={styles.label}>Notes</label>
+                        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={styles.textarea} rows={3} placeholder="Payment terms, additional info..." />
+                    </div>
 
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Discount (€)</label>
-                                    <input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} className={styles.input} step="0.01" />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>VAT Rate</label>
-                                    <select value={vatRate} onChange={(e) => setVatRate(e.target.value)} className={styles.input}>
-                                        <option value="0">0%</option>
-                                        <option value="0.09">9%</option>
-                                        <option value="0.135">13.5%</option>
-                                        <option value="0.23">23%</option>
-                                    </select>
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>PO Number</label>
-                                    <input type="text" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} className={styles.input} placeholder="Optional" />
-                                </div>
-                            </div>
-
-                            <div className={styles.formSection}>
-                                <label className={styles.label}>Notes</label>
-                                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={styles.textarea} rows={3} placeholder="Payment terms, additional info..." />
-                            </div>
-
-                            <div className={styles.totalsBox}>
-                                <div className={styles.totalLine}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
-                                {discountAmount > 0 && <div className={styles.totalLine}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>}
-                                <div className={styles.totalLine}><span>VAT ({(parseFloat(vatRate) * 100).toFixed(0)}%)</span><span>{formatCurrency(vatAmount)}</span></div>
-                                <div className={styles.totalLineBold}><span>Total</span><span>{formatCurrency(total)}</span></div>
-                            </div>
-
-                            <div className={styles.modalFooter}>
-                                <button type="button" className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
-                                <button type="submit" className={styles.submitBtn} disabled={!clientId || createMutation.isPending || updateMutation.isPending}>
-                                    {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingInvoice ? "Update Invoice" : "Create Invoice"}
-                                </button>
-                            </div>
-                        </form>
+                    <div className={styles.totalsBox}>
+                        <div className={styles.totalLine}><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+                        {discountAmount > 0 && <div className={styles.totalLine}><span>Discount</span><span>-{formatCurrency(discountAmount)}</span></div>}
+                        <div className={styles.totalLine}><span>VAT ({(parseFloat(vatRate) * 100).toFixed(0)}%)</span><span>{formatCurrency(vatAmount)}</span></div>
+                        <div className={styles.totalLineBold}><span>Total</span><span>{formatCurrency(total)}</span></div>
                     </div>
                 </div>
-            )}
+            </Modal>
         </div>
     );
 }
