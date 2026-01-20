@@ -107,16 +107,14 @@ export default function LandingPage() {
         <div className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.logo}>
-                    <div className={styles.logoIcon}>Q</div>
-                    <span className={styles.logoText}>Quotr</span>
+                    <img src="/logo.png" alt="Quotr" className={styles.logoImg} />
                 </div>
             </header>
 
             <main className={styles.main}>
                 <div className={styles.leftPanel}>
                     <div className={styles.branding}>
-                        <div className={styles.brandIcon}>Q</div>
-                        <h1 className={styles.brandName}>Quotr</h1>
+                        <img src="/wordmark.png" alt="Quotr" className={styles.wordmark} />
                     </div>
 
                     <div className={styles.carousel}>
@@ -175,8 +173,8 @@ export default function LandingPage() {
                 <div className={styles.rightPanel}>
                     <div className={styles.loginCard}>
                         <div className={styles.loginBranding}>
-                            <div className={styles.loginIcon}>Q</div>
-                            <h2 className={styles.loginTitle}>Quotr</h2>
+                            <img src="/logo.png" alt="Quotr" className={styles.loginLogo} />
+                            <img src="/wordmark.png" alt="Quotr" className={styles.loginWordmark} />
                         </div>
 
                         <Link to="/login" className={styles.primaryBtn}>
