@@ -9,10 +9,10 @@
     padding: 0 var(--spacing-lg);
     font-family: var(--font-family-sans);
     font-size: var(--font-size-button);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-normal);
     text-decoration: none;
     white-space: nowrap;
     user-select: none;
@@ -23,6 +23,11 @@
     opacity: 0.5;
 }
 
+.button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
 .button:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
@@ -31,17 +36,16 @@
 /* Primary Button */
 .primary {
     background-color: var(--color-primary);
-    color: var(--color-surface);
-    border: 1px solid var(--color-primary-dark);
-    box-shadow: none;
+    color: var(--color-surface-navigation);
+    border: none;
 }
 
 .primary:hover:not(:disabled) {
-    background-color: var(--color-primary-dark);
+    background-color: var(--color-primary-light);
 }
 
 .primary:active:not(:disabled) {
-    background-color: var(--color-primary-dark);
+    transform: translateY(0);
 }
 
 /* Secondary Button */
@@ -52,11 +56,11 @@
 }
 
 .secondary:hover:not(:disabled) {
-    background-color: rgba(11, 110, 135, 0.08);
+    background-color: rgba(0, 255, 178, 0.08);
 }
 
 .secondary:active:not(:disabled) {
-    background-color: rgba(11, 110, 135, 0.12);
+    transform: translateY(0);
 }
 
 /* Tertiary Button (Text) */
@@ -72,7 +76,7 @@
 }
 
 .tertiary:active:not(:disabled) {
-    background-color: var(--color-border);
+    transform: translateY(0);
 }
 
 /* Danger variant */

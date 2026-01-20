@@ -9,77 +9,77 @@
 // =============================================================================
 
 export const colors = {
-    // Primary
+    // Primary - Revamo Teal
     primary: {
-        DEFAULT: '#0B6E87',
-        light: '#3D8FA3',
-        dark: '#084E61',
+        DEFAULT: '#00FFB2',
+        light: '#33FFC1',
+        dark: '#00CC8E',
     },
 
     // Accent
     accent: {
-        DEFAULT: '#D97706',
-        light: '#F59E0B',
-        dark: '#B45309',
+        DEFAULT: '#00FFB2',
+        light: '#33FFC1',
+        dark: '#00CC8E',
     },
 
     // Semantic
-    success: '#059669',
+    success: '#00FFB2',
     warning: '#D97706',
     error: '#DC2626',
 
-    // Background & Surface - 3-level elevation system
-    background: '#F5F5F5',
+    // Background & Surface - Updated mapping
+    background: '#1a202c',
     surface: {
-        canvas: '#F5F5F5',      // Page background
-        DEFAULT: '#FFFFFF',      // Cards, panels, content
-        elevated: '#FFFFFF',     // Modals, right rail, assistant
-        navigation: '#031418',   // Dark Sidebar/TopBar background
+        canvas: '#1a202c',      // Dark background
+        DEFAULT: '#242d3c',      // Card backgrounds
+        elevated: '#2d3748',     // Modals, dropdowns
+        navigation: '#0f1419',   // Sidebar/nav background
     },
 
     // Borders
     border: {
-        DEFAULT: '#D1D5DB',
-        subtle: '#E5E7EB',
+        DEFAULT: 'rgba(255, 255, 255, 0.1)',
+        subtle: 'rgba(255, 255, 255, 0.05)',
     },
 
     // Text
     text: {
-        primary: '#111827',
-        secondary: '#4B5563',
-        disabled: '#9CA3AF',
+        primary: '#FFFFFF',
+        secondary: '#94a3b8',
+        disabled: '#4A5568',
     },
 
     // Status badge backgrounds (10% opacity versions)
     statusBg: {
-        paid: 'rgba(5, 150, 105, 0.1)',      // success
+        paid: 'rgba(0, 255, 178, 0.1)',      // success
         sent: 'rgba(217, 119, 6, 0.1)',       // warning
         overdue: 'rgba(220, 38, 38, 0.1)',    // error
-        draft: 'rgba(209, 213, 219, 0.1)',    // border
+        draft: 'rgba(148, 163, 184, 0.1)',    // gray text
     },
 } as const;
 
 // =============================================================================
-// TYPOGRAPHY - SF Pro, Structured Hierarchy
+// TYPOGRAPHY - Manrope, Structured Hierarchy (Revamo Scale)
 // =============================================================================
 
 export const typography = {
     // Font families
     fontFamily: {
-        sans: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif',
+        sans: '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         mono: '"SF Mono", "Fira Code", "Consolas", monospace',
     },
 
-    // Font sizes (pt to px: multiply by 1.333)
+    // Font sizes (clamp-based for fluid scale)
     fontSize: {
-        h1: '28px',      // 28pt Bold (screen titles)
-        h2: '20px',      // 20pt Semibold (section headers)
-        h3: '17px',      // 17pt Semibold (card titles)
-        body: '15px',    // 15pt Regular
-        bodySmall: '13px', // 13pt Regular
-        caption: '11px', // 11pt Medium (metadata, labels)
-        button: '15px',  // 15pt Semibold
-        tabular: '15px', // 15pt Regular Monospaced (amounts)
+        h1: 'clamp(2.5rem, 6vw, 4.5rem)',
+        h2: 'clamp(2rem, 4vw, 3rem)',
+        h3: 'clamp(1.5rem, 2.5vw, 2rem)',
+        body: '15px',
+        bodySmall: '13px',
+        caption: '11px',
+        button: '15px',
+        tabular: '15px',
     },
 
     // Font weights
@@ -88,11 +88,12 @@ export const typography = {
         medium: 500,
         semibold: 600,
         bold: 700,
+        extraBold: 800,
     },
 
     // Line heights
     lineHeight: {
-        tight: 1.25,
+        tight: 1.1,
         normal: 1.5,
         relaxed: 1.75,
     },
@@ -122,27 +123,27 @@ export const spacingValues = {
 } as const;
 
 // =============================================================================
-// BORDER RADIUS - Sharp, Professional
+// BORDER RADIUS - Revamo Styling
 // =============================================================================
 
 export const radius = {
     xs: '4px',   // Status badges
-    sm: '6px',   // Buttons, inputs
-    md: '8px',   // Cards
-    lg: '12px',
-    xl: '16px',
+    sm: '8px',   // Buttons, inputs
+    md: '10px',
+    lg: '12px',  // Cards
+    xl: '20px',
     full: '9999px', // FAB, avatars
 } as const;
 
 // =============================================================================
-// SHADOWS - 3-level elevation system
+// SHADOWS - Revamo Elevation (Subtle Lift)
 // =============================================================================
 
 export const shadows = {
     none: 'none',
-    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',           // Normal cards, content panels
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',       // Elevated panels, modals, dropdowns
-    fab: '0 2px 4px rgba(0, 0, 0, 0.1)',           // FAB only
+    sm: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    md: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
+    fab: '0 4px 12px rgba(0, 255, 178, 0.3)',
 } as const;
 
 // =============================================================================

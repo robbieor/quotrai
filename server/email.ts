@@ -5,19 +5,19 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const FROM_EMAIL = 'Quotr <noreply@quotr.info>';
 
 const baseStyles = `
-  font-family: 'PP Neue Montreal', 'Neue Montreal', Montreal, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.6;
   color: #1f2937;
 `;
 
 const buttonStyles = `
   display: inline-block;
-  background-color: #0A7E9E;
-  color: white;
+  background-color: #00FFB2;
+  color: #0f1419;
   padding: 14px 32px;
   text-decoration: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
 `;
 
