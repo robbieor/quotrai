@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Receipt, DollarSign, Calendar } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, Receipt, Calendar, X } from "lucide-react";
 import DataTable from "../components/DataTable";
 import type { Column } from "../components/DataTable";
 import type { Expense } from "../types";
+import { apiRequest } from "../lib/api";
 import styles from "./InvoicesPage.module.css";
 
 const formatCurrency = (amount: number | string) => {
@@ -11,7 +12,7 @@ const formatCurrency = (amount: number | string) => {
     return new Intl.NumberFormat("en-IE", {
         style: "currency",
         currency: "EUR",
-    }).format(num);
+    }).format(num || 0);
 };
 
 const formatDate = (dateStr: string) => {
@@ -23,12 +24,53 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function ExpensesPage() {
+    const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState("");
     const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // Form state
+    const [description, setDescription] = useState("");
+    const [amount, setAmount] = useState("0");
+    const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+    const [category, setCategory] = useState("General");
+    const [vendor, setVendor] = useState("");
 
     const { data: expenses = [], isLoading } = useQuery<Expense[]>({
         queryKey: ["/api/expenses"],
     });
+
+    const createMutation = useMutation({
+        mutationFn: async (data: any) => {
+            const res = await apiRequest("POST", "/api/expenses", data);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
+            closeModal();
+        },
+    });
+
+    const closeModal = () => {
+        setShowCreateModal(false);
+        setDescription("");
+        setAmount("0");
+        setDate(new Date().toISOString().split("T")[0]);
+        setCategory("General");
+        setVendor("");
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!description.trim() || !amount) return;
+
+        createMutation.mutate({
+            description,
+            amount: parseFloat(amount) || 0,
+            date: new Date(date).toISOString(),
+            category,
+            vendor,
+        });
+    };
 
     const filteredExpenses = expenses.filter((expense) => {
         return (
@@ -38,7 +80,7 @@ export default function ExpensesPage() {
         );
     });
 
-    const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+    const totalExpenses = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount as any) || 0), 0);
 
     const columns: Column<Expense>[] = [
         {
@@ -78,7 +120,6 @@ export default function ExpensesPage() {
             header: "Amount",
             render: (row) => (
                 <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    <DollarSign size={14} color="#ef4444" />
                     <strong style={{ color: "#ef4444" }}>{formatCurrency(row.amount)}</strong>
                 </div>
             ),
@@ -113,7 +154,7 @@ export default function ExpensesPage() {
                     <h1 className={styles.title}>Expenses</h1>
                     <p className={styles.subtitle}>Track business expenses and receipts</p>
                 </div>
-                <button className={styles.createButton} onClick={() => setShowCreateModal(true)}>
+                <button className={styles.createBtn} onClick={() => setShowCreateModal(true)}>
                     <Plus size={20} />
                     Add Expense
                 </button>
@@ -121,13 +162,12 @@ export default function ExpensesPage() {
 
             <div className={styles.toolbar}>
                 <div className={styles.searchBox}>
-                    <Search size={18} className={styles.searchIcon} />
+                    <Search size={18} />
                     <input
                         type="text"
                         placeholder="Search expenses..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className={styles.searchInput}
                     />
                 </div>
                 <div className={styles.stats}>
@@ -144,23 +184,62 @@ export default function ExpensesPage() {
                 <div className={styles.loading}>Loading expenses...</div>
             ) : (
                 <DataTable<Expense>
-                    title=""
                     columns={columns}
                     data={filteredExpenses}
-                    pageSize={10}
+                    emptyMessage="No expenses yet. Add your first expense!"
                 />
             )}
 
             {showCreateModal && (
-                <div className={styles.modalOverlay} onClick={() => setShowCreateModal(false)}>
+                <div className={styles.modalOverlay} onClick={closeModal}>
                     <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                        <h2>Add New Expense</h2>
-                        <p style={{ color: "#64748b", marginBottom: "24px" }}>
-                            Expense form coming soon. This will include receipt upload and category selection.
-                        </p>
-                        <button className={styles.cancelButton} onClick={() => setShowCreateModal(false)}>
-                            Close
-                        </button>
+                        <div className={styles.modalHeader}>
+                            <h2>Add New Expense</h2>
+                            <button className={styles.closeBtn} onClick={closeModal}><X size={20} /></button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className={styles.modalForm}>
+                            <div className={styles.formGroup}>
+                                <label className={styles.label}>Description *</label>
+                                <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} className={styles.input} required placeholder="e.g. New Drill Bits" />
+                            </div>
+
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Amount (€) *</label>
+                                    <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={styles.input} required step="0.01" />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Date</label>
+                                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={styles.input} required />
+                                </div>
+                            </div>
+
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Category</label>
+                                    <select value={category} onChange={(e) => setCategory(e.target.value)} className={styles.input}>
+                                        <option value="General">General</option>
+                                        <option value="Tools">Tools</option>
+                                        <option value="Fuel">Fuel</option>
+                                        <option value="Materials">Materials</option>
+                                        <option value="Office">Office</option>
+                                        <option value="Travel">Travel</option>
+                                    </select>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Vendor</label>
+                                    <input type="text" value={vendor} onChange={(e) => setVendor(e.target.value)} className={styles.input} placeholder="e.g. Woodies" />
+                                </div>
+                            </div>
+
+                            <div className={styles.modalFooter}>
+                                <button type="button" className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
+                                <button type="submit" className={styles.submitBtn} disabled={!description.trim() || !amount || createMutation.isPending}>
+                                    {createMutation.isPending ? "Adding..." : "Add Expense"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
+import FloatingAssistant from "../components/FloatingAssistant";
 import styles from "./DashboardLayout.module.css";
 
 interface DashboardLayoutProps {
@@ -22,6 +23,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <main className={styles.content}>
                     {children}
                 </main>
+                <FloatingAssistant />
             </div>
         </div>
     );

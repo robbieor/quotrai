@@ -1,6 +1,5 @@
 .topBar {
     height: 72px;
-    /* Slightly taller for more breathability */
     background-color: var(--dashboard-topbar-bg);
     border-bottom: 1px solid var(--color-border);
     display: flex;
@@ -70,6 +69,7 @@
 }
 
 .rightSection {
+    position: relative;
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
@@ -87,6 +87,7 @@
     color: var(--color-text-secondary);
     cursor: pointer;
     transition: background-color 0.2s;
+    position: relative;
 }
 
 .iconButton:hover {
@@ -137,4 +138,134 @@
     font-size: 12px;
     color: var(--color-text-secondary);
     display: block;
+}
+
+.dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 240px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    overflow: hidden;
+    animation: slideUp 0.15s ease-out;
+}
+
+.notificationDropdown {
+    width: 320px;
+}
+
+.dropdownHeader {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdownTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.clearAll {
+    font-size: 12px;
+    color: var(--dashboard-accent-teal);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.dropdownList {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.dropdownItem {
+    width: 100%;
+    padding: var(--spacing-md);
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-start;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-border-subtle);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+    background-color: var(--color-background-secondary);
+}
+
+.dropdownItem:last-child {
+    border-bottom: none;
+}
+
+.menuItem {
+    width: 100%;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: none;
+    border: none;
+    color: var(--color-text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.menuItem:hover {
+    background-color: var(--color-background-secondary);
+}
+
+.menuItemDanger {
+    color: #ef4444;
+}
+
+.menuItemDanger:hover {
+    background-color: #fef2f2;
+}
+
+.emptyState {
+    padding: 32px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 16px;
+    height: 16px;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--dashboard-topbar-bg);
 }

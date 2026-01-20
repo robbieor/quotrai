@@ -20,7 +20,7 @@ export default function ForemanPage() {
 
     const sendMessage = useMutation({
         mutationFn: async (message: string) => {
-            const response = await apiRequest("POST", "/api/foreman/chat", { message });
+            const response = await apiRequest("POST", "/api/assistant/chat", { message });
             return response.json();
         },
         onSuccess: (data) => {

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, FileText, CheckCircle, Clock, ArrowRight, X, Trash2 } from "lucide-react";
 import DataTable from "../components/DataTable";
@@ -7,7 +8,7 @@ import type { Quote, Client } from "../types";
 import { apiRequest } from "../lib/api";
 import ClientSelector from "../components/ClientSelector";
 import LineItemsEditor, { type LineItem } from "../components/LineItemsEditor";
-import styles from "./InvoicesPage.module.css"; // Reuse invoice styles
+import styles from "./InvoicesPage.module.css";
 
 interface QuoteWithClient extends Quote {
     client?: Client;
@@ -24,6 +25,7 @@ const formatDate = (date: string) => {
 
 export default function QuotesPage() {
     const queryClient = useQueryClient();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [editingQuote, setEditingQuote] = useState<QuoteWithClient | null>(null);
@@ -45,6 +47,16 @@ export default function QuotesPage() {
     const { data: quotes = [], isLoading } = useQuery<QuoteWithClient[]>({
         queryKey: ["/api/quotes"],
     });
+
+    useEffect(() => {
+        if (searchParams.get("action") === "new") {
+            setShowModal(true);
+            // Clear the param
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("action");
+            setSearchParams(newParams, { replace: true });
+        }
+    }, [searchParams]);
 
     const createMutation = useMutation({
         mutationFn: async (data: any) => {

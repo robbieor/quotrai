@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, FileText, Send, CheckCircle, XCircle, X, Trash2 } from "lucide-react";
 import DataTable from "../components/DataTable";
@@ -24,9 +25,19 @@ const formatDate = (date: string) => {
 
 export default function InvoicesPage() {
     const queryClient = useQueryClient();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [editingInvoice, setEditingInvoice] = useState<InvoiceWithClient | null>(null);
+
+    useEffect(() => {
+        if (searchParams.get("action") === "new") {
+            setShowModal(true);
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("action");
+            setSearchParams(newParams, { replace: true });
+        }
+    }, [searchParams]);
 
     // Form state
     const [clientId, setClientId] = useState<number | null>(null);

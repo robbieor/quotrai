@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, User, X, Trash2, Mail, Phone, MapPin } from "lucide-react";
 import DataTable from "../components/DataTable";
@@ -9,9 +10,19 @@ import styles from "./InvoicesPage.module.css";
 
 export default function ClientsPage() {
     const queryClient = useQueryClient();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
+
+    useEffect(() => {
+        if (searchParams.get("action") === "new") {
+            setShowModal(true);
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("action");
+            setSearchParams(newParams, { replace: true });
+        }
+    }, [searchParams]);
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, MapPin, Calendar, X, Trash2, Edit } from "lucide-react";
 import DataTable from "../components/DataTable";
@@ -25,9 +26,19 @@ interface JobWithClient extends Job {
 
 export default function JobsPage() {
     const queryClient = useQueryClient();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [editingJob, setEditingJob] = useState<JobWithClient | null>(null);
+
+    useEffect(() => {
+        if (searchParams.get("action") === "new") {
+            setShowModal(true);
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("action");
+            setSearchParams(newParams, { replace: true });
+        }
+    }, [searchParams]);
 
     // Form state
     const [title, setTitle] = useState("");
