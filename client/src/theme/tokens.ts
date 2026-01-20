@@ -9,7 +9,7 @@
 // =============================================================================
 
 export const colors = {
-    // Primary - Revamo Teal
+    // Primary - Revamo Marketing Teal
     primary: {
         DEFAULT: '#00FFB2',
         light: '#33FFC1',
@@ -24,43 +24,48 @@ export const colors = {
     },
 
     // Semantic
-    success: '#00FFB2',
-    warning: '#D97706',
-    error: '#DC2626',
+    success: '#22c55e', // Green
+    warning: '#fbbf24', // Amber
+    error: '#ef4444',   // Red
 
-    // Background & Surface - Updated mapping
-    background: '#1a202c',
+    // Background & Surface - Detailed Mapping
+    background: '#0f172a',      // Primary dark background
     surface: {
-        canvas: '#1a202c',      // Dark background
-        DEFAULT: '#242d3c',      // Card backgrounds
-        elevated: '#2d3748',     // Modals, dropdowns
-        navigation: '#0f1419',   // Sidebar/nav background
+        canvas: '#0f172a',      // Main canvas
+        darker: '#0a0f1a',      // Navigation / Sidebar
+        DEFAULT: '#1e293b',      // Card backgrounds
+        elevated: 'rgba(30, 41, 59, 0.8)', // Modals / Overlays
+        navigation: '#0a0f1a',   // Navigation background
+        light: '#f1f5f9',       // Light theme section backgrounds
     },
 
     // Borders
     border: {
-        DEFAULT: 'rgba(255, 255, 255, 0.1)',
+        DEFAULT: 'rgba(255, 255, 255, 0.08)',
         subtle: 'rgba(255, 255, 255, 0.05)',
+        light: 'rgba(15, 23, 42, 0.08)',
     },
 
     // Text
     text: {
-        primary: '#FFFFFF',
-        secondary: '#94a3b8',
+        primary: '#e2e8f0',     // Light primary text
+        secondary: '#94a3b8',   // Muted secondary text
+        dark: '#0f172a',        // Headings / Primary text in light context
+        gray: '#64748b',        // Secondary text in light context
         disabled: '#4A5568',
     },
 
     // Status badge backgrounds (10% opacity versions)
     statusBg: {
-        paid: 'rgba(0, 255, 178, 0.1)',      // success
-        sent: 'rgba(217, 119, 6, 0.1)',       // warning
-        overdue: 'rgba(220, 38, 38, 0.1)',    // error
-        draft: 'rgba(148, 163, 184, 0.1)',    // gray text
+        paid: 'rgba(34, 197, 94, 0.1)',      // success
+        sent: 'rgba(251, 191, 36, 0.1)',      // warning
+        overdue: 'rgba(239, 68, 68, 0.1)',    // error
+        draft: 'rgba(0, 255, 178, 0.1)',     // primary/teal
     },
 } as const;
 
 // =============================================================================
-// TYPOGRAPHY - Manrope, Structured Hierarchy (Revamo Scale)
+// TYPOGRAPHY - Manrope (Marketing Grade)
 // =============================================================================
 
 export const typography = {
@@ -70,20 +75,23 @@ export const typography = {
         mono: '"SF Mono", "Fira Code", "Consolas", monospace',
     },
 
-    // Font sizes (clamp-based for fluid scale)
+    // Font sizes (clamp-based for liquid scale)
     fontSize: {
         h1: 'clamp(2.5rem, 6vw, 4.5rem)',
         h2: 'clamp(2rem, 4vw, 3rem)',
         h3: 'clamp(1.5rem, 2.5vw, 2rem)',
-        body: '15px',
-        bodySmall: '13px',
-        caption: '11px',
-        button: '15px',
-        tabular: '15px',
+        lead: '1.25rem',
+        body: '1rem',
+        bodySmall: '0.95rem',
+        label: '0.875rem',
+        caption: '0.875rem',
+        button: '0.95rem',
+        tabular: '0.95rem',
     },
 
     // Font weights
     fontWeight: {
+        light: 300,
         regular: 400,
         medium: 500,
         semibold: 600,
@@ -95,55 +103,52 @@ export const typography = {
     lineHeight: {
         tight: 1.1,
         normal: 1.5,
-        relaxed: 1.75,
+        relaxed: 1.7,
     },
 } as const;
 
 // =============================================================================
-// SPACING - Grid-based, 8px system
+// SPACING - 8px Base Unit System
 // =============================================================================
 
 export const spacing = {
-    xs: '4px',
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-    xl: '32px',
-    '2xl': '40px',
-} as const;
-
-// Numeric versions for calculations
-export const spacingValues = {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    '2xl': 40,
+    '1': '0.25rem',  // 4px
+    '2': '0.5rem',   // 8px
+    '3': '0.75rem',  // 12px
+    '4': '1rem',     // 16px
+    '5': '1.25rem',  // 20px
+    '6': '1.5rem',   // 24px
+    '8': '2rem',     // 32px
+    '10': '2.5rem',  // 40px
+    '12': '3rem',    // 48px
+    '16': '4rem',    // 64px
+    '20': '5rem',    // 80px
+    '24': '6rem',    // 96px
 } as const;
 
 // =============================================================================
-// BORDER RADIUS - Revamo Styling
+// BORDER RADIUS - Revamo Structural Standards
 // =============================================================================
 
 export const radius = {
-    xs: '4px',   // Status badges
+    xs: '4px',
     sm: '8px',   // Buttons, inputs
     md: '10px',
     lg: '12px',  // Cards
     xl: '20px',
-    full: '9999px', // FAB, avatars
+    full: '9999px', // Pills, Badges, Avatars
 } as const;
 
 // =============================================================================
-// SHADOWS - Revamo Elevation (Subtle Lift)
+// SHADOWS - Marketing-Grade Depth
 // =============================================================================
 
 export const shadows = {
     none: 'none',
-    sm: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    md: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
-    fab: '0 4px 12px rgba(0, 255, 178, 0.3)',
+    subtle: '0 4px 20px rgba(0, 0, 0, 0.04)',
+    medium: '0 8px 24px rgba(0, 0, 0, 0.06)',
+    primary: '0 4px 12px rgba(0, 255, 178, 0.25)',
+    dark: '0 4px 20px rgba(0, 255, 178, 0.06)', // Card-dark hover
 } as const;
 
 // =============================================================================
@@ -268,14 +273,28 @@ export const cssVariables = `
   --font-weight-semibold: ${typography.fontWeight.semibold};
   --font-weight-bold: ${typography.fontWeight.bold};
   
-  /* Spacing */
-  --spacing-xs: ${spacing.xs};
-  --spacing-sm: ${spacing.sm};
-  --spacing-md: ${spacing.md};
-  --spacing-lg: ${spacing.lg};
-  --spacing-xl: ${spacing.xl};
-  --spacing-2xl: ${spacing['2xl']};
+  /* Spacing - Revamo 8px Scale */
+  --spacing-1: ${spacing['1']};
+  --spacing-2: ${spacing['2']};
+  --spacing-3: ${spacing['3']};
+  --spacing-4: ${spacing['4']};
+  --spacing-5: ${spacing['5']};
+  --spacing-6: ${spacing['6']};
+  --spacing-8: ${spacing['8']};
+  --spacing-10: ${spacing['10']};
+  --spacing-12: ${spacing['12']};
+  --spacing-16: ${spacing['16']};
+  --spacing-20: ${spacing['20']};
+  --spacing-24: ${spacing['24']};
   
+  /* Legacy Shorthands */
+  --spacing-xs: ${spacing['1']};
+  --spacing-sm: ${spacing['2']};
+  --spacing-md: ${spacing['4']};
+  --spacing-lg: ${spacing['6']};
+  --spacing-xl: ${spacing['8']};
+  --spacing-2xl: ${spacing['10']};
+
   /* Border Radius */
   --radius-xs: ${radius.xs};
   --radius-sm: ${radius.sm};
@@ -298,11 +317,17 @@ export const cssVariables = `
   --icon-list: ${dimensions.iconList};
   --icon-form: ${dimensions.iconForm};
   
-  /* Shadows */
+  /* Shadows - Marketing Grade */
   --shadow-none: ${shadows.none};
-  --shadow-sm: ${shadows.sm};
-  --shadow-md: ${shadows.md};
-  --shadow-fab: ${shadows.fab};
+  --shadow-subtle: ${shadows.subtle};
+  --shadow-medium: ${shadows.medium};
+  --shadow-primary: ${shadows.primary};
+  --shadow-dark: ${shadows.dark};
+  
+  /* Legacy Shadows */
+  --shadow-sm: ${shadows.subtle};
+  --shadow-md: ${shadows.medium};
+  --shadow-fab: ${shadows.primary};
   
   /* Transitions */
   --transition-fast: ${transitions.fast};
@@ -315,7 +340,6 @@ export default {
     colors,
     typography,
     spacing,
-    spacingValues,
     radius,
     shadows,
     dimensions,

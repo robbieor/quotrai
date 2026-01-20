@@ -1,15 +1,16 @@
 /* Button Component Styles - Per design_guidelines.md */
 
+/* Button Base */
 .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-2);
     height: var(--button-height);
-    padding: 0 var(--spacing-lg);
+    padding: 0 var(--spacing-6);
     font-family: var(--font-family-sans);
     font-size: var(--font-size-button);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-semibold);
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: all var(--transition-normal);
@@ -23,82 +24,60 @@
     opacity: 0.5;
 }
 
-.button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
 .button:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 255, 178, 0.2);
 }
 
-/* Primary Button */
+/* Primary - Revamo Teal */
 .primary {
     background-color: var(--color-primary);
-    color: var(--color-surface-navigation);
+    color: var(--color-text-dark);
     border: none;
 }
 
 .primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-primary);
     background-color: var(--color-primary-light);
 }
 
-.primary:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-/* Secondary Button */
+/* Secondary Actions */
 .secondary {
     background-color: transparent;
-    color: var(--color-primary);
-    border: 1.5px solid var(--color-primary);
+    color: var(--color-text-primary);
+    border: 1.5px solid var(--color-border);
 }
 
 .secondary:hover:not(:disabled) {
-    background-color: rgba(0, 255, 178, 0.08);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    transform: translateY(-2px);
 }
 
-.secondary:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-/* Tertiary Button (Text) */
+/* Ghost - Tertiary Actions */
 .tertiary {
     background-color: transparent;
-    color: var(--color-primary);
+    color: var(--color-text-secondary);
     border: none;
-    padding: 0 var(--spacing-md);
+    padding: 0 var(--spacing-4);
 }
 
 .tertiary:hover:not(:disabled) {
+    color: var(--color-text-primary);
     background-color: var(--color-border-subtle);
 }
 
-.tertiary:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-/* Danger variant */
+/* Status variants */
 .danger {
-    background-color: var(--color-error);
-    color: var(--color-surface);
-    border: 1px solid #B91C1C;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .danger:hover:not(:disabled) {
-    background-color: #B91C1C;
-}
-
-/* Success variant */
-.success {
-    background-color: var(--color-success);
-    color: var(--color-surface);
-    border: 1px solid #047857;
-}
-
-.success:hover:not(:disabled) {
-    background-color: #047857;
+    background: #ef4444;
+    color: white;
 }
 
 /* Size variants */

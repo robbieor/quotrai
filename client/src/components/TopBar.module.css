@@ -1,11 +1,12 @@
 .topBar {
-    height: 72px;
-    background-color: var(--color-surface-navigation);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    height: 64px;
+    background-color: rgba(10, 15, 26, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
     display: flex;
     align-items: center;
-    padding: 0 var(--spacing-xl);
-    gap: var(--spacing-lg);
+    padding: 0 var(--spacing-6);
+    gap: var(--spacing-4);
     position: sticky;
     top: 0;
     z-index: 90;
@@ -18,29 +19,29 @@
 }
 
 .greeting {
-    font-size: 16px;
-    font-weight: 700;
-    color: #ffffff;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
     letter-spacing: -0.01em;
 }
 
 .date {
-    font-size: 13px;
-    color: #94a3b8;
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
 }
 
 .searchContainer {
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-lg);
-    padding: 0 var(--spacing-md);
-    height: 44px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--spacing-4);
+    height: 40px;
     width: 480px;
     max-width: 45%;
-    gap: var(--spacing-sm);
-    transition: all 0.2s;
+    gap: var(--spacing-3);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .searchContainerFocused {

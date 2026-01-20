@@ -4,15 +4,25 @@
     background: var(--color-surface);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
-    padding: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-8);
     transition: all var(--transition-normal);
 }
 
 .card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--color-primary-light);
+    border-color: rgba(0, 255, 178, 0.2);
+    box-shadow: var(--shadow-subtle);
+    transform: translateY(-2px);
+}
+
+/* Dark variant specifically */
+.dark {
+    background: rgba(30, 41, 59, 0.5);
+    border-color: var(--color-border);
+}
+
+.dark:hover {
+    border-color: rgba(0, 255, 178, 0.2);
+    box-shadow: var(--shadow-dark);
 }
 
 /* Section card variant - slightly thicker border */

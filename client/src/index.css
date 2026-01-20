@@ -29,19 +29,14 @@
 }
 
 body {
+  margin: 0;
   font-family: var(--font-family-sans);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
-  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-normal);
 }
-
-/* =========================================================================
-   TYPOGRAPHY
-   ========================================================================= */
 
 h1,
 h2,
@@ -49,28 +44,28 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-family-sans);
+  margin: 0;
   color: var(--color-text-primary);
-  line-height: 1.25;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.02em;
 }
 
 h1 {
   font-size: var(--font-size-h1);
-  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
 }
 
 h2 {
   font-size: var(--font-size-h2);
-  font-weight: var(--font-weight-semibold);
 }
 
 h3 {
   font-size: var(--font-size-h3);
-  font-weight: var(--font-weight-semibold);
 }
 
 p {
-  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-4);
 }
 
 a {
@@ -132,56 +127,56 @@ textarea {
   background-color: var(--color-primary);
 }
 
-/* Font sizes */
-.text-h1 {
-  font-size: var(--font-size-h1);
-  font-weight: var(--font-weight-bold);
+/* =========================================================================
+   LAYOUT UTILITIES
+   ========================================================================= */
+
+.container-full {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--spacing-6);
 }
 
-.text-h2 {
-  font-size: var(--font-size-h2);
-  font-weight: var(--font-weight-semibold);
+.container-wide {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-6);
 }
 
-.text-h3 {
-  font-size: var(--font-size-h3);
-  font-weight: var(--font-weight-semibold);
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-6);
 }
 
-.text-body {
-  font-size: var(--font-size-body);
+.container-narrow {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-6);
 }
 
-.text-body-small {
-  font-size: var(--font-size-body-small);
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-8);
 }
 
-.text-caption {
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-medium);
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--spacing-8);
 }
 
-/* Font weights */
-.font-regular {
-  font-weight: var(--font-weight-regular);
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-8);
 }
 
-.font-medium {
-  font-weight: var(--font-weight-medium);
-}
-
-.font-semibold {
-  font-weight: var(--font-weight-semibold);
-}
-
-.font-bold {
-  font-weight: var(--font-weight-bold);
-}
-
-/* Tabular numbers for amounts */
-.tabular-nums {
-  font-family: var(--font-family-mono);
-  font-variant-numeric: tabular-nums;
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-8);
 }
 
 /* =========================================================================
@@ -252,10 +247,10 @@ textarea {
    ANIMATIONS
    ========================================================================= */
 
-@keyframes fadeIn {
+@keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(30px);
   }
 
   to {
@@ -264,60 +259,62 @@ textarea {
   }
 }
 
-@keyframes slideIn {
+@keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateX(-12px);
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
   }
 }
 
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
 
-  50% {
-    opacity: 0.6;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@keyframes spin {
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out forwards;
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
 }
 
-.animate-pulse {
-  animation: pulse 2s ease-in-out infinite;
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+/* Scroll reveal utility */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* =========================================================================
