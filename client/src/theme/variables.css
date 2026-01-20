@@ -1,0 +1,132 @@
+/**
+ * Quotr Design System CSS Variables
+ * Based on design_guidelines.md - Muted Professional Palette
+ * 
+ * IMPORTANT: All colors should reference these variables.
+ * Do not use hex colors directly in component styles.
+ */
+
+:root {
+    /* =========================================================================
+     PRIMARY COLORS
+     ========================================================================= */
+    --color-primary: #0B6E87;
+    --color-primary-light: #3D8FA3;
+    --color-primary-dark: #084E61;
+
+    /* =========================================================================
+     ACCENT COLORS
+     ========================================================================= */
+    --color-accent: #D97706;
+    --color-accent-light: #F59E0B;
+    --color-accent-dark: #B45309;
+
+    /* =========================================================================
+     SEMANTIC COLORS
+     ========================================================================= */
+    --color-success: #059669;
+    --color-warning: #D97706;
+    --color-error: #DC2626;
+
+    /* =========================================================================
+     BACKGROUND & SURFACE
+     ========================================================================= */
+    --color-background: #F5F5F5;
+    --color-surface: #FFFFFF;
+
+    /* =========================================================================
+     BORDERS
+     ========================================================================= */
+    --color-border: #D1D5DB;
+    --color-border-subtle: #E5E7EB;
+
+    /* =========================================================================
+     TEXT COLORS
+     ========================================================================= */
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-disabled: #9CA3AF;
+
+    /* =========================================================================
+     STATUS BADGE BACKGROUNDS (10% opacity)
+     ========================================================================= */
+    --color-status-paid-bg: rgba(5, 150, 105, 0.1);
+    --color-status-sent-bg: rgba(217, 119, 6, 0.1);
+    --color-status-overdue-bg: rgba(220, 38, 38, 0.1);
+    --color-status-draft-bg: rgba(209, 213, 219, 0.1);
+
+    /* =========================================================================
+     TYPOGRAPHY
+     ========================================================================= */
+    --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    --font-family-mono: "SF Mono", "Fira Code", "Consolas", monospace;
+
+    /* Font Sizes - Based on SF Pro hierarchy */
+    --font-size-h1: 28px;
+    --font-size-h2: 20px;
+    --font-size-h3: 17px;
+    --font-size-body: 15px;
+    --font-size-body-small: 13px;
+    --font-size-caption: 11px;
+    --font-size-button: 15px;
+    --font-size-tabular: 15px;
+
+    /* Font Weights */
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* =========================================================================
+     SPACING - 8px Grid System
+     ========================================================================= */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 40px;
+
+    /* =========================================================================
+     BORDER RADIUS - Sharp, Professional
+     ========================================================================= */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* =========================================================================
+     COMPONENT DIMENSIONS
+     ========================================================================= */
+    --button-height: 48px;
+    --fab-size: 56px;
+    --fab-radius: 28px;
+    --badge-height: 22px;
+    --list-item-min-height: 64px;
+    --input-height: 48px;
+
+    /* Icon Sizes */
+    --icon-nav: 24px;
+    --icon-action: 22px;
+    --icon-list: 20px;
+    --icon-form: 18px;
+
+    /* Touch Targets */
+    --touch-minimum: 44px;
+    --touch-preferred: 48px;
+
+    /* =========================================================================
+     SHADOWS - Minimal per guidelines
+     ========================================================================= */
+    --shadow-none: none;
+    --shadow-fab: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    /* =========================================================================
+     TRANSITIONS
+     ========================================================================= */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
+    --transition-slow: 300ms ease;
+}

@@ -13,18 +13,16 @@ export default function ClientsPage() {
     const [showModal, setShowModal] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
 
-    // Form state
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [mobile, setMobile] = useState("");
-    const [contact, setContact] = useState("");
     const [address, setAddress] = useState("");
-    const [address2, setAddress2] = useState("");
-    const [address3, setAddress3] = useState("");
     const [eircode, setEircode] = useState("");
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
     const [paymentTerms, setPaymentTerms] = useState("30");
     const [notes, setNotes] = useState("");
+    const [isGeocoding, setIsGeocoding] = useState(false);
 
     const { data: clients = [], isLoading } = useQuery<Client[]>({
         queryKey: ["/api/clients"],
@@ -65,12 +63,10 @@ export default function ClientsPage() {
         setName("");
         setEmail("");
         setPhone("");
-        setMobile("");
-        setContact("");
         setAddress("");
-        setAddress2("");
-        setAddress3("");
         setEircode("");
+        setLatitude(null);
+        setLongitude(null);
         setPaymentTerms("30");
         setNotes("");
         setEditingClient(null);
@@ -81,17 +77,15 @@ export default function ClientsPage() {
         setShowModal(true);
     };
 
-    const openEditModal = (client: Client) => {
+    const openEditModal = (client: any) => {
         setEditingClient(client);
         setName(client.name || "");
         setEmail(client.email || "");
-        setPhone(client.phone || "");
-        setMobile(client.mobile || "");
-        setContact(client.contact || "");
+        setPhone(client.phone || client.mobile || "");
         setAddress(client.address || "");
-        setAddress2(client.address2 || "");
-        setAddress3(client.address3 || "");
         setEircode(client.eircode || "");
+        setLatitude(client.latitude ? parseFloat(client.latitude) : null);
+        setLongitude(client.longitude ? parseFloat(client.longitude) : null);
         setPaymentTerms(client.paymentTerms?.toString() || "30");
         setNotes(client.notes || "");
         setShowModal(true);
@@ -102,6 +96,25 @@ export default function ClientsPage() {
         resetForm();
     };
 
+    const handleEircodeLookup = async () => {
+        if (!eircode || eircode.length < 7) return;
+
+        setIsGeocoding(true);
+        try {
+            const res = await apiRequest("GET", `/api/geocode/eircode/${eircode.toUpperCase()}`);
+            const geo = await res.json();
+            if (geo) {
+                setAddress(prev => prev || geo.formattedAddress);
+                setLatitude(geo.latitude);
+                setLongitude(geo.longitude);
+            }
+        } catch (err) {
+            console.error("Eircode lookup failed:", err);
+        } finally {
+            setIsGeocoding(false);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
@@ -110,12 +123,10 @@ export default function ClientsPage() {
             name,
             email: email || null,
             phone: phone || null,
-            mobile: mobile || null,
-            contact: contact || null,
             address: address || null,
-            address2: address2 || null,
-            address3: address3 || null,
             eircode: eircode || null,
+            latitude: latitude || null,
+            longitude: longitude || null,
             paymentTerms: parseInt(paymentTerms) || 30,
             notes: notes || null,
         };
@@ -150,7 +161,6 @@ export default function ClientsPage() {
                     </div>
                     <div>
                         <strong>{c.name}</strong>
-                        {c.contact && <div style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>{c.contact}</div>}
                     </div>
                 </div>
             )
@@ -167,9 +177,9 @@ export default function ClientsPage() {
         {
             key: "phone",
             header: "Phone",
-            render: (c) => (c.phone || c.mobile) ? (
+            render: (c) => c.phone ? (
                 <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--color-text-secondary)" }}>
-                    <Phone size={14} /> {c.phone || c.mobile}
+                    <Phone size={14} /> {c.phone}
                 </span>
             ) : "—"
         },
@@ -195,8 +205,7 @@ export default function ClientsPage() {
     const filtered = clients.filter(c =>
         c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phone?.includes(searchTerm) ||
-        c.mobile?.includes(searchTerm)
+        c.phone?.includes(searchTerm)
     );
 
     return (
@@ -241,10 +250,6 @@ export default function ClientsPage() {
                                     <label className={styles.label}>Client Name *</label>
                                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={styles.input} required placeholder="Business or person name" />
                                 </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Contact Person</label>
-                                    <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} className={styles.input} placeholder="Primary contact" />
-                                </div>
                             </div>
 
                             <div className={styles.formRow}>
@@ -254,31 +259,43 @@ export default function ClientsPage() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>Phone</label>
-                                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.input} placeholder="Office phone" />
+                                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={styles.input} placeholder="Phone number" />
                                 </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Mobile</label>
-                                    <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} className={styles.input} placeholder="Mobile number" />
-                                </div>
-                            </div>
-
-                            <div className={styles.formSection}>
-                                <label className={styles.label}>Address Line 1</label>
-                                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className={styles.input} placeholder="Street address" />
                             </div>
 
                             <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Address Line 2</label>
-                                    <input type="text" value={address2} onChange={(e) => setAddress2(e.target.value)} className={styles.input} placeholder="City/Town" />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Address Line 3</label>
-                                    <input type="text" value={address3} onChange={(e) => setAddress3(e.target.value)} className={styles.input} placeholder="County" />
-                                </div>
-                                <div className={styles.formGroup}>
+                                <div className={styles.formGroup} style={{ flex: 1 }}>
                                     <label className={styles.label}>Eircode</label>
-                                    <input type="text" value={eircode} onChange={(e) => setEircode(e.target.value)} className={styles.input} placeholder="A12 BC34" />
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                        <input
+                                            type="text"
+                                            value={eircode}
+                                            onChange={(e) => setEircode(e.target.value.toUpperCase())}
+                                            className={styles.input}
+                                            placeholder="A12 BC34"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleEircodeLookup}
+                                            disabled={isGeocoding || !eircode}
+                                            style={{
+                                                padding: "0 16px",
+                                                background: "var(--color-primary)",
+                                                color: "white",
+                                                border: "none",
+                                                borderRadius: 4,
+                                                cursor: "pointer",
+                                                fontSize: 13,
+                                                whiteSpace: "nowrap"
+                                            }}
+                                        >
+                                            {isGeocoding ? "..." : "Lookup"}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className={styles.formGroup} style={{ flex: 2 }}>
+                                    <label className={styles.label}>Address</label>
+                                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className={styles.input} placeholder="Full address" />
                                 </div>
                             </div>
 

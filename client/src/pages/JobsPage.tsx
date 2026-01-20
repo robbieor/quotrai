@@ -18,7 +18,9 @@ const formatDate = (dateStr: string | null) => {
 };
 
 interface JobWithClient extends Job {
-    client?: { id: number; name: string } | null;
+    client?: { id: number; name: string; address?: string; eircode?: string } | null;
+    clientName?: string;
+    clientAddress?: string;
 }
 
 export default function JobsPage() {
@@ -28,63 +30,59 @@ export default function JobsPage() {
     const [editingJob, setEditingJob] = useState<JobWithClient | null>(null);
 
     // Form state
-    const [name, setName] = useState("");
+    const [title, setTitle] = useState("");
     const [clientId, setClientId] = useState<number | null>(null);
-    const [address, setAddress] = useState("");
-    const [eircode, setEircode] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-    const [budgetedHours, setBudgetedHours] = useState("");
-    const [defaultHourlyRate, setDefaultHourlyRate] = useState("");
-    const [notes, setNotes] = useState("");
-    const [status, setStatus] = useState("active");
+    const [date, setDate] = useState("");
+    const [startTime, setStartTime] = useState("");
+    const [estimatedDuration, setEstimatedDuration] = useState("");
+    const [selectedClient, setSelectedClient] = useState<any>(null);
+    const [description, setDescription] = useState("");
+    const [status, setStatus] = useState("scheduled");
 
     const { data: jobs = [], isLoading } = useQuery<JobWithClient[]>({
-        queryKey: ["/api/job-sites"],
+        queryKey: ["/api/jobs"],
     });
 
     const createMutation = useMutation({
         mutationFn: async (data: any) => {
-            const res = await apiRequest("POST", "/api/job-sites", data);
+            const res = await apiRequest("POST", "/api/jobs", data);
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/job-sites"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
             closeModal();
         },
     });
 
     const updateMutation = useMutation({
         mutationFn: async ({ id, data }: { id: number; data: any }) => {
-            const res = await apiRequest("PUT", `/api/job-sites/${id}`, data);
+            const res = await apiRequest("PUT", `/api/jobs/${id}`, data);
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/job-sites"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
             closeModal();
         },
     });
 
     const deleteMutation = useMutation({
         mutationFn: async (id: number) => {
-            await apiRequest("DELETE", `/api/job-sites/${id}`);
+            await apiRequest("DELETE", `/api/jobs/${id}`);
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/api/job-sites"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
         },
     });
 
     const resetForm = () => {
-        setName("");
+        setTitle("");
         setClientId(null);
-        setAddress("");
-        setEircode("");
-        setStartDate("");
-        setEndDate("");
-        setBudgetedHours("");
-        setDefaultHourlyRate("");
-        setNotes("");
-        setStatus("active");
+        setSelectedClient(null);
+        setDate("");
+        setStartTime("");
+        setEstimatedDuration("");
+        setDescription("");
+        setStatus("scheduled");
         setEditingJob(null);
     };
 
@@ -95,16 +93,14 @@ export default function JobsPage() {
 
     const openEditModal = (job: JobWithClient) => {
         setEditingJob(job);
-        setName(job.name || "");
+        setTitle(job.title || "");
         setClientId(job.clientId || null);
-        setAddress(job.address || "");
-        setEircode((job as any).eircode || "");
-        setStartDate(job.startDate?.split("T")[0] || "");
-        setEndDate(job.endDate?.split("T")[0] || "");
-        setBudgetedHours((job as any).budgetedHours || "");
-        setDefaultHourlyRate((job as any).defaultHourlyRate || "");
-        setNotes((job as any).notes || "");
-        setStatus(job.status || "active");
+        setSelectedClient(job.client || { name: job.clientName, address: job.clientAddress });
+        setDate(job.date?.split("T")[0] || "");
+        setStartTime(job.startTime || "");
+        setEstimatedDuration(job.estimatedDuration || "");
+        setDescription(job.description || "");
+        setStatus(job.status || "scheduled");
         setShowModal(true);
     };
 
@@ -115,18 +111,15 @@ export default function JobsPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name.trim()) return;
+        if (!title.trim() || !clientId) return;
 
         const data = {
-            name,
-            clientId: clientId || null,
-            address: address || null,
-            eircode: eircode || null,
-            startDate: startDate || null,
-            endDate: endDate || null,
-            budgetedHours: budgetedHours ? parseFloat(budgetedHours) : null,
-            defaultHourlyRate: defaultHourlyRate ? parseFloat(defaultHourlyRate) : null,
-            notes: notes || null,
+            title,
+            clientId,
+            date: date ? new Date(date).toISOString() : new Date().toISOString(),
+            startTime: startTime || null,
+            estimatedDuration: estimatedDuration || null,
+            description: description || null,
             status,
         };
 
@@ -138,49 +131,53 @@ export default function JobsPage() {
     };
 
     const handleDelete = (job: JobWithClient) => {
-        if (confirm(`Delete job "${job.name}"? This cannot be undone.`)) {
+        if (confirm(`Delete job "${job.title || (job as any).name}"? This cannot be undone.`)) {
             deleteMutation.mutate(job.id);
         }
     };
 
     const filteredJobs = jobs.filter((job) => {
         return (
-            job.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            job.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (job.title || (job as any).name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.client?.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
     });
 
     const columns: Column<JobWithClient>[] = [
         {
-            key: "name",
-            header: "Job Name",
-            render: (row) => <span style={{ fontWeight: 500, color: "#1e293b" }}>{row.name}</span>,
+            key: "title",
+            header: "Job Title",
+            render: (row) => <span style={{ fontWeight: 500, color: "#1e293b" }}>{row.title || (row as any).name}</span>,
         },
         {
             key: "client",
             header: "Client",
-            render: (row) => row.client?.name || "—",
+            render: (row) => row.client?.name || row.clientName || "—",
         },
         {
-            key: "address",
+            key: "location",
             header: "Location",
-            render: (row) => row.address ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b" }}>
-                    <MapPin size={14} />
-                    <span style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {row.address}
+            render: (row) => (row.client?.address || row.clientAddress) ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--color-text-secondary)", fontSize: "13px" }}>
+                    <MapPin size={12} />
+                    <span style={{
+                        maxWidth: "200px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
+                    }}>
+                        {row.client?.address || row.clientAddress}
                     </span>
                 </div>
             ) : "—",
         },
         {
-            key: "startDate",
-            header: "Start Date",
+            key: "date",
+            header: "Date",
             render: (row) => (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b" }}>
                     <Calendar size={14} />
-                    {formatDate(row.startDate)}
+                    {formatDate(row.date)}
                 </div>
             ),
         },
@@ -189,15 +186,16 @@ export default function JobsPage() {
             header: "Status",
             render: (row) => {
                 const colors: Record<string, { bg: string; text: string }> = {
-                    active: { bg: "#dcfce7", text: "#166534" },
+                    in_progress: { bg: "#dcfce7", text: "#166534" },
                     completed: { bg: "#dbeafe", text: "#1d4ed8" },
-                    pending: { bg: "#fef3c7", text: "#92400e" },
+                    scheduled: { bg: "#fef3c7", text: "#92400e" },
                     cancelled: { bg: "#fee2e2", text: "#991b1b" },
                 };
                 const style = colors[row.status] || { bg: "#f1f5f9", text: "#475569" };
+                const label = row.status === 'in_progress' ? 'In Progress' : (row.status?.charAt(0).toUpperCase() + row.status?.slice(1)) || "Scheduled";
                 return (
                     <span className={styles.statusBadge} style={{ backgroundColor: style.bg, color: style.text }}>
-                        {row.status || "pending"}
+                        {label}
                     </span>
                 );
             },
@@ -239,7 +237,7 @@ export default function JobsPage() {
                         <strong>{jobs.length}</strong> Total
                     </span>
                     <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
-                        <strong>{jobs.filter(j => j.status === "active").length}</strong> Active
+                        <strong>{jobs.filter(j => j.status === "scheduled" || j.status === "in_progress").length}</strong> Active/Scheduled
                     </span>
                 </div>
             </div>
@@ -261,14 +259,14 @@ export default function JobsPage() {
                         <form onSubmit={handleSubmit} className={styles.modalForm}>
                             <div className={styles.formRow}>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Job Name *</label>
-                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={styles.input} required placeholder="e.g. Kitchen Renovation" />
+                                    <label className={styles.label}>Job Title *</label>
+                                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={styles.input} required placeholder="e.g. Kitchen Renovation" />
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label className={styles.label}>Status</label>
                                     <select value={status} onChange={(e) => setStatus(e.target.value)} className={styles.input}>
-                                        <option value="pending">Pending</option>
-                                        <option value="active">Active</option>
+                                        <option value="scheduled">Scheduled</option>
+                                        <option value="in_progress">In Progress</option>
                                         <option value="completed">Completed</option>
                                         <option value="cancelled">Cancelled</option>
                                     </select>
@@ -276,49 +274,53 @@ export default function JobsPage() {
                             </div>
 
                             <div className={styles.formSection}>
-                                <label className={styles.label}>Client</label>
-                                <ClientSelector value={clientId} onChange={(id) => setClientId(id)} />
-                            </div>
-
-                            <div className={styles.formSection}>
-                                <label className={styles.label}>Address</label>
-                                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className={styles.input} placeholder="Job site address" />
+                                <label className={styles.label}>Client *</label>
+                                <ClientSelector value={clientId} onChange={(id, client) => {
+                                    setClientId(id);
+                                    setSelectedClient(client);
+                                }} />
+                                {selectedClient && selectedClient.address && (
+                                    <div style={{
+                                        marginTop: "8px",
+                                        padding: "8px 12px",
+                                        background: "#f8fafc",
+                                        borderRadius: "6px",
+                                        border: "1px solid #e2e8f0",
+                                        fontSize: "13px",
+                                        color: "#64748b",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px"
+                                    }}>
+                                        <MapPin size={14} />
+                                        <span>{selectedClient.address} {selectedClient.eircode ? `(${selectedClient.eircode})` : ""}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className={styles.formRow}>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Eircode</label>
-                                    <input type="text" value={eircode} onChange={(e) => setEircode(e.target.value)} className={styles.input} placeholder="A12 BC34" />
+                                    <label className={styles.label}>Date *</label>
+                                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={styles.input} required />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Start Date</label>
-                                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={styles.input} />
+                                    <label className={styles.label}>Start Time</label>
+                                    <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={styles.input} />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>End Date</label>
-                                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={styles.input} />
-                                </div>
-                            </div>
-
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Budgeted Hours</label>
-                                    <input type="number" value={budgetedHours} onChange={(e) => setBudgetedHours(e.target.value)} className={styles.input} placeholder="40" />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label className={styles.label}>Hourly Rate (€)</label>
-                                    <input type="number" value={defaultHourlyRate} onChange={(e) => setDefaultHourlyRate(e.target.value)} className={styles.input} placeholder="50" step="0.01" />
+                                    <label className={styles.label}>Est. Duration</label>
+                                    <input type="text" value={estimatedDuration} onChange={(e) => setEstimatedDuration(e.target.value)} className={styles.input} placeholder="e.g. 2 hours" />
                                 </div>
                             </div>
 
                             <div className={styles.formSection}>
-                                <label className={styles.label}>Notes</label>
-                                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={styles.textarea} rows={3} placeholder="Additional details..." />
+                                <label className={styles.label}>Description / Notes</label>
+                                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={styles.textarea} rows={3} placeholder="Additional details..." />
                             </div>
 
                             <div className={styles.modalFooter}>
                                 <button type="button" className={styles.cancelBtn} onClick={closeModal}>Cancel</button>
-                                <button type="submit" className={styles.submitBtn} disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}>
+                                <button type="submit" className={styles.submitBtn} disabled={!title.trim() || !clientId || createMutation.isPending || updateMutation.isPending}>
                                     {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingJob ? "Update Job" : "Create Job"}
                                 </button>
                             </div>

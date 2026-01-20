@@ -1,9 +1,10 @@
 /* Enterprise Auth Pages - CaptivateIQ-inspired design */
+/* Uses design tokens from theme/variables.css */
 
 .container {
     min-height: 100vh;
     display: flex;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(135deg, var(--color-text-primary) 0%, #1e293b 100%);
 }
 
 /* Left Panel - Branding */
@@ -12,7 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 48px;
+    padding: var(--spacing-2xl);
     position: relative;
     overflow: hidden;
 }
@@ -24,8 +25,8 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at 30% 30%, rgba(13, 148, 136, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 70% 70%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    background: radial-gradient(circle at 30% 30%, rgba(11, 110, 135, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(217, 119, 6, 0.1) 0%, transparent 50%);
     animation: pulse 15s ease-in-out infinite alternate;
 }
 
@@ -48,15 +49,15 @@
 .brandLogo {
     width: 72px;
     height: 72px;
-    margin-bottom: 24px;
-    filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.3));
+    margin-bottom: var(--spacing-lg);
+    filter: drop-shadow(0 4px 12px rgba(11, 110, 135, 0.3));
 }
 
 .brandTitle {
     font-size: 36px;
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     color: white;
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-md);
     letter-spacing: -0.5px;
 }
 
@@ -64,25 +65,25 @@
     font-size: 18px;
     color: rgba(255, 255, 255, 0.7);
     line-height: 1.6;
-    margin-bottom: 40px;
+    margin-bottom: var(--spacing-2xl);
 }
 
 .features {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-md);
 }
 
 .feature {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--spacing-sm);
     color: rgba(255, 255, 255, 0.8);
-    font-size: 15px;
+    font-size: var(--font-size-body);
 }
 
 .feature svg {
-    color: #10b981;
+    color: var(--color-success);
     flex-shrink: 0;
 }
 
@@ -92,16 +93,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 48px;
-    background: #f8fafc;
+    padding: var(--spacing-2xl);
+    background: var(--color-background);
 }
 
 .authCard {
     width: 100%;
     max-width: 440px;
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
         0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
@@ -109,32 +110,32 @@
 .backLink {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    color: #64748b;
-    font-size: 14px;
-    margin-bottom: 24px;
+    gap: var(--spacing-xs);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body-small);
+    margin-bottom: var(--spacing-lg);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color var(--transition-normal);
 }
 
 .backLink:hover {
-    color: #0d9488;
+    color: var(--color-primary);
 }
 
 .authHeader {
-    margin-bottom: 32px;
+    margin-bottom: var(--spacing-xl);
 }
 
 .authHeader h2 {
     font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 8px;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
 }
 
 .authHeader p {
-    color: #64748b;
-    font-size: 15px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
 }
 
 .authForm {
@@ -146,13 +147,13 @@
 .inputGroup {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--spacing-sm);
 }
 
 .inputGroup label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
+    font-size: var(--font-size-body-small);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
 }
 
 .inputWrapper {
@@ -164,21 +165,21 @@
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: var(--color-text-disabled);
     pointer-events: none;
 }
 
 .inputWrapper input {
     width: 100%;
-    height: 48px;
-    padding: 0 16px 0 44px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
+    height: var(--input-height);
+    padding: 0 var(--spacing-md) 0 44px;
+    border: 1.5px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
     font-size: 16px;
     /* Minimum 16px prevents iOS zoom on focus */
-    color: #0f172a;
-    background: #f8fafc;
-    transition: all 0.2s;
+    color: var(--color-text-primary);
+    background: var(--color-background);
+    transition: all var(--transition-normal);
     /* Mobile touch fixes */
     -webkit-appearance: none;
     appearance: none;
@@ -187,33 +188,33 @@
 
 .inputWrapper input:focus {
     outline: none;
-    border-color: #0d9488;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 4px rgba(11, 110, 135, 0.1);
 }
 
 .inputWrapper input::placeholder {
-    color: #94a3b8;
+    color: var(--color-text-disabled);
 }
 
 .primaryButton {
     height: 52px;
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-lg);
     font-size: 16px;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: all 0.2s;
+    transition: all var(--transition-normal);
     text-decoration: none;
-    margin-top: 8px;
+    margin-top: var(--spacing-sm);
     /* Mobile touch fixes */
-    -webkit-tap-highlight-color: rgba(13, 148, 136, 0.3);
+    -webkit-tap-highlight-color: rgba(11, 110, 135, 0.3);
     touch-action: manipulation;
     -webkit-appearance: none;
     appearance: none;
@@ -224,14 +225,14 @@
 @media (hover: hover) and (pointer: fine) {
     .primaryButton:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+        box-shadow: 0 8px 20px rgba(11, 110, 135, 0.35);
     }
 }
 
 /* Active state for touch feedback on all devices */
 .primaryButton:active:not(:disabled) {
     transform: scale(0.98);
-    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+    background: linear-gradient(135deg, var(--color-primary-dark) 0%, #084E61 100%);
 }
 
 .primaryButton:disabled {
@@ -243,31 +244,31 @@
 .secondaryLink {
     display: block;
     text-align: right;
-    font-size: 14px;
-    color: #0d9488;
+    font-size: var(--font-size-body-small);
+    color: var(--color-primary);
     text-decoration: none;
     margin-top: -8px;
-    transition: color 0.2s;
+    transition: color var(--transition-normal);
 }
 
 .secondaryLink:hover {
-    color: #0f766e;
+    color: var(--color-primary-dark);
     text-decoration: underline;
 }
 
 .authFooter {
     margin-top: 28px;
-    padding-top: 24px;
-    border-top: 1px solid #e2e8f0;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border-subtle);
     text-align: center;
-    font-size: 14px;
-    color: #64748b;
+    font-size: var(--font-size-body-small);
+    color: var(--color-text-secondary);
 }
 
 .authFooter a {
-    color: #0d9488;
-    font-weight: 600;
-    margin-left: 6px;
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+    margin-left: var(--spacing-xs);
     text-decoration: none;
 }
 
@@ -276,16 +277,16 @@
 }
 
 .errorAlert {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    border: 1px solid #fecaca;
-    color: #991b1b;
-    padding: 14px 16px;
-    border-radius: 10px;
-    font-size: 14px;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0.1) 100%);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    color: var(--color-error);
+    padding: 14px var(--spacing-md);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-body-small);
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
 }
 
 .successMessage {
@@ -296,25 +297,25 @@
 .successIcon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 24px;
-    color: #16a34a;
+    margin: 0 auto var(--spacing-lg);
+    color: var(--color-success);
 }
 
 .successMessage h2 {
     font-size: 22px;
-    font-weight: 700;
-    color: #0f172a;
-    margin-bottom: 12px;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
 }
 
 .successMessage p {
-    color: #64748b;
-    font-size: 15px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
     line-height: 1.6;
     margin-bottom: 28px;
 }
@@ -326,7 +327,7 @@
     }
 
     .leftPanel {
-        padding: 32px;
+        padding: var(--spacing-xl);
         min-height: auto;
     }
 
@@ -340,7 +341,7 @@
 
     .brandTagline {
         font-size: 16px;
-        margin-bottom: 24px;
+        margin-bottom: var(--spacing-lg);
     }
 
     .features {
@@ -348,7 +349,7 @@
     }
 
     .rightPanel {
-        padding: 24px;
+        padding: var(--spacing-lg);
     }
 
     .authCard {

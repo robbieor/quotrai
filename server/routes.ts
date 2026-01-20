@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "node:http";
 import multer from "multer";
 import { db, pool } from "./db";
-import { users, userProfiles, clients, expenses, invoices, invoiceItems, savedItems, quotes, quoteItems, variationOrders, variationItems, recurringInvoices, recurringInvoiceItems, timeEntries, invoiceBranding, materials, organizations, organizationMembers, organizationInvitations, jobSites, clockEntries, clockEntryBreaks, subscriptions, consultationRequests, employeeJobAssignments, holidayRequests, notifications, cashPayments, serviceTemplates, serviceTemplateItems, activityLogs, priceLists, priceListItems, supplierInvoices, supplierInvoiceItems, globalTemplates, globalTemplateItems, templateVersions, receiptScans, expensesFinal, expenseLineItems, teamChannels, channelMessages, messageReads, teamTasks, taskAssignments } from "@shared/schema";
+import { users, userProfiles, clients, expenses, invoices, invoiceItems, savedItems, quotes, quoteItems, variationOrders, variationItems, recurringInvoices, recurringInvoiceItems, timeEntries, invoiceBranding, materials, organizations, organizationMembers, organizationInvitations, clockEntries, clockEntryBreaks, subscriptions, consultationRequests, employeeJobAssignments, holidayRequests, notifications, cashPayments, serviceTemplates, serviceTemplateItems, activityLogs, priceLists, priceListItems, supplierInvoices, supplierInvoiceItems, globalTemplates, globalTemplateItems, templateVersions, receiptScans, expensesFinal, expenseLineItems, teamChannels, channelMessages, messageReads, teamTasks, taskAssignments } from "@shared/schema";
 import { eq, desc, and, gte, lte, sql, inArray, isNotNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import session from "express-session";
@@ -20,6 +20,8 @@ import crypto from "crypto";
 import { uploadFile, downloadFile, deleteFile, generateReceiptKey, generateLogoKey, generateTeamMessageKey } from "./appStorage";
 import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendTeamInviteEmail, isEmailConfigured, sendPasswordChangeEmail, sendMigrationRequestEmail } from "./email";
 import { processAgentCommand, confirmDraft, cancelDraft, getCurrentDraft, getPersonalizedSuggestions, recordCommandUsage, parseInput } from "./agent";
+import { geocodeEircode } from "./loqate";
+import { jobs } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -856,7 +858,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to update branding settings" });
     }
   });
-
+  app.get("/api/geocode/eircode/:eircode", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const eircode = req.params.eircode;
+      if (!eircode) {
+        return res.status(400).json({ error: "Eircode is required" });
+      }
+      const geo = await geocodeEircode(eircode);
+      if (!geo) {
+        return res.status(404).json({ error: "Address not found for this Eircode" });
+      }
+      res.json(geo);
+    } catch (error) {
+      console.error("Geocode error:", error);
+      res.status(500).json({ error: "Failed to geocode Eircode" });
+    }
+  });
   app.get("/api/clients", requireAuth, async (req: Request, res: Response) => {
     try {
       const limit = Math.min(parseInt(req.query.limit as string) || 1000, 2000);
@@ -876,26 +893,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/clients", requireAuth, canWrite, async (req: Request, res: Response) => {
     try {
-      const { name, email, secondaryEmail, mobile, phone, fax, contact, address, address2, address3, eircode, latitude, longitude, paymentTerms, priceListId, notes } = req.body;
+      const { name, email, mobile, phone, address, eircode, paymentTerms, priceListId, notes, skipGeocode } = req.body;
+
+      let lat = req.body.latitude;
+      let lng = req.body.longitude;
+      let finalAddress = address;
+
+      // Geocode with Loqate if eircode is provided and not skipping
+      if (eircode && !skipGeocode) {
+        const geo = await geocodeEircode(eircode);
+        if (geo) {
+          lat = geo.latitude;
+          lng = geo.longitude;
+          if (!finalAddress) finalAddress = geo.formattedAddress;
+        }
+      }
+
       const [client] = await db.insert(clients).values({
         userId: req.session.userId!,
         organizationId: req.session.organizationId,
         name,
-        email,
-        secondaryEmail,
-        mobile,
-        phone,
-        fax,
-        contact,
-        address,
-        address2,
-        address3,
+        email: email || null,
+        mobile: mobile || null,
+        phone: phone || null,
+        address: finalAddress || null,
         eircode: eircode || null,
-        latitude: latitude ? latitude.toString() : null,
-        longitude: longitude ? longitude.toString() : null,
-        paymentTerms,
+        latitude: lat ? lat.toString() : null,
+        longitude: lng ? lng.toString() : null,
+        paymentTerms: paymentTerms || 30,
         priceListId: priceListId || null,
-        notes,
+        notes: notes || null,
       }).returning();
       res.status(201).json(client);
     } catch (error) {
@@ -924,31 +951,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/clients/:id", requireAuth, canWrite, async (req: Request, res: Response) => {
     try {
-      const { name, email, secondaryEmail, mobile, phone, fax, contact, address, address2, address3, eircode, latitude, longitude, paymentTerms, priceListId, notes } = req.body;
+      const { name, email, mobile, phone, address, eircode, paymentTerms, priceListId, notes, skipGeocode } = req.body;
+      const clientId = parseInt(req.params.id);
 
       const accessCondition = req.session.organizationId
         ? eq(clients.organizationId, req.session.organizationId)
         : eq(clients.userId, req.session.userId!);
 
+      let lat = req.body.latitude;
+      let lng = req.body.longitude;
+      let finalAddress = address;
+
+      // Geocode with Loqate if eircode is provided and not skipping
+      if (eircode && !skipGeocode) {
+        const geo = await geocodeEircode(eircode);
+        if (geo) {
+          lat = geo.latitude;
+          lng = geo.longitude;
+          if (!finalAddress) finalAddress = geo.formattedAddress;
+        }
+      }
+
       const [client] = await db.update(clients).set({
         name,
-        email,
-        secondaryEmail,
-        mobile,
-        phone,
-        fax,
-        contact,
-        address,
-        address2,
-        address3,
-        eircode: eircode || null,
-        latitude: latitude ? latitude.toString() : null,
-        longitude: longitude ? longitude.toString() : null,
+        email: email || undefined,
+        mobile: mobile || undefined,
+        phone: phone || undefined,
+        address: finalAddress || undefined,
+        eircode: eircode || undefined,
+        latitude: lat ? lat.toString() : undefined,
+        longitude: lng ? lng.toString() : undefined,
         paymentTerms,
         priceListId: priceListId !== undefined ? priceListId : undefined,
         notes,
         updatedAt: new Date(),
-      }).where(and(eq(clients.id, parseInt(req.params.id)), accessCondition)).returning();
+      }).where(and(eq(clients.id, clientId), accessCondition)).returning();
+
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+
       res.json(client);
     } catch (error) {
       console.error("Update client error:", error);
@@ -5655,6 +5697,7 @@ ${activitiesSummary || "No activity yet"}
   app.get("/api/time-entries", requireAuth, async (req: Request, res: Response) => {
     try {
       const selectedYear = parseInt(req.query.year as string) || null;
+      const jobId = req.query.jobId ? parseInt(req.query.jobId as string) : null;
       const limit = Math.min(parseInt(req.query.limit as string) || 1000, 2000);
       const offset = parseInt(req.query.offset as string) || 0;
       let conditions = [eq(timeEntries.userId, req.session.userId!)];
@@ -5666,9 +5709,34 @@ ${activitiesSummary || "No activity yet"}
         conditions.push(lte(timeEntries.date, endOfYear));
       }
 
+      if (jobId) {
+        conditions.push(eq(timeEntries.jobId, jobId));
+      }
+
       const entries = await db
-        .select()
+        .select({
+          id: timeEntries.id,
+          userId: timeEntries.userId,
+          clientId: timeEntries.clientId,
+          clientName: clients.name,
+          jobId: timeEntries.jobId,
+          jobTitle: jobs.title,
+          invoiceId: timeEntries.invoiceId,
+          description: timeEntries.description,
+          date: timeEntries.date,
+          startTime: timeEntries.startTime,
+          endTime: timeEntries.endTime,
+          duration: timeEntries.duration,
+          hourlyRate: timeEntries.hourlyRate,
+          amount: timeEntries.amount,
+          isBillable: timeEntries.isBillable,
+          isBilled: timeEntries.isBilled,
+          notes: timeEntries.notes,
+          createdAt: timeEntries.createdAt,
+        })
         .from(timeEntries)
+        .leftJoin(clients, eq(clients.id, timeEntries.clientId))
+        .leftJoin(jobs, eq(jobs.id, timeEntries.jobId))
         .where(and(...conditions))
         .orderBy(desc(timeEntries.date))
         .limit(limit)
@@ -5683,8 +5751,29 @@ ${activitiesSummary || "No activity yet"}
   app.get("/api/time-entries/unbilled", requireAuth, async (req: Request, res: Response) => {
     try {
       const entries = await db
-        .select()
+        .select({
+          id: timeEntries.id,
+          userId: timeEntries.userId,
+          clientId: timeEntries.clientId,
+          clientName: clients.name,
+          jobId: timeEntries.jobId,
+          jobTitle: jobs.title,
+          invoiceId: timeEntries.invoiceId,
+          description: timeEntries.description,
+          date: timeEntries.date,
+          startTime: timeEntries.startTime,
+          endTime: timeEntries.endTime,
+          duration: timeEntries.duration,
+          hourlyRate: timeEntries.hourlyRate,
+          amount: timeEntries.amount,
+          isBillable: timeEntries.isBillable,
+          isBilled: timeEntries.isBilled,
+          notes: timeEntries.notes,
+          createdAt: timeEntries.createdAt,
+        })
         .from(timeEntries)
+        .leftJoin(clients, eq(clients.id, timeEntries.clientId))
+        .leftJoin(jobs, eq(jobs.id, timeEntries.jobId))
         .where(
           and(
             eq(timeEntries.userId, req.session.userId!),
@@ -5704,8 +5793,29 @@ ${activitiesSummary || "No activity yet"}
     try {
       const clientId = parseInt(req.params.clientId);
       const entries = await db
-        .select()
+        .select({
+          id: timeEntries.id,
+          userId: timeEntries.userId,
+          clientId: timeEntries.clientId,
+          clientName: clients.name,
+          jobId: timeEntries.jobId,
+          jobTitle: jobs.title,
+          invoiceId: timeEntries.invoiceId,
+          description: timeEntries.description,
+          date: timeEntries.date,
+          startTime: timeEntries.startTime,
+          endTime: timeEntries.endTime,
+          duration: timeEntries.duration,
+          hourlyRate: timeEntries.hourlyRate,
+          amount: timeEntries.amount,
+          isBillable: timeEntries.isBillable,
+          isBilled: timeEntries.isBilled,
+          notes: timeEntries.notes,
+          createdAt: timeEntries.createdAt,
+        })
         .from(timeEntries)
+        .leftJoin(clients, eq(clients.id, timeEntries.clientId))
+        .leftJoin(jobs, eq(jobs.id, timeEntries.jobId))
         .where(
           and(
             eq(timeEntries.userId, req.session.userId!),
@@ -5724,8 +5834,29 @@ ${activitiesSummary || "No activity yet"}
     try {
       const id = parseInt(req.params.id);
       const [entry] = await db
-        .select()
+        .select({
+          id: timeEntries.id,
+          userId: timeEntries.userId,
+          clientId: timeEntries.clientId,
+          clientName: clients.name,
+          jobId: timeEntries.jobId,
+          jobTitle: jobs.title,
+          invoiceId: timeEntries.invoiceId,
+          description: timeEntries.description,
+          date: timeEntries.date,
+          startTime: timeEntries.startTime,
+          endTime: timeEntries.endTime,
+          duration: timeEntries.duration,
+          hourlyRate: timeEntries.hourlyRate,
+          amount: timeEntries.amount,
+          isBillable: timeEntries.isBillable,
+          isBilled: timeEntries.isBilled,
+          notes: timeEntries.notes,
+          createdAt: timeEntries.createdAt,
+        })
         .from(timeEntries)
+        .leftJoin(clients, eq(clients.id, timeEntries.clientId))
+        .leftJoin(jobs, eq(jobs.id, timeEntries.jobId))
         .where(
           and(
             eq(timeEntries.id, id),
@@ -5744,12 +5875,24 @@ ${activitiesSummary || "No activity yet"}
 
   app.post("/api/time-entries", requireAuth, canWrite, async (req: Request, res: Response) => {
     try {
-      const { clientId, jobSiteId, description, date, startTime, endTime, duration, hourlyRate, isBillable, notes, latitude, longitude, accuracy, address } = req.body;
+      const { clientId, jobId, description, date, startTime, endTime, duration, hourlyRate, isBillable, notes, latitude, longitude, accuracy, address } = req.body;
       const amount = (duration / 3600) * (parseFloat(hourlyRate) || 0);
+
+      if (!clientId && !jobId) {
+        return res.status(400).json({ error: "Client or Job is required" });
+      }
+
+      let finalClientId = clientId;
+      if (!clientId && jobId) {
+        const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+        if (job) finalClientId = job.clientId;
+      }
+
       const [entry] = await db.insert(timeEntries).values({
         userId: req.session.userId!,
-        clientId: clientId || null,
-        jobSiteId: jobSiteId || null,
+        organizationId: req.session.organizationId || null,
+        clientId: finalClientId || null,
+        jobId: jobId || null,
         description,
         date: new Date(date),
         startTime: startTime ? new Date(startTime) : null,
@@ -5775,13 +5918,14 @@ ${activitiesSummary || "No activity yet"}
   app.put("/api/time-entries/:id", requireAuth, canWrite, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { clientId, jobSiteId, description, date, startTime, endTime, duration, hourlyRate, isBillable, isBilled, notes, latitude, longitude, accuracy, address } = req.body;
+      const { clientId, jobId, description, date, startTime, endTime, duration, hourlyRate, isBillable, isBilled, notes, latitude, longitude, accuracy, address } = req.body;
       const amount = (duration / 3600) * (parseFloat(hourlyRate) || 0);
+
       const [entry] = await db
         .update(timeEntries)
         .set({
-          clientId: clientId || null,
-          jobSiteId: jobSiteId || null,
+          clientId: clientId || undefined,
+          jobId: jobId || undefined,
           description,
           date: new Date(date),
           startTime: startTime ? new Date(startTime) : null,
@@ -6137,33 +6281,181 @@ ${activitiesSummary || "No activity yet"}
     }
   });
 
-  // ============== JOB SITES API ==============
+  // ============== JOBS API ==============
+
+  app.get("/api/jobs", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const accessCondition = req.session.organizationId
+        ? eq(jobs.organizationId, req.session.organizationId)
+        : eq(jobs.userId, req.session.userId!);
+
+      const result = await db
+        .select({
+          id: jobs.id,
+          title: jobs.title,
+          description: jobs.description,
+          status: jobs.status,
+          date: jobs.date,
+          startTime: jobs.startTime,
+          estimatedDuration: jobs.estimatedDuration,
+          clientId: jobs.clientId,
+          clientName: clients.name,
+          clientAddress: clients.address,
+          clientEircode: clients.eircode,
+          clientLatitude: clients.latitude,
+          clientLongitude: clients.longitude,
+          createdAt: jobs.createdAt,
+        })
+        .from(jobs)
+        .leftJoin(clients, eq(clients.id, jobs.clientId))
+        .where(accessCondition)
+        .orderBy(desc(jobs.date), desc(jobs.createdAt));
+
+      res.json(result);
+    } catch (error) {
+      console.error("Get jobs error:", error);
+      res.status(500).json({ error: "Failed to get jobs" });
+    }
+  });
+
+  app.get("/api/jobs/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const accessCondition = req.session.organizationId
+        ? eq(jobs.organizationId, req.session.organizationId)
+        : eq(jobs.userId, req.session.userId!);
+
+      const [job] = await db
+        .select()
+        .from(jobs)
+        .where(and(eq(jobs.id, id), accessCondition))
+        .limit(1);
+
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      const [client] = await db
+        .select()
+        .from(clients)
+        .where(eq(clients.id, job.clientId!))
+        .limit(1);
+
+      res.json({ ...job, client });
+    } catch (error) {
+      console.error("Get job error:", error);
+      res.status(500).json({ error: "Failed to get job" });
+    }
+  });
+
+  app.post("/api/jobs", requireAuth, canWrite, async (req: Request, res: Response) => {
+    try {
+      const { clientId, title, description, date, startTime, estimatedDuration, status } = req.body;
+
+      if (!clientId || !title) {
+        return res.status(400).json({ error: "Client and Job Title are required" });
+      }
+
+      const [job] = await db
+        .insert(jobs)
+        .values({
+          userId: req.session.userId!,
+          organizationId: req.session.organizationId || null,
+          clientId,
+          title,
+          description: description || null,
+          date: date ? new Date(date) : new Date(),
+          startTime: startTime || null,
+          estimatedDuration: estimatedDuration || null,
+          status: status || "scheduled",
+        })
+        .returning();
+
+      res.status(201).json(job);
+    } catch (error) {
+      console.error("Create job error:", error);
+      res.status(500).json({ error: "Failed to create job" });
+    }
+  });
+
+  app.put("/api/jobs/:id", requireAuth, canWrite, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { clientId, title, description, date, startTime, estimatedDuration, status } = req.body;
+
+      const accessCondition = req.session.organizationId
+        ? eq(jobs.organizationId, req.session.organizationId)
+        : eq(jobs.userId, req.session.userId!);
+
+      const [job] = await db
+        .update(jobs)
+        .set({
+          clientId,
+          title,
+          description,
+          date: date ? new Date(date) : undefined,
+          startTime,
+          estimatedDuration,
+          status,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(jobs.id, id), accessCondition))
+        .returning();
+
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      res.json(job);
+    } catch (error) {
+      console.error("Update job error:", error);
+      res.status(500).json({ error: "Failed to update job" });
+    }
+  });
+
+  app.delete("/api/jobs/:id", requireAuth, canWrite, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const accessCondition = req.session.organizationId
+        ? eq(jobs.organizationId, req.session.organizationId)
+        : eq(jobs.userId, req.session.userId!);
+
+      await db.delete(jobs).where(and(eq(jobs.id, id), accessCondition));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete job error:", error);
+      res.status(500).json({ error: "Failed to delete job" });
+    }
+  });
+
+  // ============== LEGACY JOB SITES API (For backward compatibility during migration) ==============
 
   app.get("/api/job-sites", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Return jobs as job sites for compatibility
       const accessCondition = req.session.organizationId
-        ? eq(jobSites.organizationId, req.session.organizationId)
-        : eq(jobSites.userId, req.session.userId!);
+        ? eq(jobs.organizationId, req.session.organizationId)
+        : eq(jobs.userId, req.session.userId!);
 
       const sites = await db
         .select({
-          id: jobSites.id,
-          name: jobSites.name,
-          address: jobSites.address,
-          latitude: jobSites.latitude,
-          longitude: jobSites.longitude,
-          radiusMeters: jobSites.radiusMeters,
-          isActive: jobSites.isActive,
-          budgetedHours: jobSites.budgetedHours,
-          notes: jobSites.notes,
-          clientId: jobSites.clientId,
+          id: jobs.id,
+          name: jobs.title,
+          address: clients.address,
+          latitude: clients.latitude,
+          longitude: clients.longitude,
+          radiusMeters: sql<number>`100`,
+          isActive: sql<boolean>`true`,
+          budgetedHours: jobs.estimatedDuration,
+          notes: jobs.description,
+          clientId: jobs.clientId,
           clientName: clients.name,
-          createdAt: jobSites.createdAt,
+          createdAt: jobs.createdAt,
         })
-        .from(jobSites)
-        .leftJoin(clients, eq(clients.id, jobSites.clientId))
+        .from(jobs)
+        .leftJoin(clients, eq(clients.id, jobs.clientId))
         .where(accessCondition)
-        .orderBy(desc(jobSites.createdAt));
+        .orderBy(desc(jobs.createdAt));
 
       res.json(sites);
     } catch (error) {
@@ -6176,135 +6468,34 @@ ${activitiesSummary || "No activity yet"}
     try {
       const id = parseInt(req.params.id);
       const accessCondition = req.session.organizationId
-        ? eq(jobSites.organizationId, req.session.organizationId)
-        : eq(jobSites.userId, req.session.userId!);
+        ? eq(jobs.organizationId, req.session.organizationId)
+        : eq(jobs.userId, req.session.userId!);
 
-      const [site] = await db
-        .select()
-        .from(jobSites)
-        .where(and(eq(jobSites.id, id), accessCondition))
+      const [job] = await db
+        .select({
+          id: jobs.id,
+          name: jobs.title,
+          address: clients.address,
+          latitude: clients.latitude,
+          longitude: clients.longitude,
+          radiusMeters: sql<number>`100`,
+          budgetedHours: jobs.estimatedDuration,
+          notes: jobs.description,
+          clientId: jobs.clientId,
+          isActive: sql<boolean>`true`,
+        })
+        .from(jobs)
+        .leftJoin(clients, eq(clients.id, jobs.clientId))
+        .where(and(eq(jobs.id, id), accessCondition))
         .limit(1);
 
-      if (!site) {
+      if (!job) {
         return res.status(404).json({ error: "Job site not found" });
       }
-      res.json(site);
+      res.json(job);
     } catch (error) {
       console.error("Get job site error:", error);
       res.status(500).json({ error: "Failed to get job site" });
-    }
-  });
-
-  app.post("/api/job-sites", requireAuth, canWrite, async (req: Request, res: Response) => {
-    try {
-      const { name, address, eircode, latitude, longitude, radiusMeters, clientId, budgetedHours, defaultHourlyRate, notes, assignedEmployeeIds } = req.body;
-
-      if (!name) {
-        return res.status(400).json({ error: "Site name is required" });
-      }
-
-      const [site] = await db
-        .insert(jobSites)
-        .values({
-          userId: req.session.userId!,
-          organizationId: req.session.organizationId || null,
-          name,
-          address: address || null,
-          eircode: eircode || null,
-          latitude: latitude ? latitude.toString() : null,
-          longitude: longitude ? longitude.toString() : null,
-          radiusMeters: radiusMeters || 100,
-          clientId: clientId ? parseInt(clientId) : null,
-          budgetedHours: budgetedHours ? budgetedHours.toString() : null,
-          defaultHourlyRate: defaultHourlyRate ? defaultHourlyRate.toString() : null,
-          notes: notes || null,
-        })
-        .returning();
-
-      // Create employee job assignments if provided
-      if (assignedEmployeeIds && Array.isArray(assignedEmployeeIds) && assignedEmployeeIds.length > 0) {
-        const assignmentValues = assignedEmployeeIds.map((memberId: number) => ({
-          organizationMemberId: memberId,
-          jobSiteId: site.id,
-          assignedBy: req.session.userId!,
-        }));
-        await db.insert(employeeJobAssignments).values(assignmentValues);
-      }
-
-      res.status(201).json(site);
-    } catch (error) {
-      console.error("Create job site error:", error);
-      res.status(500).json({ error: "Failed to create job site" });
-    }
-  });
-
-  app.put("/api/job-sites/:id", requireAuth, canWrite, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { name, address, eircode, latitude, longitude, radiusMeters, clientId, budgetedHours, defaultHourlyRate, notes, isActive, assignedEmployeeIds } = req.body;
-
-      const accessCondition = req.session.organizationId
-        ? eq(jobSites.organizationId, req.session.organizationId)
-        : eq(jobSites.userId, req.session.userId!);
-
-      const [site] = await db
-        .update(jobSites)
-        .set({
-          name,
-          address: address || null,
-          eircode: eircode || null,
-          latitude: latitude ? latitude.toString() : null,
-          longitude: longitude ? longitude.toString() : null,
-          radiusMeters: radiusMeters || 100,
-          clientId: clientId ? parseInt(clientId) : null,
-          budgetedHours: budgetedHours ? budgetedHours.toString() : null,
-          defaultHourlyRate: defaultHourlyRate ? defaultHourlyRate.toString() : null,
-          notes: notes || null,
-          isActive: isActive !== undefined ? isActive : true,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(jobSites.id, id), accessCondition))
-        .returning();
-
-      if (!site) {
-        return res.status(404).json({ error: "Job site not found" });
-      }
-
-      // Update employee job assignments if provided
-      if (assignedEmployeeIds && Array.isArray(assignedEmployeeIds)) {
-        // Remove existing assignments for this site
-        await db.delete(employeeJobAssignments).where(eq(employeeJobAssignments.jobSiteId, id));
-
-        // Add new assignments
-        if (assignedEmployeeIds.length > 0) {
-          const assignmentValues = assignedEmployeeIds.map((memberId: number) => ({
-            organizationMemberId: memberId,
-            jobSiteId: id,
-            assignedBy: req.session.userId!,
-          }));
-          await db.insert(employeeJobAssignments).values(assignmentValues);
-        }
-      }
-
-      res.json(site);
-    } catch (error) {
-      console.error("Update job site error:", error);
-      res.status(500).json({ error: "Failed to update job site" });
-    }
-  });
-
-  app.delete("/api/job-sites/:id", requireAuth, canWrite, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const accessCondition = req.session.organizationId
-        ? eq(jobSites.organizationId, req.session.organizationId)
-        : eq(jobSites.userId, req.session.userId!);
-
-      await db.delete(jobSites).where(and(eq(jobSites.id, id), accessCondition));
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Delete job site error:", error);
-      res.status(500).json({ error: "Failed to delete job site" });
     }
   });
 
@@ -6450,99 +6641,7 @@ ${activitiesSummary || "No activity yet"}
     "Y35": { area: "Wexford", county: "Wexford", lat: 52.3361, lng: -6.4631 },
   };
 
-  app.get("/api/geocode/eircode/:eircode", requireAuth, async (req: Request, res: Response) => {
-    try {
-      const { eircode } = req.params;
 
-      // Format Eircode (remove spaces, uppercase)
-      const formattedEircode = eircode.replace(/\s/g, "").toUpperCase();
-
-      // Validate Eircode format (7 characters: 3 letters/digits + 4 alphanumeric)
-      if (!/^[A-Z0-9]{3}[A-Z0-9]{4}$/.test(formattedEircode)) {
-        return res.status(400).json({ error: "Invalid Eircode format. Must be 7 characters like A82N9F6" });
-      }
-
-      // Get the routing key (first 3 characters)
-      const routingKey = formattedEircode.slice(0, 3);
-      const routingInfo = EIRCODE_ROUTING_KEYS[routingKey];
-
-      if (!routingInfo) {
-        return res.status(400).json({ error: `Unrecognized Eircode routing key: ${routingKey}. Please check the Eircode is correct.` });
-      }
-
-      // Format with space for display (A82 N9F6 format)
-      const formattedWithSpace = formattedEircode.slice(0, 3) + " " + formattedEircode.slice(3);
-
-      // Try Google Geocoding API first for precise address lookup
-      const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
-      if (googleApiKey) {
-        try {
-          const googleResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(formattedWithSpace + ", Ireland")}&key=${googleApiKey}&components=country:IE`
-          );
-          const googleData = await googleResponse.json();
-
-          if (googleData.status === "OK" && googleData.results && googleData.results.length > 0) {
-            const result = googleData.results[0];
-            const addressComponents = result.address_components || [];
-
-            // Extract address parts
-            let streetNumber = "";
-            let route = "";
-            let locality = "";
-            let county = "";
-
-            for (const component of addressComponents) {
-              if (component.types.includes("street_number")) {
-                streetNumber = component.long_name;
-              } else if (component.types.includes("route")) {
-                route = component.long_name;
-              } else if (component.types.includes("locality") || component.types.includes("postal_town")) {
-                locality = component.long_name;
-              } else if (component.types.includes("administrative_area_level_1")) {
-                county = component.long_name.replace("County ", "");
-              }
-            }
-
-            const streetAddress = [streetNumber, route].filter(Boolean).join(" ") || null;
-
-            return res.json({
-              formattedAddress: result.formatted_address,
-              streetAddress: streetAddress,
-              locality: locality || routingInfo.area,
-              county: county || routingInfo.county,
-              country: "Ireland",
-              latitude: result.geometry.location.lat,
-              longitude: result.geometry.location.lng,
-              placeId: result.place_id || null,
-              precise: true,
-            });
-          } else if (googleData.status === "REQUEST_DENIED") {
-            console.log("Google Geocoding API not enabled, falling back to routing key lookup");
-          }
-        } catch (googleError) {
-          console.error("Google Geocoding error:", googleError);
-        }
-      }
-
-      // Fallback: return the area information based on the routing key
-      res.json({
-        formattedAddress: `${routingInfo.area}, County ${routingInfo.county}, Ireland (${formattedWithSpace})`,
-        streetAddress: null,
-        locality: routingInfo.area,
-        county: routingInfo.county,
-        country: "Ireland",
-        latitude: routingInfo.lat,
-        longitude: routingInfo.lng,
-        placeId: null,
-        precise: false,
-        note: "For precise GPS verification, please enable the Geocoding API in Google Cloud Console, or enter the full address manually.",
-      });
-    } catch (error) {
-      console.error("Eircode geocoding error:", error);
-      res.status(500).json({ error: "Failed to lookup Eircode" });
-    }
-  });
 
   // Google Places Autocomplete endpoint
   app.get("/api/places/autocomplete", requireAuth, async (req: Request, res: Response) => {
@@ -6668,7 +6767,7 @@ ${activitiesSummary || "No activity yet"}
 
   app.get("/api/clock-entries", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { startDate, endDate, userId: filterUserId, jobSiteId, limit = "50", offset = "0" } = req.query;
+      const { startDate, endDate, userId: filterUserId, jobId, limit = "50", offset = "0" } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 50, 100);
       const offsetNum = parseInt(offset as string) || 0;
 
@@ -6687,8 +6786,8 @@ ${activitiesSummary || "No activity yet"}
       if (filterUserId) {
         conditions.push(eq(clockEntries.userId, filterUserId as string));
       }
-      if (jobSiteId) {
-        conditions.push(eq(clockEntries.jobSiteId, parseInt(jobSiteId as string)));
+      if (jobId) {
+        conditions.push(eq(clockEntries.jobId, parseInt(jobId as string)));
       }
 
       const entries = await db
@@ -6696,8 +6795,9 @@ ${activitiesSummary || "No activity yet"}
           id: clockEntries.id,
           userId: clockEntries.userId,
           userEmail: users.email,
-          jobSiteId: clockEntries.jobSiteId,
-          jobSiteName: jobSites.name,
+          jobId: clockEntries.jobId,
+          jobTitle: jobs.title,
+          clientName: clients.name,
           clockInTime: clockEntries.clockInTime,
           clockOutTime: clockEntries.clockOutTime,
           clockInLatitude: clockEntries.clockInLatitude,
@@ -6718,7 +6818,8 @@ ${activitiesSummary || "No activity yet"}
         })
         .from(clockEntries)
         .leftJoin(users, eq(users.id, clockEntries.userId))
-        .leftJoin(jobSites, eq(jobSites.id, clockEntries.jobSiteId))
+        .leftJoin(jobs, eq(jobs.id, clockEntries.jobId))
+        .leftJoin(clients, eq(clients.id, jobs.clientId))
         .where(and(...conditions))
         .orderBy(desc(clockEntries.clockInTime))
         .limit(limitNum)
@@ -6767,21 +6868,21 @@ ${activitiesSummary || "No activity yet"}
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const orgJobSites = await db.select({ id: jobSites.id }).from(jobSites).where(eq(jobSites.organizationId, orgId));
-      const siteIds = orgJobSites.map(s => s.id);
+      const orgJobs = await db.select({ id: jobs.id }).from(jobs).where(eq(jobs.organizationId, orgId));
+      const jobIds = orgJobs.map(j => j.id);
 
-      const clockStats = siteIds.length > 0 ? await db
+      const clockStats = jobIds.length > 0 ? await db
         .select({
           userId: clockEntries.userId,
           totalMinutes: sql<number>`COALESCE(SUM(${clockEntries.totalMinutes}), 0)`,
           billableMinutes: sql<number>`COALESCE(SUM(${clockEntries.billableMinutes}), 0)`,
           clockInCount: sql<number>`COUNT(*)`,
           verifiedCount: sql<number>`SUM(CASE WHEN ${clockEntries.clockInVerified} = true THEN 1 ELSE 0 END)`,
-          jobCount: sql<number>`COUNT(DISTINCT ${clockEntries.jobSiteId})`,
+          jobCount: sql<number>`COUNT(DISTINCT ${clockEntries.jobId})`,
         })
         .from(clockEntries)
         .where(and(
-          sql`${clockEntries.jobSiteId} = ANY(${siteIds})`,
+          sql`${clockEntries.jobId} = ANY(${jobIds})`,
           sql`${clockEntries.clockInTime} >= ${thirtyDaysAgo.toISOString()}`,
           sql`${clockEntries.clockOutTime} IS NOT NULL`
         ))
@@ -6855,8 +6956,10 @@ ${activitiesSummary || "No activity yet"}
       const [activeEntry] = await db
         .select({
           id: clockEntries.id,
-          jobSiteId: clockEntries.jobSiteId,
-          jobSiteName: jobSites.name,
+          jobId: clockEntries.jobId,
+          jobTitle: jobs.title,
+          clientName: clients.name,
+          clientAddress: clients.address,
           clockInTime: clockEntries.clockInTime,
           clockInVerified: clockEntries.clockInVerified,
           clockInDistanceMeters: clockEntries.clockInDistanceMeters,
@@ -6865,7 +6968,8 @@ ${activitiesSummary || "No activity yet"}
           notes: clockEntries.notes,
         })
         .from(clockEntries)
-        .leftJoin(jobSites, eq(jobSites.id, clockEntries.jobSiteId))
+        .leftJoin(jobs, eq(jobs.id, clockEntries.jobId))
+        .leftJoin(clients, eq(clients.id, jobs.clientId))
         .where(
           and(
             eq(clockEntries.userId, req.session.userId!),
@@ -6884,10 +6988,10 @@ ${activitiesSummary || "No activity yet"}
   // Clock in
   app.post("/api/clock-entries/clock-in", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { jobSiteId, latitude, longitude, accuracy, notes, workDescription } = req.body;
+      const { jobId, latitude, longitude, accuracy, notes, workDescription } = req.body;
 
-      if (!jobSiteId) {
-        return res.status(400).json({ error: "Job site is required" });
+      if (!jobId) {
+        return res.status(400).json({ error: "Job ID is required" });
       }
 
       // Check if user already has an active clock-in
@@ -6906,28 +7010,38 @@ ${activitiesSummary || "No activity yet"}
         return res.status(400).json({ error: "You are already clocked in. Please clock out first." });
       }
 
-      // Get job site to verify location
-      const [site] = await db
-        .select()
-        .from(jobSites)
-        .where(eq(jobSites.id, parseInt(jobSiteId)))
+      // Get job and associated client to verify location
+      const [jobData] = await db
+        .select({
+          job: jobs,
+          client: clients
+        })
+        .from(jobs)
+        .innerJoin(clients, eq(clients.id, jobs.clientId))
+        .where(eq(jobs.id, parseInt(jobId)))
         .limit(1);
 
-      if (!site) {
-        return res.status(404).json({ error: "Job site not found" });
+      if (!jobData) {
+        return res.status(404).json({ error: "Job not found" });
       }
+
+      const { job, client } = jobData;
 
       let clockInDistanceMeters: number | null = null;
       let clockInVerified = false;
 
-      if (latitude && longitude && site.latitude && site.longitude) {
+      if (latitude && longitude && client.latitude && client.longitude) {
         clockInDistanceMeters = Math.round(calculateDistance(
           parseFloat(latitude),
           parseFloat(longitude),
-          parseFloat(site.latitude),
-          parseFloat(site.longitude)
+          parseFloat(client.latitude),
+          parseFloat(client.longitude)
         ));
-        clockInVerified = clockInDistanceMeters <= site.radiusMeters;
+
+        // Allow clock-in if within 100 meters (standard geofence)
+        if (clockInDistanceMeters <= 100) {
+          clockInVerified = true;
+        }
       }
 
       const [entry] = await db
@@ -6935,7 +7049,7 @@ ${activitiesSummary || "No activity yet"}
         .values({
           userId: req.session.userId!,
           organizationId: req.session.organizationId || null,
-          jobSiteId: parseInt(jobSiteId),
+          jobId: parseInt(jobId),
           clockInTime: new Date(),
           clockInLatitude: latitude ? latitude.toString() : null,
           clockInLongitude: longitude ? longitude.toString() : null,
@@ -6944,19 +7058,11 @@ ${activitiesSummary || "No activity yet"}
           clockInVerified,
           workDescription: workDescription || null,
           notes: notes || null,
-          hourlyRate: site.defaultHourlyRate || null,
+          status: "active",
         })
         .returning();
 
-      res.status(201).json({
-        ...entry,
-        verified: clockInVerified,
-        distanceMeters: clockInDistanceMeters,
-        accuracy: accuracy || null,
-        message: clockInVerified
-          ? "Successfully clocked in at job site"
-          : `Clocked in, but you are ${clockInDistanceMeters}m from the job site (allowed: ${site.radiusMeters}m)`
-      });
+      res.status(201).json(entry);
     } catch (error) {
       console.error("Clock in error:", error);
       res.status(500).json({ error: "Failed to clock in" });
@@ -6966,22 +7072,24 @@ ${activitiesSummary || "No activity yet"}
   // Clock out
   app.post("/api/clock-entries/clock-out", requireAuth, async (req: Request, res: Response) => {
     try {
-      const { latitude, longitude, accuracy, completionNotes } = req.body;
+      const { id, latitude, longitude, accuracy, notes } = req.body;
 
-      // Find active clock-in
-      const [activeEntry] = await db
+      if (!id) {
+        return res.status(400).json({ error: "Clock entry ID is required" });
+      }
+
+      const [existing] = await db
         .select()
         .from(clockEntries)
-        .where(
-          and(
-            eq(clockEntries.userId, req.session.userId!),
-            sql`${clockEntries.clockOutTime} IS NULL`
-          )
-        )
+        .where(and(eq(clockEntries.id, parseInt(id)), eq(clockEntries.userId, req.session.userId!)))
         .limit(1);
 
-      if (!activeEntry) {
-        return res.status(400).json({ error: "You are not currently clocked in" });
+      if (!existing) {
+        return res.status(404).json({ error: "Clock entry not found" });
+      }
+
+      if (existing.clockOutTime) {
+        return res.status(400).json({ error: "You are already clocked out for this entry" });
       }
 
       // Check if there's an active break - end it first
@@ -6990,7 +7098,7 @@ ${activitiesSummary || "No activity yet"}
         .from(clockEntryBreaks)
         .where(
           and(
-            eq(clockEntryBreaks.clockEntryId, activeEntry.id),
+            eq(clockEntryBreaks.clockEntryId, existing.id),
             sql`${clockEntryBreaks.breakEnd} IS NULL`
           )
         )
@@ -7008,52 +7116,43 @@ ${activitiesSummary || "No activity yet"}
       let clockOutDistanceMeters: number | null = null;
       let clockOutVerified = false;
 
-      if (activeEntry.jobSiteId) {
-        const [site] = await db
-          .select()
-          .from(jobSites)
-          .where(eq(jobSites.id, activeEntry.jobSiteId))
-          .limit(1);
+      // Get job and associated client to verify location
+      const [jobData] = await db
+        .select({
+          job: jobs,
+          client: clients
+        })
+        .from(jobs)
+        .innerJoin(clients, eq(clients.id, jobs.clientId))
+        .where(eq(jobs.id, existing.jobId!))
+        .limit(1);
 
-        if (site && latitude && longitude && site.latitude && site.longitude) {
-          clockOutDistanceMeters = Math.round(calculateDistance(
-            parseFloat(latitude),
-            parseFloat(longitude),
-            parseFloat(site.latitude),
-            parseFloat(site.longitude)
-          ));
-          clockOutVerified = clockOutDistanceMeters <= site.radiusMeters;
+      if (latitude && longitude && jobData?.client.latitude && jobData?.client.longitude) {
+        clockOutDistanceMeters = Math.round(calculateDistance(
+          parseFloat(latitude),
+          parseFloat(longitude),
+          parseFloat(jobData.client.latitude),
+          parseFloat(jobData.client.longitude)
+        ));
+
+        if (clockOutDistanceMeters <= 100) {
+          clockOutVerified = true;
         }
       }
 
       const clockOutTime = new Date();
-      const totalMinutes = Math.round((clockOutTime.getTime() - new Date(activeEntry.clockInTime).getTime()) / 60000);
+      const totalMinutes = Math.round((clockOutTime.getTime() - new Date(existing.clockInTime).getTime()) / 60000);
 
       // Calculate total break minutes
       const breaks = await db
-        .select({ durationMinutes: clockEntryBreaks.durationMinutes, isPaid: clockEntryBreaks.isPaid })
+        .select()
         .from(clockEntryBreaks)
-        .where(eq(clockEntryBreaks.clockEntryId, activeEntry.id));
+        .where(eq(clockEntryBreaks.clockEntryId, existing.id));
 
-      const breakMinutes = breaks
-        .filter(b => !b.isPaid)
-        .reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
-
+      const breakMinutes = breaks.reduce((total, b) => total + (b.durationMinutes || 0), 0);
       const billableMinutes = Math.max(0, totalMinutes - breakMinutes);
 
-      // Calculate total amount if hourly rate is set
-      let totalAmount: string | null = null;
-      if (activeEntry.hourlyRate) {
-        totalAmount = ((billableMinutes / 60) * parseFloat(activeEntry.hourlyRate)).toFixed(2);
-      }
-
-      // Determine status based on verification
-      let status = "completed";
-      if (!activeEntry.clockInVerified || !clockOutVerified) {
-        status = "flagged"; // Flag for admin review
-      }
-
-      const [entry] = await db
+      const [updated] = await db
         .update(clockEntries)
         .set({
           clockOutTime,
@@ -7065,22 +7164,13 @@ ${activitiesSummary || "No activity yet"}
           totalMinutes,
           breakMinutes,
           billableMinutes,
-          totalAmount,
-          completionNotes: completionNotes || null,
-          status,
-          updatedAt: new Date(),
+          notes: notes || existing.notes,
+          status: "completed",
         })
-        .where(eq(clockEntries.id, activeEntry.id))
+        .where(eq(clockEntries.id, existing.id))
         .returning();
 
-      res.json({
-        ...entry,
-        verified: clockOutVerified,
-        distanceMeters: clockOutDistanceMeters,
-        message: status === "completed"
-          ? `Clocked out. Total time: ${Math.floor(billableMinutes / 60)}h ${billableMinutes % 60}m (${breakMinutes}m break)`
-          : `Clocked out but flagged for review. Total time: ${Math.floor(billableMinutes / 60)}h ${billableMinutes % 60}m`
-      });
+      res.json(updated);
     } catch (error) {
       console.error("Clock out error:", error);
       res.status(500).json({ error: "Failed to clock out" });
@@ -9227,9 +9317,9 @@ ${activitiesSummary || "No activity yet"}
           id: employeeJobAssignments.id,
           employeeUserId: employeeJobAssignments.employeeUserId,
           employeeEmail: users.email,
-          jobSiteId: employeeJobAssignments.jobSiteId,
-          jobSiteName: jobSites.name,
-          jobSiteAddress: jobSites.address,
+          jobId: employeeJobAssignments.jobId,
+          jobTitle: jobs.title,
+          clientName: clients.name,
           startDate: employeeJobAssignments.startDate,
           endDate: employeeJobAssignments.endDate,
           hourlyRate: employeeJobAssignments.hourlyRate,
@@ -9239,7 +9329,8 @@ ${activitiesSummary || "No activity yet"}
         })
         .from(employeeJobAssignments)
         .innerJoin(users, eq(users.id, employeeJobAssignments.employeeUserId))
-        .innerJoin(jobSites, eq(jobSites.id, employeeJobAssignments.jobSiteId))
+        .innerJoin(jobs, eq(jobs.id, employeeJobAssignments.jobId))
+        .leftJoin(clients, eq(clients.id, jobs.clientId))
         .where(whereClause)
         .orderBy(desc(employeeJobAssignments.createdAt));
 
@@ -9255,10 +9346,10 @@ ${activitiesSummary || "No activity yet"}
     try {
       const organizationId = req.session.organizationId!;
       const assignedBy = req.session.userId!;
-      const { employeeUserId, jobSiteId, startDate, endDate, hourlyRate, notes } = req.body;
+      const { employeeUserId, jobId, startDate, endDate, hourlyRate, notes } = req.body;
 
-      if (!employeeUserId || !jobSiteId) {
-        return res.status(400).json({ error: "Employee and job site are required" });
+      if (!employeeUserId || !jobId) {
+        return res.status(400).json({ error: "Employee and job are required" });
       }
 
       // Verify employee is part of the organization
@@ -9275,23 +9366,23 @@ ${activitiesSummary || "No activity yet"}
         return res.status(400).json({ error: "Employee is not part of this organization" });
       }
 
-      // Verify job site belongs to organization
-      const [jobSite] = await db.select()
-        .from(jobSites)
+      // Verify job belongs to organization
+      const [job] = await db.select()
+        .from(jobs)
         .where(and(
-          eq(jobSites.id, jobSiteId),
-          eq(jobSites.organizationId, organizationId)
+          eq(jobs.id, jobId),
+          eq(jobs.organizationId, organizationId)
         ))
         .limit(1);
 
-      if (!jobSite) {
-        return res.status(400).json({ error: "Job site not found" });
+      if (!job) {
+        return res.status(400).json({ error: "Job not found" });
       }
 
       const [assignment] = await db.insert(employeeJobAssignments).values({
         organizationId,
         employeeUserId,
-        jobSiteId,
+        jobId,
         assignedBy,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
@@ -9306,7 +9397,7 @@ ${activitiesSummary || "No activity yet"}
         userId: employeeUserId,
         type: "assignment_added",
         title: "New Job Assignment",
-        message: `You have been assigned to ${jobSite.name}`,
+        message: `You have been assigned to ${job.title}`,
         referenceType: "job_assignment",
         referenceId: assignment.id,
       });

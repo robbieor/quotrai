@@ -1,0 +1,74 @@
+/* FAB Component Styles - Per design_guidelines.md */
+
+.fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--fab-size);
+    height: var(--fab-size);
+    border-radius: var(--radius-full);
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-accent-dark);
+    box-shadow: var(--shadow-fab);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    color: var(--color-surface);
+}
+
+.fab:hover {
+    background-color: var(--color-accent-dark);
+}
+
+.fab:active {
+    background-color: var(--color-accent-dark);
+    transform: scale(0.96);
+}
+
+.fab:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.fab:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Extended FAB with label */
+.extended {
+    width: auto;
+    padding: 0 var(--spacing-lg);
+    gap: var(--spacing-sm);
+}
+
+.label {
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Position variants */
+.fixed {
+    position: fixed;
+    bottom: calc(var(--spacing-md) + 64px);
+    /* Above tab bar */
+    z-index: 100;
+}
+
+.center {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.center:active {
+    transform: translateX(-50%) scale(0.96);
+}
+
+.right {
+    right: var(--spacing-md);
+}
+
+/* Small variant */
+.small {
+    width: 40px;
+    height: 40px;
+}

@@ -1,0 +1,70 @@
+/* Card Component Styles - Per design_guidelines.md */
+/* Note: NO SHADOWS as per guidelines */
+
+.card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: none;
+    /* Explicitly no shadow per guidelines */
+}
+
+/* Section card variant - slightly thicker border */
+.section {
+    border-width: 1.5px;
+}
+
+/* Interactive card */
+.interactive {
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.interactive:hover {
+    background-color: rgba(209, 213, 219, 0.15);
+}
+
+.interactive:active {
+    background-color: rgba(209, 213, 219, 0.25);
+}
+
+/* Compact padding variant */
+.compact {
+    padding: var(--spacing-md);
+}
+
+/* Large padding variant */
+.large {
+    padding: var(--spacing-xl);
+}
+
+/* Card header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.title {
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+/* Card content */
+.content {
+    color: var(--color-text-primary);
+}
+
+/* Card footer */
+.footer {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border-subtle);
+}

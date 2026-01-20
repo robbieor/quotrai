@@ -14,7 +14,7 @@ import {
   expenses,
   revenueIdentifiers,
   savedItems,
-  jobSites,
+  jobs,
   timeEntries,
 } from "@shared/schema";
 import { sql } from "drizzle-orm";
@@ -446,20 +446,19 @@ async function seed() {
 
   console.log("Created saved items");
 
-  const [jobSite1] = await db.insert(jobSites).values({
+  const [job1] = await db.insert(jobs).values({
     userId: user1.id,
     organizationId: org1.id,
     clientId: dublinClients[0].id,
-    name: "O'Brien Construction HQ",
-    address: "Industrial Park, Santry, Dublin 9",
-    latitude: "53.3930",
-    longitude: "-6.2545",
-    radiusMeters: 10,
-    isActive: true,
-    notes: "Main site entrance via loading bay",
+    title: "Commercial Boiler Installation",
+    description: "Full boiler Replacement and pipework for O'Brien Construction HQ",
+    status: "in_progress",
+    date: new Date(),
+    startTime: "09:00",
+    estimatedDuration: "2 days",
   }).returning();
 
-  console.log("Created job site:", jobSite1.id);
+  console.log("Created job:", job1.id);
 
   console.log("\n=== SEED COMPLETE ===");
   console.log("Test accounts created:");

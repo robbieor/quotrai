@@ -191,17 +191,12 @@ export const clients = pgTable("clients", {
   organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   email: text("email"),
-  secondaryEmail: text("secondary_email"),
   mobile: text("mobile"),
   phone: text("phone"),
-  fax: text("fax"),
-  contact: text("contact"),
   address: text("address"),
-  address2: text("address_2"),
-  address3: text("address_3"),
   eircode: text("eircode"),
-  latitude: text("latitude"),
-  longitude: text("longitude"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
   paymentTerms: integer("payment_terms").default(30),
   priceListId: integer("price_list_id"),
   notes: text("notes"),
@@ -211,6 +206,25 @@ export const clients = pgTable("clients", {
   index("clients_user_id_idx").on(table.userId),
   index("clients_org_id_idx").on(table.organizationId),
   index("clients_price_list_id_idx").on(table.priceListId),
+]);
+
+export const jobs = pgTable("jobs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
+  clientId: integer("client_id").notNull().references(() => clients.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, completed, cancelled
+  date: timestamp("date").notNull(),
+  startTime: text("start_time"), // e.g., "09:00"
+  estimatedDuration: text("estimated_duration"), // e.g., "2 hours"
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+  index("jobs_user_id_idx").on(table.userId),
+  index("jobs_org_id_idx").on(table.organizationId),
+  index("jobs_client_id_idx").on(table.clientId),
 ]);
 
 export const expenses = pgTable("expenses", {
@@ -543,6 +557,12 @@ export const insertClientSchema = createInsertSchema(clients).omit({
   updatedAt: true,
 });
 
+export const insertJobSchema = createInsertSchema(jobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   createdAt: true,
@@ -605,7 +625,7 @@ export const timeEntries = pgTable("time_entries", {
   organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
   clientId: integer("client_id").references(() => clients.id, { onDelete: "set null" }),
   invoiceId: integer("invoice_id").references(() => invoices.id, { onDelete: "set null" }),
-  jobSiteId: integer("job_site_id"),
+  jobId: integer("job_id").references(() => jobs.id, { onDelete: "set null" }),
   description: text("description").notNull(),
   date: timestamp("date").notNull(),
   startTime: timestamp("start_time"),
@@ -626,7 +646,7 @@ export const timeEntries = pgTable("time_entries", {
   index("time_entries_user_id_idx").on(table.userId),
   index("time_entries_user_date_idx").on(table.userId, table.date),
   index("time_entries_org_id_idx").on(table.organizationId),
-  index("time_entries_job_site_id_idx").on(table.jobSiteId),
+  index("time_entries_job_id_idx").on(table.jobId),
 ]);
 
 export const insertTimeEntrySchema = createInsertSchema(timeEntries).omit({
@@ -735,42 +755,14 @@ export const insertMaterialSchema = createInsertSchema(materials).omit({
   updatedAt: true,
 });
 
-// Job sites with GPS geofencing for clock-in verification
-export const jobSites = pgTable("job_sites", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
-  clientId: integer("client_id").references(() => clients.id, { onDelete: "set null" }),
-  name: text("name").notNull(),
-  address: text("address"),
-  eircode: varchar("eircode", { length: 8 }), // Irish postal code
-  latitude: decimal("latitude", { precision: 10, scale: 7 }),
-  longitude: decimal("longitude", { precision: 10, scale: 7 }),
-  radiusMeters: integer("radius_meters").notNull().default(100), // Geofence radius
-  isActive: boolean("is_active").notNull().default(true),
-  notes: text("notes"),
-  budgetedHours: decimal("budgeted_hours", { precision: 10, scale: 2 }),
-  defaultHourlyRate: decimal("default_hourly_rate", { precision: 10, scale: 2 }), // Site-specific rate
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
-  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
-}, (table) => [
-  index("job_sites_user_id_idx").on(table.userId),
-  index("job_sites_org_id_idx").on(table.organizationId),
-  index("job_sites_client_id_idx").on(table.clientId),
-]);
 
-export const insertJobSiteSchema = createInsertSchema(jobSites).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
 // Clock entries for GPS-verified time tracking
 export const clockEntries = pgTable("clock_entries", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
-  jobSiteId: integer("job_site_id").references(() => jobSites.id, { onDelete: "set null" }),
+  jobId: integer("job_id").references(() => jobs.id, { onDelete: "set null" }),
   clockInTime: timestamp("clock_in_time").notNull(),
   clockOutTime: timestamp("clock_out_time"),
   clockInLatitude: decimal("clock_in_latitude", { precision: 10, scale: 7 }),
@@ -803,7 +795,7 @@ export const clockEntries = pgTable("clock_entries", {
 }, (table) => [
   index("clock_entries_user_id_idx").on(table.userId),
   index("clock_entries_org_id_idx").on(table.organizationId),
-  index("clock_entries_job_site_id_idx").on(table.jobSiteId),
+  index("clock_entries_job_id_idx").on(table.jobId),
   index("clock_entries_clock_in_time_idx").on(table.clockInTime),
   index("clock_entries_status_idx").on(table.status),
 ]);
@@ -943,8 +935,7 @@ export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type InsertOrganizationMember = z.infer<typeof insertOrganizationMemberSchema>;
 export type OrganizationInvitation = typeof organizationInvitations.$inferSelect;
 export type InsertOrganizationInvitation = z.infer<typeof insertOrganizationInvitationSchema>;
-export type JobSite = typeof jobSites.$inferSelect;
-export type InsertJobSite = z.infer<typeof insertJobSiteSchema>;
+
 export type ClockEntry = typeof clockEntries.$inferSelect;
 export type InsertClockEntry = z.infer<typeof insertClockEntrySchema>;
 export type ClockEntryBreak = typeof clockEntryBreaks.$inferSelect;
@@ -960,12 +951,12 @@ export type InsertTemplateVersion = z.infer<typeof insertTemplateVersionSchema>;
 export type GlobalTemplateItem = typeof globalTemplateItems.$inferSelect;
 export type InsertGlobalTemplateItem = z.infer<typeof insertGlobalTemplateItemSchema>;
 
-// Employee job assignments - linking employees to job sites
+// Employee job assignments - linking employees to jobs
 export const employeeJobAssignments = pgTable("employee_job_assignments", {
   id: serial("id").primaryKey(),
   organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   employeeUserId: varchar("employee_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  jobSiteId: integer("job_site_id").notNull().references(() => jobSites.id, { onDelete: "cascade" }),
+  jobId: integer("job_id").notNull().references(() => jobs.id, { onDelete: "cascade" }),
   assignedBy: varchar("assigned_by").references(() => users.id, { onDelete: "set null" }),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
@@ -977,8 +968,8 @@ export const employeeJobAssignments = pgTable("employee_job_assignments", {
 }, (table) => [
   index("employee_job_assignments_org_id_idx").on(table.organizationId),
   index("employee_job_assignments_employee_idx").on(table.employeeUserId),
-  index("employee_job_assignments_job_site_idx").on(table.jobSiteId),
-  uniqueIndex("employee_job_unique_idx").on(table.employeeUserId, table.jobSiteId),
+  index("employee_job_assignments_job_idx").on(table.jobId),
+  uniqueIndex("employee_job_unique_idx").on(table.employeeUserId, table.jobId),
 ]);
 
 export const insertEmployeeJobAssignmentSchema = createInsertSchema(employeeJobAssignments).omit({

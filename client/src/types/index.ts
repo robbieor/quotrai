@@ -81,12 +81,11 @@ export interface Client {
     phone: string | null;
     mobile: string | null;
     address: string | null;
-    address2?: string | null;
-    address3?: string | null;
-    contact?: string | null;
-    eircode?: string | null;
-    paymentTerms?: number;
-    notes?: string | null;
+    eircode: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    paymentTerms: number;
+    notes: string | null;
 }
 
 export interface Invoice {
@@ -125,22 +124,59 @@ export interface Quote {
 
 export interface Job {
     id: number;
-    name: string;
+    userId: string;
+    organizationId: number | null;
+    clientId: number;
+    title: string;
     description: string | null;
-    clientId: number | null;
-    status: string;
-    address: string | null;
-    startDate: string | null;
-    endDate: string | null;
+    status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+    date: string;
+    startTime: string | null;
+    estimatedDuration: string | null;
+    createdAt: string;
+    updatedAt: string;
 }
+
+export type JobWithClient = Job & { client: Client };
 
 export interface TimeEntry {
     id: number;
-    userId: number;
+    userId: string;
+    clientId: number | null;
+    clientName?: string;
     jobId: number | null;
-    startTime: string;
+    jobTitle?: string;
+    invoiceId: number | null;
+    description: string;
+    date: string;
+    startTime: string | null;
     endTime: string | null;
+    duration: number;
+    hourlyRate: string;
+    amount: string;
+    isBillable: boolean;
+    isBilled: boolean;
+    notes: string | null;
+    createdAt: string;
+}
+
+export interface ClockEntry {
+    id: number;
+    userId: string;
+    jobId: number | null;
+    clockInTime: string;
+    clockOutTime: string | null;
+    clockInLatitude: string | null;
+    clockInLongitude: string | null;
+    clockInAddress: string | null;
+    clockOutLatitude: string | null;
+    clockOutLongitude: string | null;
+    clockOutAddress: string | null;
+    totalMinutes: number | null;
     breakMinutes: number;
+    billableMinutes: number | null;
+    status: 'active' | 'completed' | 'invoiced' | 'flagged';
+    workDescription: string | null;
     notes: string | null;
 }
 

@@ -1,86 +1,24 @@
-/* Import Montreal font - using locally hosted or system fallback */
-/* PP Neue Montreal is a commercial font - using similar free alternative */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+/**
+ * Quotr Global Styles
+ * 
+ * This file imports the design system variables and defines base styles.
+ * All colors must use CSS variables from theme/variables.css
+ */
 
+/* Import design system CSS variables */
+@import './theme/variables.css';
+
+/* Import fonts - using system fonts per SF Pro fallback */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Override font family to use Inter as SF Pro fallback */
 :root {
-  /* Premium Color Palette */
-  --color-primary: #0d9488;
-  --color-primary-light: #14b8a6;
-  --color-primary-dark: #0f766e;
-  --color-accent: #6366f1;
-  --color-accent-light: #818cf8;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-
-  /* Neutral Colors */
-  --color-background: #ffffff;
-  --color-background-root: #f8fafc;
-  --color-background-secondary: #f1f5f9;
-  --color-background-tertiary: #e2e8f0;
-  --color-text: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-text-disabled: #94a3b8;
-  --color-border: #e2e8f0;
-  --color-border-light: #f1f5f9;
-  --color-surface: #ffffff;
-
-  /* Enterprise Dashboard Colors */
-  --dashboard-sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  --dashboard-sidebar-active: rgba(13, 148, 136, 0.15);
-  --dashboard-sidebar-hover: rgba(255, 255, 255, 0.05);
-  --dashboard-topbar-bg: rgba(255, 255, 255, 0.8);
-  --dashboard-accent-teal: #0d9488;
-  --dashboard-accent-indigo: #6366f1;
-
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --gradient-error: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 40px;
-  --spacing-3xl: 56px;
-
-  /* Border Radius */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-full: 9999px;
-
-  /* Typography - Montreal */
-  --font-display: "Space Grotesk", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", sans-serif;
-  --font-sans: "DM Sans", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-  --shadow-glow-teal: 0 0 20px rgba(13, 148, 136, 0.3);
-  --shadow-glow-indigo: 0 0 20px rgba(99, 102, 241, 0.3);
-
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 200ms ease;
-  --transition-slow: 300ms ease;
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
 }
+
+/* =========================================================================
+   BASE STYLES
+   ========================================================================= */
 
 * {
   box-sizing: border-box;
@@ -89,13 +27,19 @@
 }
 
 body {
-  font-family: var(--font-sans);
-  background-color: var(--color-background-root);
-  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* =========================================================================
+   TYPOGRAPHY
+   ========================================================================= */
 
 h1,
 h2,
@@ -103,16 +47,28 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: var(--font-family-sans);
+  color: var(--color-text-primary);
+  line-height: 1.25;
 }
 
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-semibold);
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+p {
+  color: var(--color-text-primary);
 }
 
 a {
@@ -124,24 +80,176 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Utility Classes */
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--glass-shadow);
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
 }
 
-.gradient-text {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* =========================================================================
+   UTILITY CLASSES
+   ========================================================================= */
+
+/* Text colors */
+.text-primary {
+  color: var(--color-text-primary);
 }
 
-/* Animations */
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-disabled {
+  color: var(--color-text-disabled);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+/* Background colors */
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-background {
+  background-color: var(--color-background);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+/* Font sizes */
+.text-h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+.text-h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-h3 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-body {
+  font-size: var(--font-size-body);
+}
+
+.text-body-small {
+  font-size: var(--font-size-body-small);
+}
+
+.text-caption {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Font weights */
+.font-regular {
+  font-weight: var(--font-weight-regular);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+/* Tabular numbers for amounts */
+.tabular-nums {
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   SPACING UTILITIES
+   ========================================================================= */
+
+.p-xs {
+  padding: var(--spacing-xs);
+}
+
+.p-sm {
+  padding: var(--spacing-sm);
+}
+
+.p-md {
+  padding: var(--spacing-md);
+}
+
+.p-lg {
+  padding: var(--spacing-lg);
+}
+
+.p-xl {
+  padding: var(--spacing-xl);
+}
+
+.m-xs {
+  margin: var(--spacing-xs);
+}
+
+.m-sm {
+  margin: var(--spacing-sm);
+}
+
+.m-md {
+  margin: var(--spacing-md);
+}
+
+.m-lg {
+  margin: var(--spacing-lg);
+}
+
+.m-xl {
+  margin: var(--spacing-xl);
+}
+
+.gap-xs {
+  gap: var(--spacing-xs);
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+.gap-xl {
+  gap: var(--spacing-xl);
+}
+
+/* =========================================================================
+   ANIMATIONS
+   ========================================================================= */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -188,15 +296,9 @@ a:hover {
   }
 }
 
-@keyframes countUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-
+@keyframes spin {
   to {
-    transform: translateY(0);
-    opacity: 1;
+    transform: rotate(360deg);
   }
 }
 
@@ -208,7 +310,18 @@ a:hover {
   animation: slideIn 0.3s ease-out forwards;
 }
 
-/* Scrollbar styling */
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* =========================================================================
+   SCROLLBAR STYLING
+   ========================================================================= */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -219,7 +332,7 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-background-tertiary);
+  background: var(--color-border);
   border-radius: var(--radius-full);
 }
 
@@ -227,14 +340,43 @@ a:hover {
   background: var(--color-text-disabled);
 }
 
-/* Selection */
+/* =========================================================================
+   SELECTION & FOCUS
+   ========================================================================= */
+
 ::selection {
-  background: rgba(13, 148, 136, 0.2);
-  color: var(--color-text);
+  background: rgba(11, 110, 135, 0.2);
+  color: var(--color-text-primary);
 }
 
-/* Focus styles */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* =========================================================================
+   FORM RESET
+   ========================================================================= */
+
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Remove autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset;
+  box-shadow: 0 0 0px 1000px var(--color-surface) inset;
+  -webkit-text-fill-color: var(--color-text-primary);
 }
