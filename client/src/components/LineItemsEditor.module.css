@@ -1,0 +1,141 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: 1fr 80px 100px 100px 40px;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 80px 100px 100px 40px;
+    gap: 12px;
+    align-items: center;
+}
+
+.inputDescription,
+.inputQty,
+.inputRate {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background: var(--color-background);
+    transition: all var(--transition-fast);
+}
+
+.inputDescription:focus,
+.inputQty:focus,
+.inputRate:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.inputQty,
+.inputRate {
+    text-align: right;
+}
+
+.amount {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    text-align: right;
+    padding-right: 8px;
+}
+
+.deleteBtn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.deleteBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.addBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    background: transparent;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.addBtn:hover {
+    background: rgba(13, 148, 136, 0.05);
+    border-color: var(--color-primary);
+}
+
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 2px solid var(--color-border);
+    margin-top: 8px;
+}
+
+.totalRow span {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.totalRow strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.colDescription {}
+
+.colQty {
+    text-align: center;
+}
+
+.colRate {
+    text-align: center;
+}
+
+.colAmount {
+    text-align: right;
+}
+
+.colAction {}

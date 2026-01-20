@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import styles from "./SalesSummary.module.css";
 
@@ -12,18 +13,37 @@ interface SummarySectionProps {
     title: string;
     items: SummaryItem[];
     actionLabel: string;
+    viewAllPath: string;
+    onAction: () => void;
+    onItemClick: (status: string) => void;
 }
 
-function SummarySection({ title, items, actionLabel }: SummarySectionProps) {
+function SummarySection({ title, items, actionLabel, viewAllPath, onAction, onItemClick }: SummarySectionProps) {
+    const navigate = useNavigate();
+
     return (
         <div className={styles.section}>
             <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>{title}</h3>
-                <a href="#" className={styles.seeAll}>See all</a>
+                <a
+                    href={viewAllPath}
+                    className={styles.seeAll}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        navigate(viewAllPath);
+                    }}
+                >
+                    See all
+                </a>
             </div>
             <div className={styles.itemList}>
                 {items.map((item, idx) => (
-                    <div key={idx} className={styles.item}>
+                    <div
+                        key={idx}
+                        className={styles.item}
+                        onClick={() => onItemClick(item.status)}
+                        style={{ cursor: "pointer" }}
+                    >
                         <div className={styles.itemLeft}>
                             <div className={styles.statusDot} style={{ backgroundColor: item.color }} />
                             <span className={styles.label}>{item.label}</span>
@@ -35,7 +55,7 @@ function SummarySection({ title, items, actionLabel }: SummarySectionProps) {
                     </div>
                 ))}
             </div>
-            <button className={styles.actionButton}>
+            <button className={styles.actionButton} onClick={onAction}>
                 {actionLabel}
             </button>
         </div>
@@ -51,6 +71,8 @@ interface SalesSummaryProps {
 }
 
 export default function SalesSummary({ data }: SalesSummaryProps) {
+    const navigate = useNavigate();
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -61,18 +83,27 @@ export default function SalesSummary({ data }: SalesSummaryProps) {
                 title="Enquiries"
                 items={data.enquiries}
                 actionLabel="New Enquiry"
+                viewAllPath="/quotes"
+                onAction={() => navigate("/quotes?action=new")}
+                onItemClick={(status) => navigate(`/quotes?status=${status}`)}
             />
 
             <SummarySection
                 title="Quotes"
                 items={data.quotes}
                 actionLabel="New Quote"
+                viewAllPath="/quotes"
+                onAction={() => navigate("/quotes?action=new")}
+                onItemClick={(status) => navigate(`/quotes?status=${status}`)}
             />
 
             <SummarySection
                 title="Invoices"
                 items={data.invoices}
                 actionLabel="New Invoice"
+                viewAllPath="/invoices"
+                onAction={() => navigate("/invoices?action=new")}
+                onItemClick={(status) => navigate(`/invoices?status=${status}`)}
             />
         </div>
     );

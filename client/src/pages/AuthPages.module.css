@@ -1,0 +1,357 @@
+/* Enterprise Auth Pages - CaptivateIQ-inspired design */
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Left Panel - Branding */
+.leftPanel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+.leftPanel::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 30%, rgba(13, 148, 136, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    animation: pulse 15s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(-5%, -5%);
+    }
+}
+
+.brandContent {
+    position: relative;
+    z-index: 1;
+    max-width: 400px;
+}
+
+.brandLogo {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 24px;
+    filter: drop-shadow(0 4px 12px rgba(13, 148, 136, 0.3));
+}
+
+.brandTitle {
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+}
+
+.brandTagline {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+}
+
+.feature svg {
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+/* Right Panel - Auth Form */
+.rightPanel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    background: #f8fafc;
+}
+
+.authCard {
+    width: 100%;
+    max-width: 440px;
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 24px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.backLink:hover {
+    color: #0d9488;
+}
+
+.authHeader {
+    margin-bottom: 32px;
+}
+
+.authHeader h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.authHeader p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+.authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inputGroup label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.inputWrapper {
+    position: relative;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.inputWrapper input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px 0 44px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 16px;
+    /* Minimum 16px prevents iOS zoom on focus */
+    color: #0f172a;
+    background: #f8fafc;
+    transition: all 0.2s;
+    /* Mobile touch fixes */
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+}
+
+.inputWrapper input:focus {
+    outline: none;
+    border-color: #0d9488;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+}
+
+.inputWrapper input::placeholder {
+    color: #94a3b8;
+}
+
+.primaryButton {
+    height: 52px;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    text-decoration: none;
+    margin-top: 8px;
+    /* Mobile touch fixes */
+    -webkit-tap-highlight-color: rgba(13, 148, 136, 0.3);
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
+    user-select: none;
+}
+
+/* Only apply hover effects on devices that support hover (not touch) */
+@media (hover: hover) and (pointer: fine) {
+    .primaryButton:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
+    }
+}
+
+/* Active state for touch feedback on all devices */
+.primaryButton:active:not(:disabled) {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+}
+
+.primaryButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.secondaryLink {
+    display: block;
+    text-align: right;
+    font-size: 14px;
+    color: #0d9488;
+    text-decoration: none;
+    margin-top: -8px;
+    transition: color 0.2s;
+}
+
+.secondaryLink:hover {
+    color: #0f766e;
+    text-decoration: underline;
+}
+
+.authFooter {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.authFooter a {
+    color: #0d9488;
+    font-weight: 600;
+    margin-left: 6px;
+    text-decoration: none;
+}
+
+.authFooter a:hover {
+    text-decoration: underline;
+}
+
+.errorAlert {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.successMessage {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.successIcon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: #16a34a;
+}
+
+.successMessage h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.successMessage p {
+    color: #64748b;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .leftPanel {
+        padding: 32px;
+        min-height: auto;
+    }
+
+    .brandContent {
+        text-align: center;
+    }
+
+    .brandTitle {
+        font-size: 28px;
+    }
+
+    .brandTagline {
+        font-size: 16px;
+        margin-bottom: 24px;
+    }
+
+    .features {
+        display: none;
+    }
+
+    .rightPanel {
+        padding: 24px;
+    }
+
+    .authCard {
+        padding: 28px;
+    }
+}
