@@ -4,6 +4,7 @@ import { queryClient } from "./lib/api";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import SignUpPage from "./pages/SignUpPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -54,14 +55,17 @@ function AppRoutes() {
   return (
     <Router>
       <Routes>
+        {/* Landing Page */}
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+
         {/* Auth Routes */}
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/signup" element={isAuthenticated ? <Navigate to="/" replace /> : <SignUpPage />} />
-        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />
-        <Route path="/reset-password" element={isAuthenticated ? <Navigate to="/" replace /> : <ResetPasswordPage />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUpPage />} />
+        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />} />
+        <Route path="/reset-password" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ResetPasswordPage />} />
 
         {/* Dashboard */}
-        <Route path="/" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
 
         {/* Work */}
         <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
@@ -87,7 +91,7 @@ function AppRoutes() {
         <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
 
         {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />
       </Routes>
     </Router>
   );

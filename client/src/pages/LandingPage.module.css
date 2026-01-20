@@ -1,0 +1,444 @@
+.container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a7e9e 0%, #065a73 100%);
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    padding: 24px 40px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logoIcon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #0a7e9e;
+}
+
+.logoText {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 40px 60px;
+    gap: 60px;
+}
+
+.leftPanel {
+    flex: 1;
+    max-width: 580px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.branding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.brandIcon {
+    width: 80px;
+    height: 80px;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: #0a7e9e;
+    margin-bottom: 12px;
+}
+
+.brandName {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+}
+
+.carousel {
+    width: 100%;
+}
+
+.slideContent {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slideHeadline {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 12px;
+}
+
+.slideDescription {
+    font-size: 15px;
+    color: #6b7280;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.mockup {
+    background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    padding: 24px;
+    min-height: 280px;
+    border: 1px solid #e2e8f0;
+}
+
+.mockupHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.mockupDots {
+    display: flex;
+    gap: 6px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.mockupTitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    margin-left: 8px;
+}
+
+.mockupBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mockupRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.mockupRow[data-highlight="green"] {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.mockupRow[data-highlight="blue"] {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+.mockupRow[data-highlight="purple"] {
+    background: #f3e8ff;
+    border-color: #c4b5fd;
+}
+
+.mockupRow[data-highlight="yellow"] {
+    background: #fef3c7;
+    border-color: #fcd34d;
+}
+
+.mockupIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    color: white;
+}
+
+.mockupIcon[data-color="teal"] {
+    background: #0a7e9e;
+}
+
+.mockupIcon[data-color="green"] {
+    background: #10b981;
+}
+
+.mockupIcon[data-color="blue"] {
+    background: #3b82f6;
+}
+
+.mockupIcon[data-color="orange"] {
+    background: #f59e0b;
+}
+
+.mockupIcon[data-color="purple"] {
+    background: #8b5cf6;
+}
+
+.mockupText {
+    flex: 1;
+}
+
+.mockupLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.mockupSublabel {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+.mockupValue {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0a7e9e;
+}
+
+.badge {
+    background: #dcfce7;
+    color: #166534;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.progressBar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progressFill[data-color="teal"] {
+    background: #0a7e9e;
+}
+
+.progressFill[data-color="green"] {
+    background: #10b981;
+}
+
+.carouselDots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.carouselDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.carouselDot.active {
+    background: white;
+    transform: scale(1.2);
+}
+
+.carouselDot:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.rightPanel {
+    width: 420px;
+    flex-shrink: 0;
+}
+
+.loginCard {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.loginBranding {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.loginIcon {
+    width: 80px;
+    height: 80px;
+    background: #0a7e9e;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+}
+
+.loginTitle {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.5px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+.primaryBtn {
+    background: #111827;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.primaryBtn:hover {
+    background: #1f2937;
+}
+
+.secondaryBtn {
+    background: #f9fafb;
+    color: #111827;
+    border: 1px solid #d1d5db;
+}
+
+.secondaryBtn:hover {
+    background: #f3f4f6;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.tagline {
+    text-align: center;
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 24px;
+}
+
+@media (max-width: 1024px) {
+    .main {
+        flex-direction: column;
+        padding: 20px;
+        gap: 40px;
+    }
+
+    .leftPanel {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .rightPanel {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .header {
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .slideContent {
+        padding: 24px;
+    }
+
+    .loginCard {
+        padding: 28px;
+    }
+
+    .slideHeadline {
+        font-size: 20px;
+    }
+
+    .mockup {
+        min-height: 220px;
+        padding: 16px;
+    }
+}
