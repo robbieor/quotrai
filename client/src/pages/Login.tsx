@@ -102,16 +102,6 @@ export default function Login() {
                             type="submit"
                             className={styles.primaryButton}
                             disabled={isLoading}
-                            onTouchEnd={(e) => {
-                                // Prevent double-firing on devices that support both touch and click
-                                e.preventDefault();
-                                if (!isLoading) {
-                                    const form = e.currentTarget.closest('form');
-                                    if (form) {
-                                        form.requestSubmit();
-                                    }
-                                }
-                            }}
                         >
                             <LogIn size={20} />
                             {isLoading ? "Signing in..." : "Sign In"}
