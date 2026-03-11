@@ -227,6 +227,60 @@ export type Database = {
           },
         ]
       }
+      comms_audit_log: {
+        Row: {
+          allowed: boolean
+          attempted_at: string
+          blocked_reason: string | null
+          channel: string
+          confirmed_by_user: boolean
+          id: string
+          manual_send: boolean
+          metadata: Json | null
+          recipient: string | null
+          record_id: string | null
+          record_type: string | null
+          source_screen: string | null
+          team_id: string | null
+          template: string | null
+          user_id: string | null
+        }
+        Insert: {
+          allowed?: boolean
+          attempted_at?: string
+          blocked_reason?: string | null
+          channel?: string
+          confirmed_by_user?: boolean
+          id?: string
+          manual_send?: boolean
+          metadata?: Json | null
+          recipient?: string | null
+          record_id?: string | null
+          record_type?: string | null
+          source_screen?: string | null
+          team_id?: string | null
+          template?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          allowed?: boolean
+          attempted_at?: string
+          blocked_reason?: string | null
+          channel?: string
+          confirmed_by_user?: boolean
+          id?: string
+          manual_send?: boolean
+          metadata?: Json | null
+          recipient?: string | null
+          record_id?: string | null
+          record_type?: string | null
+          source_screen?: string | null
+          team_id?: string | null
+          template?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       comms_queue: {
         Row: {
           cancelled: boolean
@@ -1271,9 +1325,11 @@ export type Database = {
       }
       invoices: {
         Row: {
+          communication_suppressed: boolean
           created_at: string
           currency: string
           customer_id: string
+          delivery_status: string
           discount_type: string
           discount_value: number
           due_date: string
@@ -1293,9 +1349,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          communication_suppressed?: boolean
           created_at?: string
           currency?: string
           customer_id: string
+          delivery_status?: string
           discount_type?: string
           discount_value?: number
           due_date?: string
@@ -1315,9 +1373,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          communication_suppressed?: boolean
           created_at?: string
           currency?: string
           customer_id?: string
+          delivery_status?: string
           discount_type?: string
           discount_value?: number
           due_date?: string
@@ -2439,9 +2499,11 @@ export type Database = {
       }
       quotes: {
         Row: {
+          communication_suppressed: boolean
           created_at: string
           currency: string
           customer_id: string
+          delivery_status: string
           discount_type: string
           discount_value: number
           id: string
@@ -2461,9 +2523,11 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
+          communication_suppressed?: boolean
           created_at?: string
           currency?: string
           customer_id: string
+          delivery_status?: string
           discount_type?: string
           discount_value?: number
           id?: string
@@ -2483,9 +2547,11 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
+          communication_suppressed?: boolean
           created_at?: string
           currency?: string
           customer_id?: string
+          delivery_status?: string
           discount_type?: string
           discount_value?: number
           id?: string
