@@ -1,19 +1,34 @@
-import { useState } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Lock, AlertCircle, CheckCircle } from "lucide-react";
-import { apiRequest } from "../lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import styles from "./AuthPages.module.css";
 
 export default function ResetPasswordPage() {
-    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const token = searchParams.get("token");
-
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [isRecovery, setIsRecovery] = useState(false);
+
+    useEffect(() => {
+        // Check for recovery event in URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        if (hashParams.get("type") === "recovery") {
+            setIsRecovery(true);
+        }
+
+        // Also listen for auth state change with recovery event
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+            if (event === "PASSWORD_RECOVERY") {
+                setIsRecovery(true);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,7 +47,8 @@ export default function ResetPasswordPage() {
         setIsLoading(true);
 
         try {
-            await apiRequest("POST", "/api/auth/reset-password", { token, password });
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) throw error;
             setSuccess(true);
             setTimeout(() => navigate("/login"), 3000);
         } catch (err: any) {
@@ -42,7 +58,7 @@ export default function ResetPasswordPage() {
         }
     };
 
-    if (!token) {
+    if (!isRecovery) {
         return (
             <div className={styles.container}>
                 <div className={styles.leftPanel}>
@@ -55,7 +71,7 @@ export default function ResetPasswordPage() {
                     <div className={styles.authCard}>
                         <div className={styles.errorAlert}>
                             <AlertCircle size={16} />
-                            Invalid or missing reset token. Please request a new password reset.
+                            Invalid or expired reset link. Please request a new password reset.
                         </div>
                         <Link to="/forgot-password" className={styles.primaryButton}>
                             Request New Reset Link
