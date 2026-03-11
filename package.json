@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "client:dev": "cd client && npm run dev",
+    "dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
     "server:dev": "cross-env NODE_ENV=development tsx --tsconfig tsconfig.json server/index.ts",
     "server:build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=server_dist",
