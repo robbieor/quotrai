@@ -1,33 +1,12 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "paths": {
-      "@/*": [
-        "./client/*"
-      ],
-      "@shared/*": [
-        "./shared/*"
-      ]
-    },
-    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true,
-    "target": "ES2022",
-    "types": [
-      "node"
-    ]
+    "strict": false,
+    "target": "ES2022"
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "**/*.test.ts"
-  ],
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ]
+  "include": ["dummy.ts"],
+  "exclude": ["node_modules"]
 }

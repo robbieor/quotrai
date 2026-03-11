@@ -10,7 +10,6 @@
         opacity: 0;
         transform: translateY(8px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -316,4 +315,64 @@
 .submitBtn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .header h1 {
+        font-size: 22px;
+    }
+
+    .createBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .toolbar {
+        flex-direction: column;
+    }
+
+    .searchBox {
+        max-width: 100%;
+    }
+
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+
+    .modalOverlay {
+        padding: 0;
+    }
+
+    .modal {
+        max-width: 100%;
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .modalForm {
+        padding: 16px;
+    }
+
+    .modalHeader {
+        padding: 16px;
+    }
+
+    .modalFooter {
+        padding: 16px;
+        flex-direction: column;
+    }
+
+    .cancelBtn,
+    .submitBtn {
+        width: 100%;
+        justify-content: center;
+    }
 }
