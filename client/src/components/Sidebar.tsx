@@ -82,14 +82,27 @@ const NAV_SECTIONS: NavSection[] = [
 interface SidebarProps {
     collapsed: boolean;
     onToggle: () => void;
+    mobileOpen?: boolean;
+    onCloseMobile?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onCloseMobile }: SidebarProps) {
     const location = useLocation();
     const { logout } = useAuth();
 
+    const sidebarClass = [
+        styles.sidebar,
+        collapsed ? styles.sidebarCollapsed : "",
+        mobileOpen ? styles.sidebarMobileOpen : "",
+    ].filter(Boolean).join(" ");
+
+    const handleNavClick = () => {
+        // Close mobile drawer on navigation
+        onCloseMobile?.();
+    };
+
     return (
-        <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ""}`}>
+        <aside className={sidebarClass}>
             <div className={styles.header}>
                 <div className={styles.logoRow}>
                     <img src="/logo.png" alt="Quotr" className={styles.logo} />
@@ -112,9 +125,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                                 <Link
                                     key={item.label}
                                     to={item.path}
-                                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${collapsed ? styles.navItemCollapsed : ""
-                                        }`}
+                                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ""} ${collapsed ? styles.navItemCollapsed : ""}`}
                                     title={collapsed ? item.label : ""}
+                                    onClick={handleNavClick}
                                 >
                                     <Icon size={20} />
                                     {!collapsed && <span className={styles.navLabel}>{item.label}</span>}

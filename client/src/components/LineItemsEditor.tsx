@@ -27,7 +27,6 @@ export default function LineItemsEditor({ items, onChange }: LineItemsEditorProp
         const updated = [...items];
         updated[index] = { ...updated[index], [field]: value };
 
-        // Auto-calculate amount
         if (field === "quantity" || field === "rate") {
             const qty = parseFloat(updated[index].quantity) || 0;
             const rate = parseFloat(updated[index].rate) || 0;
@@ -59,23 +58,34 @@ export default function LineItemsEditor({ items, onChange }: LineItemsEditorProp
                             value={item.description}
                             onChange={(e) => updateItem(index, "description", e.target.value)}
                         />
-                        <input
-                            type="number"
-                            className={styles.inputQty}
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, "quantity", e.target.value)}
-                            min="0"
-                            step="1"
-                        />
-                        <input
-                            type="number"
-                            className={styles.inputRate}
-                            value={item.rate}
-                            onChange={(e) => updateItem(index, "rate", e.target.value)}
-                            min="0"
-                            step="0.01"
-                        />
-                        <div className={styles.amount}>€{item.amount}</div>
+                        <div className={styles.mobileFieldRow}>
+                            <div>
+                                <span className={styles.mobileLabel}>Qty</span>
+                                <input
+                                    type="number"
+                                    className={styles.inputQty}
+                                    value={item.quantity}
+                                    onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                                    min="0"
+                                    step="1"
+                                />
+                            </div>
+                            <div>
+                                <span className={styles.mobileLabel}>Rate (€)</span>
+                                <input
+                                    type="number"
+                                    className={styles.inputRate}
+                                    value={item.rate}
+                                    onChange={(e) => updateItem(index, "rate", e.target.value)}
+                                    min="0"
+                                    step="0.01"
+                                />
+                            </div>
+                            <div>
+                                <span className={styles.mobileLabel}>Amount</span>
+                                <div className={styles.amount}>€{item.amount}</div>
+                            </div>
+                        </div>
                         <button
                             type="button"
                             className={styles.deleteBtn}

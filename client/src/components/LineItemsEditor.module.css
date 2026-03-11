@@ -125,17 +125,68 @@
 }
 
 .colDescription {}
-
-.colQty {
-    text-align: center;
-}
-
-.colRate {
-    text-align: center;
-}
-
-.colAmount {
-    text-align: right;
-}
-
+.colQty { text-align: center; }
+.colRate { text-align: center; }
+.colAmount { text-align: right; }
 .colAction {}
+
+/* Mobile label for card layout */
+.mobileLabel {
+    display: none;
+}
+
+/* Mobile: stacked card layout */
+@media (max-width: 640px) {
+    .header {
+        display: none;
+    }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-background);
+        position: relative;
+    }
+
+    .inputDescription {
+        width: 100%;
+    }
+
+    .mobileLabel {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .mobileFieldRow {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+    }
+
+    .inputQty,
+    .inputRate {
+        text-align: left;
+        width: 100%;
+    }
+
+    .amount {
+        text-align: left;
+        padding: 10px 12px;
+        background: var(--color-background-secondary);
+        border-radius: var(--radius-md);
+    }
+
+    .deleteBtn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+}

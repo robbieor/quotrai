@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { Search, Bell, ChevronDown, User, Settings, LogOut, Menu } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import styles from "./TopBar.module.css";
 import { useAuth } from "../contexts/AuthContext";
 import { apiRequest } from "../lib/api";
 
-export default function TopBar() {
+interface TopBarProps {
+    onMenuToggle?: () => void;
+}
+
+export default function TopBar({ onMenuToggle }: TopBarProps) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -78,6 +82,10 @@ export default function TopBar() {
 
     return (
         <header className={styles.topBar}>
+            <button className={styles.menuButton} onClick={onMenuToggle}>
+                <Menu size={22} />
+            </button>
+
             <div className={styles.leftSection}>
                 <h1 className={styles.greeting}>{getGreeting()}, {displayName}</h1>
                 <span className={styles.date}>{dashboardDate}</span>
