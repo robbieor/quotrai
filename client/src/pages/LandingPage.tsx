@@ -119,6 +119,39 @@ const slides: Slide[] = [
 
 export default function LandingPage() {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [currency, setCurrency] = useState("EUR");
+    const [fxRates, setFxRates] = useState<Record<string, number>>({ EUR: 1 });
+    const [annual, setAnnual] = useState(false);
+
+    /* Geo-IP detect country → currency */
+    useEffect(() => {
+        fetch("https://ipapi.co/json/")
+            .then(r => r.json())
+            .then(data => {
+                const cc = data?.country_code;
+                if (!cc) return;
+                const mapped = COUNTRY_CURRENCY[cc] || (EU_COUNTRIES.includes(cc) ? "EUR" : "EUR");
+                if (SUPPORTED_CURRENCIES.includes(mapped)) setCurrency(mapped);
+            })
+            .catch(() => {/* default EUR */});
+    }, []);
+
+    /* Fetch FX rates from currency_rates table */
+    useEffect(() => {
+        supabase.from("currency_rates").select("currency_code, rate_from_eur")
+            .then(({ data }) => {
+                if (!data) return;
+                const rates: Record<string, number> = { EUR: 1 };
+                data.forEach((r: any) => { rates[r.currency_code] = Number(r.rate_from_eur); });
+                setFxRates(rates);
+            });
+    }, []);
+
+    const rate = fxRates[currency] || 1;
+    const convertPrice = (eurAmount: number) => {
+        const adjusted = annual ? eurAmount * (1 - ANNUAL_DISCOUNT) : eurAmount;
+        return formatPrice(adjusted * rate, currency);
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -128,8 +161,6 @@ export default function LandingPage() {
     }, []);
 
     const slide = slides[currentSlide];
-
-    return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.logo}>
