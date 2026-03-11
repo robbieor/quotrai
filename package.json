@@ -26,6 +26,7 @@
     "@types/connect-pg-simple": "^7.0.3",
     "@types/express-session": "^1.18.2",
     "@types/multer": "^2.0.0",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "axios": "^1.13.2",
     "base64-arraybuffer": "^1.0.2",
