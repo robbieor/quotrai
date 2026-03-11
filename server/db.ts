@@ -16,6 +16,6 @@ pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-db = drizzlePg(pool, { schema });
+db = drizzle(pool, { schema });
 
 export { db, pool };

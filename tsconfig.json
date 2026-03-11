@@ -24,7 +24,8 @@
     "node_modules",
     "build",
     "dist",
-    "client"
+    "client",
+    "scripts"
   ],
   "include": [
     "**/*.ts"
