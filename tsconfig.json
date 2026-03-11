@@ -25,7 +25,8 @@
     "build",
     "dist",
     "client",
-    "scripts"
+    "scripts",
+    "server"
   ],
   "include": [
     "**/*.ts"
