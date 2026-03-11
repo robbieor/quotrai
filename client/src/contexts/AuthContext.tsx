@@ -17,11 +17,6 @@ interface Profile {
     onboarding_completed: boolean;
 }
 
-interface TeamMembership {
-    team_id: string;
-    role: string;
-    team?: { id: string; name: string };
-}
 
 interface AuthContextType {
     user: SupabaseUser | null;
