@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --root client",
+    "dev": "vite serve client",
     "build:dev": "cd client && npm run build",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
