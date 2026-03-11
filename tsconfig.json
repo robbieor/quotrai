@@ -1,14 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./client/*"
@@ -17,18 +12,22 @@
         "./shared/*"
       ]
     },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
     "types": [
       "node"
     ]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
   "exclude": [
     "node_modules",
     "build",
     "dist",
     "**/*.test.ts"
+  ],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
   ]
 }
