@@ -30,7 +30,6 @@
     "**/*.test.ts"
   ],
   "include": [
-    "server/**/*.ts",
     "shared/**/*.ts"
   ]
 }
