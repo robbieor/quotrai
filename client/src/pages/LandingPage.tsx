@@ -1,6 +1,32 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import styles from "./LandingPage.module.css";
+
+/* ── Country → Currency mapping ── */
+const EU_COUNTRIES = ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES"];
+const COUNTRY_CURRENCY: Record<string, string> = {
+    GB: "GBP", US: "USD", AU: "AUD", NZ: "NZD", CA: "CAD", CH: "CHF",
+    SE: "SEK", NO: "NOK", DK: "DKK", PL: "PLN",
+};
+const CURRENCY_LOCALE: Record<string, string> = {
+    EUR: "en-IE", GBP: "en-GB", USD: "en-US", AUD: "en-AU", NZD: "en-NZ",
+    CAD: "en-CA", CHF: "de-CH", SEK: "sv-SE", NOK: "nb-NO", DKK: "da-DK", PLN: "pl-PL",
+};
+const SUPPORTED_CURRENCIES = ["EUR","GBP","USD","AUD","NZD","CAD","CHF","SEK","NOK","DKK","PLN"];
+
+/* ── Pricing tiers (EUR base, monthly) ── */
+const PLANS = [
+    { name: "Lite", monthlyEur: 15, features: ["Unlimited quotes & invoices", "1 user", "AI receipt scanning", "Client portal", "Basic reports"] },
+    { name: "Connect", monthlyEur: 29, popular: true, features: ["Everything in Lite", "Up to 5 users", "Job & expense tracking", "Stripe payments", "Automated reminders", "Team chat"] },
+    { name: "Grow", monthlyEur: 49, features: ["Everything in Connect", "Unlimited users", "GPS time tracking", "Recurring jobs", "Advanced analytics", "Priority support"] },
+];
+const ANNUAL_DISCOUNT = 0.15;
+
+function formatPrice(amount: number, currency: string): string {
+    const locale = CURRENCY_LOCALE[currency] || "en-IE";
+    return new Intl.NumberFormat(locale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(amount));
+}
 
 interface SlideItem {
     icon?: string;
@@ -93,6 +119,39 @@ const slides: Slide[] = [
 
 export default function LandingPage() {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [currency, setCurrency] = useState("EUR");
+    const [fxRates, setFxRates] = useState<Record<string, number>>({ EUR: 1 });
+    const [annual, setAnnual] = useState(false);
+
+    /* Geo-IP detect country → currency */
+    useEffect(() => {
+        fetch("https://ipapi.co/json/")
+            .then(r => r.json())
+            .then(data => {
+                const cc = data?.country_code;
+                if (!cc) return;
+                const mapped = COUNTRY_CURRENCY[cc] || (EU_COUNTRIES.includes(cc) ? "EUR" : "EUR");
+                if (SUPPORTED_CURRENCIES.includes(mapped)) setCurrency(mapped);
+            })
+            .catch(() => {/* default EUR */});
+    }, []);
+
+    /* Fetch FX rates from currency_rates table */
+    useEffect(() => {
+        supabase.from("currency_rates").select("currency_code, rate_from_eur")
+            .then(({ data }) => {
+                if (!data) return;
+                const rates: Record<string, number> = { EUR: 1 };
+                data.forEach((r: any) => { rates[r.currency_code] = Number(r.rate_from_eur); });
+                setFxRates(rates);
+            });
+    }, []);
+
+    const rate = fxRates[currency] || 1;
+    const convertPrice = (eurAmount: number) => {
+        const adjusted = annual ? eurAmount * (1 - ANNUAL_DISCOUNT) : eurAmount;
+        return formatPrice(adjusted * rate, currency);
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -102,8 +161,6 @@ export default function LandingPage() {
     }, []);
 
     const slide = slides[currentSlide];
-
-    return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.logo}>
@@ -193,6 +250,47 @@ export default function LandingPage() {
                     </div>
                 </div>
             </main>
+
+            {/* ── Pricing Section ── */}
+            <section className={styles.pricingSection} id="pricing">
+                <div className={styles.pricingHeader}>
+                    <h2 className={styles.pricingTitle}>Simple, transparent pricing</h2>
+                    <p className={styles.pricingSubtitle}>No contracts. No lock-in. Cancel anytime.</p>
+
+                    <div className={styles.pricingControls}>
+                        <div className={styles.billingToggle}>
+                            <button className={!annual ? styles.toggleActive : styles.toggleInactive} onClick={() => setAnnual(false)}>Monthly</button>
+                            <button className={annual ? styles.toggleActive : styles.toggleInactive} onClick={() => setAnnual(true)}>
+                                Annual <span className={styles.discountBadge}>-15%</span>
+                            </button>
+                        </div>
+                        <select className={styles.currencySelect} value={currency} onChange={e => setCurrency(e.target.value)}>
+                            {SUPPORTED_CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                <div className={styles.pricingGrid}>
+                    {PLANS.map(plan => (
+                        <div key={plan.name} className={`${styles.pricingCard} ${plan.popular ? styles.pricingCardPopular : ""}`}>
+                            {plan.popular && <div className={styles.popularTag}>Most Popular</div>}
+                            <h3 className={styles.planName}>{plan.name}</h3>
+                            <div className={styles.planPrice}>
+                                <span className={styles.priceAmount}>{convertPrice(plan.monthlyEur)}</span>
+                                <span className={styles.pricePeriod}>/{annual ? "mo (billed annually)" : "mo"}</span>
+                            </div>
+                            <ul className={styles.featureList}>
+                                {plan.features.map(f => (
+                                    <li key={f} className={styles.featureItem}>✓ {f}</li>
+                                ))}
+                            </ul>
+                            <Link to="/signup" className={plan.popular ? styles.primaryBtn : styles.secondaryBtn}>
+                                Start Free Trial
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            </section>
         </div>
     );
 }
