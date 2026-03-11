@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cd client && npx vite",
+    "dev": "cd client && bun run dev --port 8080",
     "build:dev": "cd client && npm run build",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
