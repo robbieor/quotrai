@@ -27,7 +27,8 @@
     "client",
     "scripts",
     "server",
-    "src"
+    "src",
+    "supabase"
   ],
   "include": [
     "**/*.ts"
