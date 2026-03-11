@@ -23,14 +23,12 @@ function setupCors(app: express.Application) {
   app.use((req, res, next) => {
     const origins = new Set<string>();
 
-    // Production origins
-    origins.add("https://quotrai.lovable.app");
-    origins.add("https://id-preview--9b11f743-8542-4806-8d3e-a81555111caa.lovable.app");
-
     // Local development origins
     origins.add("http://localhost:5000");
-    origins.add("http://localhost:8081");
+    origins.add("http://localhost:8081"); // Expo web
+    origins.add("http://localhost:19006"); // Expo alt port
     origins.add("http://127.0.0.1:5000");
+    origins.add("http://127.0.0.1:8081");
 
     // Replit origins (for backward compatibility)
     if (process.env.REPLIT_DEV_DOMAIN) {

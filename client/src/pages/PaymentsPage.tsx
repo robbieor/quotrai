@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CreditCard, Check, AlertCircle, ExternalLink } from "lucide-react";
-import styles from "./PaymentsPage.module.css";
+import styles from "./InvoicesPage.module.css";
 
 interface Subscription {
     id: number;
@@ -20,19 +20,33 @@ export default function PaymentsPage() {
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
-                    <h1>Payments & Subscription</h1>
+                    <h1 className={styles.title}>Payments & Subscription</h1>
                     <p className={styles.subtitle}>Manage your subscription and billing</p>
                 </div>
             </div>
 
-            <div className={styles.cardGrid}>
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "24px"
+            }}>
                 {/* Subscription Status Card */}
-                <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div
-                            className={styles.cardIcon}
-                            style={{ background: isActive ? "#dcfce7" : "#fef3c7" }}
-                        >
+                <div style={{
+                    background: "white",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                    padding: "24px"
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                        <div style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: "12px",
+                            background: isActive ? "#dcfce7" : "#fef3c7",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}>
                             {isActive ? (
                                 <Check size={24} color="#166534" />
                             ) : (
@@ -40,25 +54,37 @@ export default function PaymentsPage() {
                             )}
                         </div>
                         <div>
-                            <h3 className={styles.cardTitle}>Subscription Status</h3>
-                            <span
-                                className={styles.cardSubtitle}
-                                style={{ color: isActive ? "#166534" : "#92400e", fontWeight: 500 }}
-                            >
+                            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#1e293b" }}>
+                                Subscription Status
+                            </h3>
+                            <span style={{
+                                fontSize: "14px",
+                                color: isActive ? "#166534" : "#92400e",
+                                fontWeight: 500
+                            }}>
                                 {isActive ? "Active" : subscription?.status || "No subscription"}
                             </span>
                         </div>
                     </div>
 
                     {subscription?.planName && (
-                        <div className={styles.planBox}>
-                            <div className={styles.planLabel}>Current Plan</div>
-                            <div className={styles.planName}>{subscription.planName}</div>
+                        <div style={{
+                            padding: "12px",
+                            background: "#f8fafc",
+                            borderRadius: "8px",
+                            marginBottom: "16px"
+                        }}>
+                            <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>
+                                Current Plan
+                            </div>
+                            <div style={{ fontSize: "18px", fontWeight: 600, color: "#1e293b" }}>
+                                {subscription.planName}
+                            </div>
                         </div>
                     )}
 
                     {subscription?.currentPeriodEnd && (
-                        <div className={styles.renewDate}>
+                        <div style={{ fontSize: "14px", color: "#64748b" }}>
                             Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-IE", {
                                 day: "numeric",
                                 month: "long",
@@ -69,18 +95,38 @@ export default function PaymentsPage() {
                 </div>
 
                 {/* Payment Methods Card */}
-                <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <div className={styles.cardIcon} style={{ background: "#dbeafe" }}>
+                <div style={{
+                    background: "white",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                    padding: "24px"
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                        <div style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: "12px",
+                            background: "#dbeafe",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}>
                             <CreditCard size={24} color="#1d4ed8" />
                         </div>
                         <div>
-                            <h3 className={styles.cardTitle}>Payment Methods</h3>
-                            <span className={styles.cardSubtitle}>Manage your payment options</span>
+                            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#1e293b" }}>
+                                Payment Methods
+                            </h3>
+                            <span style={{ fontSize: "14px", color: "#64748b" }}>
+                                Manage your payment options
+                            </span>
                         </div>
                     </div>
 
-                    <button className={styles.manageBtn}>
+                    <button
+                        className={styles.createButton}
+                        style={{ width: "100%" }}
+                    >
                         <ExternalLink size={18} />
                         Manage Billing
                     </button>

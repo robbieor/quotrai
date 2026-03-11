@@ -27,6 +27,7 @@ export default function LineItemsEditor({ items, onChange }: LineItemsEditorProp
         const updated = [...items];
         updated[index] = { ...updated[index], [field]: value };
 
+        // Auto-calculate amount
         if (field === "quantity" || field === "rate") {
             const qty = parseFloat(updated[index].quantity) || 0;
             const rate = parseFloat(updated[index].rate) || 0;

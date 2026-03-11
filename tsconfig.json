@@ -1,42 +1,33 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true,
-    "jsx": "react-jsx",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleDetection": "force",
-    "moduleResolution": "bundler",
-    "noEmit": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "moduleResolution": "node",
     "paths": {
       "@/*": [
-        "./client/src/*"
+        "./client/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
       ]
     },
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": [
-      "vite/client"
-    ],
-    "useDefineForClassFields": true,
-    "verbatimModuleSyntax": true
+      "node"
+    ]
   },
   "exclude": [
     "node_modules",
-    "server"
+    "build",
+    "dist",
+    "**/*.test.ts"
   ],
   "include": [
-    "client/src",
-    "src"
+    "**/*.ts",
+    "**/*.tsx"
   ]
 }

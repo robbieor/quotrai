@@ -73,8 +73,13 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideUp {
@@ -82,39 +87,9 @@
         opacity: 0;
         transform: translateY(20px) scale(0.98);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
-    }
-}
-
-/* Mobile: full-screen modal */
-@media (max-width: 640px) {
-    .overlay {
-        padding: 0;
-    }
-
-    .modal {
-        max-height: 100vh;
-        height: 100vh;
-        border-radius: 0;
-        border: none;
-    }
-
-    .header {
-        padding: var(--spacing-md);
-    }
-
-    .content {
-        padding: var(--spacing-md);
-    }
-
-    .footer {
-        padding: var(--spacing-md);
-        flex-direction: column;
-    }
-
-    .footer button {
-        width: 100%;
     }
 }

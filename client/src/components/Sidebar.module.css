@@ -197,29 +197,3 @@
     border-color: rgba(239, 68, 68, 0.3);
     box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
 }
-
-/* Mobile: off-canvas drawer */
-@media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100vh;
-        width: 280px;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        z-index: 200;
-    }
-
-    .sidebarCollapsed {
-        width: 280px;
-    }
-
-    .sidebarMobileOpen {
-        transform: translateX(0);
-    }
-
-    .collapseButton {
-        display: none;
-    }
-}
