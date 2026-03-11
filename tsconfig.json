@@ -5,34 +5,18 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "paths": {
-      "@/*": [
-        "./client/*"
-      ],
-      "@shared/*": [
-        "./shared/*"
-      ]
+      "@/*": ["./client/*"],
+      "@shared/*": ["./shared/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,
-    "noEmit": true,
     "target": "ES2022",
-    "types": [
-      "node"
-    ]
+    "noEmit": true
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "client",
-    "scripts",
-    "server",
-    "shared",
-    "**/*.test.ts"
+  "references": [
+    { "path": "./client/tsconfig.app.json" }
   ],
-  "include": [
-    "*.ts"
-  ],
-  "files": []
+  "files": [],
+  "include": []
 }
