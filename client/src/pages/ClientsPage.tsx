@@ -58,8 +58,8 @@ export default function ClientsPage() {
     });
 
     const createMutation = useMutation({
-        mutationFn: async (data: Partial<ClientRow>) => {
-            const { error } = await supabase.from("customers").insert({ ...data, team_id: teamId! });
+        mutationFn: async (data: Partial<ClientRow> & { name: string }) => {
+            const { error } = await supabase.from("customers").insert({ name: data.name, email: data.email, phone: data.phone, address: data.address, notes: data.notes, team_id: teamId! });
             if (error) throw error;
         },
         onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["clients"] }); closeModal(); },
