@@ -1,14 +1,8 @@
-import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "@shared/schema";
-import path from "path";
 
-// Determine which database to use based on environment
-const useSqlite = !process.env.DATABASE_URL || process.env.USE_SQLITE === "true";
-
-let db: ReturnType<typeof drizzlePg> | ReturnType<typeof drizzleSqlite>;
+let db: ReturnType<typeof drizzle>;
 let pool: pg.Pool | null = null;
 
 // PostgreSQL for production/Supabase
