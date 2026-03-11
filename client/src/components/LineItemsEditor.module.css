@@ -130,7 +130,7 @@
 .colAmount { text-align: right; }
 .colAction {}
 
-/* Mobile label for card layout */
+/* Mobile label */
 .mobileLabel {
     display: none;
 }
@@ -156,6 +156,12 @@
         width: 100%;
     }
 
+    .inputQty,
+    .inputRate {
+        text-align: left;
+        width: 100%;
+    }
+
     .mobileLabel {
         display: block;
         font-size: 11px;
@@ -163,18 +169,13 @@
         color: var(--color-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.04em;
+        margin-bottom: 4px;
     }
 
-    .mobileFieldRow {
+    .mobileFieldGroup {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         gap: 8px;
-    }
-
-    .inputQty,
-    .inputRate {
-        text-align: left;
-        width: 100%;
     }
 
     .amount {
