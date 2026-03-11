@@ -1,20 +1,12 @@
 {
   "compilerOptions": {
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "paths": {
-      "@/*": ["./client/*"],
-      "@shared/*": ["./shared/*"]
-    },
-    "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,
     "target": "ES2022"
   },
-  "files": [],
-  "references": [
-    { "path": "./client/tsconfig.app.json" }
-  ]
+  "include": ["client/src/vite-env.d.ts"],
+  "exclude": ["node_modules", "client", "server", "scripts", "shared"]
 }
