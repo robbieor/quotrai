@@ -26,7 +26,8 @@
     "dist",
     "client",
     "scripts",
-    "server"
+    "server",
+    "src"
   ],
   "include": [
     "**/*.ts"
