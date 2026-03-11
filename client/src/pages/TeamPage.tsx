@@ -9,7 +9,7 @@ import styles from "./InvoicesPage.module.css";
 
 export default function TeamPage() {
     const { teamId } = useAuth();
-    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [, setShowInviteModal] = useState(false);
 
     const { data: members = [], isLoading } = useQuery({
         queryKey: ["team_memberships", teamId],

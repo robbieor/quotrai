@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, FileText, CheckCircle, Clock, ArrowRight, X, Trash2 } from "lucide-react";
+import { Plus, Search, FileText, CheckCircle, Clock, ArrowRight, Trash2 } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
 import DataTable from "../components/DataTable";
