@@ -31,5 +31,8 @@
     "shared",
     "**/*.test.ts"
   ],
-  "include": []
+  "include": [
+    "*.ts"
+  ],
+  "files": []
 }
