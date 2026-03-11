@@ -24,10 +24,9 @@
     "node_modules",
     "build",
     "dist",
-    "**/*.test.ts"
+    "client"
   ],
   "include": [
-    "**/*.ts",
-    "**/*.tsx"
+    "**/*.ts"
   ]
 }
