@@ -7,6 +7,6 @@
     "strict": false,
     "target": "ES2022"
   },
-  "include": ["client/src/vite-env.d.ts"],
-  "exclude": ["node_modules", "client", "server", "scripts", "shared"]
+  "include": ["dummy.ts"],
+  "exclude": ["node_modules"]
 }
