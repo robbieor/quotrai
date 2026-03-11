@@ -11,12 +11,10 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,
-    "target": "ES2022",
-    "noEmit": true
+    "target": "ES2022"
   },
+  "files": [],
   "references": [
     { "path": "./client/tsconfig.app.json" }
-  ],
-  "files": [],
-  "include": []
+  ]
 }
