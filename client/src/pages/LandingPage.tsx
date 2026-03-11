@@ -250,6 +250,47 @@ export default function LandingPage() {
                     </div>
                 </div>
             </main>
+
+            {/* ── Pricing Section ── */}
+            <section className={styles.pricingSection} id="pricing">
+                <div className={styles.pricingHeader}>
+                    <h2 className={styles.pricingTitle}>Simple, transparent pricing</h2>
+                    <p className={styles.pricingSubtitle}>No contracts. No lock-in. Cancel anytime.</p>
+
+                    <div className={styles.pricingControls}>
+                        <div className={styles.billingToggle}>
+                            <button className={!annual ? styles.toggleActive : styles.toggleInactive} onClick={() => setAnnual(false)}>Monthly</button>
+                            <button className={annual ? styles.toggleActive : styles.toggleInactive} onClick={() => setAnnual(true)}>
+                                Annual <span className={styles.discountBadge}>-15%</span>
+                            </button>
+                        </div>
+                        <select className={styles.currencySelect} value={currency} onChange={e => setCurrency(e.target.value)}>
+                            {SUPPORTED_CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                <div className={styles.pricingGrid}>
+                    {PLANS.map(plan => (
+                        <div key={plan.name} className={`${styles.pricingCard} ${plan.popular ? styles.pricingCardPopular : ""}`}>
+                            {plan.popular && <div className={styles.popularTag}>Most Popular</div>}
+                            <h3 className={styles.planName}>{plan.name}</h3>
+                            <div className={styles.planPrice}>
+                                <span className={styles.priceAmount}>{convertPrice(plan.monthlyEur)}</span>
+                                <span className={styles.pricePeriod}>/{annual ? "mo (billed annually)" : "mo"}</span>
+                            </div>
+                            <ul className={styles.featureList}>
+                                {plan.features.map(f => (
+                                    <li key={f} className={styles.featureItem}>✓ {f}</li>
+                                ))}
+                            </ul>
+                            <Link to="/signup" className={plan.popular ? styles.primaryBtn : styles.secondaryBtn}>
+                                Start Free Trial
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            </section>
         </div>
     );
 }
