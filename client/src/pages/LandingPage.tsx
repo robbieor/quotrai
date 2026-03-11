@@ -1,6 +1,32 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import styles from "./LandingPage.module.css";
+
+/* ── Country → Currency mapping ── */
+const EU_COUNTRIES = ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES"];
+const COUNTRY_CURRENCY: Record<string, string> = {
+    GB: "GBP", US: "USD", AU: "AUD", NZ: "NZD", CA: "CAD", CH: "CHF",
+    SE: "SEK", NO: "NOK", DK: "DKK", PL: "PLN",
+};
+const CURRENCY_LOCALE: Record<string, string> = {
+    EUR: "en-IE", GBP: "en-GB", USD: "en-US", AUD: "en-AU", NZD: "en-NZ",
+    CAD: "en-CA", CHF: "de-CH", SEK: "sv-SE", NOK: "nb-NO", DKK: "da-DK", PLN: "pl-PL",
+};
+const SUPPORTED_CURRENCIES = ["EUR","GBP","USD","AUD","NZD","CAD","CHF","SEK","NOK","DKK","PLN"];
+
+/* ── Pricing tiers (EUR base, monthly) ── */
+const PLANS = [
+    { name: "Lite", monthlyEur: 15, features: ["Unlimited quotes & invoices", "1 user", "AI receipt scanning", "Client portal", "Basic reports"] },
+    { name: "Connect", monthlyEur: 29, popular: true, features: ["Everything in Lite", "Up to 5 users", "Job & expense tracking", "Stripe payments", "Automated reminders", "Team chat"] },
+    { name: "Grow", monthlyEur: 49, features: ["Everything in Connect", "Unlimited users", "GPS time tracking", "Recurring jobs", "Advanced analytics", "Priority support"] },
+];
+const ANNUAL_DISCOUNT = 0.15;
+
+function formatPrice(amount: number, currency: string): string {
+    const locale = CURRENCY_LOCALE[currency] || "en-IE";
+    return new Intl.NumberFormat(locale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(amount));
+}
 
 interface SlideItem {
     icon?: string;
