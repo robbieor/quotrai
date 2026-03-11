@@ -27,9 +27,9 @@
     "dist",
     "client",
     "scripts",
+    "server",
+    "shared",
     "**/*.test.ts"
   ],
-  "include": [
-    "shared/**/*.ts"
-  ]
+  "include": []
 }
