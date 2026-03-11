@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Shield, UserPlus, Trash2 } from "lucide-react";
+import { Shield, UserPlus } from "lucide-react";
 import DataTable from "../components/DataTable";
 import type { Column } from "../components/DataTable";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import styles from "./InvoicesPage.module.css";
 
 export default function TeamPage() {
     const { teamId } = useAuth();
-    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [, setShowInviteModal] = useState(false);
 
     const { data: members = [], isLoading } = useQuery({
         queryKey: ["team_memberships", teamId],

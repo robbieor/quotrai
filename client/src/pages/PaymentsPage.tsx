@@ -1,9 +1,7 @@
-import { CreditCard, Check, AlertCircle, ExternalLink } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { CreditCard, Check, ExternalLink } from "lucide-react";
 import styles from "./InvoicesPage.module.css";
 
 export default function PaymentsPage() {
-    const { teamId } = useAuth();
 
     return (
         <div className={styles.page}>
