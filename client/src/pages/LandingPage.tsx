@@ -161,6 +161,8 @@ export default function LandingPage() {
     }, []);
 
     const slide = slides[currentSlide];
+
+    return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.logo}>
