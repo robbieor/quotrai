@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { VoiceAgentProvider } from "@/contexts/VoiceAgentContext";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 
 // Lazy-loaded pages
@@ -95,23 +94,23 @@ const App = () => {
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/select-plan" element={<SelectPlan />} />
 
-                {/* Protected dashboard pages */}
-                <Route path="/dashboard" element={<DashboardLayout><RoleGuard><Dashboard /></RoleGuard></DashboardLayout>} />
-                <Route path="/jobs" element={<DashboardLayout><Jobs /></DashboardLayout>} />
-                <Route path="/calendar" element={<DashboardLayout><JobCalendar /></DashboardLayout>} />
-                <Route path="/customers" element={<DashboardLayout><RoleGuard><Customers /></RoleGuard></DashboardLayout>} />
-                <Route path="/quotes" element={<DashboardLayout><RoleGuard><Quotes /></RoleGuard></DashboardLayout>} />
-                <Route path="/invoices" element={<DashboardLayout><RoleGuard><Invoices /></RoleGuard></DashboardLayout>} />
-                <Route path="/expenses" element={<DashboardLayout><RoleGuard><Expenses /></RoleGuard></DashboardLayout>} />
-                <Route path="/leads" element={<DashboardLayout><RoleGuard><Leads /></RoleGuard></DashboardLayout>} />
-                <Route path="/george" element={<DashboardLayout><George /></DashboardLayout>} />
-                <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
-                <Route path="/reports" element={<DashboardLayout><RoleGuard><Reports /></RoleGuard></DashboardLayout>} />
-                <Route path="/templates" element={<DashboardLayout><RoleGuard><Templates /></RoleGuard></DashboardLayout>} />
-                <Route path="/documents" element={<DashboardLayout><RoleGuard><Documents /></RoleGuard></DashboardLayout>} />
-                <Route path="/certificates" element={<DashboardLayout><RoleGuard><Certificates /></RoleGuard></DashboardLayout>} />
-                <Route path="/notifications" element={<DashboardLayout><Notifications /></DashboardLayout>} />
-                <Route path="/time-tracking" element={<DashboardLayout><TimeTracking /></DashboardLayout>} />
+                {/* Protected dashboard pages - pages self-wrap with DashboardLayout */}
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/calendar" element={<JobCalendar />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/expenses" element={<Expenses />} />
+                <Route path="/leads" element={<Leads />} />
+                <Route path="/george" element={<George />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/templates" element={<Templates />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/certificates" element={<Certificates />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/time-tracking" element={<TimeTracking />} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
