@@ -1,36 +1,24 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "allowJs": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "paths": {
       "@/*": [
-        "./client/*"
-      ],
-      "@shared/*": [
-        "./shared/*"
+        "./src/*"
       ]
     },
-    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true,
-    "target": "ES2022",
-    "types": [
-      "node"
-    ]
+    "strictNullChecks": false
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "client",
-    "scripts",
-    "server",
-    "src",
-    "supabase"
-  ],
-  "include": [
-    "**/*.ts"
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
   ]
 }
