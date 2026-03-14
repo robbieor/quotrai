@@ -1,5 +1,5 @@
 // Stub: ElevenLabs voice agent - only works with native SDK
-type ConnectionStatus = "disconnected" | "connected" | "connecting";
+type ConnectionStatus = "disconnected" | "connected" | "connecting" | "disconnecting";
 
 export function useConversation(_options?: any) {
   return {
