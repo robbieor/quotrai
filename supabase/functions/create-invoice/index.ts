@@ -1,0 +1,170 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { client_name, template_name, additional_notes, team_id, tax_rate, due_days } = await req.json();
+
+    // Validate required fields
+    if (!client_name) {
+      return new Response(
+        JSON.stringify({ error: "client_name is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!template_name) {
+      return new Response(
+        JSON.stringify({ error: "template_name is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    
+    // Country to VAT rate mapping
+    const COUNTRY_VAT_RATES: Record<string, number> = {
+      ie: 23, gb: 20, uk: 20, us: 0, ca: 5, au: 10, nz: 15,
+      de: 19, fr: 20, es: 21, it: 22, nl: 21, be: 21, at: 20,
+      ch: 8.1, se: 25, no: 25, dk: 25, fi: 24, pl: 23, pt: 23
+    };
+
+    // Look up client by name (case-insensitive)
+    const { data: client, error: clientError } = await supabase
+      .from("customers")
+      .select("id, name, team_id, country_code")
+      .ilike("name", `%${client_name}%`)
+      .limit(1)
+      .single();
+
+    if (clientError || !client) {
+      return new Response(
+        JSON.stringify({ error: `Client not found: ${client_name}` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Get VAT rate based on client's country or default
+    const clientCountry = client.country_code?.toLowerCase() || "ie";
+    const defaultVatRate = COUNTRY_VAT_RATES[clientCountry] ?? 0;
+
+    const effectiveTeamId = team_id || client.team_id;
+
+    // Look up template by name (case-insensitive)
+    const { data: template, error: templateError } = await supabase
+      .from("templates")
+      .select("*, template_items(*)")
+      .ilike("name", `%${template_name}%`)
+      .eq("team_id", effectiveTeamId)
+      .limit(1)
+      .single();
+
+    if (templateError || !template) {
+      return new Response(
+        JSON.stringify({ error: `Template not found: ${template_name}` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const templateItems = template.template_items || [];
+
+    // Generate invoice number
+    const { count } = await supabase
+      .from("invoices")
+      .select("*", { count: "exact", head: true })
+      .eq("team_id", effectiveTeamId);
+
+    const year = new Date().getFullYear();
+    const invoiceNumber = `INV-${year}-${String((count || 0) + 1).padStart(3, "0")}`;
+
+    // Calculate totals from template items
+    const subtotal = templateItems.reduce(
+      (sum: number, item: any) => sum + (Number(item.quantity) || 1) * (Number(item.unit_price) || 0),
+      0
+    );
+    // Use provided tax_rate, template tax_rate, or default from country
+    const taxRateValue = tax_rate !== undefined ? tax_rate : (template.tax_rate || defaultVatRate);
+    const taxAmount = subtotal * (taxRateValue / 100);
+    const total = subtotal + taxAmount;
+
+    // Create invoice
+    const today = new Date().toISOString().split("T")[0];
+    const daysUntilDue = due_days || 30;
+    const dueDate = new Date(Date.now() + daysUntilDue * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    const { data: invoice, error: invoiceError } = await supabase
+      .from("invoices")
+      .insert({
+        team_id: effectiveTeamId,
+        customer_id: client.id,
+        invoice_number: invoiceNumber,
+        status: "draft",
+        issue_date: today,
+        due_date: dueDate,
+        subtotal,
+        tax_rate: taxRateValue,
+        tax_amount: taxAmount,
+        total,
+        notes: additional_notes || null,
+      })
+      .select()
+      .single();
+
+    if (invoiceError) {
+      console.error("Invoice creation error:", invoiceError);
+      return new Response(
+        JSON.stringify({ error: `Failed to create invoice: ${invoiceError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create invoice items from template (copy line_items)
+    if (templateItems.length > 0) {
+      const invoiceItems = templateItems.map((item: any) => ({
+        invoice_id: invoice.id,
+        description: item.description,
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+        amount: (item.quantity || 1) * (item.unit_price || 0),
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("invoice_items")
+        .insert(invoiceItems);
+
+      if (itemsError) {
+        console.error("Invoice items error:", itemsError);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        invoice_id: invoice.id,
+        invoice_number: invoiceNumber,
+        message: `Invoice ${invoiceNumber} created for ${client.name}`,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Error:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

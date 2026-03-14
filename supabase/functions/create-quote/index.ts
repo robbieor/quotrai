@@ -1,0 +1,202 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { client_name, template_name, additional_notes, valid_days, team_id, tax_rate } = await req.json();
+
+    // Validate required fields
+    if (!client_name) {
+      return new Response(
+        JSON.stringify({ error: "client_name is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!template_name) {
+      return new Response(
+        JSON.stringify({ error: "template_name is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    
+    // Country to VAT rate mapping
+    const COUNTRY_VAT_RATES: Record<string, number> = {
+      ie: 23, gb: 20, uk: 20, us: 0, ca: 5, au: 10, nz: 15,
+      de: 19, fr: 20, es: 21, it: 22, nl: 21, be: 21, at: 20,
+      ch: 8.1, se: 25, no: 25, dk: 25, fi: 24, pl: 23, pt: 23
+    };
+
+    // Look up client by name (case-insensitive)
+    const { data: client, error: clientError } = await supabase
+      .from("customers")
+      .select("id, name, team_id, country_code")
+      .ilike("name", `%${client_name}%`)
+      .limit(1)
+      .single();
+
+    if (clientError || !client) {
+      return new Response(
+        JSON.stringify({ error: `Client not found: ${client_name}` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Get VAT rate based on client's country or default
+    const clientCountry = client.country_code?.toLowerCase() || "ie";
+    const defaultVatRate = COUNTRY_VAT_RATES[clientCountry] ?? 0;
+
+    const effectiveTeamId = team_id || client.team_id;
+
+    // Look up template by name - try exact substring first, then fuzzy word match
+    let template = null;
+    let templateError = null;
+
+    // First try direct substring match
+    const { data: directMatch, error: directErr } = await supabase
+      .from("templates")
+      .select("*, template_items(*)")
+      .ilike("name", `%${template_name}%`)
+      .eq("team_id", effectiveTeamId)
+      .limit(1)
+      .maybeSingle();
+
+    if (directMatch) {
+      template = directMatch;
+    } else {
+      // Fuzzy match: split search into words and find templates matching all words
+      const searchWords = template_name.toLowerCase().split(/\s+/).filter((w: string) => w.length > 1);
+      
+      const { data: allTemplates, error: allErr } = await supabase
+        .from("templates")
+        .select("*, template_items(*)")
+        .eq("team_id", effectiveTeamId);
+
+      if (allErr) {
+        templateError = allErr;
+      } else if (allTemplates) {
+        // Score templates by how many search words match
+        const scored = allTemplates
+          .map((t: any) => {
+            const nameLower = t.name.toLowerCase();
+            const matchCount = searchWords.filter((w: string) => nameLower.includes(w)).length;
+            return { ...t, matchCount };
+          })
+          .filter((t: any) => t.matchCount > 0)
+          .sort((a: any, b: any) => b.matchCount - a.matchCount);
+
+        if (scored.length > 0) {
+          template = scored[0];
+        }
+      }
+    }
+
+    if (templateError || !template) {
+      return new Response(
+        JSON.stringify({ error: `Template not found: ${template_name}` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const templateItems = template.template_items || [];
+
+    // Generate quote number
+    const { count } = await supabase
+      .from("quotes")
+      .select("*", { count: "exact", head: true })
+      .eq("team_id", effectiveTeamId);
+
+    const year = new Date().getFullYear();
+    const quoteNumber = `QTE-${year}-${String((count || 0) + 1).padStart(3, "0")}`;
+
+    // Calculate totals from template items
+    const subtotal = templateItems.reduce(
+      (sum: number, item: any) => sum + (Number(item.quantity) || 1) * (Number(item.unit_price) || 0),
+      0
+    );
+    // Use provided tax_rate, template tax_rate, or default from country
+    const taxRateValue = tax_rate !== undefined ? tax_rate : (template.tax_rate || defaultVatRate);
+    const taxAmount = subtotal * (taxRateValue / 100);
+    const total = subtotal + taxAmount;
+
+    // Calculate valid_until date (default 30 days)
+    const validDays = valid_days || 30;
+    const validUntil = new Date(Date.now() + validDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    // Create quote
+    const { data: quote, error: quoteError } = await supabase
+      .from("quotes")
+      .insert({
+        team_id: effectiveTeamId,
+        customer_id: client.id,
+        quote_number: quoteNumber,
+        status: "draft",
+        valid_until: validUntil,
+        subtotal,
+        tax_rate: taxRateValue,
+        tax_amount: taxAmount,
+        total,
+        notes: additional_notes || null,
+      })
+      .select()
+      .single();
+
+    if (quoteError) {
+      console.error("Quote creation error:", quoteError);
+      return new Response(
+        JSON.stringify({ error: `Failed to create quote: ${quoteError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create quote items from template (copy line_items)
+    if (templateItems.length > 0) {
+      const quoteItems = templateItems.map((item: any) => ({
+        quote_id: quote.id,
+        description: item.description,
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("quote_items")
+        .insert(quoteItems);
+
+      if (itemsError) {
+        console.error("Quote items error:", itemsError);
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        quote_id: quote.id,
+        quote_number: quoteNumber,
+        message: `Quote ${quoteNumber} created for ${client.name}`,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Error:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
