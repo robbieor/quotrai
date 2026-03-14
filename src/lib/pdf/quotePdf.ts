@@ -1,0 +1,142 @@
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { format } from "date-fns";
+import type { Quote } from "@/hooks/useQuotes";
+import type { CompanyBranding } from "@/hooks/useCompanyBranding";
+import { getBrandingConfig, hexToRgb, addBrandingHeader, addBrandingFooter } from "./pdfBranding";
+
+export async function generateQuotePdf(
+  quote: Quote,
+  branding?: CompanyBranding | null,
+  currencySymbol: string = "€"
+): Promise<jsPDF> {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const config = getBrandingConfig(branding);
+
+  // Add branded header
+  let startY = await addBrandingHeader(doc, config, "QUOTE", quote.quote_number);
+
+  // Quote details section
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("Prepared For:", 20, startY);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(60, 60, 60);
+  doc.text(quote.customer?.name || "N/A", 20, startY + 6);
+
+  // Quote meta (right side)
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(100, 100, 100);
+  doc.text("Date:", pageWidth - 70, startY);
+  if (quote.valid_until) {
+    doc.text("Valid Until:", pageWidth - 70, startY + 7);
+  }
+  doc.text("Status:", pageWidth - 70, quote.valid_until ? startY + 14 : startY + 7);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  doc.text(format(new Date(quote.created_at), "MMM d, yyyy"), pageWidth - 20, startY, { align: "right" });
+  if (quote.valid_until) {
+    doc.text(format(new Date(quote.valid_until), "MMM d, yyyy"), pageWidth - 20, startY + 7, { align: "right" });
+  }
+  
+  // Status with color
+  const statusText = quote.status.charAt(0).toUpperCase() + quote.status.slice(1);
+  const statusY = quote.valid_until ? startY + 14 : startY + 7;
+  const statusColor = quote.status === "accepted" ? [34, 197, 94] : quote.status === "declined" ? [239, 68, 68] : [100, 100, 100];
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.text(statusText, pageWidth - 20, statusY, { align: "right" });
+
+  // Line items table
+  const tableData = quote.quote_items.map((item) => [
+    item.description,
+    item.quantity.toString(),
+    `${currencySymbol}${Number(item.unit_price).toFixed(2)}`,
+    `${currencySymbol}${Number(item.total_price).toFixed(2)}`,
+  ]);
+
+  autoTable(doc, {
+    startY: startY + 28,
+    head: [["Description", "Qty", "Unit Price", "Total"]],
+    body: tableData,
+    theme: "striped",
+    headStyles: {
+      fillColor: hexToRgb(config.accentColor),
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    styles: {
+      fontSize: 9,
+    },
+    columnStyles: {
+      0: { cellWidth: "auto" },
+      1: { cellWidth: 20, halign: "center" },
+      2: { cellWidth: 30, halign: "right" },
+      3: { cellWidth: 30, halign: "right" },
+    },
+    margin: { left: 20, right: 20 },
+  });
+
+  // Totals
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 100, 100);
+  doc.text("Subtotal:", pageWidth - 70, finalY);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`${currencySymbol}${Number(quote.subtotal).toFixed(2)}`, pageWidth - 20, finalY, { align: "right" });
+
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Tax (${Number(quote.tax_rate)}%):`, pageWidth - 70, finalY + 7);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`${currencySymbol}${Number(quote.tax_amount).toFixed(2)}`, pageWidth - 20, finalY + 7, { align: "right" });
+
+  doc.setDrawColor(...hexToRgb(config.accentColor));
+  doc.setLineWidth(0.5);
+  doc.line(pageWidth - 80, finalY + 12, pageWidth - 20, finalY + 12);
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...hexToRgb(config.accentColor));
+  doc.text("Total:", pageWidth - 70, finalY + 20);
+  doc.text(`${currencySymbol}${Number(quote.total).toFixed(2)}`, pageWidth - 20, finalY + 20, { align: "right" });
+
+  // Notes
+  let notesEndY = finalY + 25;
+  if (quote.notes) {
+    notesEndY = finalY + 35;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("Notes:", 20, notesEndY);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    const splitNotes = doc.splitTextToSize(quote.notes, pageWidth - 40);
+    doc.text(splitNotes, 20, notesEndY + 5);
+    notesEndY += 5 + splitNotes.length * 4;
+  }
+
+  // Add branded footer
+  addBrandingFooter(doc, config, notesEndY);
+
+  // Generation timestamp
+  const pageHeight = doc.internal.pageSize.getHeight();
+  doc.setFontSize(7);
+  doc.setTextColor(180, 180, 180);
+  doc.text(`Generated on ${format(new Date(), "MMM d, yyyy 'at' h:mm a")}`, pageWidth / 2, pageHeight - 8, { align: "center" });
+
+  return doc;
+}
+
+export async function downloadQuotePdf(
+  quote: Quote,
+  branding?: CompanyBranding | null,
+  currencySymbol?: string
+) {
+  const doc = await generateQuotePdf(quote, branding, currencySymbol);
+  doc.save(`${quote.quote_number}.pdf`);
+}
