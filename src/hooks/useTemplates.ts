@@ -51,7 +51,7 @@ export interface UpdateTemplateInput extends Partial<CreateTemplateInput> {
   id: string;
 }
 
-const TRADE_CATEGORY_LABELS: Record<TradeCategory, string> = {
+const TRADE_CATEGORY_LABELS: Record<string, string> = {
   electrician: "Electrician",
   plumber: "Plumber",
   hvac: "HVAC",
