@@ -1,0 +1,331 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { toast } from "sonner";
+import { getCurrencyFromCountry } from "@/utils/currencyUtils";
+
+export type Invoice = Tables<"invoices"> & {
+  customer: { name: string; country_code?: string | null } | null;
+  invoice_items: Tables<"invoice_items">[];
+  quote: { quote_number: string } | null;
+};
+
+export type InvoiceItem = Tables<"invoice_items">;
+export type InvoiceItemInsert = Omit<TablesInsert<"invoice_items">, "invoice_id">;
+
+export function useInvoices() {
+  return useQuery({
+    queryKey: ["invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          customer:customers(name, country_code),
+          invoice_items(*),
+          quote:quotes(quote_number)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Invoice[];
+    },
+  });
+}
+
+export function useInvoice(id: string | null) {
+  return useQuery({
+    queryKey: ["invoices", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          customer:customers(name, country_code),
+          invoice_items(*),
+          quote:quotes(quote_number)
+        `)
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as Invoice | null;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateInvoice(onXeroSync?: (id: string) => void) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      invoice,
+      items,
+    }: {
+      invoice: Omit<TablesInsert<"invoices">, "team_id" | "invoice_number">;
+      items: InvoiceItemInsert[];
+    }) => {
+      // Get team_id
+      const { data: teamId, error: teamError } = await supabase.rpc("get_user_team_id");
+      if (teamError) throw teamError;
+
+      // Generate invoice number
+      const { count } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId);
+      
+      const invoiceNumber = `INV-${String((count || 0) + 1).padStart(4, "0")}`;
+
+      // Calculate totals
+      const subtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.unit_price || 0), 0);
+      const taxRate = invoice.tax_rate || 0;
+      const taxAmount = subtotal * (taxRate / 100);
+      const total = subtotal + taxAmount;
+
+      // Get customer country for currency
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("country_code")
+        .eq("id", invoice.customer_id)
+        .single();
+      const currency = getCurrencyFromCountry(customer?.country_code);
+
+      // Create invoice
+      const { data: newInvoice, error: invoiceError } = await supabase
+        .from("invoices")
+        .insert({
+          ...invoice,
+          team_id: teamId,
+          invoice_number: invoiceNumber,
+          subtotal,
+          tax_amount: taxAmount,
+          total,
+          currency,
+        })
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      // Create invoice items
+      if (items.length > 0) {
+        const itemsWithInvoiceId = items.map((item) => ({
+          ...item,
+          invoice_id: newInvoice.id,
+          total_price: (item.quantity || 1) * (item.unit_price || 0),
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(itemsWithInvoiceId);
+
+        if (itemsError) throw itemsError;
+      }
+
+      return newInvoice;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice created successfully");
+      onXeroSync?.(data.id);
+    },
+    onError: (error) => {
+      toast.error("Failed to create invoice: " + error.message);
+    },
+  });
+}
+
+export function useCreateInvoiceFromQuote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      // Fetch the quote with items
+      const { data: quote, error: quoteError } = await supabase
+        .from("quotes")
+        .select(`*, quote_items(*)`)
+        .eq("id", quoteId)
+        .single();
+
+      if (quoteError) throw quoteError;
+      if (!quote) throw new Error("Quote not found");
+
+      // Get team_id
+      const { data: teamId, error: teamError } = await supabase.rpc("get_user_team_id");
+      if (teamError) throw teamError;
+
+      // Generate invoice number
+      const { count } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId);
+      
+      const invoiceNumber = `INV-${String((count || 0) + 1).padStart(4, "0")}`;
+
+      // Create invoice from quote
+      const { data: newInvoice, error: invoiceError } = await supabase
+        .from("invoices")
+        .insert({
+          team_id: teamId,
+          customer_id: quote.customer_id,
+          quote_id: quoteId,
+          invoice_number: invoiceNumber,
+          status: "draft",
+          subtotal: quote.subtotal,
+          tax_rate: quote.tax_rate,
+          tax_amount: quote.tax_amount,
+          total: quote.total,
+          notes: quote.notes,
+        })
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      // Copy quote items to invoice items
+      if (quote.quote_items.length > 0) {
+        const invoiceItems = quote.quote_items.map((item: Tables<"quote_items">) => ({
+          invoice_id: newInvoice.id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(invoiceItems);
+
+        if (itemsError) throw itemsError;
+      }
+
+      return newInvoice;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["quotes"] });
+      toast.success("Invoice created from quote");
+    },
+    onError: (error) => {
+      toast.error("Failed to create invoice: " + error.message);
+    },
+  });
+}
+
+export function useUpdateInvoice(onXeroSync?: (id: string) => void) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      invoice,
+      items,
+    }: {
+      id: string;
+      invoice: TablesUpdate<"invoices">;
+      items: InvoiceItemInsert[];
+    }) => {
+      // Calculate totals
+      const subtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.unit_price || 0), 0);
+      const taxRate = invoice.tax_rate || 0;
+      const taxAmount = subtotal * (taxRate / 100);
+      const total = subtotal + taxAmount;
+
+      // Update invoice
+      const { error: invoiceError } = await supabase
+        .from("invoices")
+        .update({
+          ...invoice,
+          subtotal,
+          tax_amount: taxAmount,
+          total,
+        })
+        .eq("id", id);
+
+      if (invoiceError) throw invoiceError;
+
+      // Delete existing items and recreate
+      const { error: deleteError } = await supabase
+        .from("invoice_items")
+        .delete()
+        .eq("invoice_id", id);
+
+      if (deleteError) throw deleteError;
+
+      // Create new items
+      if (items.length > 0) {
+        const itemsWithInvoiceId = items.map((item) => ({
+          ...item,
+          invoice_id: id,
+          total_price: (item.quantity || 1) * (item.unit_price || 0),
+        }));
+
+        const { error: itemsError } = await supabase
+          .from("invoice_items")
+          .insert(itemsWithInvoiceId);
+
+        if (itemsError) throw itemsError;
+      }
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice updated successfully");
+      onXeroSync?.(variables.id);
+    },
+    onError: (error) => {
+      toast.error("Failed to update invoice: " + error.message);
+    },
+  });
+}
+
+export function useDeleteInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Delete items first
+      const { error: itemsError } = await supabase
+        .from("invoice_items")
+        .delete()
+        .eq("invoice_id", id);
+
+      if (itemsError) throw itemsError;
+
+      // Delete invoice
+      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete invoice: " + error.message);
+    },
+  });
+}
+
+export function useUpdateInvoiceStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: Tables<"invoices">["status"] }) => {
+      const { error } = await supabase
+        .from("invoices")
+        .update({ status })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice status updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update status: " + error.message);
+    },
+  });
+}
