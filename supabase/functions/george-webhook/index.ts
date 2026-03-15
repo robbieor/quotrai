@@ -495,7 +495,7 @@ serve(async (req) => {
         // Find the invoice
         let invoiceQuery = supabase
           .from("invoices")
-          .select("id, invoice_number, total, due_date, status, customer:customers(name, email)")
+          .select("id, invoice_number, total, due_date, status, communication_suppressed, customer:customers(name, email)")
           .eq("team_id", company_id);
 
         if (invoice_id) {
