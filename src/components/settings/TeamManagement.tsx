@@ -361,15 +361,12 @@ export function TeamManagement() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={async () => {
               try {
-                const addSeat = useAddSeat;
-                // Use inline invocation
-                const { data, error } = await (await import("@/integrations/supabase/client")).supabase.functions.invoke("add-subscription-seat", { body: {} });
-                if (error) throw error;
+                await addSeatMutation.mutateAsync();
                 setShowAddSeatDialog(false);
                 handleSeatAdded();
-              } catch { /* handled */ }
-            }}>
-              Add Seat
+              } catch { /* handled by mutation */ }
+            }} disabled={addSeatMutation.isPending}>
+              {addSeatMutation.isPending ? "Adding..." : "Add Seat"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
