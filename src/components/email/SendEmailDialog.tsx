@@ -66,6 +66,7 @@ export function SendEmailDialog({
         pdfBase64 = doc.output("datauristring").split(",")[1];
       }
 
+      // COMMUNICATION SAFETY: Include mandatory safety metadata
       const payload: Record<string, unknown> = {
         to: email,
         customerName,
@@ -74,6 +75,11 @@ export function SendEmailDialog({
         total,
         fromName,
         pdfBase64,
+        manual_send: true,
+        confirmed_by_user: true,
+        source_screen: "SendEmailDialog",
+        record_type: documentType,
+        record_id: document.id,
       };
 
       if (isInvoice(document)) {

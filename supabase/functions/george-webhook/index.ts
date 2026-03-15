@@ -534,7 +534,26 @@ serve(async (req) => {
           break;
         }
 
-        // Send email via Resend
+        // COMMUNICATION SAFETY: George AI reminder gated by kill switch
+        const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
+        if (!outboundEnabled) {
+          console.log("[SAFETY] george-webhook send_invoice_reminder blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
+          response = {
+            success: false,
+            message: `Outbound emails are currently disabled. The reminder for invoice ${invoice.invoice_number} was not sent. You can re-enable email sending in your settings.`
+          };
+          break;
+        }
+
+        // Check if invoice has communication_suppressed (imported records)
+        if ((invoice as any).communication_suppressed) {
+          response = {
+            success: false,
+            message: `Invoice ${invoice.invoice_number} was imported and has communication suppressed. Please remove the suppression flag before sending reminders.`
+          };
+          break;
+        }
+
         const resendApiKey = Deno.env.get("RESEND_API_KEY");
         if (resendApiKey) {
           try {
@@ -564,6 +583,21 @@ serve(async (req) => {
               console.error("Resend error:", await emailResponse.text());
               throw new Error("Failed to send email");
             }
+
+            // Audit log for George-triggered send
+            await supabase.from("comms_audit_log").insert({
+              channel: "email",
+              record_type: "invoice",
+              record_id: invoice.id,
+              recipient: customerEmail,
+              template: "george-webhook:send_invoice_reminder",
+              manual_send: true,
+              confirmed_by_user: true,
+              allowed: true,
+              source_screen: "george_voice",
+              user_id: user_id,
+              team_id: company_id,
+            });
           } catch (emailError) {
             console.error("Email sending failed:", emailError);
             response = {

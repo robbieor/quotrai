@@ -316,6 +316,7 @@ async function importQuotes(
 
     const status = validateStatus(row.status, ["draft", "sent", "accepted", "declined"]) || "draft";
 
+    // COMMUNICATION SAFETY: All imported quotes are suppressed from outbound comms
     const { error } = await supabase.from("quotes").insert({
       team_id: teamId,
       customer_id: customer.id,
@@ -327,6 +328,8 @@ async function importQuotes(
       tax_rate: taxRate,
       tax_amount: taxAmount,
       total,
+      communication_suppressed: true,
+      delivery_status: "not_sent",
     });
 
     if (error) {
