@@ -105,6 +105,7 @@ export function GeorgeAgentInput({
             body: {
               message: actionMessage,
               conversation_id: conversationId || null,
+              memory_context: memoryContext || undefined,
             },
           });
 
@@ -113,6 +114,10 @@ export function GeorgeAgentInput({
           const assistantMessage = response.data.message || "I'm here to help!";
           const newConversationId = response.data.conversation_id;
           onAssistantMessage?.(assistantMessage, newConversationId);
+          
+          if (response.data.action_plan) {
+            onStructuredResponse?.(response.data, newConversationId);
+          }
         } catch (error) {
           console.error("Chat error:", error);
           toast.error("Failed to send message");
