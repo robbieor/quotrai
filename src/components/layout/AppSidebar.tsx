@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, TEAM_SEAT_NAV_IDS } from "@/hooks/useUserRole";
-import { DraggableNavItem } from "./DraggableNavItem";
 import quotrLogo from "@/assets/quotr-logo.png";
 
 interface NavItem {
