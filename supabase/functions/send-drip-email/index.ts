@@ -6,13 +6,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
  *
  * Called on a schedule (cron) to send post-signup nurture emails.
  * Reads from `drip_queue`, sends via Resend, marks sent.
- *
- * Drip sequence:
- *   Day 0 — Welcome (sent inline at signup via auth hook)
- *   Day 1 — "Create your first quote in 60 seconds"
- *   Day 3 — "Meet Foreman AI — your hands-free assistant"
- *   Day 7 — "See what you're missing — ROI calculator"
- *   Day 12 — "Your trial ends soon — subscribe now"
  */
 
 const corsHeaders = {
@@ -56,12 +49,22 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ──────────────────────────────────────────────────────────
+  // COMMUNICATION SAFETY: Global kill switch
+  // ──────────────────────────────────────────────────────────
+  const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
+  if (!outboundEnabled) {
+    console.log("[SAFETY] send-drip-email blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
+    return new Response(JSON.stringify({ sent: 0, blocked: true, reason: "kill_switch" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch pending drip emails that are due
     const now = new Date().toISOString();
     const { data: queue, error: fetchError } = await supabase
       .from("drip_queue")
@@ -86,7 +89,6 @@ serve(async (req) => {
       const name = row.full_name?.split(" ")[0] || "there";
 
       if (RESEND_API_KEY) {
-        // Send via Resend
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -109,7 +111,6 @@ serve(async (req) => {
         console.log(`[DRY RUN] Would send drip ${row.drip_step} to ${row.email}`);
       }
 
-      // Mark as sent
       await supabase
         .from("drip_queue")
         .update({ sent: true, sent_at: new Date().toISOString() })

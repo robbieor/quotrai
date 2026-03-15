@@ -12,6 +12,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ──────────────────────────────────────────────────────────
+  // COMMUNICATION SAFETY: Global kill switch — blocks ALL automated reminders
+  // ──────────────────────────────────────────────────────────
+  const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
+  if (!outboundEnabled) {
+    console.log("[SAFETY] send-payment-reminder blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
+    return new Response(JSON.stringify({ sent: 0, blocked: true, reason: "kill_switch" }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -27,11 +38,20 @@ serve(async (req) => {
     // Find overdue invoices with customer email
     const { data: overdueInvoices } = await supabase
       .from('invoices')
-      .select('id, invoice_number, total, due_date, team_id, portal_token, customer:customers(name, email)')
+      .select('id, invoice_number, total, due_date, team_id, portal_token, communication_suppressed, customer:customers(name, email)')
       .in('status', ['pending', 'overdue'])
       .lt('due_date', today);
 
     for (const inv of (overdueInvoices || [])) {
+      // ──────────────────────────────────────────────────────────
+      // COMMUNICATION SAFETY: Skip imported/suppressed invoices
+      // ──────────────────────────────────────────────────────────
+      if (inv.communication_suppressed) {
+        console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: communication_suppressed`);
+        results.skipped++;
+        continue;
+      }
+
       const customer = inv.customer as any;
       if (!customer?.email) { results.skipped++; continue; }
 
@@ -39,11 +59,9 @@ serve(async (req) => {
         (Date.now() - new Date(inv.due_date).getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      // Determine reminder type based on days overdue
       let reminderType = 'overdue';
       if (daysOverdue >= 30) reminderType = 'final';
 
-      // Check if we already sent this reminder type today
       const { count } = await supabase
         .from('payment_reminders')
         .select('*', { count: 'exact', head: true })
@@ -53,7 +71,6 @@ serve(async (req) => {
 
       if (count && count > 0) { results.skipped++; continue; }
 
-      // Check max reminders (don't send more than 5 total per invoice)
       const { count: totalReminders } = await supabase
         .from('payment_reminders')
         .select('*', { count: 'exact', head: true })
@@ -61,7 +78,6 @@ serve(async (req) => {
 
       if (totalReminders && totalReminders >= 5) { results.skipped++; continue; }
 
-      // Get company branding for from name
       const { data: branding } = await supabase
         .from('company_branding')
         .select('company_name')
@@ -125,12 +141,24 @@ serve(async (req) => {
           `,
         });
 
-        // Log the reminder
         await supabase.from('payment_reminders').insert({
           team_id: inv.team_id,
           invoice_id: inv.id,
           reminder_number: (totalReminders || 0) + 1,
           reminder_type: reminderType,
+        });
+
+        // Audit log
+        await supabase.from("comms_audit_log").insert({
+          channel: "email",
+          record_type: "invoice",
+          record_id: inv.id,
+          recipient: customer.email,
+          template: `send-payment-reminder:${reminderType}`,
+          manual_send: false,
+          confirmed_by_user: false,
+          allowed: true,
+          source_screen: "cron",
         });
 
         results.sent++;

@@ -1,6 +1,5 @@
 import { Resend } from "https://esm.sh/resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +17,12 @@ interface EmailRequest {
   fromName: string;
   pdfBase64?: string;
   portalUrl?: string;
+  // SAFETY FIELDS — required for all sends
+  manual_send?: boolean;
+  confirmed_by_user?: boolean;
+  source_screen?: string;
+  record_type?: string;
+  record_id?: string;
 }
 
 // Quotr brand colors and styles
@@ -98,6 +103,15 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ──────────────────────────────────────────────────────────
+  // COMMUNICATION SAFETY: Global kill switch
+  // ──────────────────────────────────────────────────────────
+  const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+
   try {
     const { 
       to, 
@@ -110,7 +124,57 @@ const handler = async (req: Request): Promise<Response> => {
       fromName,
       pdfBase64,
       portalUrl,
+      manual_send,
+      confirmed_by_user,
+      source_screen,
+      record_type,
+      record_id,
     }: EmailRequest = await req.json();
+
+    // ──────────────────────────────────────────────────────────
+    // COMMUNICATION SAFETY: Require manual_send + confirmed_by_user
+    // ──────────────────────────────────────────────────────────
+    if (!manual_send || !confirmed_by_user) {
+      // Log blocked attempt
+      await supabase.from("comms_audit_log").insert({
+        channel: "email",
+        record_type: record_type || documentType,
+        record_id: record_id || null,
+        recipient: to,
+        template: `send-document-email:${documentType}`,
+        manual_send: manual_send || false,
+        confirmed_by_user: confirmed_by_user || false,
+        allowed: false,
+        blocked_reason: "Missing manual_send or confirmed_by_user flag",
+        source_screen: source_screen || null,
+      });
+
+      return new Response(
+        JSON.stringify({ error: "Send blocked: manual_send and confirmed_by_user required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!outboundEnabled) {
+      // Log blocked attempt
+      await supabase.from("comms_audit_log").insert({
+        channel: "email",
+        record_type: record_type || documentType,
+        record_id: record_id || null,
+        recipient: to,
+        template: `send-document-email:${documentType}`,
+        manual_send: true,
+        confirmed_by_user: true,
+        allowed: false,
+        blocked_reason: "OUTBOUND_COMMUNICATION_ENABLED is false",
+        source_screen: source_screen || null,
+      });
+
+      return new Response(
+        JSON.stringify({ error: "Outbound communication is currently disabled" }),
+        { status: 503, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     if (!to || !customerName || !documentType || !documentNumber) {
       return new Response(
@@ -118,6 +182,8 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
     const formattedTotal = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -200,6 +266,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Email sent successfully:", emailResponse);
+
+    // ──────────────────────────────────────────────────────────
+    // COMMUNICATION SAFETY: Audit log — allowed send
+    // ──────────────────────────────────────────────────────────
+    await supabase.from("comms_audit_log").insert({
+      channel: "email",
+      record_type: record_type || documentType,
+      record_id: record_id || null,
+      recipient: to,
+      template: `send-document-email:${documentType}`,
+      manual_send: true,
+      confirmed_by_user: true,
+      allowed: true,
+      source_screen: source_screen || null,
+    });
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
