@@ -248,6 +248,52 @@ export function useElevenLabsAgent() {
       get_financial_summary: async (params: { period?: string }) => {
         return await callGeorgeWebhook("get_financial_summary", params, contextRef.current, queryClientRef.current || undefined);
       },
+      // --- Enquiry tools ---
+      create_enquiry: async (params: { contact_name: string; phone?: string; email?: string; description?: string; source?: string; address?: string; urgency?: string }) => {
+        return await callGeorgeWebhook("create_enquiry", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      list_enquiries: async (params: { status?: string; source?: string; search?: string; limit?: number }) => {
+        return await callGeorgeWebhook("list_enquiries", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      update_enquiry: async (params: { enquiry_id?: string; contact_name?: string; phone?: string; email?: string; description?: string; notes?: string; address?: string; urgency?: string }) => {
+        return await callGeorgeWebhook("update_enquiry", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      update_enquiry_status: async (params: { enquiry_id?: string; contact_name?: string; new_status: string }) => {
+        return await callGeorgeWebhook("update_enquiry_status", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      convert_enquiry_to_customer: async (params: { enquiry_id?: string; contact_name?: string }) => {
+        return await callGeorgeWebhook("convert_enquiry_to_customer", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      convert_enquiry_to_quote: async (params: { enquiry_id?: string; contact_name?: string; template_name?: string; template_id?: string; notes?: string }) => {
+        return await callGeorgeWebhook("convert_enquiry_to_quote", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      // --- Job status tool ---
+      update_job_status: async (params: { job_id?: string; job_title?: string; client_name?: string; new_status: string }) => {
+        return await callGeorgeWebhook("update_job_status", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      // --- Multi-service tools ---
+      add_template_to_quote: async (params: { quote_id?: string; quote_number?: string; template_name?: string; template_id?: string; quantity_overrides?: Record<string, number> }) => {
+        return await callGeorgeWebhook("add_template_to_quote", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      add_template_to_invoice: async (params: { invoice_id?: string; invoice_number?: string; template_name?: string; template_id?: string; quantity_overrides?: Record<string, number> }) => {
+        return await callGeorgeWebhook("add_template_to_invoice", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      merge_quotes: async (params: { quote_ids?: string[]; quote_numbers?: string[]; customer_name?: string }) => {
+        return await callGeorgeWebhook("merge_quotes", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      // --- AI / advisory tools ---
+      get_business_insights: async (params: { period?: string; focus?: string }) => {
+        return await callGeorgeWebhook("get_business_insights", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      draft_customer_message: async (params: { customer_name?: string; customer_id?: string; message_type: string; context?: string }) => {
+        return await callGeorgeWebhook("draft_customer_message", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      estimate_job_cost: async (params: { job_description: string; trade_category?: string }) => {
+        return await callGeorgeWebhook("estimate_job_cost", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      ask_foreman: async (params: { question: string; trade_category?: string }) => {
+        return await callGeorgeWebhook("ask_foreman", params, contextRef.current, queryClientRef.current || undefined);
+      },
     },
   });
 
