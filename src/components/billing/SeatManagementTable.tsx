@@ -32,6 +32,8 @@ export function SeatManagementTable() {
   const { data: members, isLoading } = useOrgMembers();
   const updateSeatType = useUpdateSeatType();
   const { formatCurrency } = useCurrency();
+  const { isOwner } = useUserRole();
+  const { formatCurrency } = useCurrency();
   const { role: currentUserRole } = useUserRole();
 
   const isCeo = currentUserRole === 'ceo' || currentUserRole === 'owner';
