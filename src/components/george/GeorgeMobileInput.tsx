@@ -21,8 +21,10 @@ interface GeorgeMobileInputProps {
 export function GeorgeMobileInput({
   onUserMessage,
   onAssistantMessage,
+  onStructuredResponse,
   onPhotoQuote,
   conversationId,
+  memoryContext,
 }: GeorgeMobileInputProps) {
   const [message, setMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
