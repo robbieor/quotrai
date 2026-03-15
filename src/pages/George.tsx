@@ -284,8 +284,10 @@ export default function George() {
             <GeorgeMobileInput
               onUserMessage={handleUserMessage}
               onAssistantMessage={handleAssistantMessage}
+              onStructuredResponse={handleStructuredResponse}
               onPhotoQuote={handlePhotoQuote}
               conversationId={activeConversationId}
+              memoryContext={memoryContext}
             />
           </div>
         </div>
@@ -361,6 +363,7 @@ export default function George() {
                 onPhotoQuote={handlePhotoQuote}
                 conversationId={activeConversationId}
                 textareaRef={textInputRef}
+                memoryContext={memoryContext}
               />
             </div>
           </ResizablePanel>
