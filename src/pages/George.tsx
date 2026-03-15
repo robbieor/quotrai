@@ -317,8 +317,14 @@ export default function George() {
 
           <ResizablePanel defaultSize={sidebarOpen ? 78 : 100} minSize={50}>
             <div className="flex flex-col h-full">
-              <div className="px-4 pt-2">
+              <div className="px-4 pt-2 flex items-center justify-between">
                 <GeorgeUsageWarning />
+                <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+                  <Link to="/ai-audit">
+                    <History className="h-4 w-4 mr-1.5" />
+                    Activity
+                  </Link>
+                </Button>
               </div>
               <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
 
