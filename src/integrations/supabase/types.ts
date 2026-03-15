@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_action_audit: {
+        Row: {
+          action_id: string
+          command_text: string
+          confirmation_required: boolean | null
+          confirmation_result: string | null
+          conversation_id: string | null
+          created_at: string
+          entities: Json | null
+          id: string
+          intent: string
+          intent_label: string
+          output_record_id: string | null
+          output_type: string | null
+          status: string
+          steps: Json | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          action_id: string
+          command_text: string
+          confirmation_required?: boolean | null
+          confirmation_result?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          entities?: Json | null
+          id?: string
+          intent: string
+          intent_label: string
+          output_record_id?: string | null
+          output_type?: string | null
+          status?: string
+          steps?: Json | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          action_id?: string
+          command_text?: string
+          confirmation_required?: boolean | null
+          confirmation_result?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          entities?: Json | null
+          id?: string
+          intent?: string
+          intent_label?: string
+          output_record_id?: string | null
+          output_type?: string | null
+          status?: string
+          steps?: Json | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_action_audit_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string
