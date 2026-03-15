@@ -22,6 +22,7 @@ import quotrLogo from "@/assets/quotr-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { FirstQuoteWizard } from "@/components/onboarding/FirstQuoteWizard";
+import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";
 
 const tradeTypes = [
   "Electrician",
@@ -53,6 +54,28 @@ interface OnboardingData {
   country: string;
 }
 
+interface CommsPrefs {
+  visit_reminder_enabled: boolean;
+  quote_followup_enabled: boolean;
+  job_complete_enabled: boolean;
+  on_my_way_enabled: boolean;
+  enquiry_ack_enabled: boolean;
+  review_request_enabled: boolean;
+  invoice_reminder_enabled: boolean;
+  payment_receipt_enabled: boolean;
+}
+
+const DEFAULT_COMMS: CommsPrefs = {
+  visit_reminder_enabled: false,
+  quote_followup_enabled: false,
+  job_complete_enabled: false,
+  on_my_way_enabled: false,
+  enquiry_ack_enabled: false,
+  review_request_enabled: false,
+  invoice_reminder_enabled: false,
+  payment_receipt_enabled: false,
+};
+
 export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -65,10 +88,11 @@ export default function Onboarding() {
     currency: "EUR",
     country: "IE",
   });
+  const [commsPrefs, setCommsPrefs] = useState<CommsPrefs>(DEFAULT_COMMS);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const updateData = (field: keyof OnboardingData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -82,6 +106,8 @@ export default function Onboarding() {
         return data.tradeType !== "" && data.businessSize !== "";
       case 3:
         return true;
+      case 4:
+        return true; // comms step - all optional
       default:
         return false;
     }
@@ -130,15 +156,34 @@ export default function Onboarding() {
         .single();
 
       if (profile?.team_id) {
+        // Update team name
         await supabase
           .from("teams")
           .update({ name: data.companyName })
           .eq("id", profile.team_id);
+
+        // Upsert comms settings for the team
+        const { data: existing } = await supabase
+          .from("comms_settings")
+          .select("id")
+          .eq("team_id", profile.team_id)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("comms_settings")
+            .update({ ...commsPrefs, updated_at: new Date().toISOString() })
+            .eq("team_id", profile.team_id);
+        } else {
+          await supabase
+            .from("comms_settings")
+            .insert({ team_id: profile.team_id, ...commsPrefs });
+        }
       }
 
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize });
       toast.success("Welcome to Quotr! Let's create your first quote.");
-      setStep(4); // Move to first-quote wizard
+      setStep(5); // Move to first-quote wizard
     } catch (error: any) {
       console.error("Onboarding error:", error);
       toast.error("Failed to save your preferences. Please try again.");
@@ -147,7 +192,7 @@ export default function Onboarding() {
     }
   };
 
-  const stepLabels = ["Profile", "Trade", "Preferences", "First Quote"];
+  const stepLabels = ["Profile", "Trade", "Preferences", "Comms", "First Quote"];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
@@ -161,13 +206,15 @@ export default function Onboarding() {
             {step === 1 && "Welcome to Quotr!"}
             {step === 2 && "Tell us about your trade"}
             {step === 3 && "Almost there!"}
-            {step === 4 && "Create your first quote"}
+            {step === 4 && "Communication preferences"}
+            {step === 5 && "Create your first quote"}
           </h1>
           <p className="text-muted-foreground">
             {step === 1 && "Let's get your account set up in under 2 minutes"}
             {step === 2 && "We'll tailor your experience to your business"}
             {step === 3 && "Just a couple more preferences, then you're ready"}
-            {step === 4 && "See how easy quoting is — we've pre-filled it for you"}
+            {step === 4 && "Choose which emails you'd like to send to clients"}
+            {step === 5 && "See how easy quoting is — we've pre-filled it for you"}
           </p>
         </div>
 
@@ -351,16 +398,21 @@ export default function Onboarding() {
           </Card>
         )}
 
-        {/* Step 4: First Quote Wizard */}
+        {/* Step 4: Communications Preferences */}
         {step === 4 && (
+          <OnboardingCommsStep prefs={commsPrefs} onChange={setCommsPrefs} />
+        )}
+
+        {/* Step 5: First Quote Wizard */}
+        {step === 5 && (
           <FirstQuoteWizard
             tradeType={data.tradeType}
-            onBack={() => setStep(3)}
+            onBack={() => setStep(4)}
           />
         )}
 
-        {/* Navigation buttons (steps 1-3 only, step 4 has its own) */}
-        {step <= 3 && (
+        {/* Navigation buttons (steps 1-4 only, step 5 has its own) */}
+        {step <= 4 && (
         <div className="flex items-center justify-between mt-6">
           <Button
             variant="ghost"
@@ -372,7 +424,7 @@ export default function Onboarding() {
             Back
           </Button>
           
-          {step < 3 ? (
+          {step < 4 ? (
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
