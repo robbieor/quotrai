@@ -136,13 +136,11 @@ const pipelineSteps = [
   { label: "Profit", icon: DollarSign, desc: "Paid & reconciled" },
 ];
 
-// Competitor comparison
-// Competitor base prices in EUR (will be converted dynamically)
+// Competitor comparison — generic comparators (no named competitors)
 const competitorBaseEUR = [
-  { name: "Tradify", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
-  { name: "Fergus", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
-  { name: "Jobber", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
-  { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Traditional FSM Software A", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Traditional FSM Software B", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
+  { name: "Traditional FSM Software C", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
   { name: "Quotr", eur: 29, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
 
