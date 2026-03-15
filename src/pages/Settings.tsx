@@ -176,6 +176,11 @@ export default function Settings() {
                   <span className="hidden sm:inline">Branding</span>
                   <span className="sm:hidden">Brand</span>
                 </TabsTrigger>
+                <TabsTrigger value="comms" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                  <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Comms</span>
+                  <span className="sm:hidden">Mail</span>
+                </TabsTrigger>
                 <TabsTrigger value="import" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <FileSpreadsheet className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span>Import</span>
