@@ -24,7 +24,14 @@ interface MonthViewProps {
   onJobDragEnd: () => void;
 }
 
-export function MonthView({ currentDate, jobs, onJobClick }: MonthViewProps) {
+export function MonthView({
+  currentDate,
+  jobs,
+  onJobClick,
+  onJobDrop,
+  onJobDragStart,
+  onJobDragEnd,
+}: MonthViewProps) {
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
