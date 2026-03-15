@@ -129,9 +129,17 @@ export function WeekView({
                   className="border-r last:border-r-0 p-1 min-h-[60px]"
                   hasJobs={jobCount > 0}
                   jobCount={jobCount}
+                  onJobDrop={onJobDrop}
                 >
                   {[...hourJobs, ...unscheduledJobs].map((job) => (
-                    <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} compact />
+                    <DraggableJobCard
+                      key={job.id}
+                      job={job}
+                      onClick={() => onJobClick(job)}
+                      onJobDragStart={onJobDragStart}
+                      onJobDragEnd={onJobDragEnd}
+                      compact
+                    />
                   ))}
                 </DroppableCell>
               );
