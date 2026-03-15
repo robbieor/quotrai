@@ -86,15 +86,6 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
           "{testimonial.quote}"
         </blockquote>
 
-        {/* Stat highlight */}
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5">
-          <span className="text-lg font-bold text-primary">
-            {testimonial.statHighlight}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {testimonial.statLabel}
-          </span>
-        </div>
 
         {/* Author */}
         <div className="mt-4 flex items-center gap-3 border-t border-border/50 pt-4">
