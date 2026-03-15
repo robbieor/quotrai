@@ -619,15 +619,15 @@ export default function Landing() {
               </div>
               
               <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6 leading-tight">
-                Give your clients a<br />
+                Your clients approve quotes<br />
                 <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                  professional experience.
+                  from their phone.
                 </span>
               </h2>
               
               <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
-                Clients approve quotes with one click, pay invoices online, and see their full history — 
-                all branded to your business. Look like a company, even if it's just you.
+                One-click quote approvals, online invoice payments, and full job history — 
+                all branded to your business. You get paid faster. They get a better experience.
               </p>
               
               <ul className="space-y-3 sm:space-y-4">
