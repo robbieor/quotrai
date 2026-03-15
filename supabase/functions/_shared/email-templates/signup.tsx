@@ -9,7 +9,6 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Text,
@@ -33,26 +32,27 @@ export const SignupEmail = ({
     <Preview>Confirm your email for Quotr</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/quotr-logo.png"
-          width="48"
-          height="48"
-          alt="Quotr"
-          style={logo}
-        />
-        <Heading style={h1}>Welcome to Quotr 👋</Heading>
+        <Text style={logo}>Quotr</Text>
+        <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
-          Thanks for signing up! Confirm your email address (
+          Thanks for signing up for{' '}
+          <Link href={siteUrl} style={link}>
+            <strong>Quotr</strong>
+          </Link>
+          !
+        </Text>
+        <Text style={text}>
+          Please confirm your email address (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) to get started managing your trade business.
+          ) by clicking the button below:
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Confirm Email
+          Verify Email
         </Button>
         <Text style={footer}>
-          If you didn't create a Quotr account, you can safely ignore this email.
+          If you didn't create an account, you can safely ignore this email.
         </Text>
       </Container>
     </Body>
@@ -61,29 +61,11 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Manrope', Arial, sans-serif" }
-const container = { padding: '32px 28px' }
-const logo = { borderRadius: '12px', marginBottom: '24px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#0f172a',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#64748b',
-  lineHeight: '1.6',
-  margin: '0 0 25px',
-}
-const link = { color: '#0f172a', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#00E699',
-  color: '#0f172a',
-  fontSize: '14px',
-  fontWeight: '600' as const,
-  borderRadius: '12px',
-  padding: '12px 24px',
-  textDecoration: 'none',
-}
+const main = { backgroundColor: '#ffffff', fontFamily: "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }
+const container = { padding: '30px 25px' }
+const logo = { fontSize: '28px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 24px' }
+const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 20px' }
+const text = { fontSize: '14px', color: '#64748b', lineHeight: '1.5', margin: '0 0 25px' }
+const link = { color: 'inherit', textDecoration: 'underline' }
+const button = { backgroundColor: '#00E6A0', color: '#0f172a', fontSize: '14px', fontWeight: '600' as const, borderRadius: '12px', padding: '12px 24px', textDecoration: 'none' }
 const footer = { fontSize: '12px', color: '#94a3b8', margin: '30px 0 0' }

@@ -1,20 +1,18 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-serve(async (req) => {
+const SENDER_DOMAIN = "notify.quotr.work";
+const FROM_DOMAIN = "quotr.work";
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // ──────────────────────────────────────────────────────────
-  // COMMUNICATION SAFETY: Global kill switch — blocks ALL automated reminders
-  // ──────────────────────────────────────────────────────────
   const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
   if (!outboundEnabled) {
     console.log("[SAFETY] send-payment-reminder blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
@@ -26,16 +24,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    
-    if (!resendApiKey) throw new Error('RESEND_API_KEY not configured');
-    
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    const resend = new Resend(resendApiKey);
     const today = new Date().toISOString().split('T')[0];
     const results = { sent: 0, skipped: 0 };
 
-    // Find overdue invoices with customer email
     const { data: overdueInvoices } = await supabase
       .from('invoices')
       .select('id, invoice_number, total, due_date, team_id, portal_token, communication_suppressed, customer:customers(name, email)')
@@ -43,9 +35,6 @@ serve(async (req) => {
       .lt('due_date', today);
 
     for (const inv of (overdueInvoices || [])) {
-      // ──────────────────────────────────────────────────────────
-      // COMMUNICATION SAFETY: Skip imported/suppressed invoices
-      // ──────────────────────────────────────────────────────────
       if (inv.communication_suppressed) {
         console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: communication_suppressed`);
         results.skipped++;
@@ -98,67 +87,76 @@ serve(async (req) => {
         : `This is a friendly reminder that invoice ${inv.invoice_number} is <strong>${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} past due</strong>. Please arrange payment at your earliest convenience.`;
 
       try {
-        await resend.emails.send({
-          from: `${fromName} via Quotr <noreply@quotr.info>`,
-          to: [customer.email],
-          subject,
-          html: `
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-            <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
-              <div style="max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #00FFB2, #00D4FF); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-                  <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Quotr</div>
-                  <h1 style="color: #0f172a; margin: 10px 0 0; font-size: 20px;">Payment Reminder</h1>
-                </div>
-                <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-                  <p>Dear ${customer.name},</p>
-                  <p>${urgencyText}</p>
-                  <div style="text-align: center; margin: 20px 0;">
-                    <span style="font-size: 36px; font-weight: 700; color: #ef4444;">€${Number(inv.total).toFixed(2)}</span>
-                  </div>
-                  <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><strong>Invoice:</strong> ${inv.invoice_number}</p>
-                    <p style="margin: 5px 0;"><strong>Due Date:</strong> ${inv.due_date}</p>
-                    <p style="margin: 5px 0; color: #ef4444;"><strong>Days Overdue:</strong> ${daysOverdue}</p>
-                  </div>
-                  ${portalUrl ? `
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="${portalUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #00FFB2, #00D4FF); color: #0f172a; font-weight: 700; font-size: 16px; text-decoration: none; border-radius: 8px;">
-                      💳 Pay Now
-                    </a>
-                  </div>
-                  ` : ''}
-                  <p>Thank you,<br><strong>${fromName}</strong></p>
-                </div>
-                <div style="text-align: center; padding: 15px; color: #64748b; font-size: 12px;">
-                  Powered by <a href="#" style="color: #00D4FF;">Quotr</a>
-                </div>
+        const messageId = crypto.randomUUID();
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+          <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #00FFB2, #00D4FF); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+                <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Quotr</div>
+                <h1 style="color: #0f172a; margin: 10px 0 0; font-size: 20px;">Payment Reminder</h1>
               </div>
-            </body>
-            </html>
-          `,
+              <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
+                <p>Dear ${customer.name},</p>
+                <p>${urgencyText}</p>
+                <div style="text-align: center; margin: 20px 0;">
+                  <span style="font-size: 36px; font-weight: 700; color: #ef4444;">€${Number(inv.total).toFixed(2)}</span>
+                </div>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 5px 0;"><strong>Invoice:</strong> ${inv.invoice_number}</p>
+                  <p style="margin: 5px 0;"><strong>Due Date:</strong> ${inv.due_date}</p>
+                  <p style="margin: 5px 0; color: #ef4444;"><strong>Days Overdue:</strong> ${daysOverdue}</p>
+                </div>
+                ${portalUrl ? `
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${portalUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #00FFB2, #00D4FF); color: #0f172a; font-weight: 700; font-size: 16px; text-decoration: none; border-radius: 8px;">
+                    💳 Pay Now
+                  </a>
+                </div>` : ''}
+                <p>Thank you,<br><strong>${fromName}</strong></p>
+              </div>
+              <div style="text-align: center; padding: 15px; color: #64748b; font-size: 12px;">
+                Powered by <a href="#" style="color: #00D4FF;">Quotr</a>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        await supabase.from("email_send_log").insert({
+          message_id: messageId, template_name: `payment-reminder:${reminderType}`,
+          recipient_email: customer.email, status: "pending",
         });
+
+        const { error: enqueueError } = await supabase.rpc("enqueue_email", {
+          queue_name: "transactional_emails",
+          payload: {
+            message_id: messageId,
+            to: customer.email,
+            from: `${fromName} via Quotr <noreply@${FROM_DOMAIN}>`,
+            sender_domain: SENDER_DOMAIN,
+            subject, html,
+            text: `Payment reminder for invoice ${inv.invoice_number} - €${Number(inv.total).toFixed(2)} overdue by ${daysOverdue} days`,
+            purpose: "transactional",
+            label: `payment-reminder:${reminderType}`,
+            queued_at: new Date().toISOString(),
+          },
+        });
+
+        if (enqueueError) throw enqueueError;
 
         await supabase.from('payment_reminders').insert({
-          team_id: inv.team_id,
-          invoice_id: inv.id,
-          reminder_number: (totalReminders || 0) + 1,
-          reminder_type: reminderType,
+          team_id: inv.team_id, invoice_id: inv.id,
+          reminder_number: (totalReminders || 0) + 1, reminder_type: reminderType,
         });
 
-        // Audit log
         await supabase.from("comms_audit_log").insert({
-          channel: "email",
-          record_type: "invoice",
-          record_id: inv.id,
-          recipient: customer.email,
-          template: `send-payment-reminder:${reminderType}`,
-          manual_send: false,
-          confirmed_by_user: false,
-          allowed: true,
-          source_screen: "cron",
+          channel: "email", record_type: "invoice", record_id: inv.id,
+          recipient: customer.email, template: `send-payment-reminder:${reminderType}`,
+          manual_send: false, confirmed_by_user: false,
+          allowed: true, source_screen: "cron",
         });
 
         results.sent++;
@@ -174,8 +172,7 @@ serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
