@@ -144,11 +144,18 @@ export function DayView({
                 className="p-2 min-h-[60px]"
                 hasJobs={jobCount > 0}
                 jobCount={jobCount}
+                onJobDrop={onJobDrop}
               >
                 {hourJobs.length > 0 && (
                   <div className="space-y-1">
                     {hourJobs.map((job) => (
-                      <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} />
+                      <DraggableJobCard
+                        key={job.id}
+                        job={job}
+                        onClick={() => onJobClick(job)}
+                        onJobDragStart={onJobDragStart}
+                        onJobDragEnd={onJobDragEnd}
+                      />
                     ))}
                   </div>
                 )}
