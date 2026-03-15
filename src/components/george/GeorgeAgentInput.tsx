@@ -156,6 +156,7 @@ export function GeorgeAgentInput({
           body: {
             message: text,
             conversation_id: conversationId || null,
+            memory_context: memoryContext || undefined,
           },
         });
 
