@@ -27,7 +27,8 @@ interface GeorgeAgentInputProps {
 
 export function GeorgeAgentInput({ 
   onUserMessage, 
-  onAssistantMessage, 
+  onAssistantMessage,
+  onStructuredResponse,
   onPhotoQuote,
   conversationId,
   textareaRef: externalTextareaRef,
