@@ -11,6 +11,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ──────────────────────────────────────────────────────────
+  // COMMUNICATION SAFETY: Global kill switch
+  // ──────────────────────────────────────────────────────────
+  const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
+  if (!outboundEnabled) {
+    console.log("[SAFETY] check-churn blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
+    return new Response(JSON.stringify({ sent: 0, blocked: true, reason: "kill_switch" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -24,11 +35,9 @@ serve(async (req) => {
       });
     }
 
-    // Find users inactive for 7+ days (no recent jobs, invoices, or quotes created)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Get all profiles with active subscriptions who haven't been emailed recently
     const { data: profiles, error: profileError } = await supabase
       .from("profiles")
       .select("id, email, full_name, team_id, updated_at")
@@ -48,7 +57,6 @@ serve(async (req) => {
     for (const profile of profiles) {
       if (!profile.email || !profile.team_id) continue;
 
-      // Check if we already sent a churn email recently
       const { data: recentChurn } = await supabase
         .from("churn_events")
         .select("id")
@@ -58,7 +66,6 @@ serve(async (req) => {
 
       if (recentChurn && recentChurn.length > 0) continue;
 
-      // Check for recent activity (jobs, invoices, quotes)
       const { count: jobCount } = await supabase
         .from("jobs")
         .select("*", { count: "exact", head: true })
@@ -73,7 +80,6 @@ serve(async (req) => {
 
       if ((jobCount || 0) > 0 || (invoiceCount || 0) > 0) continue;
 
-      // Send re-engagement email
       const firstName = profile.full_name?.split(" ")[0] || "there";
 
       try {
@@ -114,7 +120,6 @@ serve(async (req) => {
           }),
         });
 
-        // Log churn event
         await supabase.from("churn_events").insert({
           team_id: profile.team_id,
           user_id: profile.id,

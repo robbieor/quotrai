@@ -51,13 +51,14 @@ serve(async (req) => {
         dueDate.setDate(dueDate.getDate() + 30);
 
         // Create the invoice
+        // COMMUNICATION SAFETY: Auto-generated invoices are always suppressed
         const { data: newInvoice, error: invoiceError } = await supabase
           .from('invoices')
           .insert({
             team_id: schedule.team_id,
             customer_id: schedule.customer_id,
             invoice_number: invoiceNumber,
-            status: schedule.auto_send ? 'pending' : 'draft',
+            status: 'draft',
             issue_date: today,
             due_date: dueDate.toISOString().split('T')[0],
             subtotal,
@@ -65,6 +66,8 @@ serve(async (req) => {
             tax_amount: taxAmount,
             total,
             notes: schedule.notes,
+            communication_suppressed: true,
+            delivery_status: "not_sent",
           })
           .select()
           .single();

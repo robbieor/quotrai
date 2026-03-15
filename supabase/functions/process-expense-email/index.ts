@@ -29,7 +29,6 @@ serve(async (req) => {
 
     const body = await req.json();
 
-    // Resend inbound email webhook format
     const {
       from: senderEmail,
       to: recipientEmail,
@@ -40,26 +39,18 @@ serve(async (req) => {
 
     console.log(`Processing expense email from: ${senderEmail}, subject: ${subject}`);
 
-    // Extract the unique forwarding code from the recipient address
-    // Format: expenses+CODE@quotr.work
     const toAddress = Array.isArray(recipientEmail) ? recipientEmail[0] : recipientEmail;
     const toAddr = typeof toAddress === "string" ? toAddress : (toAddress?.address || "");
     const codeMatch = toAddr.match(/expenses\+([a-z0-9]+)@/i);
     
     if (!codeMatch?.[1]) {
-      console.log(`No forwarding code found in recipient: ${toAddr}`);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: "Invalid forwarding address. Use your unique expenses+CODE@quotr.work address from Settings." 
-      }), { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      return new Response(JSON.stringify({ success: false, error: "Invalid forwarding address." }), { 
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } 
       });
     }
 
     const forwardCode = codeMatch[1].toLowerCase();
 
-    // Look up the user by their unique expense forwarding code
     const { data: profile } = await adminSupabase
       .from("profiles")
       .select("id, team_id")
@@ -67,13 +58,8 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!profile?.team_id) {
-      console.log(`No user found for forwarding code: ${forwardCode}`);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: "Forwarding code not recognised. Check your unique address in Settings → Expenses." 
-      }), { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      return new Response(JSON.stringify({ success: false, error: "Forwarding code not recognised." }), { 
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } 
       });
     }
 
@@ -81,23 +67,15 @@ serve(async (req) => {
       ? senderEmail 
       : (senderEmail?.address || senderEmail?.[0]?.address || senderEmail?.[0] || "unknown");
 
-    // Use the email content for AI parsing
     const emailContent = textBody || htmlBody?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || "";
 
     if (!emailContent && !subject) {
       return new Response(JSON.stringify({ success: false, error: "Empty email content" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Use AI to extract expense details via tool calling for strict schema
-    const aiPrompt = `You are an expense parser for tradespeople. Extract expense details from this forwarded supplier invoice/receipt email.
-
-Email subject: ${subject || "No subject"}
-
-Email content:
-${emailContent.substring(0, 3000)}`;
+    const aiPrompt = `You are an expense parser for tradespeople. Extract expense details from this forwarded supplier invoice/receipt email.\n\nEmail subject: ${subject || "No subject"}\n\nEmail content:\n${emailContent.substring(0, 3000)}`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -108,92 +86,69 @@ ${emailContent.substring(0, 3000)}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are an expense parser for tradespeople. Extract expense details from forwarded supplier invoices and receipts." },
+          { role: "system", content: "You are an expense parser for tradespeople." },
           { role: "user", content: aiPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "log_expense",
-              description: "Log a parsed expense from a supplier invoice or receipt email.",
-              parameters: {
-                type: "object",
-                properties: {
-                  description: { type: "string", description: "Brief description of what was purchased (max 100 chars)" },
-                  amount: { type: "number", description: "Total amount as a number, no currency symbols" },
-                  vendor: { type: "string", description: "The supplier or vendor name" },
-                  date: { type: "string", description: "Invoice/transaction date in YYYY-MM-DD format. Use today if not found." },
-                  category: { 
-                    type: "string", 
-                    enum: VALID_CATEGORIES,
-                    description: "Best matching category for the purchase" 
-                  },
-                },
-                required: ["description", "amount", "vendor", "date", "category"],
-                additionalProperties: false,
+        tools: [{
+          type: "function",
+          function: {
+            name: "log_expense",
+            description: "Log a parsed expense from a supplier invoice or receipt email.",
+            parameters: {
+              type: "object",
+              properties: {
+                description: { type: "string" },
+                amount: { type: "number" },
+                vendor: { type: "string" },
+                date: { type: "string" },
+                category: { type: "string", enum: VALID_CATEGORIES },
               },
+              required: ["description", "amount", "vendor", "date", "category"],
+              additionalProperties: false,
             },
           },
-        ],
+        }],
         tool_choice: { type: "function", function: { name: "log_expense" } },
         temperature: 0.1,
       }),
     });
 
     if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      throw new Error(`AI API call failed [${aiResponse.status}]: ${errText}`);
+      throw new Error(`AI API call failed [${aiResponse.status}]: ${await aiResponse.text()}`);
     }
 
     const aiData = await aiResponse.json();
-    
-    // Extract from tool call response
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let parsed: { description?: string; amount?: number; vendor?: string; date?: string; category?: string };
     
     if (toolCall?.function?.arguments) {
       try {
-        parsed = typeof toolCall.function.arguments === "string" 
-          ? JSON.parse(toolCall.function.arguments) 
-          : toolCall.function.arguments;
+        parsed = typeof toolCall.function.arguments === "string" ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
       } catch {
-        console.error("Failed to parse tool call arguments:", toolCall.function.arguments);
         throw new Error("Could not extract expense details from email");
       }
     } else {
-      // Fallback: try to parse from content
       const aiText = aiData.choices?.[0]?.message?.content || "";
       try {
         const jsonMatch = aiText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, aiText];
         parsed = JSON.parse(jsonMatch[1].trim());
       } catch {
-        console.error("Failed to parse AI response:", aiText);
         throw new Error("Could not extract expense details from email");
       }
     }
 
-    // Validate parsed data
     const amount = typeof parsed.amount === "number" ? parsed.amount : parseFloat(String(parsed.amount || "0"));
     if (!amount || amount <= 0) {
-      console.log("No valid amount found in email");
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: "Could not find a valid amount in the email" 
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ success: false, error: "No valid amount found" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const category = VALID_CATEGORIES.includes(parsed.category || "") ? parsed.category : "other";
     const description = (parsed.description || subject || "Email expense").substring(0, 200);
     const vendor = (parsed.vendor || "").substring(0, 200) || null;
-    const expenseDate = parsed.date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date) 
-      ? parsed.date 
-      : new Date().toISOString().substring(0, 10);
+    const expenseDate = parsed.date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date) ? parsed.date : new Date().toISOString().substring(0, 10);
 
-    // Create the expense
     const { data: expense, error: insertError } = await adminSupabase
       .from("expenses")
       .insert({
@@ -209,16 +164,18 @@ ${emailContent.substring(0, 3000)}`;
       .select()
       .single();
 
-    if (insertError) {
-      console.error("Failed to create expense:", insertError);
-      throw new Error(`Failed to create expense: ${insertError.message}`);
-    }
+    if (insertError) throw new Error(`Failed to create expense: ${insertError.message}`);
 
     console.log(`Created expense: ${expense.id} - ${description} - ${amount}`);
 
-    // Send confirmation email via Resend
+    // ──────────────────────────────────────────────────────────
+    // COMMUNICATION SAFETY: Confirmation email gated by kill switch
+    // This emails the USER (not a client), but still respects global flag.
+    // ──────────────────────────────────────────────────────────
+    const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (RESEND_API_KEY) {
+    
+    if (outboundEnabled && RESEND_API_KEY) {
       try {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -248,8 +205,9 @@ ${emailContent.substring(0, 3000)}`;
         });
       } catch (emailErr) {
         console.error("Failed to send confirmation email:", emailErr);
-        // Don't fail the whole operation
       }
+    } else {
+      console.log("[SAFETY] Expense confirmation email suppressed: kill switch is off");
     }
 
     return new Response(JSON.stringify({ success: true, expense_id: expense.id }), {
@@ -259,7 +217,7 @@ ${emailContent.substring(0, 3000)}`;
     console.error("Process expense email error:", err);
     const errorMessage = err instanceof Error ? err.message : "Internal error";
     return new Response(JSON.stringify({ success: false, error: errorMessage }), {
-      status: 200, // Return 200 for webhooks
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

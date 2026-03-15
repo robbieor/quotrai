@@ -11,13 +11,23 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ──────────────────────────────────────────────────────────
+  // COMMUNICATION SAFETY: Global kill switch — blocks ALL automated job reminders
+  // ──────────────────────────────────────────────────────────
+  const outboundEnabled = Deno.env.get("OUTBOUND_COMMUNICATION_ENABLED") === "true";
+  if (!outboundEnabled) {
+    console.log("[SAFETY] send-job-reminders blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
+    return new Response(JSON.stringify({ sent: 0, blocked: true, reason: "kill_switch" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get unsent reminders due now
     const { data: reminders, error: fetchError } = await supabase
       .from("job_reminders")
       .select(`
@@ -73,6 +83,20 @@ serve(async (req) => {
               `,
             }),
           });
+
+          // Audit log
+          await supabase.from("comms_audit_log").insert({
+            channel: "email",
+            record_type: "job_reminder",
+            record_id: reminder.id,
+            recipient: customerEmail,
+            template: "send-job-reminders",
+            manual_send: false,
+            confirmed_by_user: false,
+            allowed: true,
+            source_screen: "cron",
+          });
+
           sentCount++;
         } catch (e) {
           console.error("Failed to send reminder email:", e);
@@ -80,7 +104,6 @@ serve(async (req) => {
         }
       }
 
-      // Mark as sent
       await supabase
         .from("job_reminders")
         .update({ sent: true, sent_at: new Date().toISOString() })
