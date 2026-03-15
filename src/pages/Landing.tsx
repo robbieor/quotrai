@@ -449,7 +449,7 @@ export default function Landing() {
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
               One platform.<br />
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                Zero office staff needed.
+                Lead to profit, on autopilot.
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
