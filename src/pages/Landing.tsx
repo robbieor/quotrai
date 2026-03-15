@@ -252,7 +252,6 @@ export default function Landing() {
             </Link>
             <Link to="/request-access" className="hidden sm:inline-flex">
               <Button size="sm" className="font-medium btn-hover-lift text-sm px-3 sm:px-4 gap-1.5">
-                <Rocket className="h-3.5 w-3.5" />
                 Get Founding Member Access
               </Button>
             </Link>
