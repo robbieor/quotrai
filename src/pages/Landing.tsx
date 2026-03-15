@@ -688,7 +688,7 @@ export default function Landing() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">Boiler Service & Repair</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">€450.00</span>
+                      <span className="text-lg font-bold text-foreground">{formatPrice(450, 2)}</span>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <CreditCard className="h-4 w-4" />
                         Paid 15 Jan 2025
