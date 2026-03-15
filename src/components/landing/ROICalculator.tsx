@@ -251,7 +251,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
                   <div className="p-3 rounded-lg bg-background/80">
                     <p className="text-xs text-muted-foreground">Annual Savings</p>
                     <p className="text-lg font-bold text-foreground">
-                      £{Math.round(annualSavings).toLocaleString()}
+                      €{Math.round(annualSavings).toLocaleString()}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-background/80">
