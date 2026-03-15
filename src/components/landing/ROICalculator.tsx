@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 // Assumptions for ROI calculation
 const HOURS_SAVED_PER_PERSON_PER_WEEK = 10; // Average hours saved on admin
-const AVERAGE_HOURLY_RATE = 30; // £30/hour average cost for admin time
+const AVERAGE_HOURLY_RATE = 30; // €30/hour average cost for admin time
 const QUOTR_SEAT_PRICE = 29; // €29/month per seat
 const QUOTR_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
@@ -126,7 +126,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           <div className="p-4 rounded-lg bg-primary/10 text-center">
             <p className="text-sm text-muted-foreground">Monthly savings</p>
             <p className="text-3xl font-bold text-primary">
-              £{Math.round(netMonthlySavings).toLocaleString()}
+              €{Math.round(netMonthlySavings).toLocaleString()}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {roiMultiple.toFixed(1)}x return on investment
@@ -243,7 +243,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
                 <div>
                   <p className="text-sm text-muted-foreground">Monthly Net Savings</p>
                   <p className="text-4xl font-bold text-primary">
-                    £{Math.round(netMonthlySavings).toLocaleString()}
+                    €{Math.round(netMonthlySavings).toLocaleString()}
                   </p>
                 </div>
                 
@@ -251,7 +251,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
                   <div className="p-3 rounded-lg bg-background/80">
                     <p className="text-xs text-muted-foreground">Annual Savings</p>
                     <p className="text-lg font-bold text-foreground">
-                      £{Math.round(annualSavings).toLocaleString()}
+                      €{Math.round(annualSavings).toLocaleString()}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg bg-background/80">
@@ -306,16 +306,16 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-muted-foreground">Admin Time Saved</p>
               <p className="font-semibold text-primary">
-                £{Math.round(potentialMoneySavedPerMonth).toLocaleString()}/month
+                €{Math.round(potentialMoneySavedPerMonth).toLocaleString()}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {Math.round(potentialHoursSavedPerMonth)} hrs × £{AVERAGE_HOURLY_RATE}/hr
+                {Math.round(potentialHoursSavedPerMonth)} hrs × €{AVERAGE_HOURLY_RATE}/hr
               </p>
             </div>
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
               <p className="text-muted-foreground">Net Benefit</p>
               <p className="font-bold text-primary">
-                £{Math.round(netMonthlySavings).toLocaleString()}/month
+                €{Math.round(netMonthlySavings).toLocaleString()}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Savings minus subscription
@@ -385,7 +385,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          * Based on average admin time costs of £{AVERAGE_HOURLY_RATE}/hour and up to {HOURS_SAVED_PER_PERSON_PER_WEEK} hours saved per person per week
+          * Based on average admin time costs of €{AVERAGE_HOURLY_RATE}/hour and up to {HOURS_SAVED_PER_PERSON_PER_WEEK} hours saved per person per week
         </p>
       </CardContent>
     </Card>

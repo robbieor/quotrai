@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   FileText, 
   Receipt, 
@@ -16,7 +17,6 @@ import {
   Mic,
   Bot,
   Calendar,
-  Shield,
   CreditCard,
   ExternalLink,
   Globe,
@@ -24,8 +24,6 @@ import {
   Wrench,
   DollarSign,
   PieChart,
-  UserPlus,
-  ClipboardList,
   MapPin,
   Hammer,
   Paintbrush,
@@ -37,49 +35,24 @@ import {
   Timer,
   RefreshCw,
   Menu,
-  X
+  X,
+  Calculator,
+  Rocket,
+  ChevronRight,
+  Star,
+  Minus,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
-import { DashboardShowcase } from "@/components/landing/DashboardShowcase";
-import { DayTimeline } from "@/components/landing/DayTimeline";
-import { BeforeAfter } from "@/components/landing/BeforeAfter";
-import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 
-// Platform features
-const platformFeatures = [
-  { name: "Job Management", icon: Briefcase },
-  { name: "Quoting & Estimates", icon: FileText },
-  { name: "Invoicing", icon: Receipt },
-  { name: "GPS Time Tracking", icon: MapPin },
-  { name: "Customer CRM", icon: Users },
-  { name: "Expense Tracking", icon: DollarSign },
-  { name: "Business Reports", icon: BarChart3 },
-  { name: "Team Management", icon: UserPlus },
-  { name: "Job Templates", icon: ClipboardList },
-  { name: "Payment Tracking", icon: CreditCard },
-  { name: "Calendar & Scheduling", icon: Calendar },
-  { name: "Xero Integration", icon: RefreshCw },
-  { name: "Foreman AI Assistant", icon: Bot },
-];
-
+// 4 capability cards matching quotr.work
 const platformCapabilities = [
   {
     icon: BarChart3,
     title: "Real-Time Dashboards",
-    description: "See revenue, job status, outstanding invoices, and business health at a glance. Data-driven decisions, not guesswork."
-  },
-  {
-    icon: FileText,
-    title: "Professional Quotes",
-    description: "Create branded quotes in seconds using trade-specific templates. Send to clients with one click."
-  },
-  {
-    icon: Receipt,
-    title: "Invoicing & Payments",
-    description: "Convert quotes to invoices instantly. Track payments, send reminders, and see what's outstanding."
+    description: "Revenue, job status, outstanding invoices, and business health at a glance. Data-driven decisions, not guesswork."
   },
   {
     icon: MapPin,
@@ -88,19 +61,14 @@ const platformCapabilities = [
   },
   {
     icon: PieChart,
-    title: "Business Intelligence",
+    title: "P&L & Business Intelligence",
     description: "Revenue trends, quote conversion rates, job performance — analytics that help you grow."
   },
   {
     icon: RefreshCw,
-    title: "Xero Accounting Sync",
-    description: "Connect Xero in one click. Invoices, payments, and contacts sync automatically — no double entry."
+    title: "Xero & QuickBooks Sync",
+    description: "Connect in one click. Invoices, payments, and contacts sync automatically — no double entry."
   },
-  {
-    icon: Bot,
-    title: "Foreman AI Assistant",
-    description: "Talk to Foreman AI to create quotes, schedule jobs, or check your calendar — completely hands-free."
-  }
 ];
 
 const trades = [
@@ -121,11 +89,10 @@ const exampleCommands = [
   { command: "What's my total revenue this month?", category: "Reports" },
   { command: "Move tomorrow's plumbing job to Friday at 3pm", category: "Scheduling" },
   { command: "Send a payment reminder for invoice 1042", category: "Invoices" },
-  { command: "Log a £45 expense for copper fittings", category: "Expenses" },
+  { command: "Log a €45 expense for copper fittings", category: "Expenses" },
   { command: "Mark the Smith bathroom job as completed", category: "Jobs" },
 ];
 
-// Tom's complete skill categories
 const tomSkillCategories = [
   {
     title: "Jobs & Scheduling",
@@ -159,10 +126,78 @@ const tomSkillCategories = [
   },
 ];
 
+// Lead → Profit pipeline
+const pipelineSteps = [
+  { label: "Lead In", icon: Users, desc: "Enquiry captured" },
+  { label: "Quote", icon: FileText, desc: "AI-generated quote" },
+  { label: "Job", icon: Briefcase, desc: "Scheduled & tracked" },
+  { label: "Invoice", icon: Receipt, desc: "Auto-sent" },
+  { label: "Profit", icon: DollarSign, desc: "Paid & reconciled" },
+];
+
+// Competitor comparison
+const competitors = [
+  {
+    name: "Tradify",
+    price: "€34/user/mo",
+    ai: false,
+    voice: false,
+    portal: false,
+    gps: true,
+    xero: true,
+  },
+  {
+    name: "Fergus",
+    price: "€40/user/mo",
+    ai: false,
+    voice: false,
+    portal: true,
+    gps: false,
+    xero: true,
+  },
+  {
+    name: "Jobber",
+    price: "€49/user/mo",
+    ai: false,
+    voice: false,
+    portal: true,
+    gps: true,
+    xero: true,
+  },
+  {
+    name: "ServiceM8",
+    price: "€29/user/mo",
+    ai: false,
+    voice: false,
+    portal: false,
+    gps: true,
+    xero: true,
+  },
+  {
+    name: "Quotr",
+    price: "€15/user/mo",
+    ai: true,
+    voice: true,
+    portal: true,
+    gps: true,
+    xero: true,
+    highlight: true,
+  },
+];
+
+const comparisonFeatures = [
+  { key: "ai", label: "AI Assistant" },
+  { key: "voice", label: "Voice Commands" },
+  { key: "portal", label: "Customer Portal" },
+  { key: "gps", label: "GPS Time Tracking" },
+  { key: "xero", label: "Xero/QuickBooks Sync" },
+] as const;
+
 export default function Landing() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [roiOpen, setRoiOpen] = useState(false);
 
   // Force light mode on landing page
   useLayoutEffect(() => {
@@ -201,9 +236,23 @@ export default function Landing() {
     <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
         title="Quotr — AI-Powered Job Management for Trade Businesses"
-        description="Quotr runs the office so you don't have to. Quotes, invoices, scheduling, GPS tracking, and an AI assistant — for solo operators to 20-person crews. 30-day free trial."
+        description="Talk to your business. It talks back. Quotes, invoices, expenses, scheduling — all voice-powered, all in one app. Built for field service pros."
         path="/"
       />
+
+      {/* ROI Calculator Dialog */}
+      <Dialog open={roiOpen} onOpenChange={setRoiOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-primary" />
+              ROI Calculator
+            </DialogTitle>
+          </DialogHeader>
+          <ROICalculator />
+        </DialogContent>
+      </Dialog>
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
@@ -217,6 +266,15 @@ export default function Landing() {
                 Pricing
               </Button>
             </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="font-medium hidden sm:inline-flex gap-1.5"
+              onClick={() => setRoiOpen(true)}
+            >
+              <Calculator className="h-3.5 w-3.5" />
+              ROI Calculator
+            </Button>
             <Link to="/customer/login">
               <Button variant="ghost" size="sm" className="font-medium hidden sm:inline-flex">
                 Customer Portal
@@ -227,9 +285,10 @@ export default function Landing() {
                 Login
               </Button>
             </Link>
-            <Link to="/signup" className="hidden sm:inline-flex">
-              <Button size="sm" className="font-medium btn-hover-lift text-sm px-3 sm:px-4">
-                Start Free Trial
+            <Link to="/request-access" className="hidden sm:inline-flex">
+              <Button size="sm" className="font-medium btn-hover-lift text-sm px-3 sm:px-4 gap-1.5">
+                <Rocket className="h-3.5 w-3.5" />
+                Get Founding Member Access
               </Button>
             </Link>
             <button
@@ -249,14 +308,25 @@ export default function Landing() {
               <Link to="/pricing" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start font-medium">Pricing</Button>
               </Link>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start font-medium gap-2"
+                onClick={() => { setRoiOpen(true); setMobileMenuOpen(false); }}
+              >
+                <Calculator className="h-4 w-4" />
+                ROI Calculator
+              </Button>
               <Link to="/customer/login" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start font-medium">Customer Portal</Button>
               </Link>
               <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start font-medium">Login</Button>
               </Link>
-              <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full font-medium">Start Free Trial</Button>
+              <Link to="/request-access" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full font-medium gap-2">
+                  <Rocket className="h-4 w-4" />
+                  Get Founding Member Access
+                </Button>
               </Link>
             </div>
           </div>
@@ -272,163 +342,119 @@ export default function Landing() {
         </div>
         
         <div className="container mx-auto max-w-6xl relative">
-          <div className="text-center mb-10 sm:mb-16 animate-fade-up">
-            {/* Social proof badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 sm:mb-8">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[10px] font-bold text-primary">
-                    {String.fromCharCode(64 + i)}
-                  </div>
-                ))}
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            {/* Left — Copy */}
+            <div className="animate-fade-up text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 sm:mb-8">
+                <Rocket className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs sm:text-sm font-medium text-primary">
+                  Founding Member Program — 30% off, 200 places
+                </span>
               </div>
-              <span className="text-xs sm:text-sm font-medium text-primary">
-                Built for solo operators to 20-person crews
-              </span>
+
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
+                Talk to your business.<br />
+                <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+                  It talks back.
+                </span>
+              </h1>
+              
+              <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Quotes, invoices, expenses, scheduling, price lists, customer portal — all voice-powered, all in one app. 
+                <span className="font-semibold text-foreground"> Built for field service pros, not accountants.</span>
+              </p>
+              
+              <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-6">
+                <Link to="/request-access" className="w-full sm:w-auto">
+                  <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
+                    🚀 Get Founding Member Access
+                    <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
+              
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Join the Beta Program to get 30% off — limited places available
+              </p>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
-              Your AI Office Manager.<br />
-              <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                For Trade Businesses.
-              </span>
-            </h1>
-            
-            <p className="text-base sm:text-xl md:text-2xl text-muted-foreground mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-2">
-              Quotr runs the office so you don't have to. Quotes by voice, invoices that chase themselves, 
-              GPS time tracking, and scheduling — 
-              <span className="font-semibold text-foreground">all in one platform your whole team actually uses</span>.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-              <Link to="/signup" className="w-full sm:w-auto">
-                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
-                  Try Free for 30 Days
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/pricing" className="w-full sm:w-auto">
-                <Button variant="outline" size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold gap-2 w-full sm:w-auto">
-                  View Pricing
-                </Button>
-              </Link>
-            </div>
-            
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground px-4">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                No credit card required
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                Set up in 5 minutes
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                Cancel anytime
-              </span>
-            </div>
-          </div>
-
-          {/* Dashboard Showcase - replaces static mockup */}
-          <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
-            <DashboardShowcase />
-          </div>
-          
-          {/* Platform Features Pills */}
-          <div className="mt-8 sm:mt-12 animate-fade-up" style={{ animationDelay: "400ms" }}>
-            <p className="text-xs text-muted-foreground mb-4 text-center">Replace 4–5 disconnected tools with one platform</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {platformFeatures.map((feature) => (
-                <div 
-                  key={feature.name}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border text-xs font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors cursor-default"
-                >
-                  <feature.icon className="h-3 w-3" />
-                  <span className="hidden sm:inline">{feature.name}</span>
+            {/* Right — Foreman AI Chat Mockup */}
+            <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
+                {/* Chat header */}
+                <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-primary/30">
+                    <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-foreground">Foreman AI</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-xs text-muted-foreground">Online</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                    <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                    <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+                
+                {/* Chat messages */}
+                <div className="p-5 space-y-4">
+                  {/* User message */}
+                  <div className="flex justify-end">
+                    <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+                      <p className="text-sm text-foreground">"Create a quote for Mrs. Patterson — EV charger install, 7kW unit"</p>
+                    </div>
+                  </div>
+                  
+                  {/* AI response */}
+                  <div className="flex gap-2.5">
+                    <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
+                      <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
+                      <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> created:</p>
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        <p>• 7kW EV Charger Unit — €1,180.00</p>
+                        <p>• Installation & Cabling — €420.00</p>
+                        <p>• SEAI Grant Applied — -€300.00</p>
+                        <p className="font-semibold text-foreground pt-1">Total: €1,300.00</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">Want me to send it to her email?</p>
+                    </div>
+                  </div>
 
-      {/* Stats Section with Animated Counters */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 border-y border-border bg-muted/30">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
-            <div className="text-center animate-fade-up">
-              <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent mb-1 sm:mb-2">
-                <AnimatedCounter end={11} suffix=" days" />
-              </p>
-              <p className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">Faster Payments</p>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">With automated payment chasing</p>
-            </div>
-            <div className="text-center animate-fade-up" style={{ animationDelay: "100ms" }}>
-              <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent mb-1 sm:mb-2">
-                <AnimatedCounter end={8} suffix="hrs" />
-              </p>
-              <p className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">Saved Weekly</p>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">On quoting, invoicing & admin</p>
-            </div>
-            <div className="text-center animate-fade-up" style={{ animationDelay: "200ms" }}>
-              <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent mb-1 sm:mb-2">
-                <AnimatedCounter end={4} suffix="x" />
-              </p>
-              <p className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">Faster Quotes</p>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Voice-to-quote in minutes, not hours</p>
-            </div>
-            <div className="text-center animate-fade-up" style={{ animationDelay: "300ms" }}>
-              <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent mb-1 sm:mb-2">
-                1–20
-              </p>
-              <p className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">Person Teams</p>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Solo operators to established firms</p>
-            </div>
-          </div>
-        </div>
-      </section>
+                  {/* User confirm */}
+                  <div className="flex justify-end">
+                    <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5">
+                      <p className="text-sm text-foreground">"Yes, send it"</p>
+                    </div>
+                  </div>
+                  
+                  {/* AI confirm */}
+                  <div className="flex gap-2.5">
+                    <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
+                      <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5">
+                      <p className="text-sm text-foreground">✅ Sent to patterson@gmail.com — she'll get a branded PDF with one-click approval.</p>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Your Day with Quotr - Timeline Section */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="container mx-auto">
-          <div className="text-center mb-10 sm:mb-12 animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
-              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium text-primary">Your Day with Quotr</span>
+                {/* Chat input mock */}
+                <div className="px-5 py-3 border-t border-border bg-muted/20">
+                  <div className="flex items-center gap-2 bg-background rounded-xl border border-border px-4 py-2.5">
+                    <Mic className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-muted-foreground flex-1">Talk or type to Foreman AI...</span>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
+                  </div>
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
-              From morning briefing to<br />
-              <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                evening summary.
-              </span>
-            </h2>
-            <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
-              See how Quotr transforms a typical day for trade professionals.
-            </p>
           </div>
-          
-          <DayTimeline />
-        </div>
-      </section>
-
-      {/* Before/After Transformation Section */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-10 sm:mb-12 animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
-              <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium text-primary">Transform Your Business</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
-              WhatsApp & spreadsheets<br />
-              <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                vs. one platform.
-              </span>
-            </h2>
-          </div>
-          
-          <BeforeAfter />
         </div>
       </section>
 
@@ -443,9 +469,9 @@ export default function Landing() {
             {trades.map((trade) => (
               <div 
                 key={trade.name}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border hover:border-primary/50 transition-colors"
+                className="group flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border hover:border-primary/50 hover:scale-105 hover:-translate-y-0.5 transition-all duration-200 cursor-default"
               >
-                <trade.icon className="h-4 w-4 text-primary" />
+                <trade.icon className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-medium text-foreground">{trade.name}</span>
               </div>
             ))}
@@ -453,7 +479,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Platform Capabilities Section */}
+      {/* Platform — Lead to Profit Pipeline + 4 Capability Cards */}
       <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-10 sm:mb-16 animate-fade-up">
@@ -468,39 +494,55 @@ export default function Landing() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
-              From first quote to final payment — replace spreadsheets, WhatsApp groups, and disconnected apps with one system.
+              From first lead to final payment — replace spreadsheets, WhatsApp groups, and disconnected apps with one system.
             </p>
           </div>
+
+          {/* Lead → Profit Pipeline */}
+          <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-0 mb-12 sm:mb-16 animate-fade-up">
+            {pipelineSteps.map((step, i) => (
+              <div key={step.label} className="flex items-center">
+                <div className="flex flex-col items-center gap-1.5 group">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/20 border border-primary/30 flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-200">
+                    <step.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">{step.label}</span>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">{step.desc}</span>
+                </div>
+                {i < pipelineSteps.length - 1 && (
+                  <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary/40 mx-1 sm:mx-3 flex-shrink-0" />
+                )}
+              </div>
+            ))}
+          </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {platformCapabilities.map((capability, index) => (
               <div 
                 key={capability.title} 
-                className="group p-5 sm:p-8 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 animate-fade-up"
+                className="group p-5 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 animate-fade-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
-                  <capability.icon className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-200">
+                  <capability.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-foreground">{capability.title}</h3>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{capability.description}</p>
+                <h3 className="text-base sm:text-lg font-bold mb-2 text-foreground">{capability.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{capability.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Meet Foreman AI - AI Assistant Showcase */}
+      {/* Meet Foreman AI */}
       <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="container mx-auto">
-          {/* Header with Foreman AI Avatar */}
           <div className="text-center mb-12 sm:mb-16 animate-fade-up">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
               <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               <span className="text-xs sm:text-sm font-medium text-primary">AI-Powered Assistant</span>
             </div>
             
-            {/* Foreman AI Avatar */}
             <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 rounded-2xl overflow-hidden shadow-xl border-4 border-primary/20 bg-primary/10">
               <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
             </div>
@@ -528,7 +570,7 @@ export default function Landing() {
             {tomSkillCategories.map((category, index) => (
               <div 
                 key={category.title}
-                className="p-5 sm:p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-all group animate-fade-up"
+                className="group p-5 sm:p-6 rounded-xl bg-card border border-border hover:border-primary/30 hover:-translate-y-1 transition-all duration-200 animate-fade-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex items-center gap-3 mb-4">
@@ -590,7 +632,7 @@ export default function Landing() {
                 {exampleCommands.map((item, index) => (
                   <div 
                     key={index}
-                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-card border border-border hover:border-primary/30 transition-colors group"
+                    className="group flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-card border border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
                   >
                     <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full overflow-hidden flex-shrink-0 border border-border">
                       <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
@@ -645,8 +687,7 @@ export default function Landing() {
             </div>
             
             <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
-                {/* Portal Header */}
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5 hover:-translate-y-1 transition-transform duration-300">
                 <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center">
                     <Users className="h-5 w-5 text-primary-foreground" />
@@ -657,7 +698,6 @@ export default function Landing() {
                   </div>
                 </div>
                 
-                {/* Portal Content */}
                 <div className="p-6 space-y-4">
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
                     <div className="flex items-center justify-between mb-3">
@@ -666,7 +706,7 @@ export default function Landing() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">EV Charger Installation</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">£1,240.00</span>
+                      <span className="text-lg font-bold text-foreground">€1,240.00</span>
                       <div className="flex gap-2">
                         <div className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium">Decline</div>
                         <div className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">Accept Quote</div>
@@ -681,7 +721,7 @@ export default function Landing() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">Boiler Service & Repair</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">£450.00</span>
+                      <span className="text-lg font-bold text-foreground">€450.00</span>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <CreditCard className="h-4 w-4" />
                         Paid 15 Jan 2025
@@ -695,61 +735,66 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ROI Calculator Section */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-10 sm:mb-12 animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
-              <PieChart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium text-primary">Calculate Your Savings</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
-              See your potential<br />
-              <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                cost savings.
-              </span>
-            </h2>
-            <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
-              Enter your team size and current admin hours to see how much you could save.
-            </p>
-          </div>
-          
-          <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
-            <ROICalculator />
-          </div>
-        </div>
-      </section>
-
       {/* Customer Testimonials */}
       <Testimonials />
 
-      {/* Security & Trust */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 border-y border-border bg-muted/30">
-        <div className="container mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 text-center sm:text-left">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              <div>
-                <p className="text-sm sm:text-base font-semibold text-foreground">Bank-Level Security</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">256-bit encryption</p>
-              </div>
+      {/* Competitor Comparison */}
+      <section className="py-16 sm:py-24 px-4 sm:px-6">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-10 sm:mb-12 animate-fade-up">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
+              <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+              <span className="text-xs sm:text-sm font-medium text-primary">Why Quotr?</span>
             </div>
-            <div className="hidden sm:block h-12 w-px bg-border" />
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Globe className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              <div>
-                <p className="text-sm sm:text-base font-semibold text-foreground">Global Ready</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Multi-currency & VAT</p>
-              </div>
-            </div>
-            <div className="hidden sm:block h-12 w-px bg-border" />
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              <div>
-                <p className="text-sm sm:text-base font-semibold text-foreground">GDPR Compliant</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Your data stays yours</p>
-              </div>
-            </div>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
+              How we stack up against<br />
+              <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+                the competition.
+              </span>
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto animate-fade-up" style={{ animationDelay: "200ms" }}>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Platform</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Price</th>
+                  {comparisonFeatures.map((f) => (
+                    <th key={f.key} className="text-center py-3 px-3 font-medium text-muted-foreground whitespace-nowrap">{f.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {competitors.map((c) => (
+                  <tr
+                    key={c.name}
+                    className={`border-b border-border transition-colors ${
+                      c.highlight
+                        ? "bg-primary/5 border-primary/20 font-semibold"
+                        : "hover:bg-muted/30"
+                    }`}
+                  >
+                    <td className="py-3 px-4 font-semibold text-foreground">
+                      {c.highlight && <span className="text-primary">★ </span>}
+                      {c.name}
+                    </td>
+                    <td className={`py-3 px-4 ${c.highlight ? "text-primary font-bold" : "text-foreground"}`}>
+                      {c.price}
+                    </td>
+                    {comparisonFeatures.map((f) => (
+                      <td key={f.key} className="text-center py-3 px-3">
+                        {(c as Record<string, unknown>)[f.key] ? (
+                          <CheckCircle2 className={`h-4 w-4 mx-auto ${c.highlight ? "text-primary" : "text-green-500"}`} />
+                        ) : (
+                          <Minus className="h-4 w-4 mx-auto text-muted-foreground/40" />
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -774,13 +819,13 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
-            {/* Team Seat */}
-            <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col animate-fade-up">
+            {/* Lite */}
+            <div className="group rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col animate-fade-up hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center">
                   <Users className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">Team Seat</h3>
+                <h3 className="text-xl font-bold text-foreground">Lite</h3>
               </div>
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-foreground">€15</span>
@@ -803,23 +848,23 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/signup" className="w-full">
+              <Link to="/request-access" className="w-full">
                 <Button variant="outline" className="w-full" size="lg">
-                  Start Free Trial
+                  Get Founding Member Access
                 </Button>
               </Link>
             </div>
 
-            {/* Voice Seat */}
-            <div className="rounded-2xl border-2 border-primary bg-card p-6 sm:p-8 flex flex-col relative animate-fade-up" style={{ animationDelay: "100ms" }}>
-              <Badge className="absolute -top-3 left-6 bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold">
+            {/* Connect */}
+            <div className="group rounded-2xl border-2 border-primary bg-card p-6 sm:p-8 flex flex-col relative animate-fade-up hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 shadow-[0_0_30px_-5px_hsl(159,100%,45%,0.2)]" style={{ animationDelay: "100ms" }}>
+              <Badge className="absolute -top-3 left-6 bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold animate-pulse-glow">
                 Most Popular
               </Badge>
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Mic className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">Voice Seat</h3>
+                <h3 className="text-xl font-bold text-foreground">Connect</h3>
               </div>
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-primary">€29</span>
@@ -830,7 +875,7 @@ export default function Landing() {
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Everything in Team Seat",
+                  "Everything in Lite",
                   "Foreman AI voice & text assistant",
                   "60 voice minutes/month",
                   "Create quotes & invoices by voice",
@@ -844,21 +889,21 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/signup" className="w-full">
-                <Button className="w-full" size="lg">
-                  Start Free Trial
-                  <ArrowRight className="h-4 w-4 ml-2" />
+              <Link to="/request-access" className="w-full">
+                <Button className="w-full group/btn" size="lg">
+                  Get Founding Member Access
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
 
-            {/* Enterprise Seat */}
-            <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col animate-fade-up" style={{ animationDelay: "200ms" }}>
+            {/* Grow */}
+            <div className="group rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col animate-fade-up hover:-translate-y-1 hover:shadow-xl transition-all duration-300" style={{ animationDelay: "200ms" }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">Enterprise</h3>
+                <h3 className="text-xl font-bold text-foreground">Grow</h3>
               </div>
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-foreground">€49</span>
@@ -869,7 +914,7 @@ export default function Landing() {
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Everything in Voice Seat",
+                  "Everything in Connect",
                   "200 voice minutes/month",
                   "Priority support & onboarding",
                   "Dedicated account manager",
@@ -883,7 +928,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/signup" className="w-full">
+              <Link to="/request-access" className="w-full">
                 <Button variant="outline" className="w-full" size="lg">
                   Contact Sales
                 </Button>
@@ -926,12 +971,12 @@ export default function Landing() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-xl mx-auto">
-              Join trade professionals who run their entire business from Quotr — from solo sparks to 20-person crews.
+              Join the Founding Member Program — 30% off for the first 200 trade businesses.
             </p>
-            <Link to="/signup">
+            <Link to="/request-access">
               <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2 sm:gap-3">
-                <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
-                Start Free Trial
+                <Rocket className="h-5 w-5 sm:h-6 sm:w-6" />
+                Get Founding Member Access
                 <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
               </Button>
             </Link>
@@ -964,8 +1009,8 @@ export default function Landing() {
               <Link to="/login" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Log in
               </Link>
-              <Link to="/signup" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Sign Up
+              <Link to="/request-access" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Get Access
               </Link>
             </div>
           </div>

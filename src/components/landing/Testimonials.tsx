@@ -164,28 +164,6 @@ export function Testimonials() {
           ))}
         </div>
 
-        {/* Trust indicators */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-center">
-          <div>
-            <p className="text-3xl font-bold text-primary">500+</p>
-            <p className="text-sm text-muted-foreground">Trade Businesses</p>
-          </div>
-          <div className="h-8 w-px bg-border hidden sm:block" />
-          <div>
-            <p className="text-3xl font-bold text-primary">4.9/5</p>
-            <p className="text-sm text-muted-foreground">Average Rating</p>
-          </div>
-          <div className="h-8 w-px bg-border hidden sm:block" />
-          <div>
-            <p className="text-3xl font-bold text-primary">12,000+</p>
-            <p className="text-sm text-muted-foreground">Hours Saved Monthly</p>
-          </div>
-          <div className="h-8 w-px bg-border hidden sm:block" />
-          <div>
-            <p className="text-3xl font-bold text-primary">€2.1M</p>
-            <p className="text-sm text-muted-foreground">Invoiced This Month</p>
-          </div>
-        </div>
       </div>
     </section>
   );

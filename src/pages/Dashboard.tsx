@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ExpenseEmailBanner } from "@/components/expenses/ExpenseEmailBanner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { MorningBriefingCard } from "@/components/dashboard/MorningBriefingCard";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -71,6 +72,7 @@ export default function Dashboard() {
       <div className="space-y-6">
         <UpgradePromptBanner />
         <OnboardingChecklist />
+        <MorningBriefingCard />
         {/* Header with Quick Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card border border-border rounded-lg p-4">
           <h1 className="text-lg sm:text-xl font-semibold text-foreground">Dashboard</h1>
