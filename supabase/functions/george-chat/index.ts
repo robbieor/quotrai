@@ -14,6 +14,8 @@ interface ChatRequest {
     current_job?: { id: string; title: string };
     current_quote?: { id: string; number: string };
     current_invoice?: { id: string; number: string };
+    session_entities?: Array<{ key: string; value: string; label: string; timestamp: string }>;
+    unresolved_fields?: string[];
   };
 }
 
