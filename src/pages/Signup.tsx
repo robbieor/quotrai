@@ -54,7 +54,7 @@ export default function Signup() {
     } else {
       track("signup_completed", { method: "email" });
       toast.success("Account created! Let's set up your profile.");
-      navigate("/onboarding");
+      navigate("/dashboard");
     }
   };
 
