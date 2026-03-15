@@ -19,6 +19,7 @@ import {
 interface GeorgeAgentInputProps {
   onUserMessage?: (message: string) => void;
   onAssistantMessage?: (message: string, conversationId?: string) => void;
+  onStructuredResponse?: (responseData: any, conversationId?: string) => void;
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
   conversationId?: string | null;
   textareaRef?: RefObject<HTMLTextAreaElement>;
