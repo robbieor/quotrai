@@ -716,14 +716,47 @@ serve(async (req) => {
 
     // ─── MEMORY CONTEXT ──────────────────────────────────────────
     let memoryPrompt = "";
+    const memoryResolutionLog: any[] = [];
     if (memory_context) {
       const parts: string[] = [];
-      if (memory_context.current_customer) parts.push(`Current customer: ${memory_context.current_customer.name}`);
-      if (memory_context.current_job) parts.push(`Current job: ${memory_context.current_job.title}`);
-      if (memory_context.current_quote) parts.push(`Current quote: ${memory_context.current_quote.number}`);
-      if (memory_context.current_invoice) parts.push(`Current invoice: ${memory_context.current_invoice.number}`);
+      if (memory_context.current_customer) {
+        parts.push(`Current customer: ${memory_context.current_customer.name} (id: ${memory_context.current_customer.id})`);
+      }
+      if (memory_context.current_job) {
+        parts.push(`Current job: ${memory_context.current_job.title} (id: ${memory_context.current_job.id})`);
+      }
+      if (memory_context.current_quote) {
+        parts.push(`Current quote: ${memory_context.current_quote.number} (id: ${memory_context.current_quote.id})`);
+      }
+      if (memory_context.current_invoice) {
+        parts.push(`Current invoice: ${memory_context.current_invoice.number} (id: ${memory_context.current_invoice.id})`);
+      }
+      // Session entities for "same customer", "use the same description" etc.
+      if (memory_context.session_entities?.length) {
+        parts.push(`\nRecent session references:`);
+        for (const entity of memory_context.session_entities) {
+          parts.push(`  - ${entity.label}: ${entity.value}`);
+        }
+      }
       if (parts.length > 0) {
-        memoryPrompt = `\n\nACTIVE CONTEXT (from current session):\n${parts.join("\n")}\nUse this context when the user says "same customer", "that quote", etc.`;
+        memoryPrompt = `\n\nACTIVE CONTEXT (from current session):\n${parts.join("\n")}\nUse this context when the user says "same customer", "that quote", "the same description", "make it X", etc.
+When resolving an ambiguous follow-up using context, mention which context you used in your response (e.g. "Using your current draft quote...").
+If there are multiple possible matches and you're unsure, ASK a compact clarifying question instead of guessing. Example: "I found 2 John Murphys — do you mean John Murphy (Electrical) or John Murphy (Plumbing)?"`;
+      }
+    }
+
+    // ─── PREFERENCES PROMPT ──────────────────────────────────────
+    let preferencesPrompt = "";
+    if (userPrefs) {
+      const prefParts: string[] = [];
+      if (userPrefs.always_create_drafts) prefParts.push("- ALWAYS create records as drafts, never send automatically");
+      if (userPrefs.require_confirmation_before_send) prefParts.push("- Show a confirmation gate before any client-facing communication");
+      if (userPrefs.itemised_format) prefParts.push("- Use itemised line-item format for quotes and invoices");
+      if (userPrefs.labour_materials_split) prefParts.push("- Split labour and materials costs separately on quotes/invoices");
+      if (userPrefs.default_payment_terms_days) prefParts.push(`- Default payment terms: ${userPrefs.default_payment_terms_days} days`);
+      if (userPrefs.default_tax_rate != null) prefParts.push(`- Default tax rate: ${userPrefs.default_tax_rate}%`);
+      if (prefParts.length > 0) {
+        preferencesPrompt = `\n\nUSER PREFERENCES:\n${prefParts.join("\n")}`;
       }
     }
 
