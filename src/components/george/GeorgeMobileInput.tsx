@@ -12,8 +12,10 @@ import { toast } from "sonner";
 interface GeorgeMobileInputProps {
   onUserMessage?: (message: string) => void;
   onAssistantMessage?: (message: string, conversationId?: string) => void;
+  onStructuredResponse?: (responseData: any, conversationId?: string) => void;
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
   conversationId?: string | null;
+  memoryContext?: Record<string, unknown>;
 }
 
 export function GeorgeMobileInput({
