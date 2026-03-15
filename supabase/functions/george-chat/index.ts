@@ -329,7 +329,8 @@ function classifyIntent(toolCalls: any[]): { intent: string; label: string; outp
   const map: Record<string, { intent: string; label: string; outputType: string }> = {
     create_quote: { intent: "create_quote", label: "Create Quote", outputType: "quote" },
     use_template_for_quote: { intent: "create_quote", label: "Create Quote from Template", outputType: "quote" },
-    create_invoice_from_template: { intent: "create_invoice", label: "Create Invoice", outputType: "invoice" },
+    create_invoice: { intent: "create_invoice", label: "Create Invoice", outputType: "invoice" },
+    create_invoice_from_template: { intent: "create_invoice", label: "Create Invoice from Template", outputType: "invoice" },
     create_job: { intent: "create_job", label: "Schedule Job", outputType: "job" },
     reschedule_job: { intent: "reschedule_job", label: "Reschedule Job", outputType: "job" },
     update_job_status: { intent: "update_job", label: "Update Job Status", outputType: "job" },
