@@ -363,6 +363,10 @@ export default function Settings() {
             <XeroConnectionCard />
             <QuickBooksConnectionCard />
           </TabsContent>
+
+          <TabsContent value="ai" className="space-y-6 max-w-3xl">
+            <ForemanAISettings />
+          </TabsContent>
         </Tabs>
       </div>
 
