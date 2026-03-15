@@ -497,7 +497,7 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
   let params: any = {};
   try { params = JSON.parse(toolCalls[0].function.arguments || "{}"); } catch {}
 
-  const isWrite = ["create_quote", "use_template_for_quote", "create_invoice_from_template", "create_job", "log_expense"].includes(name);
+  const isWrite = ["create_quote", "create_invoice", "use_template_for_quote", "create_invoice_from_template", "create_job", "log_expense"].includes(name);
   
   if (!isWrite) return null; // Info responses are handled via text_response
 
@@ -507,16 +507,48 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
   ];
 
   // Never auto-add "Send" — user must request it explicitly
-  
+
+  // Build rich preview_data from tool parameters
+  const previewData: Record<string, string> = {};
+  if (params.client_name) previewData["Customer"] = params.client_name;
+  if (params.template_name) previewData["Template"] = params.template_name;
+  if (params.job_title) previewData["Job"] = params.job_title;
+  if (params.scheduled_date) previewData["Date"] = params.scheduled_date;
+  if (params.scheduled_time) previewData["Time"] = params.scheduled_time;
+  if (params.notes) previewData["Notes"] = params.notes;
+  if (params.tax_rate !== undefined) previewData["Tax Rate"] = `${params.tax_rate}%`;
+  if (params.vendor_name) previewData["Vendor"] = params.vendor_name;
+  if (params.category) previewData["Category"] = params.category;
+
+  // Summarise line items if present
+  if (Array.isArray(params.items) && params.items.length > 0) {
+    previewData["Items"] = `${params.items.length} line item${params.items.length > 1 ? "s" : ""}`;
+    const subtotal = params.items.reduce((sum: number, it: any) => sum + (it.quantity || 1) * (it.unit_price || 0), 0);
+    previewData["Subtotal"] = `€${subtotal.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+    if (params.tax_rate) {
+      const tax = subtotal * (params.tax_rate / 100);
+      previewData["Tax"] = `€${tax.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+      previewData["Total"] = `€${(subtotal + tax).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+    } else {
+      previewData["Total"] = `€${subtotal.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+    }
+  }
+
+  // Add result data
+  if (params.amount) previewData["Amount"] = `€${Number(params.amount).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+  if (result?.quote_number) previewData["Quote #"] = result.quote_number;
+  if (result?.invoice_number) previewData["Invoice #"] = result.invoice_number;
+  if (params.estimated_value) previewData["Est. Value"] = `€${Number(params.estimated_value).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+
   return {
     type: intent.outputType,
     title: result?.message || `${intent.label} completed`,
     summary: result?.quote_number || result?.invoice_number || result?.job_id 
-      ? `Record created successfully` 
+      ? `Draft record created successfully` 
       : undefined,
     record_id: result?.quote_id || result?.invoice_id || result?.job_id || result?.expense_id,
     record_number: result?.quote_number || result?.invoice_number,
-    preview_data: params.client_name ? { Customer: params.client_name } : undefined,
+    preview_data: Object.keys(previewData).length > 0 ? previewData : undefined,
     quick_actions: quickActions,
   };
 }
