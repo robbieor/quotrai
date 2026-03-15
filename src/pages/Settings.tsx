@@ -312,6 +312,16 @@ export default function Settings() {
             <BrandingSettings />
           </TabsContent>
 
+          <TabsContent value="comms" className="space-y-6 max-w-3xl">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">Communications</h2>
+              <p className="text-muted-foreground">
+                Control which types of emails you can send to your clients. All categories are off by default.
+              </p>
+            </div>
+            <CommunicationsSettings />
+          </TabsContent>
+
           <TabsContent value="import" className="space-y-6 max-w-4xl">
             <ExpenseEmailForwarding />
             <DataImportSection />
