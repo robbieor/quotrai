@@ -309,7 +309,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
                 €{Math.round(potentialMoneySavedPerMonth).toLocaleString()}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {Math.round(potentialHoursSavedPerMonth)} hrs × £{AVERAGE_HOURLY_RATE}/hr
+                {Math.round(potentialHoursSavedPerMonth)} hrs × €{AVERAGE_HOURLY_RATE}/hr
               </p>
             </div>
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
