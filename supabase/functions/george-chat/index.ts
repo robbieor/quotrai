@@ -459,6 +459,32 @@ function needsConfirmation(toolCalls: any[]): any | null {
       ],
     };
   }
+
+  // Record-creating actions get a medium-risk confirmation gate
+  const recordCreators = ["create_quote", "create_invoice", "create_invoice_from_template", "use_template_for_quote", "create_job"];
+  if (recordCreators.includes(name)) {
+    let params: any = {};
+    try { params = JSON.parse(toolCalls[0].function.arguments || "{}"); } catch {}
+    const clientLabel = params.client_name ? ` for ${params.client_name}` : "";
+    const actionLabels: Record<string, string> = {
+      create_quote: "Create Quote",
+      create_invoice: "Create Invoice",
+      create_invoice_from_template: "Create Invoice",
+      use_template_for_quote: "Create Quote",
+      create_job: "Schedule Job",
+    };
+    return {
+      id: crypto.randomUUID(),
+      message: `This will ${actionLabels[name]?.toLowerCase() || "create a record"}${clientLabel} as a draft. Ready to proceed?`,
+      risk_level: "medium",
+      actions: [
+        { label: actionLabels[name] || "Confirm", action: "confirm", variant: "default" },
+        { label: "Review First", action: "review", variant: "outline" },
+        { label: "Cancel", action: "cancel", variant: "outline" },
+      ],
+    };
+  }
+
   return null;
 }
 
