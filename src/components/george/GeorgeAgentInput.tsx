@@ -33,6 +33,7 @@ export function GeorgeAgentInput({
   onPhotoQuote,
   conversationId,
   textareaRef: externalTextareaRef,
+  memoryContext,
 }: GeorgeAgentInputProps) {
   const [message, setMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
