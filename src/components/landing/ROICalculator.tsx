@@ -306,7 +306,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-muted-foreground">Admin Time Saved</p>
               <p className="font-semibold text-primary">
-                £{Math.round(potentialMoneySavedPerMonth).toLocaleString()}/month
+                €{Math.round(potentialMoneySavedPerMonth).toLocaleString()}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {Math.round(potentialHoursSavedPerMonth)} hrs × £{AVERAGE_HOURLY_RATE}/hr
