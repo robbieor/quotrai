@@ -19,11 +19,12 @@ import { QuickBooksConnectionCard } from "@/components/settings/QuickBooksConnec
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/settings/AvatarCropDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet } from "lucide-react";
+import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { CURRENCY_OPTIONS, CurrencyCode } from "@/hooks/useCurrency";
+import { CommunicationsSettings } from "@/components/settings/CommunicationsSettings";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -175,6 +176,11 @@ export default function Settings() {
                   <span className="hidden sm:inline">Branding</span>
                   <span className="sm:hidden">Brand</span>
                 </TabsTrigger>
+                <TabsTrigger value="comms" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                  <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Comms</span>
+                  <span className="sm:hidden">Mail</span>
+                </TabsTrigger>
                 <TabsTrigger value="import" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <FileSpreadsheet className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span>Import</span>
@@ -304,6 +310,16 @@ export default function Settings() {
               </p>
             </div>
             <BrandingSettings />
+          </TabsContent>
+
+          <TabsContent value="comms" className="space-y-6 max-w-3xl">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">Communications</h2>
+              <p className="text-muted-foreground">
+                Control which types of emails you can send to your clients. All categories are off by default.
+              </p>
+            </div>
+            <CommunicationsSettings />
           </TabsContent>
 
           <TabsContent value="import" className="space-y-6 max-w-4xl">

@@ -366,9 +366,12 @@ export type Database = {
           created_at: string
           enquiry_ack_enabled: boolean | null
           id: string
+          invoice_reminder_days: number
+          invoice_reminder_enabled: boolean
           job_complete_enabled: boolean
           job_complete_hours: number
           on_my_way_enabled: boolean
+          payment_receipt_enabled: boolean
           quote_followup_days: number
           quote_followup_enabled: boolean
           review_request_enabled: boolean | null
@@ -382,9 +385,12 @@ export type Database = {
           created_at?: string
           enquiry_ack_enabled?: boolean | null
           id?: string
+          invoice_reminder_days?: number
+          invoice_reminder_enabled?: boolean
           job_complete_enabled?: boolean
           job_complete_hours?: number
           on_my_way_enabled?: boolean
+          payment_receipt_enabled?: boolean
           quote_followup_days?: number
           quote_followup_enabled?: boolean
           review_request_enabled?: boolean | null
@@ -398,9 +404,12 @@ export type Database = {
           created_at?: string
           enquiry_ack_enabled?: boolean | null
           id?: string
+          invoice_reminder_days?: number
+          invoice_reminder_enabled?: boolean
           job_complete_enabled?: boolean
           job_complete_hours?: number
           on_my_way_enabled?: boolean
+          payment_receipt_enabled?: boolean
           quote_followup_days?: number
           quote_followup_enabled?: boolean
           review_request_enabled?: boolean | null
