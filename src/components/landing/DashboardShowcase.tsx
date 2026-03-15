@@ -37,7 +37,7 @@ const mockMetrics = [
 const mockActivities = [
   { text: "Quote accepted by James Wilson", time: "2 min ago", type: "success" },
   { text: "New job scheduled: Kitchen Renovation", time: "15 min ago", type: "info" },
-  { text: "Payment received: £1,850", time: "1 hour ago", type: "success" },
+  { text: "Payment received: €1,850", time: "1 hour ago", type: "success" },
   { text: "Invoice sent to Sarah Mitchell", time: "2 hours ago", type: "info" },
 ];
 
