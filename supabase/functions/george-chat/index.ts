@@ -650,6 +650,20 @@ serve(async (req) => {
     const userName = profile.full_name || "there";
     const { message, conversation_id, memory_context }: ChatRequest = await req.json();
 
+    // ─── LOAD USER AI PREFERENCES ─────────────────────────────────
+    let userPrefs: any = null;
+    try {
+      const { data: prefsData } = await serviceSupabase
+        .from("foreman_ai_preferences")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .maybeSingle();
+      userPrefs = prefsData;
+    } catch (e) {
+      console.error("george-chat: Failed to load preferences (non-fatal):", e);
+    }
+
     if (!message) {
       return new Response(
         JSON.stringify({ error: "Message is required" }),
