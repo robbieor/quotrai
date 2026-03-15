@@ -19,7 +19,7 @@ import { QuickBooksConnectionCard } from "@/components/settings/QuickBooksConnec
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/settings/AvatarCropDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet } from "lucide-react";
+import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
