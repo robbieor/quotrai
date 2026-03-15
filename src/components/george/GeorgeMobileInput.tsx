@@ -15,7 +15,7 @@ interface GeorgeMobileInputProps {
   onStructuredResponse?: (responseData: any, conversationId?: string) => void;
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
   conversationId?: string | null;
-  memoryContext?: Record<string, unknown>;
+  memoryContext?: any;
 }
 
 export function GeorgeMobileInput({

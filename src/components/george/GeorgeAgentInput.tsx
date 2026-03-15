@@ -23,7 +23,7 @@ interface GeorgeAgentInputProps {
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
   conversationId?: string | null;
   textareaRef?: RefObject<HTMLTextAreaElement>;
-  memoryContext?: Record<string, unknown>;
+  memoryContext?: any;
 }
 
 export function GeorgeAgentInput({ 
