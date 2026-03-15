@@ -196,7 +196,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-lg p-0 gap-0 overflow-y-auto max-h-[90vh] [&>button]:hidden"
+        className="max-w-2xl p-0 gap-0 overflow-y-auto max-h-[90vh] [&>button]:hidden"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
