@@ -29,9 +29,9 @@ const views: { id: ViewType; label: string; icon: typeof Briefcase }[] = [
 
 const mockMetrics = [
   { label: "Active Jobs", value: "12", icon: Briefcase, trend: "+3 this week" },
-  { label: "Revenue MTD", value: "£24,580", icon: DollarSign, trend: "+18%" },
-  { label: "Pending Quotes", value: "8", icon: FileText, trend: "£12,400 value" },
-  { label: "Due Invoices", value: "4", icon: Receipt, trend: "£6,200 total" },
+  { label: "Revenue MTD", value: "€24,580", icon: DollarSign, trend: "+18%" },
+  { label: "Pending Quotes", value: "8", icon: FileText, trend: "€12,400 value" },
+  { label: "Due Invoices", value: "4", icon: Receipt, trend: "€6,200 total" },
 ];
 
 const mockActivities = [
