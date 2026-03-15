@@ -16,16 +16,17 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    VitePWA({
-      registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "icon-192.png"],
-      workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB
-      },
-      manifest: false, // use existing public/manifest.json
-    }),
+    mode === "production" &&
+      VitePWA({
+        registerType: "autoUpdate",
+        includeAssets: ["favicon.ico", "icon-192.png"],
+        workbox: {
+          navigateFallbackDenylist: [/^\/~oauth/],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB
+        },
+        manifest: false, // use existing public/manifest.json
+      }),
   ].filter(Boolean),
   resolve: {
     alias: {

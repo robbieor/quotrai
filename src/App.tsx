@@ -55,9 +55,26 @@ const LoadingFallback = () => (
 const App = () => {
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
+      const reasonMessage =
+        typeof event.reason === "string"
+          ? event.reason
+          : event.reason?.message;
+
+      if (
+        typeof reasonMessage === "string" &&
+        reasonMessage.includes("Failed to fetch dynamically imported module")
+      ) {
+        const hasReloaded = sessionStorage.getItem("__quotr_chunk_retry__");
+        if (!hasReloaded) {
+          sessionStorage.setItem("__quotr_chunk_retry__", "1");
+          window.location.reload();
+          return;
+        }
+      }
+
       console.error("Unhandled rejection:", event.reason);
-      event.preventDefault();
     };
+
     window.addEventListener("unhandledrejection", handler);
     return () => window.removeEventListener("unhandledrejection", handler);
   }, []);
