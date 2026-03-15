@@ -924,9 +924,9 @@ export default function Landing() {
         <div className="container mx-auto text-center relative">
           <div className="max-w-3xl mx-auto animate-fade-up px-2">
             <h2 className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-foreground mb-4 sm:mb-6">
-              Stop chasing paper.<br />
+              Stop texting clients<br />
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                Start chasing growth.
+                for payment at 10pm.
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-xl mx-auto">
