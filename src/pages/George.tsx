@@ -363,6 +363,7 @@ export default function George() {
                 onPhotoQuote={handlePhotoQuote}
                 conversationId={activeConversationId}
                 textareaRef={textInputRef}
+                memoryContext={memoryContext}
               />
             </div>
           </ResizablePanel>
