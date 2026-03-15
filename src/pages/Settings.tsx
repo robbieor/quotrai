@@ -14,6 +14,7 @@ import { GeorgeBillingReports } from "@/components/billing/GeorgeBillingReports"
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { DataImportSection } from "@/components/settings/DataImportSection";
 import { ExpenseEmailForwarding } from "@/components/settings/ExpenseEmailForwarding";
+import { ForemanAISettings } from "@/components/settings/ForemanAISettings";
 
 import { StripeConnectSetup } from "@/components/settings/StripeConnectSetup";
 import { XeroConnectionCard } from "@/components/settings/XeroConnectionCard";
