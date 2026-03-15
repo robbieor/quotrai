@@ -873,17 +873,17 @@ export default function Landing() {
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                Priority support, higher AI limits, SSO.
+                Everything in Connect + reporting, accounting sync & leads.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
                   "Everything in Connect",
                   "200 voice minutes/month",
+                  "Advanced reporting & P&L",
+                  "Xero & QuickBooks sync",
+                  "Lead management pipeline",
                   "Priority support & onboarding",
-                  "Dedicated account manager",
-                  "Custom accounting mapping",
                   "API access & webhooks",
-                  "SLA guarantee",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
