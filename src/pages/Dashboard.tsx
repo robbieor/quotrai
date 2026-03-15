@@ -18,9 +18,11 @@ import { ExpenseEmailBanner } from "@/components/expenses/ExpenseEmailBanner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { MorningBriefingCard } from "@/components/dashboard/MorningBriefingCard";
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useQueryClient } from "@tanstack/react-query";
 
 function MetricSkeleton() {
   return (
@@ -50,6 +52,7 @@ export default function Dashboard() {
   const { profile } = useProfile();
   const navigate = useNavigate();
   const { formatCurrency, symbol: currencySymbol } = useCurrency();
+  const queryClient = useQueryClient();
 
   // Fire alert checks on dashboard load
   useEffect(() => {
@@ -60,12 +63,12 @@ export default function Dashboard() {
     }
   }, [profile?.team_id]);
 
-  // Redirect to onboarding if not completed
-  useEffect(() => {
-    if (!authLoading && !onboardingLoading && user && !isOnboardingComplete) {
-      navigate("/onboarding");
-    }
-  }, [user, authLoading, onboardingLoading, isOnboardingComplete, navigate]);
+  const showOnboarding = !authLoading && !onboardingLoading && user && !isOnboardingComplete;
+
+  const handleOnboardingComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ["onboarding-status", user?.id] });
+    queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+  };
 
   return (
     <DashboardLayout>
@@ -162,6 +165,11 @@ export default function Dashboard() {
           <TeamActivityCard />
         </div>
       </div>
+
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <OnboardingModal open={true} onComplete={handleOnboardingComplete} />
+      )}
     </DashboardLayout>
   );
 }
