@@ -834,7 +834,7 @@ export default function Landing() {
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                Everything + Foreman AI voice agent & chat.
+                Everything in Lite + Foreman AI & expenses.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
@@ -842,8 +842,8 @@ export default function Landing() {
                   "Foreman AI voice & text assistant",
                   "60 voice minutes/month",
                   "Create quotes & invoices by voice",
-                  "Xero & QuickBooks sync",
-                  "Customer management",
+                  "Expense tracking & receipts",
+                  "Documents & certificates",
                   "PDF generation & email",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
