@@ -9,8 +9,6 @@ interface Testimonial {
   company: string;
   location: string;
   avatar?: string;
-  statHighlight: string;
-  statLabel: string;
 }
 
 const testimonials: Testimonial[] = [
