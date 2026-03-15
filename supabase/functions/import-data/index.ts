@@ -234,6 +234,7 @@ async function importInvoices(
 
     const status = validateStatus(row.status, ["draft", "sent", "paid", "overdue", "cancelled"]) || "draft";
 
+    // COMMUNICATION SAFETY: All imported invoices are suppressed from outbound comms
     const { error } = await supabase.from("invoices").insert({
       team_id: teamId,
       customer_id: customer.id,
@@ -246,6 +247,8 @@ async function importInvoices(
       tax_rate: taxRate,
       tax_amount: taxAmount,
       total,
+      communication_suppressed: true,
+      delivery_status: "not_sent",
     });
 
     if (error) {
