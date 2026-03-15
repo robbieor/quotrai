@@ -32,7 +32,7 @@ import {
 import { useSeatUsage, useSubscription } from "@/hooks/useSubscription";
 import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
-import { AddSeatDialog } from "./AddSeatDialog";
+import { useAddSeat } from "@/hooks/useSubscription";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
 import { toast } from "sonner";
 
@@ -40,6 +40,7 @@ export function TeamManagement() {
   const [email, setEmail] = useState("");
   const [showAddSeatDialog, setShowAddSeatDialog] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  const addSeatMutation = useAddSeat();
   
   const { user } = useAuth();
   const { data: team, isLoading: teamLoading } = useTeam();
@@ -348,11 +349,28 @@ export function TeamManagement() {
       </Card>
 
       {/* Add Seat Dialog */}
-      <AddSeatDialog
-        open={showAddSeatDialog}
-        onOpenChange={setShowAddSeatDialog}
-        onSuccess={handleSeatAdded}
-      />
+      <AlertDialog open={showAddSeatDialog} onOpenChange={setShowAddSeatDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add Another Seat</AlertDialogTitle>
+            <AlertDialogDescription>
+              You've reached your current seat limit. Adding a seat will update your subscription.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              try {
+                await addSeatMutation.mutateAsync();
+                setShowAddSeatDialog(false);
+                handleSeatAdded();
+              } catch { /* handled by mutation */ }
+            }} disabled={addSeatMutation.isPending}>
+              {addSeatMutation.isPending ? "Adding..." : "Add Seat"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
 export type SubscriptionTier = 'active' | 'trialing' | 'expired';
+export type SeatType = 'lite' | 'connect' | 'grow';
 
 export interface TeamSubscription {
   id: string;
@@ -16,85 +17,118 @@ export interface TeamSubscription {
   george_voice_seats: number;
 }
 
+// Stripe Price ID Map — single source of truth
+export const STRIPE_PRICES = {
+  lite: {
+    monthly: 'price_1T7b44DQETj2awNEVZC5FQn2',
+    annual: 'price_1T7b4eDQETj2awNEhlMGRoGE',
+  },
+  connect: {
+    monthly: 'price_1T7afYDQETj2awNEcXocEe7h',
+    annual: 'price_1T7apqDQETj2awNEXdefYkfs',
+  },
+  grow: {
+    monthly: 'price_1T7agsDQETj2awNEeLQafzg5',
+    annual: 'price_1T7ahZDQETj2awNE5gr1v6DI',
+  },
+} as const;
+
 // Pricing constants - single source of truth
 export const PRICING = {
-  BASE_SEAT: 29,        // Pro seat (full access + Foreman AI voice)
-  STARTER_SEAT: 12,     // Starter seat (core features, no AI)
-  ENTERPRISE_SEAT: 49,  // Enterprise seat (priority support, custom onboarding)
+  LITE_SEAT: 15,
+  CONNECT_SEAT: 29,
+  GROW_SEAT: 49,
   ANNUAL_DISCOUNT: 0.15,
-  ANNUAL_SEAT: Math.round(29 * 12 * (1 - 0.15)),            // €296/year pro
-  ANNUAL_STARTER_SEAT: Math.round(12 * 12 * (1 - 0.15)),    // €122/year starter
-  ANNUAL_ENTERPRISE_SEAT: Math.round(49 * 12 * (1 - 0.15)), // €499/year enterprise
+  ANNUAL_LITE_SEAT: Math.round(15 * 12 * (1 - 0.15)),       // €153/year
+  ANNUAL_CONNECT_SEAT: Math.round(29 * 12 * (1 - 0.15)),    // €296/year
+  ANNUAL_GROW_SEAT: Math.round(49 * 12 * (1 - 0.15)),       // €500/year
   VOICE_MINUTES_PER_SEAT: 60,
-  ENTERPRISE_VOICE_MINUTES: -1, // unlimited
+  GROW_VOICE_MINUTES: -1, // unlimited
   PLATFORM_FEE: 2.5,
-  ENTERPRISE_PLATFORM_FEE: 2.0,
+  GROW_PLATFORM_FEE: 1.5,
   BULK_DISCOUNT_THRESHOLD: 5,
   BULK_DISCOUNT: 0.10,
   // Legacy aliases
-  TEAM_SEAT: 12,
-  ANNUAL_TEAM_SEAT: Math.round(12 * 12 * (1 - 0.15)),
+  BASE_SEAT: 29,
+  STARTER_SEAT: 15,
+  ENTERPRISE_SEAT: 49,
+  ANNUAL_SEAT: Math.round(29 * 12 * (1 - 0.15)),
+  ANNUAL_STARTER_SEAT: Math.round(15 * 12 * (1 - 0.15)),
+  ANNUAL_ENTERPRISE_SEAT: Math.round(49 * 12 * (1 - 0.15)),
+  ENTERPRISE_PLATFORM_FEE: 1.5,
+  TEAM_SEAT: 15,
+  ANNUAL_TEAM_SEAT: Math.round(15 * 12 * (1 - 0.15)),
 } as const;
 
 export interface PlanDetails {
   name: string;
+  code: SeatType;
   price: number;
+  annualPrice: number;
   features: string[];
   highlighted?: boolean;
 }
 
-// Starter Seat — core features, no AI
-export const STARTER_SEAT_DETAILS: PlanDetails = {
-  name: 'Starter',
-  price: PRICING.STARTER_SEAT,
+// Lite Seat — core features, no AI
+export const LITE_SEAT_DETAILS: PlanDetails = {
+  name: 'Lite',
+  code: 'lite',
+  price: PRICING.LITE_SEAT,
+  annualPrice: PRICING.ANNUAL_LITE_SEAT,
   features: [
     'Unlimited quotes & invoices',
     'Job scheduling & calendar',
     'Customer management',
-    'Expense tracking',
+    'GPS time tracking',
     'PDF generation & email',
     'Team collaboration',
   ],
 };
 
-// Pro Seat — full access with Foreman AI
-export const PRO_SEAT_DETAILS: PlanDetails = {
-  name: 'Pro',
-  price: PRICING.BASE_SEAT,
+// Connect Seat — full access with Foreman AI
+export const CONNECT_SEAT_DETAILS: PlanDetails = {
+  name: 'Connect',
+  code: 'connect',
+  price: PRICING.CONNECT_SEAT,
+  annualPrice: PRICING.ANNUAL_CONNECT_SEAT,
   features: [
-    'Everything in Starter',
+    'Everything in Lite',
     'Foreman AI text & voice assistant',
     `${PRICING.VOICE_MINUTES_PER_SEAT} voice minutes/month`,
-    'GPS time tracking & geofencing',
+    'Expense tracking & documents',
     'Business reports & dashboards',
-    'Xero / QuickBooks sync',
     'Recurring invoices',
   ],
   highlighted: true,
 };
 
-// Enterprise Seat — everything + priority support
-export const ENTERPRISE_SEAT_DETAILS: PlanDetails = {
-  name: 'Enterprise',
-  price: PRICING.ENTERPRISE_SEAT,
+// Grow Seat — everything + priority support
+export const GROW_SEAT_DETAILS: PlanDetails = {
+  name: 'Grow',
+  code: 'grow',
+  price: PRICING.GROW_SEAT,
+  annualPrice: PRICING.ANNUAL_GROW_SEAT,
   features: [
-    'Everything in Pro',
+    'Everything in Connect',
     'Unlimited voice minutes',
-    `Reduced ${PRICING.ENTERPRISE_PLATFORM_FEE}% platform fee`,
+    `Reduced ${PRICING.GROW_PLATFORM_FEE}% platform fee`,
+    'Xero / QuickBooks sync',
+    'Advanced reporting',
+    'Lead management pipeline',
     'Priority support & SLA',
-    'Dedicated account manager',
-    'Custom onboarding',
     'API access & webhooks',
-    'White-label PDF branding',
   ],
 };
 
-// Legacy aliases for backward compatibility
-export const TEAM_SEAT_DETAILS = STARTER_SEAT_DETAILS;
-export const VOICE_SEAT_DETAILS = PRO_SEAT_DETAILS;
+export const ALL_PLANS: PlanDetails[] = [LITE_SEAT_DETAILS, CONNECT_SEAT_DETAILS, GROW_SEAT_DETAILS];
 
-// Keep legacy export for compatibility
-export const PLAN_DETAILS = PRO_SEAT_DETAILS;
+// Legacy aliases for backward compatibility
+export const STARTER_SEAT_DETAILS = { ...LITE_SEAT_DETAILS, name: 'Starter' };
+export const PRO_SEAT_DETAILS = CONNECT_SEAT_DETAILS;
+export const ENTERPRISE_SEAT_DETAILS = GROW_SEAT_DETAILS;
+export const TEAM_SEAT_DETAILS = LITE_SEAT_DETAILS;
+export const VOICE_SEAT_DETAILS = CONNECT_SEAT_DETAILS;
+export const PLAN_DETAILS = CONNECT_SEAT_DETAILS;
 
 export function useSubscriptionTier() {
   const { user } = useAuth();
@@ -133,7 +167,7 @@ export function useSubscriptionTier() {
         .from('teams')
         .update({
           is_trial: true,
-          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .eq('id', teamSubscription.id);
 
