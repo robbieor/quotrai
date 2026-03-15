@@ -384,10 +384,10 @@ export default function Landing() {
                     <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
                       <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> created:</p>
                       <div className="space-y-1 text-xs text-muted-foreground">
-                        <p>• 7kW EV Charger Unit — €1,180.00</p>
-                        <p>• Installation & Cabling — €420.00</p>
-                        <p>• SEAI Grant Applied — -€300.00</p>
-                        <p className="font-semibold text-foreground pt-1">Total: €1,300.00</p>
+                        <p>• 7kW EV Charger Unit — {formatPrice(1180, 2)}</p>
+                        <p>• Installation & Cabling — {formatPrice(420, 2)}</p>
+                        <p>• SEAI Grant Applied — -{formatPrice(300, 2)}</p>
+                        <p className="font-semibold text-foreground pt-1">Total: {formatPrice(1300, 2)}</p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">Want me to send it to her email?</p>
                     </div>
