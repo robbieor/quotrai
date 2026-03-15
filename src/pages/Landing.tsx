@@ -145,7 +145,6 @@ const competitorBaseEUR = [
   { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
   { name: "Quotr", eur: 15, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
-];
 
 const comparisonFeatures = [
   { key: "ai", label: "AI Assistant" },
