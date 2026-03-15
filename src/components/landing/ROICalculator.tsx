@@ -315,7 +315,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
               <p className="text-muted-foreground">Net Benefit</p>
               <p className="font-bold text-primary">
-                £{Math.round(netMonthlySavings).toLocaleString()}/month
+                €{Math.round(netMonthlySavings).toLocaleString()}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Savings minus subscription
