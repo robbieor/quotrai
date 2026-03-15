@@ -9,6 +9,9 @@ interface DayViewProps {
   currentDate: Date;
   jobs: Job[];
   onJobClick: (job: Job) => void;
+  onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
+  onJobDragStart: (job: Job) => void;
+  onJobDragEnd: () => void;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
