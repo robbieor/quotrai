@@ -260,6 +260,34 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "create_invoice",
+      description: "Create a new draft invoice for a client with line items. Does NOT send automatically.",
+      parameters: {
+        type: "object",
+        properties: {
+          client_name: { type: "string" },
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                description: { type: "string" },
+                quantity: { type: "number" },
+                unit_price: { type: "number" }
+              },
+              required: ["description", "quantity", "unit_price"]
+            }
+          },
+          notes: { type: "string" },
+          tax_rate: { type: "number" }
+        },
+        required: ["client_name", "items"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "search_templates",
       description: "Search for templates by keyword or job type.",
       parameters: {
