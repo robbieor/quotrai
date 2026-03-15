@@ -277,9 +277,9 @@ export default function Pricing() {
           <p className="text-muted-foreground text-lg mb-8">
             Join trade professionals who run their entire business from Quotr.
           </p>
-          <Link to="/signup">
+          <Link to="/request-access">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">
-              Start Your Free Trial
+              Get Founding Member Access
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
