@@ -934,7 +934,6 @@ export default function Landing() {
             </p>
             <Link to="/request-access">
               <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2 sm:gap-3">
-                <Rocket className="h-5 w-5 sm:h-6 sm:w-6" />
                 Get Founding Member Access
                 <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
               </Button>
