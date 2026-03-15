@@ -143,7 +143,7 @@ const competitorBaseEUR = [
   { name: "Fergus", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
   { name: "Jobber", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
   { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
-  { name: "Quotr", eur: 15, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
+  { name: "Quotr", eur: 29, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
 
 const comparisonFeatures = [
@@ -795,15 +795,15 @@ export default function Landing() {
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                Jobs, quotes, invoices, calendar, reports. No AI.
+                Dashboard, jobs, quotes, invoices, calendar. No AI.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "View & update assigned jobs",
+                  "Dashboard & business overview",
+                  "Jobs, quotes & invoices",
                   "Job scheduling & calendar",
                   "Time tracking with GPS",
-                  "Log expenses & attach receipts",
-                  "Team collaboration",
+                  "Customer management",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
@@ -834,7 +834,7 @@ export default function Landing() {
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                Everything + Foreman AI voice agent & chat.
+                Everything in Lite + Foreman AI & expenses.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
@@ -842,8 +842,8 @@ export default function Landing() {
                   "Foreman AI voice & text assistant",
                   "60 voice minutes/month",
                   "Create quotes & invoices by voice",
-                  "Xero & QuickBooks sync",
-                  "Customer management",
+                  "Expense tracking & receipts",
+                  "Documents & certificates",
                   "PDF generation & email",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
@@ -873,17 +873,17 @@ export default function Landing() {
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
-                Priority support, higher AI limits, SSO.
+                Everything in Connect + reporting, accounting sync & leads.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
                   "Everything in Connect",
                   "200 voice minutes/month",
+                  "Advanced reporting & P&L",
+                  "Xero & QuickBooks sync",
+                  "Lead management pipeline",
                   "Priority support & onboarding",
-                  "Dedicated account manager",
-                  "Custom accounting mapping",
                   "API access & webhooks",
-                  "SLA guarantee",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
