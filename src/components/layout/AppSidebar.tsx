@@ -54,7 +54,7 @@ const navGroups: NavGroup[] = [
   {
     label: "MORE",
     items: [
-      { id: "documents", title: "Templates", url: "/documents", icon: FolderOpen },
+      { id: "templates", title: "Templates", url: "/templates", icon: FolderOpen },
     ],
   },
 ];
