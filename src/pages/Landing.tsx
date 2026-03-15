@@ -137,53 +137,14 @@ const pipelineSteps = [
 ];
 
 // Competitor comparison
-const competitors = [
-  {
-    name: "Tradify",
-    price: "€34/user/mo",
-    ai: false,
-    voice: false,
-    portal: false,
-    gps: true,
-    xero: true,
-  },
-  {
-    name: "Fergus",
-    price: "€40/user/mo",
-    ai: false,
-    voice: false,
-    portal: true,
-    gps: false,
-    xero: true,
-  },
-  {
-    name: "Jobber",
-    price: "€49/user/mo",
-    ai: false,
-    voice: false,
-    portal: true,
-    gps: true,
-    xero: true,
-  },
-  {
-    name: "ServiceM8",
-    price: "€29/user/mo",
-    ai: false,
-    voice: false,
-    portal: false,
-    gps: true,
-    xero: true,
-  },
-  {
-    name: "Quotr",
-    price: "€15/user/mo",
-    ai: true,
-    voice: true,
-    portal: true,
-    gps: true,
-    xero: true,
-    highlight: true,
-  },
+// Competitor base prices in EUR (will be converted dynamically)
+const competitorBaseEUR = [
+  { name: "Tradify", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Fergus", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
+  { name: "Jobber", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
+  { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Quotr", eur: 15, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
+];
 ];
 
 const comparisonFeatures = [
