@@ -29,15 +29,15 @@ const views: { id: ViewType; label: string; icon: typeof Briefcase }[] = [
 
 const mockMetrics = [
   { label: "Active Jobs", value: "12", icon: Briefcase, trend: "+3 this week" },
-  { label: "Revenue MTD", value: "£24,580", icon: DollarSign, trend: "+18%" },
-  { label: "Pending Quotes", value: "8", icon: FileText, trend: "£12,400 value" },
-  { label: "Due Invoices", value: "4", icon: Receipt, trend: "£6,200 total" },
+  { label: "Revenue MTD", value: "€24,580", icon: DollarSign, trend: "+18%" },
+  { label: "Pending Quotes", value: "8", icon: FileText, trend: "€12,400 value" },
+  { label: "Due Invoices", value: "4", icon: Receipt, trend: "€6,200 total" },
 ];
 
 const mockActivities = [
   { text: "Quote accepted by James Wilson", time: "2 min ago", type: "success" },
   { text: "New job scheduled: Kitchen Renovation", time: "15 min ago", type: "info" },
-  { text: "Payment received: £1,850", time: "1 hour ago", type: "success" },
+  { text: "Payment received: €1,850", time: "1 hour ago", type: "success" },
   { text: "Invoice sent to Sarah Mitchell", time: "2 hours ago", type: "info" },
 ];
 
@@ -51,23 +51,23 @@ const mockChartData = [
 ];
 
 const mockQuotes = [
-  { number: "Q-0048", customer: "James Wilson", title: "Boiler Service", amount: "£340.00", status: "sent" },
-  { number: "Q-0047", customer: "Sarah Mitchell", title: "EV Charger Installation", amount: "£1,240.00", status: "pending" },
-  { number: "Q-0046", customer: "Tom Henderson", title: "Bathroom Renovation", amount: "£4,850.00", status: "accepted" },
+  { number: "Q-0048", customer: "James Wilson", title: "Boiler Service", amount: "€340.00", status: "sent" },
+  { number: "Q-0047", customer: "Sarah Mitchell", title: "EV Charger Installation", amount: "€1,240.00", status: "pending" },
+  { number: "Q-0046", customer: "Tom Henderson", title: "Bathroom Renovation", amount: "€4,850.00", status: "accepted" },
 ];
 
 const mockInvoices = [
-  { number: "INV-0034", customer: "Emma Roberts", title: "Kitchen Rewiring", amount: "£2,150.00", status: "paid", paidDate: "Today" },
-  { number: "INV-0033", customer: "David Clark", title: "Emergency Repair", amount: "£185.00", status: "overdue", daysOverdue: 7 },
-  { number: "INV-0032", customer: "Lisa Thompson", title: "Annual Maintenance", amount: "£450.00", status: "pending" },
+  { number: "INV-0034", customer: "Emma Roberts", title: "Kitchen Rewiring", amount: "€2,150.00", status: "paid", paidDate: "Today" },
+  { number: "INV-0033", customer: "David Clark", title: "Emergency Repair", amount: "€185.00", status: "overdue", daysOverdue: 7 },
+  { number: "INV-0032", customer: "Lisa Thompson", title: "Annual Maintenance", amount: "€450.00", status: "pending" },
 ];
 
 const tomConversation = [
   { role: "user", text: "What's my day look like?" },
   { role: "assistant", text: "Good morning, Mike! Here's your briefing:", typing: false },
-  { role: "assistant", text: "📅 3 jobs scheduled today\n💰 £1,240 in pending quotes\n⚠️ 1 invoice overdue (7 days)", typing: false },
+  { role: "assistant", text: "📅 3 jobs scheduled today\n💰 €1,240 in pending quotes\n⚠️ 1 invoice overdue (7 days)", typing: false },
   { role: "user", text: "Create a quote for Mrs. Patterson using the boiler template" },
-  { role: "assistant", text: "Done! Quote #Q-0049 created for £340. Want me to send it now?", typing: false },
+  { role: "assistant", text: "Done! Quote #Q-0049 created for €340. Want me to send it now?", typing: false },
 ];
 
 export function DashboardShowcase() {
