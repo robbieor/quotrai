@@ -32,7 +32,7 @@ import {
 import { useSeatUsage, useSubscription } from "@/hooks/useSubscription";
 import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
-import { AddSeatDialog } from "./AddSeatDialog";
+import { useAddSeat } from "@/hooks/useSubscription";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
 import { toast } from "sonner";
 
