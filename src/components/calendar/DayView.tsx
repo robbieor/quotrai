@@ -99,7 +99,13 @@ export function DayView({
           <div className="text-xs text-muted-foreground mb-2">All Day / No Time Set</div>
           <div className="space-y-1">
             {unscheduledTimeJobs.map((job) => (
-              <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} />
+              <DraggableJobCard
+                key={job.id}
+                job={job}
+                onClick={() => onJobClick(job)}
+                onJobDragStart={onJobDragStart}
+                onJobDragEnd={onJobDragEnd}
+              />
             ))}
           </div>
         </div>
