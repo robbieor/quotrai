@@ -706,9 +706,9 @@ export default function Landing() {
               <span className="text-xs sm:text-sm font-medium text-primary">Why Quotr?</span>
             </div>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
-              How we stack up against<br />
+              What you get at<br />
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                the competition.
+                the base price.
               </span>
             </h2>
           </div>
