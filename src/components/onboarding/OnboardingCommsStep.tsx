@@ -1,7 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Mail, Bell, FileText, Clock, Truck, MessageSquare, Star, Receipt, CreditCard, ShieldCheck } from "lucide-react";
+import { Bell, FileText, Clock, Truck, MessageSquare, Star, Receipt, CreditCard, ShieldCheck } from "lucide-react";
 
 interface CommsPrefs {
   visit_reminder_enabled: boolean;
@@ -36,24 +35,15 @@ export function OnboardingCommsStep({ prefs, onChange }: OnboardingCommsStepProp
   };
 
   return (
-    <Card className="animate-fade-up">
-      <CardHeader className="text-center pb-2">
-        <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-          <Mail className="h-6 w-6 text-primary" />
-        </div>
-        <CardTitle>Client Emails</CardTitle>
-        <CardDescription>
-          Choose which emails you'd like to send to clients. Everything is off by default — you're in control.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2 pt-4">
-        <div className="flex items-center gap-2 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
-          <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-          <p className="text-xs text-muted-foreground">
-            Quotr never sends emails automatically. You always preview and confirm before anything goes out.
-          </p>
-        </div>
+    <div className="animate-fade-up space-y-3">
+      <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+        <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+        <p className="text-xs text-muted-foreground">
+          Quotr never sends emails automatically. You always preview and confirm before anything goes out.
+        </p>
+      </div>
 
+      <div className="grid sm:grid-cols-2 gap-2">
         {COMM_OPTIONS.map(({ key, icon, label, desc }) => (
           <div key={key} className="flex items-center gap-3 p-3 rounded-lg border border-border">
             <div className="text-muted-foreground">{icon}</div>
@@ -64,11 +54,11 @@ export function OnboardingCommsStep({ prefs, onChange }: OnboardingCommsStepProp
             <Switch checked={prefs[key]} onCheckedChange={() => toggle(key)} />
           </div>
         ))}
+      </div>
 
-        <p className="text-xs text-muted-foreground text-center pt-2">
-          You can change these anytime in Settings → Comms
-        </p>
-      </CardContent>
-    </Card>
+      <p className="text-xs text-muted-foreground text-center pt-1">
+        You can change these anytime in Settings → Comms
+      </p>
+    </div>
   );
 }
