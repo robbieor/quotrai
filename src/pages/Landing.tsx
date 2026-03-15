@@ -287,8 +287,7 @@ export default function Landing() {
                 <Button variant="ghost" className="w-full justify-start font-medium">Login</Button>
               </Link>
               <Link to="/request-access" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full font-medium gap-2">
-                  <Rocket className="h-4 w-4" />
+              <Button className="w-full font-medium gap-2">
                   Get Founding Member Access
                 </Button>
               </Link>
