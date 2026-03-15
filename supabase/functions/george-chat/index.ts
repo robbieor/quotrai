@@ -412,6 +412,7 @@ function buildActionSteps(toolCalls: any[], toolResults: any[]): any[] {
     const stepLabels: Record<string, string[]> = {
       create_quote: ["Searching customer", "Creating draft quote", "Adding line items", "Calculating totals", "Saving quote"],
       use_template_for_quote: ["Searching customer", "Loading template", "Creating draft quote", "Applying template items", "Saving quote"],
+      create_invoice: ["Searching customer", "Creating draft invoice", "Adding line items", "Calculating totals", "Saving invoice"],
       create_invoice_from_template: ["Searching customer", "Loading template", "Creating draft invoice", "Applying template items", "Saving invoice"],
       create_job: ["Searching customer", "Checking availability", "Creating job", "Scheduling"],
       reschedule_job: ["Finding job", "Checking new date availability", "Updating schedule"],
