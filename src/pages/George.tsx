@@ -17,6 +17,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { History } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { PhotoQuoteSuggestion } from "@/components/george/PhotoQuoteButton";
 import type { AIActionPlan, MemoryContext } from "@/types/foreman-actions";
 
