@@ -260,6 +260,34 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "create_invoice",
+      description: "Create a new draft invoice for a client with line items. Does NOT send automatically.",
+      parameters: {
+        type: "object",
+        properties: {
+          client_name: { type: "string" },
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                description: { type: "string" },
+                quantity: { type: "number" },
+                unit_price: { type: "number" }
+              },
+              required: ["description", "quantity", "unit_price"]
+            }
+          },
+          notes: { type: "string" },
+          tax_rate: { type: "number" }
+        },
+        required: ["client_name", "items"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "search_templates",
       description: "Search for templates by keyword or job type.",
       parameters: {
@@ -301,7 +329,8 @@ function classifyIntent(toolCalls: any[]): { intent: string; label: string; outp
   const map: Record<string, { intent: string; label: string; outputType: string }> = {
     create_quote: { intent: "create_quote", label: "Create Quote", outputType: "quote" },
     use_template_for_quote: { intent: "create_quote", label: "Create Quote from Template", outputType: "quote" },
-    create_invoice_from_template: { intent: "create_invoice", label: "Create Invoice", outputType: "invoice" },
+    create_invoice: { intent: "create_invoice", label: "Create Invoice", outputType: "invoice" },
+    create_invoice_from_template: { intent: "create_invoice", label: "Create Invoice from Template", outputType: "invoice" },
     create_job: { intent: "create_job", label: "Schedule Job", outputType: "job" },
     reschedule_job: { intent: "reschedule_job", label: "Reschedule Job", outputType: "job" },
     update_job_status: { intent: "update_job", label: "Update Job Status", outputType: "job" },
@@ -383,6 +412,7 @@ function buildActionSteps(toolCalls: any[], toolResults: any[]): any[] {
     const stepLabels: Record<string, string[]> = {
       create_quote: ["Searching customer", "Creating draft quote", "Adding line items", "Calculating totals", "Saving quote"],
       use_template_for_quote: ["Searching customer", "Loading template", "Creating draft quote", "Applying template items", "Saving quote"],
+      create_invoice: ["Searching customer", "Creating draft invoice", "Adding line items", "Calculating totals", "Saving invoice"],
       create_invoice_from_template: ["Searching customer", "Loading template", "Creating draft invoice", "Applying template items", "Saving invoice"],
       create_job: ["Searching customer", "Checking availability", "Creating job", "Scheduling"],
       reschedule_job: ["Finding job", "Checking new date availability", "Updating schedule"],
@@ -430,6 +460,32 @@ function needsConfirmation(toolCalls: any[]): any | null {
       ],
     };
   }
+
+  // Record-creating actions get a medium-risk confirmation gate
+  const recordCreators = ["create_quote", "create_invoice", "create_invoice_from_template", "use_template_for_quote", "create_job"];
+  if (recordCreators.includes(name)) {
+    let params: any = {};
+    try { params = JSON.parse(toolCalls[0].function.arguments || "{}"); } catch {}
+    const clientLabel = params.client_name ? ` for ${params.client_name}` : "";
+    const actionLabels: Record<string, string> = {
+      create_quote: "Create Quote",
+      create_invoice: "Create Invoice",
+      create_invoice_from_template: "Create Invoice",
+      use_template_for_quote: "Create Quote",
+      create_job: "Schedule Job",
+    };
+    return {
+      id: crypto.randomUUID(),
+      message: `This will ${actionLabels[name]?.toLowerCase() || "create a record"}${clientLabel} as a draft. Ready to proceed?`,
+      risk_level: "medium",
+      actions: [
+        { label: actionLabels[name] || "Confirm", action: "confirm", variant: "default" },
+        { label: "Review First", action: "review", variant: "outline" },
+        { label: "Cancel", action: "cancel", variant: "outline" },
+      ],
+    };
+  }
+
   return null;
 }
 
@@ -442,7 +498,7 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
   let params: any = {};
   try { params = JSON.parse(toolCalls[0].function.arguments || "{}"); } catch {}
 
-  const isWrite = ["create_quote", "use_template_for_quote", "create_invoice_from_template", "create_job", "log_expense"].includes(name);
+  const isWrite = ["create_quote", "create_invoice", "use_template_for_quote", "create_invoice_from_template", "create_job", "log_expense"].includes(name);
   
   if (!isWrite) return null; // Info responses are handled via text_response
 
@@ -452,16 +508,48 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
   ];
 
   // Never auto-add "Send" — user must request it explicitly
-  
+
+  // Build rich preview_data from tool parameters
+  const previewData: Record<string, string> = {};
+  if (params.client_name) previewData["Customer"] = params.client_name;
+  if (params.template_name) previewData["Template"] = params.template_name;
+  if (params.job_title) previewData["Job"] = params.job_title;
+  if (params.scheduled_date) previewData["Date"] = params.scheduled_date;
+  if (params.scheduled_time) previewData["Time"] = params.scheduled_time;
+  if (params.notes) previewData["Notes"] = params.notes;
+  if (params.tax_rate !== undefined) previewData["Tax Rate"] = `${params.tax_rate}%`;
+  if (params.vendor_name) previewData["Vendor"] = params.vendor_name;
+  if (params.category) previewData["Category"] = params.category;
+
+  // Summarise line items if present
+  if (Array.isArray(params.items) && params.items.length > 0) {
+    previewData["Items"] = `${params.items.length} line item${params.items.length > 1 ? "s" : ""}`;
+    const subtotal = params.items.reduce((sum: number, it: any) => sum + (it.quantity || 1) * (it.unit_price || 0), 0);
+    previewData["Subtotal"] = `€${subtotal.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+    if (params.tax_rate) {
+      const tax = subtotal * (params.tax_rate / 100);
+      previewData["Tax"] = `€${tax.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+      previewData["Total"] = `€${(subtotal + tax).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+    } else {
+      previewData["Total"] = `€${subtotal.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+    }
+  }
+
+  // Add result data
+  if (params.amount) previewData["Amount"] = `€${Number(params.amount).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+  if (result?.quote_number) previewData["Quote #"] = result.quote_number;
+  if (result?.invoice_number) previewData["Invoice #"] = result.invoice_number;
+  if (params.estimated_value) previewData["Est. Value"] = `€${Number(params.estimated_value).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
+
   return {
     type: intent.outputType,
     title: result?.message || `${intent.label} completed`,
     summary: result?.quote_number || result?.invoice_number || result?.job_id 
-      ? `Record created successfully` 
+      ? `Draft record created successfully` 
       : undefined,
     record_id: result?.quote_id || result?.invoice_id || result?.job_id || result?.expense_id,
     record_number: result?.quote_number || result?.invoice_number,
-    preview_data: params.client_name ? { Customer: params.client_name } : undefined,
+    preview_data: Object.keys(previewData).length > 0 ? previewData : undefined,
     quick_actions: quickActions,
   };
 }
@@ -872,7 +960,7 @@ IMPORTANT RULES:
       JSON.stringify({
         message: finalMessage,
         conversation_id: activeConversationId,
-        action_plan: hasAction ? actionPlan : undefined,
+        action_plan: actionPlan,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
