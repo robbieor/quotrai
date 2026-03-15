@@ -439,7 +439,7 @@ export function DashboardShowcase() {
                   <h3 className="text-lg font-semibold text-foreground">Foreman AI</h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    Your AI assistant • 25+ skills
+                    Your AI assistant • 50+ skills
                   </p>
                 </div>
               </div>
