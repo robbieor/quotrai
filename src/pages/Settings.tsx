@@ -12,7 +12,7 @@ import { GeorgeBillingReports } from "@/components/billing/GeorgeBillingReports"
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { DataImportSection } from "@/components/settings/DataImportSection";
 import { ExpenseEmailForwarding } from "@/components/settings/ExpenseEmailForwarding";
-import { ReferralCard } from "@/components/settings/ReferralCard";
+
 import { StripeConnectSetup } from "@/components/settings/StripeConnectSetup";
 import { XeroConnectionCard } from "@/components/settings/XeroConnectionCard";
 import { QuickBooksConnectionCard } from "@/components/settings/QuickBooksConnectionCard";
@@ -299,7 +299,7 @@ export default function Settings() {
                 </Button>
               </CardContent>
             </Card>
-            <ReferralCard />
+            
           </TabsContent>
 
           <TabsContent value="branding" className="space-y-6 max-w-3xl">
