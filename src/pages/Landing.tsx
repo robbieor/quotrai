@@ -160,6 +160,12 @@ export default function Landing() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roiOpen, setRoiOpen] = useState(false);
+  const { formatPrice, currency } = useLandingCurrency();
+
+  const competitors = competitorBaseEUR.map((c) => ({
+    ...c,
+    price: `${formatPrice(c.eur)}/user/mo`,
+  }));
 
   // Force light mode on landing page
   useLayoutEffect(() => {
