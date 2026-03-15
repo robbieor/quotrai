@@ -48,6 +48,7 @@ const navGroups: NavGroup[] = [
     label: "INSIGHTS",
     items: [
       { id: "tom", title: "Foreman AI", url: "/george", icon: Bot },
+      { id: "ai-activity", title: "AI Activity", url: "/ai-audit", icon: Clock },
     ],
   },
   {
