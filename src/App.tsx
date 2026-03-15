@@ -112,22 +112,22 @@ const App = () => {
                 <Route path="/select-plan" element={<SelectPlan />} />
 
                 {/* Protected dashboard pages */}
-                <Route path="/dashboard" element={<DashboardLayout><RoleGuard><Dashboard /></RoleGuard></DashboardLayout>} />
-                <Route path="/jobs" element={<DashboardLayout><Jobs /></DashboardLayout>} />
-                <Route path="/calendar" element={<DashboardLayout><JobCalendar /></DashboardLayout>} />
-                <Route path="/customers" element={<DashboardLayout><RoleGuard><Customers /></RoleGuard></DashboardLayout>} />
-                <Route path="/quotes" element={<DashboardLayout><RoleGuard><Quotes /></RoleGuard></DashboardLayout>} />
-                <Route path="/invoices" element={<DashboardLayout><RoleGuard><Invoices /></RoleGuard></DashboardLayout>} />
-                <Route path="/expenses" element={<DashboardLayout><RoleGuard><Expenses /></RoleGuard></DashboardLayout>} />
-                <Route path="/leads" element={<DashboardLayout><RoleGuard><Leads /></RoleGuard></DashboardLayout>} />
-                <Route path="/george" element={<DashboardLayout><George /></DashboardLayout>} />
-                <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
-                <Route path="/reports" element={<DashboardLayout><RoleGuard><Reports /></RoleGuard></DashboardLayout>} />
-                <Route path="/templates" element={<DashboardLayout><RoleGuard><Templates /></RoleGuard></DashboardLayout>} />
-                <Route path="/documents" element={<DashboardLayout><RoleGuard><Documents /></RoleGuard></DashboardLayout>} />
-                <Route path="/certificates" element={<DashboardLayout><RoleGuard><Certificates /></RoleGuard></DashboardLayout>} />
-                <Route path="/notifications" element={<DashboardLayout><Notifications /></DashboardLayout>} />
-                <Route path="/time-tracking" element={<DashboardLayout><TimeTracking /></DashboardLayout>} />
+                <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/calendar" element={<JobCalendar />} />
+                <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
+                <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
+                <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
+                <Route path="/expenses" element={<RoleGuard><Expenses /></RoleGuard>} />
+                <Route path="/leads" element={<RoleGuard><Leads /></RoleGuard>} />
+                <Route path="/george" element={<George />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/reports" element={<RoleGuard><Reports /></RoleGuard>} />
+                <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
+                <Route path="/documents" element={<RoleGuard><Documents /></RoleGuard>} />
+                <Route path="/certificates" element={<RoleGuard><Certificates /></RoleGuard>} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/time-tracking" element={<TimeTracking />} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
