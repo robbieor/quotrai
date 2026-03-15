@@ -57,9 +57,9 @@ const mockQuotes = [
 ];
 
 const mockInvoices = [
-  { number: "INV-0034", customer: "Emma Roberts", title: "Kitchen Rewiring", amount: "£2,150.00", status: "paid", paidDate: "Today" },
-  { number: "INV-0033", customer: "David Clark", title: "Emergency Repair", amount: "£185.00", status: "overdue", daysOverdue: 7 },
-  { number: "INV-0032", customer: "Lisa Thompson", title: "Annual Maintenance", amount: "£450.00", status: "pending" },
+  { number: "INV-0034", customer: "Emma Roberts", title: "Kitchen Rewiring", amount: "€2,150.00", status: "paid", paidDate: "Today" },
+  { number: "INV-0033", customer: "David Clark", title: "Emergency Repair", amount: "€185.00", status: "overdue", daysOverdue: 7 },
+  { number: "INV-0032", customer: "Lisa Thompson", title: "Annual Maintenance", amount: "€450.00", status: "pending" },
 ];
 
 const tomConversation = [
