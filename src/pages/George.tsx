@@ -348,6 +348,7 @@ export default function George() {
               <GeorgeAgentInput
                 onUserMessage={handleUserMessage}
                 onAssistantMessage={handleAssistantMessage}
+                onStructuredResponse={handleStructuredResponse}
                 onPhotoQuote={handlePhotoQuote}
                 conversationId={activeConversationId}
                 textareaRef={textInputRef}
