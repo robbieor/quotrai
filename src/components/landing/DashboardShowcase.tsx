@@ -51,9 +51,9 @@ const mockChartData = [
 ];
 
 const mockQuotes = [
-  { number: "Q-0048", customer: "James Wilson", title: "Boiler Service", amount: "£340.00", status: "sent" },
-  { number: "Q-0047", customer: "Sarah Mitchell", title: "EV Charger Installation", amount: "£1,240.00", status: "pending" },
-  { number: "Q-0046", customer: "Tom Henderson", title: "Bathroom Renovation", amount: "£4,850.00", status: "accepted" },
+  { number: "Q-0048", customer: "James Wilson", title: "Boiler Service", amount: "€340.00", status: "sent" },
+  { number: "Q-0047", customer: "Sarah Mitchell", title: "EV Charger Installation", amount: "€1,240.00", status: "pending" },
+  { number: "Q-0046", customer: "Tom Henderson", title: "Bathroom Renovation", amount: "€4,850.00", status: "accepted" },
 ];
 
 const mockInvoices = [
