@@ -385,7 +385,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          * Based on average admin time costs of £{AVERAGE_HOURLY_RATE}/hour and up to {HOURS_SAVED_PER_PERSON_PER_WEEK} hours saved per person per week
+          * Based on average admin time costs of €{AVERAGE_HOURLY_RATE}/hour and up to {HOURS_SAVED_PER_PERSON_PER_WEEK} hours saved per person per week
         </p>
       </CardContent>
     </Card>
