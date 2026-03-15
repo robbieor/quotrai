@@ -19,6 +19,7 @@ import {
 interface GeorgeAgentInputProps {
   onUserMessage?: (message: string) => void;
   onAssistantMessage?: (message: string, conversationId?: string) => void;
+  onStructuredResponse?: (responseData: any, conversationId?: string) => void;
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
   conversationId?: string | null;
   textareaRef?: RefObject<HTMLTextAreaElement>;
@@ -26,7 +27,8 @@ interface GeorgeAgentInputProps {
 
 export function GeorgeAgentInput({ 
   onUserMessage, 
-  onAssistantMessage, 
+  onAssistantMessage,
+  onStructuredResponse,
   onPhotoQuote,
   conversationId,
   textareaRef: externalTextareaRef,
@@ -150,7 +152,6 @@ export function GeorgeAgentInput({
       // Otherwise, call george-chat edge function directly
       setIsProcessing(true);
       try {
-        // supabase.functions.invoke automatically includes auth token
         const response = await supabase.functions.invoke("george-chat", {
           body: {
             message: text,
@@ -163,6 +164,11 @@ export function GeorgeAgentInput({
         const assistantMessage = response.data.message || "I'm here to help!";
         const newConversationId = response.data.conversation_id;
         onAssistantMessage?.(assistantMessage, newConversationId);
+        
+        // Pass structured action plan if available
+        if (response.data.action_plan) {
+          onStructuredResponse?.(response.data, newConversationId);
+        }
       } catch (error) {
         console.error("Chat error:", error);
         toast.error("Failed to send message");
