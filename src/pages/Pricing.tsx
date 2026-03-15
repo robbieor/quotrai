@@ -13,12 +13,6 @@ import {
   Zap,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
-import {
-  PRICING,
-  TEAM_SEAT_DETAILS,
-  VOICE_SEAT_DETAILS,
-  ENTERPRISE_SEAT_DETAILS,
-} from "@/hooks/useSubscriptionTier";
 import { cn } from "@/lib/utils";
 
 const faqs = [
