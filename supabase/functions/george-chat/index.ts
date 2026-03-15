@@ -960,7 +960,7 @@ IMPORTANT RULES:
       JSON.stringify({
         message: finalMessage,
         conversation_id: activeConversationId,
-        action_plan: hasAction ? actionPlan : undefined,
+        action_plan: actionPlan,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
