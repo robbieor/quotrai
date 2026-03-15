@@ -312,12 +312,8 @@ export default function Landing() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Left — Copy */}
             <div className="animate-fade-up text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 sm:mb-8">
-                <Rocket className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs sm:text-sm font-medium text-primary">
-                  Founding Member Program — 30% off, 200 places
-                </span>
-              </div>
+
+
 
               <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
                 Talk to your business.<br />
