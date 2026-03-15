@@ -129,6 +129,7 @@ const App = () => {
                 <Route path="/certificates" element={<RoleGuard><Certificates /></RoleGuard>} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/time-tracking" element={<TimeTracking />} />
+                <Route path="/ai-audit" element={<RoleGuard><AIAuditHistory /></RoleGuard>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
