@@ -16,7 +16,14 @@ interface DayViewProps {
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
 
-export function DayView({ currentDate, jobs, onJobClick }: DayViewProps) {
+export function DayView({
+  currentDate,
+  jobs,
+  onJobClick,
+  onJobDrop,
+  onJobDragStart,
+  onJobDragEnd,
+}: DayViewProps) {
   const dayJobs = jobs.filter((job) => {
     if (!job.scheduled_date) return false;
     return isSameDay(new Date(job.scheduled_date), currentDate);
