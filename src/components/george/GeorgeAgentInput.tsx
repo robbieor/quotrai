@@ -152,7 +152,6 @@ export function GeorgeAgentInput({
       // Otherwise, call george-chat edge function directly
       setIsProcessing(true);
       try {
-        // supabase.functions.invoke automatically includes auth token
         const response = await supabase.functions.invoke("george-chat", {
           body: {
             message: text,
@@ -165,6 +164,11 @@ export function GeorgeAgentInput({
         const assistantMessage = response.data.message || "I'm here to help!";
         const newConversationId = response.data.conversation_id;
         onAssistantMessage?.(assistantMessage, newConversationId);
+        
+        // Pass structured action plan if available
+        if (response.data.action_plan) {
+          onStructuredResponse?.(response.data, newConversationId);
+        }
       } catch (error) {
         console.error("Chat error:", error);
         toast.error("Failed to send message");
