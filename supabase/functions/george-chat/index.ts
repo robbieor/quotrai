@@ -14,6 +14,8 @@ interface ChatRequest {
     current_job?: { id: string; title: string };
     current_quote?: { id: string; number: string };
     current_invoice?: { id: string; number: string };
+    session_entities?: Array<{ key: string; value: string; label: string; timestamp: string }>;
+    unresolved_fields?: string[];
   };
 }
 
@@ -648,6 +650,20 @@ serve(async (req) => {
     const userName = profile.full_name || "there";
     const { message, conversation_id, memory_context }: ChatRequest = await req.json();
 
+    // ─── LOAD USER AI PREFERENCES ─────────────────────────────────
+    let userPrefs: any = null;
+    try {
+      const { data: prefsData } = await serviceSupabase
+        .from("foreman_ai_preferences")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .maybeSingle();
+      userPrefs = prefsData;
+    } catch (e) {
+      console.error("george-chat: Failed to load preferences (non-fatal):", e);
+    }
+
     if (!message) {
       return new Response(
         JSON.stringify({ error: "Message is required" }),
@@ -700,14 +716,47 @@ serve(async (req) => {
 
     // ─── MEMORY CONTEXT ──────────────────────────────────────────
     let memoryPrompt = "";
+    const memoryResolutionLog: any[] = [];
     if (memory_context) {
       const parts: string[] = [];
-      if (memory_context.current_customer) parts.push(`Current customer: ${memory_context.current_customer.name}`);
-      if (memory_context.current_job) parts.push(`Current job: ${memory_context.current_job.title}`);
-      if (memory_context.current_quote) parts.push(`Current quote: ${memory_context.current_quote.number}`);
-      if (memory_context.current_invoice) parts.push(`Current invoice: ${memory_context.current_invoice.number}`);
+      if (memory_context.current_customer) {
+        parts.push(`Current customer: ${memory_context.current_customer.name} (id: ${memory_context.current_customer.id})`);
+      }
+      if (memory_context.current_job) {
+        parts.push(`Current job: ${memory_context.current_job.title} (id: ${memory_context.current_job.id})`);
+      }
+      if (memory_context.current_quote) {
+        parts.push(`Current quote: ${memory_context.current_quote.number} (id: ${memory_context.current_quote.id})`);
+      }
+      if (memory_context.current_invoice) {
+        parts.push(`Current invoice: ${memory_context.current_invoice.number} (id: ${memory_context.current_invoice.id})`);
+      }
+      // Session entities for "same customer", "use the same description" etc.
+      if (memory_context.session_entities?.length) {
+        parts.push(`\nRecent session references:`);
+        for (const entity of memory_context.session_entities) {
+          parts.push(`  - ${entity.label}: ${entity.value}`);
+        }
+      }
       if (parts.length > 0) {
-        memoryPrompt = `\n\nACTIVE CONTEXT (from current session):\n${parts.join("\n")}\nUse this context when the user says "same customer", "that quote", etc.`;
+        memoryPrompt = `\n\nACTIVE CONTEXT (from current session):\n${parts.join("\n")}\nUse this context when the user says "same customer", "that quote", "the same description", "make it X", etc.
+When resolving an ambiguous follow-up using context, mention which context you used in your response (e.g. "Using your current draft quote...").
+If there are multiple possible matches and you're unsure, ASK a compact clarifying question instead of guessing. Example: "I found 2 John Murphys — do you mean John Murphy (Electrical) or John Murphy (Plumbing)?"`;
+      }
+    }
+
+    // ─── PREFERENCES PROMPT ──────────────────────────────────────
+    let preferencesPrompt = "";
+    if (userPrefs) {
+      const prefParts: string[] = [];
+      if (userPrefs.always_create_drafts) prefParts.push("- ALWAYS create records as drafts, never send automatically");
+      if (userPrefs.require_confirmation_before_send) prefParts.push("- Show a confirmation gate before any client-facing communication");
+      if (userPrefs.itemised_format) prefParts.push("- Use itemised line-item format for quotes and invoices");
+      if (userPrefs.labour_materials_split) prefParts.push("- Split labour and materials costs separately on quotes/invoices");
+      if (userPrefs.default_payment_terms_days) prefParts.push(`- Default payment terms: ${userPrefs.default_payment_terms_days} days`);
+      if (userPrefs.default_tax_rate != null) prefParts.push(`- Default tax rate: ${userPrefs.default_tax_rate}%`);
+      if (prefParts.length > 0) {
+        preferencesPrompt = `\n\nUSER PREFERENCES:\n${prefParts.join("\n")}`;
       }
     }
 
@@ -727,7 +776,7 @@ IMPORTANT RULES:
 5. Use tools to actually perform actions — don't just describe what you would do.
 6. When a job type is mentioned, proactively suggest a relevant template.
 7. VAT is automatically applied — don't ask about it unless the user mentions a custom rate.
-8. Be concise, professional, and trade-aware.${memoryPrompt}`;
+8. Be concise, professional, and trade-aware.${memoryPrompt}${preferencesPrompt}`;
 
     // ─── AI CALL ──────────────────────────────────────────────────
     const actionId = crypto.randomUUID();
@@ -935,6 +984,27 @@ IMPORTANT RULES:
 
     // ─── AUDIT LOG ────────────────────────────────────────────────
     if (hasAction) {
+      // Build memory resolution log
+      const memoryLog: any = {};
+      if (memory_context?.current_customer) {
+        memoryLog.customer_context_used = memory_context.current_customer.name;
+      }
+      if (memory_context?.current_quote) {
+        memoryLog.quote_context_used = memory_context.current_quote.number;
+      }
+      if (memory_context?.current_invoice) {
+        memoryLog.invoice_context_used = memory_context.current_invoice.number;
+      }
+      if (memory_context?.current_job) {
+        memoryLog.job_context_used = memory_context.current_job.title;
+      }
+      if (memory_context?.session_entities?.length) {
+        memoryLog.session_entities_available = memory_context.session_entities.length;
+      }
+      if (userPrefs) {
+        memoryLog.preferences_applied = true;
+      }
+
       try {
         await serviceSupabase.from("ai_action_audit").insert({
           team_id: teamId,
@@ -950,6 +1020,7 @@ IMPORTANT RULES:
           output_record_id: output?.record_id || null,
           confirmation_required: !!confirmation,
           conversation_id: activeConversationId,
+          memory_resolution_log: Object.keys(memoryLog).length > 0 ? memoryLog : null,
         });
       } catch (auditErr) {
         console.error("george-chat: Audit log error (non-fatal):", auditErr);

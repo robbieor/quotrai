@@ -14,6 +14,7 @@ import { GeorgeBillingReports } from "@/components/billing/GeorgeBillingReports"
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { DataImportSection } from "@/components/settings/DataImportSection";
 import { ExpenseEmailForwarding } from "@/components/settings/ExpenseEmailForwarding";
+import { ForemanAISettings } from "@/components/settings/ForemanAISettings";
 
 import { StripeConnectSetup } from "@/components/settings/StripeConnectSetup";
 import { XeroConnectionCard } from "@/components/settings/XeroConnectionCard";
@@ -21,7 +22,7 @@ import { QuickBooksConnectionCard } from "@/components/settings/QuickBooksConnec
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/settings/AvatarCropDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail, Plug } from "lucide-react";
+import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail, Plug, Brain } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -201,6 +202,11 @@ export default function Settings() {
                   <span className="hidden sm:inline">Integrations</span>
                   <span className="sm:hidden">Integ</span>
                 </TabsTrigger>
+                <TabsTrigger value="ai" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                  <Brain className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Foreman AI</span>
+                  <span className="sm:hidden">AI</span>
+                </TabsTrigger>
               </>
             )}
           </TabsList>
@@ -356,6 +362,10 @@ export default function Settings() {
             </div>
             <XeroConnectionCard />
             <QuickBooksConnectionCard />
+          </TabsContent>
+
+          <TabsContent value="ai" className="space-y-6 max-w-3xl">
+            <ForemanAISettings />
           </TabsContent>
         </Tabs>
       </div>

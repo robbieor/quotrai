@@ -26,6 +26,7 @@ export type Database = {
           id: string
           intent: string
           intent_label: string
+          memory_resolution_log: Json | null
           output_record_id: string | null
           output_type: string | null
           status: string
@@ -44,6 +45,7 @@ export type Database = {
           id?: string
           intent: string
           intent_label: string
+          memory_resolution_log?: Json | null
           output_record_id?: string | null
           output_type?: string | null
           status?: string
@@ -62,6 +64,7 @@ export type Database = {
           id?: string
           intent?: string
           intent_label?: string
+          memory_resolution_log?: Json | null
           output_record_id?: string | null
           output_type?: string | null
           status?: string
@@ -1140,6 +1143,56 @@ export type Database = {
           },
           {
             foreignKeyName: "expenses_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      foreman_ai_preferences: {
+        Row: {
+          always_create_drafts: boolean
+          created_at: string
+          default_payment_terms_days: number
+          default_tax_rate: number | null
+          id: string
+          itemised_format: boolean
+          labour_materials_split: boolean
+          require_confirmation_before_send: boolean
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          always_create_drafts?: boolean
+          created_at?: string
+          default_payment_terms_days?: number
+          default_tax_rate?: number | null
+          id?: string
+          itemised_format?: boolean
+          labour_materials_split?: boolean
+          require_confirmation_before_send?: boolean
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          always_create_drafts?: boolean
+          created_at?: string
+          default_payment_terms_days?: number
+          default_tax_rate?: number | null
+          id?: string
+          itemised_format?: boolean
+          labour_materials_split?: boolean
+          require_confirmation_before_send?: boolean
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foreman_ai_preferences_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"

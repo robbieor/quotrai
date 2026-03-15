@@ -9,9 +9,11 @@ import { GeorgeUsageWarning } from "@/components/george/GeorgeUsageWarning";
 import { VoiceFallbackBanner } from "@/components/george/VoiceFallbackBanner";
 import { PhotoQuoteCard } from "@/components/george/PhotoQuoteCard";
 import { LiveActionFeed, type DisplayItem } from "@/components/george/action-mode/LiveActionFeed";
+import { MemoryContextPanel } from "@/components/george/action-mode/MemoryContextPanel";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeorgeMessages } from "@/hooks/useGeorge";
+import { useForemanMemory } from "@/hooks/useForemanMemory";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { History } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { PhotoQuoteSuggestion } from "@/components/george/PhotoQuoteButton";
-import type { AIActionPlan, MemoryContext } from "@/types/foreman-actions";
+import type { AIActionPlan } from "@/types/foreman-actions";
 
 interface Message {
   id: string;
@@ -37,13 +39,22 @@ export default function George() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [photoQuoteSuggestion, setPhotoQuoteSuggestion] = useState<PhotoQuoteSuggestion | null>(null);
-  const [memoryContext, setMemoryContext] = useState<MemoryContext>({});
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const { callWebhook, setContext, status } = useGlobalVoiceAgent();
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  // Foreman AI memory system
+  const {
+    taskContext,
+    sessionEntities,
+    hasActiveContext,
+    updateFromActionPlan,
+    buildMemoryPayload,
+    clearContext,
+  } = useForemanMemory();
 
   const focusTextInput = useCallback(() => {
     textInputRef.current?.focus();
@@ -63,12 +74,11 @@ export default function George() {
         timestamp: new Date(m.created_at),
       }));
       setMessages(msgs);
-      // Convert existing messages to display items (no action plans for historical)
       setDisplayItems(msgs.map(m => ({ type: "message" as const, data: m })));
     } else if (!activeConversationId) {
       setMessages([]);
       setDisplayItems([]);
-      setMemoryContext({});
+      clearContext("all");
     }
   }, [dbMessages, activeConversationId]);
 
@@ -91,10 +101,8 @@ export default function George() {
   const addActionPlan = useCallback((plan: AIActionPlan) => {
     setDisplayItems(prev => [...prev, { type: "action_plan", data: plan }]);
     // Update memory context from action plan
-    if (plan.memory_context) {
-      setMemoryContext(prev => ({ ...prev, ...plan.memory_context }));
-    }
-  }, []);
+    updateFromActionPlan(plan.memory_context);
+  }, [updateFromActionPlan]);
 
   // Listen for demo responses
   useEffect(() => {
@@ -136,7 +144,6 @@ export default function George() {
     if (responseData.action_plan) {
       addActionPlan(responseData.action_plan);
     }
-    // The text message is still added separately via handleAssistantMessage
   }, [addActionPlan]);
 
   const handleQuickAction = useCallback(async (action: string, message: string) => {
@@ -162,14 +169,14 @@ export default function George() {
     setMessages([]);
     setDisplayItems([]);
     setPhotoQuoteSuggestion(null);
-    setMemoryContext({});
-  }, []);
+    clearContext("all");
+  }, [clearContext]);
 
   const handleSelectConversation = useCallback((conversationId: string | null) => {
     setActiveConversationId(conversationId);
     setPhotoQuoteSuggestion(null);
-    setMemoryContext({});
-  }, []);
+    clearContext("all");
+  }, [clearContext]);
 
   const handlePhotoQuote = useCallback((suggestion: PhotoQuoteSuggestion) => {
     setPhotoQuoteSuggestion(suggestion);
@@ -189,7 +196,6 @@ export default function George() {
   }, [navigate]);
 
   const handleConfirmation = useCallback((planId: string, action: "confirm" | "review" | "cancel") => {
-    // Update the action plan status in display items
     setDisplayItems(prev =>
       prev.map(item => {
         if (item.type === "action_plan" && item.data.action_id === planId) {
@@ -217,7 +223,6 @@ export default function George() {
 
   const handleOutputAction = useCallback((planId: string, action: string) => {
     if (action === "edit") {
-      // Find the record and navigate
       const plan = displayItems.find(i => i.type === "action_plan" && i.data.action_id === planId);
       if (plan && plan.type === "action_plan") {
         const output = plan.data.output;
@@ -232,6 +237,19 @@ export default function George() {
 
   const showLoginDialog = !loading && !user;
   const hasDisplayItems = displayItems.length > 0;
+
+  // Build memory payload for inputs
+  const memoryPayload = buildMemoryPayload();
+
+  // Memory context panel (shared between mobile and desktop)
+  const memoryPanel = (
+    <MemoryContextPanel
+      taskContext={taskContext}
+      sessionEntities={sessionEntities}
+      hasActiveContext={hasActiveContext}
+      onClear={clearContext}
+    />
+  );
 
   // Mobile layout
   if (isMobile) {
@@ -252,6 +270,8 @@ export default function George() {
               <GeorgeUsageWarning />
             </div>
             <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
+
+            {memoryPanel}
 
             {hasDisplayItems ? (
               <LiveActionFeed
@@ -287,7 +307,7 @@ export default function George() {
               onStructuredResponse={handleStructuredResponse}
               onPhotoQuote={handlePhotoQuote}
               conversationId={activeConversationId}
-              memoryContext={memoryContext}
+              memoryContext={memoryPayload}
             />
           </div>
         </div>
@@ -330,6 +350,8 @@ export default function George() {
               </div>
               <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
 
+              {memoryPanel}
+
               {hasDisplayItems ? (
                 <LiveActionFeed
                   items={displayItems}
@@ -363,7 +385,7 @@ export default function George() {
                 onPhotoQuote={handlePhotoQuote}
                 conversationId={activeConversationId}
                 textareaRef={textInputRef}
-                memoryContext={memoryContext}
+                memoryContext={memoryPayload}
               />
             </div>
           </ResizablePanel>
