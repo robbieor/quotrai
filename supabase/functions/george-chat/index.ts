@@ -984,6 +984,27 @@ IMPORTANT RULES:
 
     // ─── AUDIT LOG ────────────────────────────────────────────────
     if (hasAction) {
+      // Build memory resolution log
+      const memoryLog: any = {};
+      if (memory_context?.current_customer) {
+        memoryLog.customer_context_used = memory_context.current_customer.name;
+      }
+      if (memory_context?.current_quote) {
+        memoryLog.quote_context_used = memory_context.current_quote.number;
+      }
+      if (memory_context?.current_invoice) {
+        memoryLog.invoice_context_used = memory_context.current_invoice.number;
+      }
+      if (memory_context?.current_job) {
+        memoryLog.job_context_used = memory_context.current_job.title;
+      }
+      if (memory_context?.session_entities?.length) {
+        memoryLog.session_entities_available = memory_context.session_entities.length;
+      }
+      if (userPrefs) {
+        memoryLog.preferences_applied = true;
+      }
+
       try {
         await serviceSupabase.from("ai_action_audit").insert({
           team_id: teamId,
@@ -999,6 +1020,7 @@ IMPORTANT RULES:
           output_record_id: output?.record_id || null,
           confirmation_required: !!confirmation,
           conversation_id: activeConversationId,
+          memory_resolution_log: Object.keys(memoryLog).length > 0 ? memoryLog : null,
         });
       } catch (auditErr) {
         console.error("george-chat: Audit log error (non-fatal):", auditErr);
