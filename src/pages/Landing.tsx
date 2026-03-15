@@ -673,7 +673,7 @@ export default function Landing() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">EV Charger Installation</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">€1,240.00</span>
+                      <span className="text-lg font-bold text-foreground">{formatPrice(1240, 2)}</span>
                       <div className="flex gap-2">
                         <div className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium">Decline</div>
                         <div className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">Accept Quote</div>
