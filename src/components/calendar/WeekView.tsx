@@ -16,7 +16,14 @@ interface WeekViewProps {
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
 
-export function WeekView({ currentDate, jobs, onJobClick }: WeekViewProps) {
+export function WeekView({
+  currentDate,
+  jobs,
+  onJobClick,
+  onJobDrop,
+  onJobDragStart,
+  onJobDragEnd,
+}: WeekViewProps) {
   const days = useMemo(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
