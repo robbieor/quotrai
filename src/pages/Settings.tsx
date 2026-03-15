@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamManagement } from "@/components/settings/TeamManagement";
 import { SubscriptionPricing } from "@/components/billing/SubscriptionPricing";
+import { SubscriptionOverview } from "@/components/billing/SubscriptionOverview";
+import { SeatManagementTable } from "@/components/billing/SeatManagementTable";
 import { GeorgeVoiceOverview } from "@/components/settings/GeorgeVoiceOverview";
 import { GeorgeBillingReports } from "@/components/billing/GeorgeBillingReports";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
@@ -19,7 +21,7 @@ import { QuickBooksConnectionCard } from "@/components/settings/QuickBooksConnec
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/settings/AvatarCropDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail } from "lucide-react";
+import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail, Plug } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
