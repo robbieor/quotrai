@@ -9,11 +9,21 @@ interface WeekViewProps {
   currentDate: Date;
   jobs: Job[];
   onJobClick: (job: Job) => void;
+  onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
+  onJobDragStart: (job: Job) => void;
+  onJobDragEnd: () => void;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
 
-export function WeekView({ currentDate, jobs, onJobClick }: WeekViewProps) {
+export function WeekView({
+  currentDate,
+  jobs,
+  onJobClick,
+  onJobDrop,
+  onJobDragStart,
+  onJobDragEnd,
+}: WeekViewProps) {
   const days = useMemo(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
@@ -119,9 +129,17 @@ export function WeekView({ currentDate, jobs, onJobClick }: WeekViewProps) {
                   className="border-r last:border-r-0 p-1 min-h-[60px]"
                   hasJobs={jobCount > 0}
                   jobCount={jobCount}
+                  onJobDrop={onJobDrop}
                 >
                   {[...hourJobs, ...unscheduledJobs].map((job) => (
-                    <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} compact />
+                    <DraggableJobCard
+                      key={job.id}
+                      job={job}
+                      onClick={() => onJobClick(job)}
+                      onJobDragStart={onJobDragStart}
+                      onJobDragEnd={onJobDragEnd}
+                      compact
+                    />
                   ))}
                 </DroppableCell>
               );

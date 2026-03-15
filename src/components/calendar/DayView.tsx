@@ -9,11 +9,21 @@ interface DayViewProps {
   currentDate: Date;
   jobs: Job[];
   onJobClick: (job: Job) => void;
+  onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
+  onJobDragStart: (job: Job) => void;
+  onJobDragEnd: () => void;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
 
-export function DayView({ currentDate, jobs, onJobClick }: DayViewProps) {
+export function DayView({
+  currentDate,
+  jobs,
+  onJobClick,
+  onJobDrop,
+  onJobDragStart,
+  onJobDragEnd,
+}: DayViewProps) {
   const dayJobs = jobs.filter((job) => {
     if (!job.scheduled_date) return false;
     return isSameDay(new Date(job.scheduled_date), currentDate);
@@ -89,7 +99,13 @@ export function DayView({ currentDate, jobs, onJobClick }: DayViewProps) {
           <div className="text-xs text-muted-foreground mb-2">All Day / No Time Set</div>
           <div className="space-y-1">
             {unscheduledTimeJobs.map((job) => (
-              <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} />
+              <DraggableJobCard
+                key={job.id}
+                job={job}
+                onClick={() => onJobClick(job)}
+                onJobDragStart={onJobDragStart}
+                onJobDragEnd={onJobDragEnd}
+              />
             ))}
           </div>
         </div>
@@ -128,11 +144,18 @@ export function DayView({ currentDate, jobs, onJobClick }: DayViewProps) {
                 className="p-2 min-h-[60px]"
                 hasJobs={jobCount > 0}
                 jobCount={jobCount}
+                onJobDrop={onJobDrop}
               >
                 {hourJobs.length > 0 && (
                   <div className="space-y-1">
                     {hourJobs.map((job) => (
-                      <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} />
+                      <DraggableJobCard
+                        key={job.id}
+                        job={job}
+                        onClick={() => onJobClick(job)}
+                        onJobDragStart={onJobDragStart}
+                        onJobDragEnd={onJobDragEnd}
+                      />
                     ))}
                   </div>
                 )}

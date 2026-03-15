@@ -19,9 +19,19 @@ interface MonthViewProps {
   currentDate: Date;
   jobs: Job[];
   onJobClick: (job: Job) => void;
+  onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
+  onJobDragStart: (job: Job) => void;
+  onJobDragEnd: () => void;
 }
 
-export function MonthView({ currentDate, jobs, onJobClick }: MonthViewProps) {
+export function MonthView({
+  currentDate,
+  jobs,
+  onJobClick,
+  onJobDrop,
+  onJobDragStart,
+  onJobDragEnd,
+}: MonthViewProps) {
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -59,6 +69,7 @@ export function MonthView({ currentDate, jobs, onJobClick }: MonthViewProps) {
               key={day.toISOString()}
               id={`month-${dateKey}`}
               date={day}
+              onJobDrop={onJobDrop}
               className={cn(
                 "min-h-[120px] p-1 border-b border-r",
                 index % 7 === 0 && "border-l-0",
@@ -76,12 +87,17 @@ export function MonthView({ currentDate, jobs, onJobClick }: MonthViewProps) {
               </div>
               <div className="space-y-1 overflow-hidden">
                 {dayJobs.slice(0, 3).map((job) => (
-                  <DraggableJobCard key={job.id} job={job} onClick={() => onJobClick(job)} compact />
+                  <DraggableJobCard
+                    key={job.id}
+                    job={job}
+                    onClick={() => onJobClick(job)}
+                    onJobDragStart={onJobDragStart}
+                    onJobDragEnd={onJobDragEnd}
+                    compact
+                  />
                 ))}
                 {dayJobs.length > 3 && (
-                  <div className="text-xs text-muted-foreground px-1">
-                    +{dayJobs.length - 3} more
-                  </div>
+                  <div className="text-xs text-muted-foreground px-1">+{dayJobs.length - 3} more</div>
                 )}
               </div>
             </DroppableCell>
