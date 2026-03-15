@@ -126,7 +126,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           <div className="p-4 rounded-lg bg-primary/10 text-center">
             <p className="text-sm text-muted-foreground">Monthly savings</p>
             <p className="text-3xl font-bold text-primary">
-              £{Math.round(netMonthlySavings).toLocaleString()}
+              €{Math.round(netMonthlySavings).toLocaleString()}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {roiMultiple.toFixed(1)}x return on investment
