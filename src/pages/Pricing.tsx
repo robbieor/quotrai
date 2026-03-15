@@ -99,9 +99,9 @@ export default function Pricing() {
             <Link to="/login">
               <Button variant="ghost" size="sm">Login</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/request-access">
               <Button size="sm" className="gap-1">
-                Start Free Trial
+                Get Founding Member Access
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
