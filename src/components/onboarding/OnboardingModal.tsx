@@ -196,7 +196,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-lg p-0 gap-0 overflow-y-auto max-h-[90vh] [&>button]:hidden"
+        className="max-w-2xl p-0 gap-0 overflow-y-auto max-h-[90vh] [&>button]:hidden"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -331,29 +331,31 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
                 <CardDescription>Just a couple more preferences</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-4 px-0">
-                <div className="space-y-2">
-                  <Label>Country</Label>
-                  <Select value={data.country} onValueChange={(v) => updateData("country", v)}>
-                    <SelectTrigger><SelectValue placeholder="Select your country" /></SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>{country.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Preferred Currency</Label>
-                  <Select value={data.currency} onValueChange={(v) => updateData("currency", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EUR">€ Euro (EUR)</SelectItem>
-                      <SelectItem value="GBP">£ British Pound (GBP)</SelectItem>
-                      <SelectItem value="USD">$ US Dollar (USD)</SelectItem>
-                      <SelectItem value="AUD">$ Australian Dollar (AUD)</SelectItem>
-                      <SelectItem value="CAD">$ Canadian Dollar (CAD)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Country</Label>
+                    <Select value={data.country} onValueChange={(v) => updateData("country", v)}>
+                      <SelectTrigger><SelectValue placeholder="Select your country" /></SelectTrigger>
+                      <SelectContent>
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country.code} value={country.code}>{country.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Preferred Currency</Label>
+                    <Select value={data.currency} onValueChange={(v) => updateData("currency", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="EUR">€ Euro (EUR)</SelectItem>
+                        <SelectItem value="GBP">£ British Pound (GBP)</SelectItem>
+                        <SelectItem value="USD">$ US Dollar (USD)</SelectItem>
+                        <SelectItem value="AUD">$ Australian Dollar (AUD)</SelectItem>
+                        <SelectItem value="CAD">$ Canadian Dollar (CAD)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
