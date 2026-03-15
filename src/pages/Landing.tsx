@@ -834,7 +834,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Connect</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-primary">€29</span>
+                <span className="text-4xl font-extrabold text-primary">{formatPrice(29)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
