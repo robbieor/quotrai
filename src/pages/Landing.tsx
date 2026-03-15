@@ -143,7 +143,7 @@ const competitorBaseEUR = [
   { name: "Fergus", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
   { name: "Jobber", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
   { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
-  { name: "Quotr", eur: 15, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
+  { name: "Quotr", eur: 29, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
 
 const comparisonFeatures = [
