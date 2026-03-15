@@ -284,8 +284,10 @@ export default function George() {
             <GeorgeMobileInput
               onUserMessage={handleUserMessage}
               onAssistantMessage={handleAssistantMessage}
+              onStructuredResponse={handleStructuredResponse}
               onPhotoQuote={handlePhotoQuote}
               conversationId={activeConversationId}
+              memoryContext={memoryContext}
             />
           </div>
         </div>
