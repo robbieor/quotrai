@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, pointerWithin } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,9 +8,14 @@ import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { DayView } from "@/components/calendar/DayView";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
-import { JobCard } from "@/components/calendar/JobCard";
 import { useJobs, useUpdateJob, type Job, type JobStatus } from "@/hooks/useJobs";
 import { toast } from "sonner";
+
+interface DroppedJobData {
+  jobId: string;
+  date: Date;
+  hour?: number;
+}
 
 export default function JobCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -39,63 +43,42 @@ export default function JobCalendar() {
     scheduled_time?: string | null;
     estimated_value?: number | null;
   }) => {
-    if (selectedJob) {
-      updateJob.mutate(
-        { id: selectedJob.id, ...values },
-        {
-          onSuccess: () => {
-            setFormDialogOpen(false);
-            setSelectedJob(null);
-          },
-        }
-      );
-    }
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const job = event.active.data.current?.job as Job | undefined;
-    if (job) {
-      setActiveJob(job);
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveJob(null);
-    
-    const { active, over } = event;
-    if (!over) return;
-
-    const job = active.data.current?.job as Job | undefined;
-    const dropData = over.data.current as { date: Date; hour?: number } | undefined;
-
-    if (!job || !dropData) return;
-
-    const newDate = format(dropData.date, "yyyy-MM-dd");
-    const newTime = dropData.hour !== undefined 
-      ? `${String(dropData.hour).padStart(2, "0")}:00:00`
-      : job.scheduled_time;
-
-    // Only update if something changed
-    if (newDate === job.scheduled_date && newTime === job.scheduled_time) {
-      return;
-    }
+    if (!selectedJob) return;
 
     updateJob.mutate(
-      { 
-        id: job.id, 
-        scheduled_date: newDate,
-        scheduled_time: newTime,
-      },
+      { id: selectedJob.id, ...values },
       {
         onSuccess: () => {
-          toast.success(`Job rescheduled to ${format(dropData.date, "MMM d, yyyy")}${dropData.hour !== undefined ? ` at ${dropData.hour}:00` : ""}`);
+          setFormDialogOpen(false);
+          setSelectedJob(null);
         },
       }
     );
   };
 
-  const handleDragCancel = () => {
+  const handleJobDrop = ({ jobId, date, hour }: DroppedJobData) => {
     setActiveJob(null);
+
+    const job = scheduledJobs.find((item) => item.id === jobId);
+    if (!job) return;
+
+    const newDate = format(date, "yyyy-MM-dd");
+    const newTime = hour !== undefined ? `${String(hour).padStart(2, "0")}:00:00` : job.scheduled_time;
+
+    if (newDate === job.scheduled_date && newTime === job.scheduled_time) return;
+
+    updateJob.mutate(
+      {
+        id: job.id,
+        scheduled_date: newDate,
+        scheduled_time: newTime,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Job rescheduled to ${format(date, "MMM d, yyyy")}${hour !== undefined ? ` at ${hour}:00` : ""}`);
+        },
+      }
+    );
   };
 
   return (
@@ -115,26 +98,26 @@ export default function JobCalendar() {
               onViewChange={setView}
             />
 
+            {activeJob && (
+              <div className="mb-3 text-xs text-muted-foreground">Dragging: {activeJob.title}</div>
+            )}
+
             {isLoading ? (
               <div className="flex items-center justify-center py-24">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
-              <div className="text-center py-24 text-destructive">
-                Failed to load jobs. Please try again.
-              </div>
+              <div className="text-center py-24 text-destructive">Failed to load jobs. Please try again.</div>
             ) : (
-              <DndContext
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragCancel={handleDragCancel}
-                collisionDetection={pointerWithin}
-              >
+              <>
                 {view === "month" && (
                   <MonthView
                     currentDate={currentDate}
                     jobs={scheduledJobs}
                     onJobClick={handleJobClick}
+                    onJobDrop={handleJobDrop}
+                    onJobDragStart={setActiveJob}
+                    onJobDragEnd={() => setActiveJob(null)}
                   />
                 )}
                 {view === "week" && (
@@ -142,6 +125,9 @@ export default function JobCalendar() {
                     currentDate={currentDate}
                     jobs={scheduledJobs}
                     onJobClick={handleJobClick}
+                    onJobDrop={handleJobDrop}
+                    onJobDragStart={setActiveJob}
+                    onJobDragEnd={() => setActiveJob(null)}
                   />
                 )}
                 {view === "day" && (
@@ -149,16 +135,12 @@ export default function JobCalendar() {
                     currentDate={currentDate}
                     jobs={scheduledJobs}
                     onJobClick={handleJobClick}
+                    onJobDrop={handleJobDrop}
+                    onJobDragStart={setActiveJob}
+                    onJobDragEnd={() => setActiveJob(null)}
                   />
                 )}
-                <DragOverlay>
-                  {activeJob ? (
-                    <div className="opacity-90 shadow-xl">
-                      <JobCard job={activeJob} onClick={() => {}} compact />
-                    </div>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
+              </>
             )}
           </CardContent>
         </Card>
