@@ -9,8 +9,6 @@ interface Testimonial {
   company: string;
   location: string;
   avatar?: string;
-  statHighlight: string;
-  statLabel: string;
 }
 
 const testimonials: Testimonial[] = [
@@ -20,8 +18,6 @@ const testimonials: Testimonial[] = [
     role: "Owner",
     company: "Murphy's Plumbing & Heating",
     location: "Dublin, Ireland",
-    statHighlight: "15 hrs",
-    statLabel: "saved per week",
   },
   {
     quote: "The GPS time tracking has been a game-changer. No more arguments with the lads about hours, and my clients love seeing exactly when we arrived and left.",
@@ -29,8 +25,6 @@ const testimonials: Testimonial[] = [
     role: "Director",
     company: "Gallagher Electrical Services",
     location: "Cork, Ireland",
-    statHighlight: "98%",
-    statLabel: "timesheet accuracy",
   },
   {
     quote: "We've cut our admin costs by half. I've moved my office manager to customer service because Quotr does all the paperwork automatically.",
@@ -38,8 +32,6 @@ const testimonials: Testimonial[] = [
     role: "Managing Director",
     company: "Thompson Roofing Ltd",
     location: "Manchester, UK",
-    statHighlight: "50%",
-    statLabel: "less admin costs",
   },
   {
     quote: "Foreman AI understands the trade. I just tell it what job I've quoted and it knows exactly what materials and labour to include. It's like having a 20-year veteran in my pocket.",
@@ -47,8 +39,6 @@ const testimonials: Testimonial[] = [
     role: "Founder",
     company: "O'Brien Carpentry & Joinery",
     location: "Galway, Ireland",
-    statHighlight: "3x",
-    statLabel: "faster quoting",
   },
   {
     quote: "Getting paid used to take 45 days on average. Now with automatic reminders and the customer portal, we're down to 12 days. Cash flow has never been better.",
@@ -56,8 +46,6 @@ const testimonials: Testimonial[] = [
     role: "Owner",
     company: "Williams HVAC Solutions",
     location: "Birmingham, UK",
-    statHighlight: "12 days",
-    statLabel: "avg payment time",
   },
   {
     quote: "I was sceptical about AI for trades, but Foreman AI gets it. It knows a first fix from a second fix, understands VAT on materials, and never makes me look daft in front of customers.",
@@ -65,8 +53,6 @@ const testimonials: Testimonial[] = [
     role: "Managing Partner",
     company: "Doyle & Sons Builders",
     location: "Belfast, UK",
-    statHighlight: "0",
-    statLabel: "quote errors",
   },
 ];
 
@@ -100,15 +86,6 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
           "{testimonial.quote}"
         </blockquote>
 
-        {/* Stat highlight */}
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5">
-          <span className="text-lg font-bold text-primary">
-            {testimonial.statHighlight}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {testimonial.statLabel}
-          </span>
-        </div>
 
         {/* Author */}
         <div className="mt-4 flex items-center gap-3 border-t border-border/50 pt-4">

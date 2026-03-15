@@ -429,7 +429,7 @@ export default function Landing() {
       <section className="py-12 sm:py-16 px-4 sm:px-6">
         <div className="container mx-auto">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">From Sparks to Pipes — One Platform</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Built for Every Trade</h2>
             <p className="text-sm sm:text-base text-muted-foreground">If you quote it, invoice it, or schedule it — Quotr manages it</p>
           </div>
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
