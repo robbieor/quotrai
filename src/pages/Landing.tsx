@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useLandingCurrency } from "@/hooks/useLandingCurrency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   FileText, 
@@ -136,53 +137,13 @@ const pipelineSteps = [
 ];
 
 // Competitor comparison
-const competitors = [
-  {
-    name: "Tradify",
-    price: "€34/user/mo",
-    ai: false,
-    voice: false,
-    portal: false,
-    gps: true,
-    xero: true,
-  },
-  {
-    name: "Fergus",
-    price: "€40/user/mo",
-    ai: false,
-    voice: false,
-    portal: true,
-    gps: false,
-    xero: true,
-  },
-  {
-    name: "Jobber",
-    price: "€49/user/mo",
-    ai: false,
-    voice: false,
-    portal: true,
-    gps: true,
-    xero: true,
-  },
-  {
-    name: "ServiceM8",
-    price: "€29/user/mo",
-    ai: false,
-    voice: false,
-    portal: false,
-    gps: true,
-    xero: true,
-  },
-  {
-    name: "Quotr",
-    price: "€15/user/mo",
-    ai: true,
-    voice: true,
-    portal: true,
-    gps: true,
-    xero: true,
-    highlight: true,
-  },
+// Competitor base prices in EUR (will be converted dynamically)
+const competitorBaseEUR = [
+  { name: "Tradify", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Fergus", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
+  { name: "Jobber", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
+  { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Quotr", eur: 15, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
 
 const comparisonFeatures = [
@@ -198,6 +159,12 @@ export default function Landing() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roiOpen, setRoiOpen] = useState(false);
+  const { formatPrice, currency } = useLandingCurrency();
+
+  const competitors = competitorBaseEUR.map((c) => ({
+    ...c,
+    price: `${formatPrice(c.eur)}/user/mo`,
+  }));
 
   // Force light mode on landing page
   useLayoutEffect(() => {
@@ -417,10 +384,10 @@ export default function Landing() {
                     <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
                       <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> created:</p>
                       <div className="space-y-1 text-xs text-muted-foreground">
-                        <p>• 7kW EV Charger Unit — €1,180.00</p>
-                        <p>• Installation & Cabling — €420.00</p>
-                        <p>• SEAI Grant Applied — -€300.00</p>
-                        <p className="font-semibold text-foreground pt-1">Total: €1,300.00</p>
+                        <p>• 7kW EV Charger Unit — {formatPrice(1180, 2)}</p>
+                        <p>• Installation & Cabling — {formatPrice(420, 2)}</p>
+                        <p>• SEAI Grant Applied — -{formatPrice(300, 2)}</p>
+                        <p className="font-semibold text-foreground pt-1">Total: {formatPrice(1300, 2)}</p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">Want me to send it to her email?</p>
                     </div>
@@ -706,7 +673,7 @@ export default function Landing() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">EV Charger Installation</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">€1,240.00</span>
+                      <span className="text-lg font-bold text-foreground">{formatPrice(1240, 2)}</span>
                       <div className="flex gap-2">
                         <div className="px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium">Decline</div>
                         <div className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium">Accept Quote</div>
@@ -721,7 +688,7 @@ export default function Landing() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">Boiler Service & Repair</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-foreground">€450.00</span>
+                      <span className="text-lg font-bold text-foreground">{formatPrice(450, 2)}</span>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <CreditCard className="h-4 w-4" />
                         Paid 15 Jan 2025
@@ -828,7 +795,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Lite</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-foreground">€15</span>
+                <span className="text-4xl font-extrabold text-foreground">{formatPrice(15)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
@@ -867,7 +834,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Connect</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-primary">€29</span>
+                <span className="text-4xl font-extrabold text-primary">{formatPrice(29)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
@@ -906,7 +873,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Grow</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-foreground">€49</span>
+                <span className="text-4xl font-extrabold text-foreground">{formatPrice(49)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
