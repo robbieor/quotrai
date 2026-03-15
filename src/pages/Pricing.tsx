@@ -233,7 +233,7 @@ export default function Pricing() {
                     ))}
                   </ul>
 
-                  <Link to={plan.name === "Enterprise Seat" ? "/signup" : "/signup"}>
+                  <Link to={plan.name === "Grow" ? "mailto:hello@quotr.ai" : "/request-access"}>
                     <Button
                       className="w-full"
                       variant={plan.popular ? "default" : "outline"}
