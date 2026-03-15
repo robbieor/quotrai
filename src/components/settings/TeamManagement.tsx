@@ -40,6 +40,7 @@ export function TeamManagement() {
   const [email, setEmail] = useState("");
   const [showAddSeatDialog, setShowAddSeatDialog] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  const addSeatMutation = useAddSeat();
   
   const { user } = useAuth();
   const { data: team, isLoading: teamLoading } = useTeam();
