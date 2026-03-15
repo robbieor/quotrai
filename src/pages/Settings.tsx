@@ -339,12 +339,23 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-6 max-w-4xl">
-            <StripeConnectSetup />
-            <XeroConnectionCard />
-            <QuickBooksConnectionCard />
+            <SubscriptionOverview />
+            <SeatManagementTable />
             <SubscriptionPricing />
+            <StripeConnectSetup />
             <GeorgeVoiceOverview />
             <GeorgeBillingReports />
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-6 max-w-3xl">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">Integrations</h2>
+              <p className="text-muted-foreground">
+                Connect your accounting and business tools.
+              </p>
+            </div>
+            <XeroConnectionCard />
+            <QuickBooksConnectionCard />
           </TabsContent>
         </Tabs>
       </div>

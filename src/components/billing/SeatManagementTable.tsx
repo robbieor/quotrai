@@ -33,10 +33,8 @@ export function SeatManagementTable() {
   const updateSeatType = useUpdateSeatType();
   const { formatCurrency } = useCurrency();
   const { isOwner } = useUserRole();
-  const { formatCurrency } = useCurrency();
-  const { role: currentUserRole } = useUserRole();
 
-  const isCeo = currentUserRole === 'ceo' || currentUserRole === 'owner';
+  const isCeo = isOwner;
 
   if (isLoading) {
     return (
