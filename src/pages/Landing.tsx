@@ -328,7 +328,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-6">
                 <Link to="/request-access" className="w-full sm:w-auto">
                   <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
-                    🚀 Get Founding Member Access
+                    Get Founding Member Access
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
