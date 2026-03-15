@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ExpenseEmailBanner } from "@/components/expenses/ExpenseEmailBanner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { MorningBriefingCard } from "@/components/dashboard/MorningBriefingCard";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/useCurrency";

@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 // Assumptions for ROI calculation
 const HOURS_SAVED_PER_PERSON_PER_WEEK = 10; // Average hours saved on admin
-const AVERAGE_HOURLY_RATE = 30; // £30/hour average cost for admin time
+const AVERAGE_HOURLY_RATE = 30; // €30/hour average cost for admin time
 const QUOTR_SEAT_PRICE = 29; // €29/month per seat
 const QUOTR_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
