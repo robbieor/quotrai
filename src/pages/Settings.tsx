@@ -24,6 +24,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { CURRENCY_OPTIONS, CurrencyCode } from "@/hooks/useCurrency";
+import { CommunicationsSettings } from "@/components/settings/CommunicationsSettings";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
