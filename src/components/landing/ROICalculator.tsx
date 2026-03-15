@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Calculator, TrendingUp, Clock, Users, Sparkles, Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-// Assumptions for ROI calculation
-const HOURS_SAVED_PER_PERSON_PER_WEEK = 10; // Average hours saved on admin
-const AVERAGE_HOURLY_RATE = 30; // €30/hour average cost for admin time
+
+// Conservative defaults validated against industry benchmarks (Jobber, Tradify)
+const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
+const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
 const QUOTR_SEAT_PRICE = 29; // €29/month per seat
 const QUOTR_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
+const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
 
 interface ROICalculatorProps {
   variant?: "full" | "compact";
@@ -22,7 +24,7 @@ interface ROICalculatorProps {
 
 export function ROICalculator({ variant = "full", showVoice = true }: ROICalculatorProps) {
   const [teamSize, setTeamSize] = useState(5);
-  const [adminHoursPerWeek, setAdminHoursPerWeek] = useState(15);
+  const [adminHoursPerWeek, setAdminHoursPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_WEEK);
   const [voiceUsers, setVoiceUsers] = useState(2);
   
   // Email capture state
@@ -30,8 +32,10 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
   const [name, setName] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  // Calculate savings
-  const potentialHoursSavedPerWeek = Math.min(adminHoursPerWeek, HOURS_SAVED_PER_PERSON_PER_WEEK) * teamSize;
+
+  // Calculate savings — hours saved is total team, scales gently with size
+  const scaleFactor = Math.min(teamSize, 10) / 5; // gentle scaling, caps at 2x for 10+ people
+  const potentialHoursSavedPerWeek = Math.min(adminHoursPerWeek * scaleFactor, MAX_HOURS_SAVED_PER_WEEK * scaleFactor);
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
   
@@ -44,7 +48,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
   const roiMultiple = quotrMonthlyCost > 0 ? potentialMoneySavedPerMonth / quotrMonthlyCost : 0;
 
   // Admin headcount equivalent
-  const fullTimeAdminHoursPerMonth = 160; // 40hrs/week * 4 weeks
+  const fullTimeAdminHoursPerMonth = 160;
   const adminHeadcountEquivalent = potentialHoursSavedPerMonth / fullTimeAdminHoursPerMonth;
 
   const handleSendSummary = async () => {
@@ -82,6 +86,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
       setIsSending(false);
     }
   };
+
   if (variant === "compact") {
     return (
       <Card className="border-primary/30">
@@ -109,14 +114,14 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>Admin hours/week per person</span>
+                <span>Admin hours saved/week (total team)</span>
                 <span className="font-semibold">{adminHoursPerWeek} hrs</span>
               </div>
               <Slider
                 value={[adminHoursPerWeek]}
                 onValueChange={(v) => setAdminHoursPerWeek(v[0])}
-                min={5}
-                max={30}
+                min={2}
+                max={15}
                 step={1}
                 className="w-full"
               />
@@ -147,7 +152,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           <div>
             <CardTitle className="text-xl">ROI Calculator</CardTitle>
             <CardDescription>
-              See how much you could save on admin costs
+              See how much admin time you could save
             </CardDescription>
           </div>
         </div>
@@ -186,22 +191,22 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <label className="text-sm font-medium">Admin Hours/Week</label>
+                  <label className="text-sm font-medium">Admin Hours Saved/Week</label>
                 </div>
                 <Badge variant="secondary" className="text-sm font-semibold">
-                  {adminHoursPerWeek} hrs/person
+                  {adminHoursPerWeek} hrs total
                 </Badge>
               </div>
               <Slider
                 value={[adminHoursPerWeek]}
                 onValueChange={(v) => setAdminHoursPerWeek(v[0])}
-                min={5}
-                max={30}
+                min={2}
+                max={15}
                 step={1}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Hours spent on quotes, invoices, scheduling, etc.
+                Total team hours saved on quotes, invoices, scheduling, etc.
               </p>
             </div>
 
@@ -236,7 +241,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Your Potential Savings</span>
+                <span className="font-semibold">Your Estimated Savings</span>
               </div>
               
               <div className="space-y-4">
@@ -330,7 +335,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-primary" />
-            <h4 className="font-medium text-sm">Get your personalized ROI summary</h4>
+            <h4 className="font-medium text-sm">Get your personalised ROI summary</h4>
           </div>
           
           {emailSent ? (
@@ -339,7 +344,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
               <div>
                 <p className="font-medium text-foreground">Summary sent!</p>
                 <p className="text-sm text-muted-foreground">
-                  Check your inbox for your personalized ROI breakdown
+                  Check your inbox for your personalised ROI breakdown
                 </p>
               </div>
             </div>
@@ -385,7 +390,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          * Based on average admin time costs of €{AVERAGE_HOURLY_RATE}/hour and up to {HOURS_SAVED_PER_PERSON_PER_WEEK} hours saved per person per week
+          * Based on average admin time costs of €{AVERAGE_HOURLY_RATE}/hour. Savings estimates are conservative and based on industry benchmarks.
         </p>
       </CardContent>
     </Card>

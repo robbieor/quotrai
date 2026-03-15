@@ -9,37 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bot, CheckCircle2, ArrowLeft, Sparkles, Quote, Users, Clock, Star } from "lucide-react";
+import { Bot, CheckCircle2, ArrowLeft, Sparkles, Users, Clock } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { Link } from "react-router-dom";
 import { COUNTRIES } from "@/constants/countries";
-
-const testimonials = [
-  {
-    quote: "Foreman AI has completely changed how I run my business. I quote jobs in minutes instead of hours.",
-    name: "Mike T.",
-    role: "Electrician",
-    rating: 5,
-  },
-  {
-    quote: "Finally, software that understands the trades. The voice commands are a game-changer on site.",
-    name: "Sarah K.",
-    role: "Plumber",
-    rating: 5,
-  },
-  {
-    quote: "I've cut my admin time by 80%. More time on tools, less time on paperwork.",
-    name: "Dave R.",
-    role: "HVAC Technician",
-    rating: 5,
-  },
-];
-
-const socialProofStats = [
-  { value: "500+", label: "Beta Waitlist" },
-  { value: "90%", label: "Time Saved on Admin" },
-  { value: "2 min", label: "Average Quote Time" },
-];
 
 const tradeTypes = [
   "Electrician",
@@ -131,7 +104,7 @@ export default function RequestAccess() {
                 <CheckCircle2 className="h-8 w-8 text-background" />
               </div>
             </div>
-            <CardTitle className="text-2xl">You're on the list! 🎉</CardTitle>
+            <CardTitle className="text-2xl">You're on the list!</CardTitle>
             <CardDescription className="text-base mt-2">
               Thank you for your interest in Quotr
             </CardDescription>
@@ -162,50 +135,39 @@ export default function RequestAccess() {
   return (
     <div className="min-h-screen bg-background px-4 py-12">
       <div className="max-w-6xl mx-auto">
-        {/* Social Proof Stats */}
-        <div className="flex flex-wrap justify-center gap-8 mb-12">
-          {socialProofStats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="text-3xl font-bold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(160,100%,50%)] bg-clip-text text-transparent">
-                {stat.value}
-              </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Testimonials Column */}
+          {/* Left column — Why join */}
           <div className="space-y-6 order-2 lg:order-1">
             <div className="text-center lg:text-left mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">What Beta Users Say</h2>
-              <p className="text-muted-foreground">Join trade professionals already transforming their business</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Why Join the Beta?</h2>
+              <p className="text-muted-foreground">We're building Quotr with real tradespeople — your feedback shapes the product.</p>
             </div>
-            
-            {testimonials.map((testimonial, index) => (
-              <div 
-                key={index}
-                className="bg-card border border-border rounded-xl p-6 hover:border-primary/30 transition-colors"
-              >
-                <div className="flex gap-1 mb-3">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <p className="text-foreground mb-4 italic">"{testimonial.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-semibold text-primary">
-                      {testimonial.name.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{testimonial.name}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h3 className="font-semibold text-foreground mb-3">What you get as a Founding Member:</h3>
+              <ul className="space-y-3">
+                {[
+                  "30% off your subscription — locked in for life",
+                  "Direct access to the product team",
+                  "Priority feature requests",
+                  "Free onboarding & setup support",
+                  "Shape the roadmap with your feedback",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-card border border-border rounded-xl p-6">
+              <h3 className="font-semibold text-foreground mb-3">Built for trades, not office workers</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Quotr is the only job management platform with a voice-first AI assistant that understands trade terminology. 
+                Create quotes, chase invoices, and manage your schedule — all by talking to Foreman AI while you're on-site.
+              </p>
+            </div>
 
             {/* Trust Indicators */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-4 text-sm text-muted-foreground">

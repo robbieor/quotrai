@@ -136,13 +136,11 @@ const pipelineSteps = [
   { label: "Profit", icon: DollarSign, desc: "Paid & reconciled" },
 ];
 
-// Competitor comparison
-// Competitor base prices in EUR (will be converted dynamically)
+// Competitor comparison — generic comparators (no named competitors)
 const competitorBaseEUR = [
-  { name: "Tradify", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
-  { name: "Fergus", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
-  { name: "Jobber", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
-  { name: "ServiceM8", eur: 29, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Traditional FSM Software A", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
+  { name: "Traditional FSM Software B", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
+  { name: "Traditional FSM Software C", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
   { name: "Quotr", eur: 29, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
 
@@ -254,7 +252,6 @@ export default function Landing() {
             </Link>
             <Link to="/request-access" className="hidden sm:inline-flex">
               <Button size="sm" className="font-medium btn-hover-lift text-sm px-3 sm:px-4 gap-1.5">
-                <Rocket className="h-3.5 w-3.5" />
                 Get Founding Member Access
               </Button>
             </Link>
@@ -290,8 +287,7 @@ export default function Landing() {
                 <Button variant="ghost" className="w-full justify-start font-medium">Login</Button>
               </Link>
               <Link to="/request-access" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full font-medium gap-2">
-                  <Rocket className="h-4 w-4" />
+              <Button className="w-full font-medium gap-2">
                   Get Founding Member Access
                 </Button>
               </Link>
@@ -330,7 +326,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-6">
                 <Link to="/request-access" className="w-full sm:w-auto">
                   <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
-                    🚀 Get Founding Member Access
+                    Get Founding Member Access
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -453,7 +449,7 @@ export default function Landing() {
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
               One platform.<br />
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                Zero office staff needed.
+                Lead to profit, on autopilot.
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
@@ -623,15 +619,15 @@ export default function Landing() {
               </div>
               
               <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6 leading-tight">
-                Give your clients a<br />
+                Your clients approve quotes<br />
                 <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                  professional experience.
+                  from their phone.
                 </span>
               </h2>
               
               <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
-                Clients approve quotes with one click, pay invoices online, and see their full history — 
-                all branded to your business. Look like a company, even if it's just you.
+                One-click quote approvals, online invoice payments, and full job history — 
+                all branded to your business. You get paid faster. They get a better experience.
               </p>
               
               <ul className="space-y-3 sm:space-y-4">
@@ -710,9 +706,9 @@ export default function Landing() {
               <span className="text-xs sm:text-sm font-medium text-primary">Why Quotr?</span>
             </div>
             <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6">
-              How we stack up against<br />
+              What you get at<br />
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                the competition.
+                the base price.
               </span>
             </h2>
           </div>
@@ -928,9 +924,9 @@ export default function Landing() {
         <div className="container mx-auto text-center relative">
           <div className="max-w-3xl mx-auto animate-fade-up px-2">
             <h2 className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-foreground mb-4 sm:mb-6">
-              Stop chasing paper.<br />
+              Stop texting clients<br />
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                Start chasing growth.
+                for payment at 10pm.
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-xl mx-auto">
@@ -938,7 +934,6 @@ export default function Landing() {
             </p>
             <Link to="/request-access">
               <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2 sm:gap-3">
-                <Rocket className="h-5 w-5 sm:h-6 sm:w-6" />
                 Get Founding Member Access
                 <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
               </Button>

@@ -13,12 +13,6 @@ import {
   Zap,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
-import {
-  PRICING,
-  TEAM_SEAT_DETAILS,
-  VOICE_SEAT_DETAILS,
-  ENTERPRISE_SEAT_DETAILS,
-} from "@/hooks/useSubscriptionTier";
 import { cn } from "@/lib/utils";
 
 const faqs = [
@@ -28,7 +22,7 @@ const faqs = [
   },
   {
     q: "What's the difference between seat types?",
-    a: "Team Seats are for field crew who need job access, time tracking, and expenses. Voice Seats add Foreman AI with 60 voice minutes/month. Enterprise Seats include 200 minutes, priority support, and API access.",
+    a: "Lite seats are for field crew who need job access, time tracking, and basic quoting. Connect seats add Foreman AI with 60 voice minutes/month. Grow seats include 200 minutes, advanced reporting, and accounting sync.",
   },
   {
     q: "Can I mix seat types on one team?",
@@ -56,26 +50,50 @@ export default function Pricing() {
 
   const plans = [
     {
-      ...TEAM_SEAT_DETAILS,
+      name: "Lite",
       icon: Users,
-      monthlyPrice: PRICING.TEAM_SEAT,
-      annualPrice: PRICING.ANNUAL_TEAM_SEAT,
-      cta: "Start Free Trial",
+      features: [
+        "Dashboard & business overview",
+        "Jobs, quotes & invoices",
+        "Job scheduling & calendar",
+        "Time tracking with GPS",
+        "Customer management",
+      ],
+      monthlyPrice: 15,
+      annualPrice: Math.round(15 * 12 * 0.85),
+      cta: "Get Founding Member Access",
       popular: false,
     },
     {
-      ...VOICE_SEAT_DETAILS,
+      name: "Connect",
       icon: Mic,
-      monthlyPrice: PRICING.BASE_SEAT,
-      annualPrice: PRICING.ANNUAL_SEAT,
-      cta: "Start Free Trial",
+      features: [
+        "Everything in Lite",
+        "Foreman AI voice & text assistant",
+        "60 voice minutes/month",
+        "Expense tracking & receipts",
+        "Documents & certificates",
+        "PDF generation & email",
+      ],
+      monthlyPrice: 29,
+      annualPrice: Math.round(29 * 12 * 0.85),
+      cta: "Get Founding Member Access",
       popular: true,
     },
     {
-      ...ENTERPRISE_SEAT_DETAILS,
+      name: "Grow",
       icon: Building2,
-      monthlyPrice: PRICING.ENTERPRISE_SEAT,
-      annualPrice: PRICING.ANNUAL_ENTERPRISE_SEAT,
+      features: [
+        "Everything in Connect",
+        "200 voice minutes/month",
+        "Advanced reporting & P&L",
+        "Xero & QuickBooks sync",
+        "Lead management pipeline",
+        "Priority support & onboarding",
+        "API access & webhooks",
+      ],
+      monthlyPrice: 49,
+      annualPrice: Math.round(49 * 12 * 0.85),
       cta: "Contact Sales",
       popular: false,
     },
@@ -99,9 +117,9 @@ export default function Pricing() {
             <Link to="/login">
               <Button variant="ghost" size="sm">Login</Button>
             </Link>
-            <Link to="/signup">
+            <Link to="/request-access">
               <Button size="sm" className="gap-1">
-                Start Free Trial
+                Get Founding Member Access
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -209,7 +227,7 @@ export default function Pricing() {
                     ))}
                   </ul>
 
-                  <Link to={plan.name === "Enterprise Seat" ? "/signup" : "/signup"}>
+                  <Link to={plan.name === "Grow" ? "mailto:hello@quotr.ai" : "/request-access"}>
                     <Button
                       className="w-full"
                       variant={plan.popular ? "default" : "outline"}
@@ -253,9 +271,9 @@ export default function Pricing() {
           <p className="text-muted-foreground text-lg mb-8">
             Join trade professionals who run their entire business from Quotr.
           </p>
-          <Link to="/signup">
+          <Link to="/request-access">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">
-              Start Your Free Trial
+              Get Founding Member Access
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
