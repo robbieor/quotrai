@@ -65,9 +65,9 @@ const mockInvoices = [
 const tomConversation = [
   { role: "user", text: "What's my day look like?" },
   { role: "assistant", text: "Good morning, Mike! Here's your briefing:", typing: false },
-  { role: "assistant", text: "📅 3 jobs scheduled today\n💰 £1,240 in pending quotes\n⚠️ 1 invoice overdue (7 days)", typing: false },
+  { role: "assistant", text: "📅 3 jobs scheduled today\n💰 €1,240 in pending quotes\n⚠️ 1 invoice overdue (7 days)", typing: false },
   { role: "user", text: "Create a quote for Mrs. Patterson using the boiler template" },
-  { role: "assistant", text: "Done! Quote #Q-0049 created for £340. Want me to send it now?", typing: false },
+  { role: "assistant", text: "Done! Quote #Q-0049 created for €340. Want me to send it now?", typing: false },
 ];
 
 export function DashboardShowcase() {
