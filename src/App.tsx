@@ -41,6 +41,7 @@ const QuotePortal = lazy(() => import("./pages/QuotePortal"));
 const InvoicePortal = lazy(() => import("./pages/InvoicePortal"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const AIAuditHistory = lazy(() => import("./pages/AIAuditHistory"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
