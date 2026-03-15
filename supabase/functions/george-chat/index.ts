@@ -776,7 +776,7 @@ IMPORTANT RULES:
 5. Use tools to actually perform actions — don't just describe what you would do.
 6. When a job type is mentioned, proactively suggest a relevant template.
 7. VAT is automatically applied — don't ask about it unless the user mentions a custom rate.
-8. Be concise, professional, and trade-aware.${memoryPrompt}`;
+8. Be concise, professional, and trade-aware.${memoryPrompt}${preferencesPrompt}`;
 
     // ─── AI CALL ──────────────────────────────────────────────────
     const actionId = crypto.randomUUID();
