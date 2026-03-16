@@ -1,10 +1,35 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Users, Clock, Battery, Navigation } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useStaffLocations, useJobSites } from "@/hooks/useTimeTracking";
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix default marker icons for Leaflet + bundlers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+const staffIcon = new L.DivIcon({
+  className: "staff-marker",
+  html: `<div style="width:32px;height:32px;border-radius:50%;background:hsl(var(--primary));display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;">●</div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const siteIcon = new L.DivIcon({
+  className: "site-marker",
+  html: `<div style="width:28px;height:28px;border-radius:50%;background:hsl(var(--destructive));display:flex;align-items:center;justify-content:center;color:white;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;">📍</div>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
+});
 
 interface StaffMember {
   user_id: string;
@@ -18,89 +43,37 @@ interface StaffMember {
   is_moving: boolean;
 }
 
+// Auto-fit map bounds to markers
+function FitBounds({ positions }: { positions: [number, number][] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (positions.length > 0) {
+      const bounds = L.latLngBounds(positions.map(([lat, lng]) => [lat, lng]));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    }
+  }, [positions, map]);
+  return null;
+}
+
 export function StaffLocationMap() {
   const { data: staffLocations, isLoading: loadingStaff } = useStaffLocations();
   const { data: jobSites } = useJobSites();
-  const mapRef = useRef<HTMLDivElement>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
 
   const activeStaff = staffLocations?.filter((s) => s.status === "clocked_in") || [];
-  const inactiveStaff = staffLocations?.filter((s) => s.status === "clocked_out") || [];
 
-  // Simple map visualization (in production, you'd use Mapbox/Google Maps)
-  const renderMapPlaceholder = () => (
-    <div className="relative h-[400px] bg-muted rounded-lg overflow-hidden">
-      {/* Map background pattern */}
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(var(--foreground) / 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(var(--foreground) / 0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: "20px 20px",
-        }}
-      />
+  // Collect all positions for bounds fitting
+  const allPositions: [number, number][] = [];
+  staffLocations?.forEach((s) => {
+    if (s.location) allPositions.push([s.location.lat, s.location.lng]);
+  });
+  jobSites?.forEach((site) => {
+    allPositions.push([site.latitude, site.longitude]);
+  });
 
-      {/* Map content */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <MapPin className="h-12 w-12 text-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">
-            Map visualization
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {activeStaff.length} staff on-site
-          </p>
-        </div>
-      </div>
-
-      {/* Staff location pins (positioned randomly for demo) */}
-      {activeStaff.map((staff, index) => {
-        const angle = (index / activeStaff.length) * 2 * Math.PI;
-        const radius = 100 + Math.random() * 50;
-        const x = 50 + (Math.cos(angle) * radius) / 4;
-        const y = 50 + (Math.sin(angle) * radius) / 4;
-
-        return (
-          <div
-            key={staff.user_id}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-            style={{ left: `${x}%`, top: `${y}%` }}
-            onClick={() => setSelectedStaff(staff as StaffMember)}
-          >
-            <div className="relative">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium shadow-lg">
-                {staff.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Job site markers */}
-      {jobSites?.map((site, index) => {
-        const x = 20 + (index * 20) % 60;
-        const y = 30 + (index * 15) % 40;
-
-        return (
-          <div
-            key={site.id}
-            className="absolute transform -translate-x-1/2 -translate-y-full"
-            style={{ left: `${x}%`, top: `${y}%` }}
-          >
-            <div className="flex flex-col items-center">
-              <MapPin className="h-6 w-6 text-primary fill-primary/20" />
-              <span className="text-[10px] bg-background/80 px-1 rounded mt-1 truncate max-w-[80px]">
-                {site.jobs?.title}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  // Default center (Dublin, Ireland)
+  const defaultCenter: [number, number] = [53.3498, -6.2603];
+  const center = allPositions.length > 0 ? allPositions[0] : defaultCenter;
 
   if (loadingStaff) {
     return (
@@ -132,8 +105,83 @@ export function StaffLocationMap() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Map */}
-        {renderMapPlaceholder()}
+        {/* Leaflet Map */}
+        <div className="h-[400px] rounded-lg overflow-hidden border">
+          <MapContainer
+            center={center}
+            zoom={12}
+            style={{ height: "100%", width: "100%" }}
+            scrollWheelZoom={true}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            />
+
+            {allPositions.length > 0 && <FitBounds positions={allPositions} />}
+
+            {/* Job site markers with geofence circles */}
+            {jobSites?.map((site) => (
+              <div key={site.id}>
+                <Circle
+                  center={[site.latitude, site.longitude]}
+                  radius={site.geofence_radius || 200}
+                  pathOptions={{
+                    color: "hsl(var(--primary))",
+                    fillColor: "hsl(var(--primary))",
+                    fillOpacity: 0.1,
+                    weight: 2,
+                    dashArray: "5, 5",
+                  }}
+                />
+                <Marker
+                  position={[site.latitude, site.longitude]}
+                  icon={siteIcon}
+                >
+                  <Popup>
+                    <div className="text-sm">
+                      <p className="font-semibold">{site.jobs?.title || "Job Site"}</p>
+                      <p className="text-muted-foreground">{site.address}</p>
+                      <p className="text-xs mt-1">
+                        Geofence: {site.geofence_radius || 200}m radius
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+              </div>
+            ))}
+
+            {/* Staff location markers */}
+            {staffLocations?.map((staff) => {
+              if (!staff.location) return null;
+              return (
+                <Marker
+                  key={staff.user_id}
+                  position={[staff.location.lat, staff.location.lng]}
+                  icon={staffIcon}
+                  eventHandlers={{
+                    click: () => setSelectedStaff(staff as StaffMember),
+                  }}
+                >
+                  <Popup>
+                    <div className="text-sm">
+                      <p className="font-semibold">{staff.name}</p>
+                      <p>{staff.current_job || "Not clocked in"}</p>
+                      {staff.last_updated && (
+                        <p className="text-xs mt-1">
+                          Updated{" "}
+                          {formatDistanceToNow(new Date(staff.last_updated), {
+                            addSuffix: true,
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MapContainer>
+        </div>
 
         {/* Selected Staff Info */}
         {selectedStaff && (
@@ -158,9 +206,7 @@ export function StaffLocationMap() {
                     : "bg-muted text-muted-foreground"
                 }
               >
-                {selectedStaff.status === "clocked_in"
-                  ? "On-site"
-                  : "Clocked out"}
+                {selectedStaff.status === "clocked_in" ? "On-site" : "Clocked out"}
               </Badge>
             </div>
             {selectedStaff.last_updated && (
