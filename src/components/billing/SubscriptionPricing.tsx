@@ -41,7 +41,6 @@ export function SubscriptionPricing() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   if (isNative) return null;
-  const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const handleSubscribe = async (plan: PlanDetails) => {
     setIsLoading(plan.code);
