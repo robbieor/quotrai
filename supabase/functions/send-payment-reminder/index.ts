@@ -43,6 +43,14 @@ Deno.serve(async (req) => {
     const commsMap = new Map((allCommsSettings || []).map((s: any) => [s.team_id, s]));
 
     for (const inv of (overdueInvoices || [])) {
+      // SAFETY: Check team-level opt-in for invoice reminders
+      const teamComms = commsMap.get(inv.team_id);
+      if (!teamComms || !teamComms.invoice_reminder_enabled) {
+        console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: team invoice_reminder_enabled is false or missing`);
+        results.skipped_disabled++;
+        continue;
+      }
+
       if (inv.communication_suppressed) {
         console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: communication_suppressed`);
         results.skipped++;
