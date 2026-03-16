@@ -104,7 +104,7 @@ serve(async (req) => {
           type: "express",
           email: profile?.email || undefined,
           business_profile: {
-            name: profile.company_name || undefined,
+            name: profile?.company_name || undefined,
           },
           metadata: {
             team_id: profile.team_id,
