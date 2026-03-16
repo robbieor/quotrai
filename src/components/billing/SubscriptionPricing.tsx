@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ALL_PLANS, PRICING, STRIPE_PRICES, type PlanDetails, type SeatType } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useIsNative } from "@/hooks/useIsNative";
 
 interface FeatureRow {
   label: string;
@@ -35,8 +36,11 @@ const FEATURE_MATRIX: FeatureRow[] = [
 
 export function SubscriptionPricing() {
   const { formatCurrency } = useCurrency();
+  const isNative = useIsNative();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
   const [isLoading, setIsLoading] = useState<string | null>(null);
+
+  if (isNative) return null;
 
   const handleSubscribe = async (plan: PlanDetails) => {
     setIsLoading(plan.code);

@@ -3,9 +3,10 @@ import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { SeatType } from "@/hooks/useSubscriptionTier";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 interface SeatGuardProps {
   requiredSeat: SeatType;
@@ -25,6 +26,7 @@ const SEAT_LABELS: Record<SeatType, string> = {
 export function SeatGuard({ requiredSeat, children }: SeatGuardProps) {
   const { user } = useAuth();
   const { canAccess, isLoading } = useSeatAccess();
+  const isNative = useIsNative();
 
   // Don't guard if not logged in or still loading
   if (!user || isLoading) return <>{children}</>;
@@ -44,11 +46,25 @@ export function SeatGuard({ requiredSeat, children }: SeatGuardProps) {
           <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
               This feature requires a <strong>{SEAT_LABELS[requiredSeat]}</strong> seat or higher.
-              Ask your team owner to upgrade your seat to access this page.
+              {isNative
+                ? " Manage your subscription at quotr.work."
+                : " Ask your team owner to upgrade your seat to access this page."}
             </p>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/settings?tab=team-billing">View Plans</Link>
-            </Button>
+            {isNative ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => openExternalUrl("https://quotr.work/settings?tab=team-billing")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open in Browser
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="sm">
+                <Link to="/settings?tab=team-billing">View Plans</Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

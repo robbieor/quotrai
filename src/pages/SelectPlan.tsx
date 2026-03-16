@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ArrowRight, MessageSquare } from "lucide-react";
+import { Check, ArrowRight, MessageSquare, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +9,42 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { track } from "@/utils/analytics";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 export default function SelectPlan() {
   const navigate = useNavigate();
   const { startTrial, isStartingTrial } = useSubscriptionTier();
   const { formatCurrency } = useCurrency();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const isNative = useIsNative();
+
+  if (isNative) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
+              <span className="text-2xl font-bold">Quotr</span>
+            </div>
+            <CardTitle>Manage Your Subscription</CardTitle>
+            <CardDescription>
+              Subscription management is available on the web. Visit quotr.work to choose a plan or manage billing.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              className="gap-2"
+              onClick={() => openExternalUrl("https://quotr.work/settings?tab=team-billing")}
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open quotr.work
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const proMonthly = PRICING.BASE_SEAT;
   const proAnnualTotal = PRICING.ANNUAL_SEAT;

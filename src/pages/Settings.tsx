@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/settings/AvatarCropDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mail, Plug, Brain } from "lucide-react";
+import { useIsNative } from "@/hooks/useIsNative";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -40,6 +41,7 @@ export default function Settings() {
   const { user } = useAuth();
   const { isTeamSeat } = useUserRole();
   const { canAccessGeorge, canAccessIntegrations } = useSeatAccess();
+  const isNative = useIsNative();
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("EUR");
@@ -185,7 +187,7 @@ export default function Settings() {
                 </TabsTrigger>
                 <TabsTrigger value="team-billing" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                  <span className="hidden sm:inline">Team & Billing</span>
+                  <span className="hidden sm:inline">{isNative ? "Team" : "Team & Billing"}</span>
                   <span className="sm:hidden">Team</span>
                 </TabsTrigger>
                 {canAccessIntegrations && (

@@ -6,11 +6,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useGeorgeUsageHistory } from "@/hooks/useGeorgeUsageHistory";
 import { format } from "date-fns";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useIsNative } from "@/hooks/useIsNative";
 
 const TOM_VOICE_PRICE = 20;
 
 export function GeorgeBillingReports() {
   const { data: snapshots, isLoading } = useGeorgeUsageHistory();
+  const isNative = useIsNative();
+
+  if (isNative) return null;
 
   if (isLoading) {
     return (

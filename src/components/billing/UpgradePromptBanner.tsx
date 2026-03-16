@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { X, Sparkles, Clock, Zap, TrendingUp, AlertTriangle } from "lucide-react";
+import { X, Sparkles, Clock, Zap, TrendingUp, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUpgradePrompts, UpgradePrompt } from "@/hooks/useUpgradePrompts";
 import { useState } from "react";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 const iconMap: Record<string, typeof Sparkles> = {
   trial_expiring: Clock,
@@ -20,7 +21,16 @@ const styleMap: Record<string, string> = {
 
 function SingleBanner({ prompt, onDismiss }: { prompt: UpgradePrompt; onDismiss: () => void }) {
   const navigate = useNavigate();
+  const isNative = useIsNative();
   const Icon = iconMap[prompt.type] || Sparkles;
+
+  const handleCta = () => {
+    if (isNative) {
+      openExternalUrl(prompt.route);
+    } else {
+      navigate(prompt.route);
+    }
+  };
 
   return (
     <div className={`relative rounded-lg border p-4 mb-4 ${styleMap[prompt.urgency]}`}>
@@ -40,9 +50,10 @@ function SingleBanner({ prompt, onDismiss }: { prompt: UpgradePrompt; onDismiss:
         <Button
           size="sm"
           variant={prompt.urgency === "high" ? "default" : "outline"}
-          className="flex-shrink-0"
-          onClick={() => navigate(prompt.route)}
+          className="flex-shrink-0 gap-1.5"
+          onClick={handleCta}
         >
+          {isNative && <ExternalLink className="h-3.5 w-3.5" />}
           {prompt.cta}
         </Button>
       </div>

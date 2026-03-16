@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useSubscriptionTier } from "./useSubscriptionTier";
 import { useDashboardMetrics } from "./useDashboardData";
+import { useIsNative } from "./useIsNative";
 
 export type UpgradePromptType = 
   | "trial_expiring"
@@ -22,9 +23,12 @@ export interface UpgradePrompt {
   route: string;
 }
 
+const WEB_BILLING_URL = "https://quotr.work/settings?tab=team-billing";
+
 export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: UpgradePrompt | null } {
   const { teamSubscription, trialDaysRemaining, isTrialExpired, remainingVoiceMinutes } = useSubscriptionTier();
   const { data: metrics } = useDashboardMetrics();
+  const isNative = useIsNative();
 
   const prompts = useMemo(() => {
     const result: UpgradePrompt[] = [];
@@ -33,15 +37,21 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
     const isTrial = teamSubscription.is_trial;
     const hasPaid = teamSubscription.subscription_tier === "paid";
 
+    // On native, rewrite route & CTA to point to external web
+    const route = isNative ? WEB_BILLING_URL : "/onboarding/select-plan";
+    const nativeCta = "Manage on quotr.work";
+
     // Trial expired — highest urgency
     if (isTrialExpired) {
       result.push({
         type: "trial_expired",
         title: "Your trial has ended",
-        message: "Upgrade now to keep managing jobs, invoices, and customers without interruption.",
-        cta: "Choose a Plan",
+        message: isNative
+          ? "Visit quotr.work to upgrade and keep managing jobs, invoices, and customers."
+          : "Upgrade now to keep managing jobs, invoices, and customers without interruption.",
+        cta: isNative ? nativeCta : "Choose a Plan",
         urgency: "high",
-        route: "/onboarding/select-plan",
+        route,
       });
     }
 
@@ -50,10 +60,12 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
       result.push({
         type: "trial_expiring",
         title: `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left on your trial`,
-        message: "Lock in your price and keep all your data — upgrade before it ends.",
-        cta: "Upgrade Now",
+        message: isNative
+          ? "Visit quotr.work to lock in your price before it ends."
+          : "Lock in your price and keep all your data — upgrade before it ends.",
+        cta: isNative ? nativeCta : "Upgrade Now",
         urgency: trialDaysRemaining <= 2 ? "high" : "medium",
-        route: "/onboarding/select-plan",
+        route,
       });
     }
 
@@ -62,10 +74,12 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
       result.push({
         type: "voice_limit",
         title: `Only ${remainingVoiceMinutes} AI voice minutes left`,
-        message: "Upgrade to Pro to keep using Foreman AI, or contact us about Enterprise for unlimited minutes.",
-        cta: "Get More Minutes",
+        message: isNative
+          ? "Visit quotr.work to upgrade to Pro for more minutes."
+          : "Upgrade to Pro to keep using Foreman AI, or contact us about Enterprise for unlimited minutes.",
+        cta: isNative ? nativeCta : "Get More Minutes",
         urgency: "medium",
-        route: "/onboarding/select-plan",
+        route,
       });
     }
 
@@ -75,10 +89,12 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
       result.push({
         type: "invoice_milestone",
         title: `You've created ${invoiceCount} invoices!`,
-        message: "You're clearly getting value from Quotr. Upgrade to keep sending invoices and collecting payments.",
-        cta: "Unlock Payments",
+        message: isNative
+          ? "Visit quotr.work to upgrade and keep sending invoices."
+          : "You're clearly getting value from Quotr. Upgrade to keep sending invoices and collecting payments.",
+        cta: isNative ? nativeCta : "Unlock Payments",
         urgency: "low",
-        route: "/onboarding/select-plan",
+        route,
       });
     }
 
@@ -88,28 +104,32 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
       result.push({
         type: "growth_nudge",
         title: "You're building momentum!",
-        message: `${jobCount} jobs tracked. Upgrade to send invoices with one-click online payments.`,
-        cta: "See Plans",
+        message: isNative
+          ? `${jobCount} jobs tracked. Visit quotr.work to upgrade.`
+          : `${jobCount} jobs tracked. Upgrade to send invoices with one-click online payments.`,
+        cta: isNative ? nativeCta : "See Plans",
         urgency: "low",
-        route: "/onboarding/select-plan",
+        route,
       });
     }
 
-    // Quote milestone — sent 5+ quotes on trial (using pendingQuotesCount as proxy)
+    // Quote milestone — sent 5+ quotes on trial
     const quoteCount = metrics?.pendingQuotesCount ?? 0;
     if (isTrial && quoteCount >= 5) {
       result.push({
         type: "quote_milestone",
         title: "You're quoting like a pro!",
-        message: `${quoteCount} quotes created. Lock in your account to keep the momentum going.`,
-        cta: "Lock In Your Plan",
+        message: isNative
+          ? `${quoteCount} quotes created. Visit quotr.work to lock in your account.`
+          : `${quoteCount} quotes created. Lock in your account to keep the momentum going.`,
+        cta: isNative ? nativeCta : "Lock In Your Plan",
         urgency: "low",
-        route: "/onboarding/select-plan",
+        route,
       });
     }
 
     return result;
-  }, [teamSubscription, trialDaysRemaining, isTrialExpired, remainingVoiceMinutes, metrics]);
+  }, [teamSubscription, trialDaysRemaining, isTrialExpired, remainingVoiceMinutes, metrics, isNative]);
 
   return { prompts, topPrompt: prompts[0] ?? null };
 }

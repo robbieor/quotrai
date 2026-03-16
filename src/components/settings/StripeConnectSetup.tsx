@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Building2, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useIsNative } from "@/hooks/useIsNative";
 
 interface ConnectStatus {
   connected: boolean;
@@ -18,6 +19,10 @@ export function StripeConnectSetup() {
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const isNative = useIsNative();
+
+  // Hide payment setup entirely on native (Apple policy)
+  if (isNative) return null;
 
   const fetchStatus = useCallback(async () => {
     try {
