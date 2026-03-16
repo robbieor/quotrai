@@ -6,14 +6,18 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGrou
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserRole, TEAM_SEAT_NAV_IDS } from "@/hooks/useUserRole";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useSeatAccess } from "@/hooks/useSeatAccess";
 import quotrLogo from "@/assets/quotr-logo.png";
+import type { SeatType } from "@/hooks/useSubscriptionTier";
 
 interface NavItem {
   id: string;
   title: string;
   url: string;
   icon: LucideIcon;
+  /** Minimum seat type required; omit for all seats */
+  requiredSeat?: SeatType;
 }
 
 interface NavGroup {
@@ -35,7 +39,7 @@ const navGroups: NavGroup[] = [
     label: "MONEY",
     items: [
       { id: "invoices", title: "Invoices", url: "/invoices", icon: Receipt },
-      { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet },
+      { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
     ],
   },
   {
@@ -47,8 +51,8 @@ const navGroups: NavGroup[] = [
   {
     label: "INSIGHTS",
     items: [
-      { id: "tom", title: "Foreman AI", url: "/george", icon: Bot },
-      { id: "ai-activity", title: "AI Activity", url: "/ai-audit", icon: Clock },
+      { id: "tom", title: "Foreman AI", url: "/george", icon: Bot, requiredSeat: "connect" },
+      { id: "ai-activity", title: "AI Activity", url: "/ai-audit", icon: Clock, requiredSeat: "connect" },
     ],
   },
   {
@@ -59,20 +63,29 @@ const navGroups: NavGroup[] = [
   },
 ];
 
+// Nav items that team-seat members (role=member) can see regardless of seat type
+const MEMBER_ALLOWED_IDS = ["jobs", "calendar", "time-tracking"];
+
 export function AppSidebar() {
   const { profile } = useProfile();
   const { signOut } = useAuth();
   const { isTeamSeat } = useUserRole();
+  const { canAccess } = useSeatAccess();
 
   const filteredGroups = useMemo(() => {
-    if (!isTeamSeat) return navGroups;
     return navGroups
       .map(group => ({
         ...group,
-        items: group.items.filter(item => TEAM_SEAT_NAV_IDS.includes(item.id)),
+        items: group.items.filter(item => {
+          // Team-seat members only see allowed nav items
+          if (isTeamSeat && !MEMBER_ALLOWED_IDS.includes(item.id)) return false;
+          // Check seat-type access
+          if (item.requiredSeat && !canAccess(item.requiredSeat)) return false;
+          return true;
+        }),
       }))
       .filter(group => group.items.length > 0);
-  }, [isTeamSeat]);
+  }, [isTeamSeat, canAccess]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
