@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Building2, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useIsNative } from "@/hooks/useIsNative";
 
 interface ConnectStatus {
   connected: boolean;
