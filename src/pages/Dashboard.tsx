@@ -1,20 +1,24 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { MetricTile } from "@/components/dashboard/MetricTile";
 import { DashboardRevenueChart } from "@/components/dashboard/DashboardRevenueChart";
 import { DashboardJobStatusChart } from "@/components/dashboard/DashboardJobStatusChart";
+import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
+import { DrillThroughDrawer, DrillColumn } from "@/components/dashboard/DrillThroughDrawer";
+import { QuoteConversionFunnel } from "@/components/dashboard/QuoteConversionFunnel";
+import { InvoiceAgingChart } from "@/components/dashboard/InvoiceAgingChart";
+import { TopCustomersChart } from "@/components/dashboard/TopCustomersChart";
+import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { JobsDueTable } from "@/components/dashboard/JobsDueTable";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { RecentActivityFeed } from "@/components/dashboard/RecentActivityFeed";
 import { TeamActivityCard } from "@/components/dashboard/TeamActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, DollarSign, FileText, Receipt, Plus } from "lucide-react";
-import { useDashboardMetrics } from "@/hooks/useDashboardData";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useAuth } from "@/hooks/useAuth";
-import { ExpenseEmailBanner } from "@/components/expenses/ExpenseEmailBanner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { MorningBriefingCard } from "@/components/dashboard/MorningBriefingCard";
@@ -23,6 +27,9 @@ import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useQueryClient } from "@tanstack/react-query";
+import { DashboardFilterProvider, useDashboardFilters } from "@/contexts/DashboardFilterContext";
+import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
+import { useEffect } from "react";
 
 function MetricSkeleton() {
   return (
@@ -45,8 +52,8 @@ const quickActions = [
   { label: "New Job", icon: Briefcase, route: "/jobs" },
 ];
 
-export default function Dashboard() {
-  const { data: metrics, isLoading } = useDashboardMetrics();
+function DashboardContent() {
+  const { data, isLoading } = useDashboardAnalytics();
   const { isOnboardingComplete, isLoading: onboardingLoading } = useOnboarding();
   const { user, loading: authLoading } = useAuth();
   const { profile } = useProfile();
@@ -54,12 +61,18 @@ export default function Dashboard() {
   const { formatCurrency, symbol: currencySymbol } = useCurrency();
   const queryClient = useQueryClient();
 
-  // Fire alert checks on dashboard load
+  // Drill-through state
+  const [drillOpen, setDrillOpen] = useState(false);
+  const [drillTitle, setDrillTitle] = useState("");
+  const [drillColumns, setDrillColumns] = useState<DrillColumn[]>([]);
+  const [drillData, setDrillData] = useState<any[]>([]);
+  const [drillLink, setDrillLink] = useState<string | undefined>();
+
   useEffect(() => {
     if (profile?.team_id) {
       supabase.functions.invoke("check-alerts", {
         body: { team_id: profile.team_id },
-      }).catch(() => {}); // fire and forget
+      }).catch(() => {});
     }
   }, [profile?.team_id]);
 
@@ -70,12 +83,23 @@ export default function Dashboard() {
     queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
   };
 
+  const openDrill = (title: string, columns: DrillColumn[], records: any[], link?: string) => {
+    setDrillTitle(title);
+    setDrillColumns(columns);
+    setDrillData(records);
+    setDrillLink(link);
+    setDrillOpen(true);
+  };
+
+  const metrics = data?.metrics;
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <UpgradePromptBanner />
         <OnboardingChecklist />
         <MorningBriefingCard />
+
         {/* Header with Quick Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card border border-border rounded-lg p-4">
           <h1 className="text-lg sm:text-xl font-semibold text-foreground">Dashboard</h1>
@@ -96,8 +120,14 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Filter Bar */}
+        <DashboardFilterBar />
+
+        {/* Proactive Insights */}
+        <InsightAlerts insights={data?.insights} />
+
         {/* Metrics Row */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {isLoading ? (
             <>
               <MetricSkeleton />
@@ -113,41 +143,80 @@ export default function Dashboard() {
                 icon={Briefcase}
                 trend={metrics?.activeJobsTrend}
                 subtitle="vs last week"
-                href="/jobs"
+                onDrillDown={() => openDrill("Active Jobs", [
+                  { key: "title", label: "Job" },
+                  { key: "client", label: "Client" },
+                  { key: "status", label: "Status" },
+                  { key: "date", label: "Scheduled" },
+                  { key: "value", label: "Value", align: "right", format: (v) => formatCurrency(v) },
+                ], data?.drillData?.activeJobs || [], "/jobs")}
               />
               <MetricTile
-                title="Revenue MTD"
+                title="Revenue"
                 value={formatCurrency(metrics?.revenueMTD || 0)}
                 icon={DollarSign}
                 progress={{
                   current: metrics?.revenueMTD || 0,
-                  goal: metrics?.revenueGoal || 10000,
+                  goal: metrics?.revenueGoal || 1,
                   symbol: currencySymbol,
                 }}
-                href="/reports"
               />
               <MetricTile
                 title="Outstanding"
                 value={formatCurrency(metrics?.outstandingAmount || 0)}
                 icon={Receipt}
                 subtitle={`${metrics?.outstandingCount || 0} invoices`}
-                href="/invoices"
+                onDrillDown={() => openDrill("Outstanding Invoices", [
+                  { key: "invoiceNumber", label: "Invoice #" },
+                  { key: "client", label: "Client" },
+                  { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
+                  { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
+                ], data?.drillData?.outstanding || [], "/invoices")}
               />
               <MetricTile
                 title="Quotes Pending"
                 value={formatCurrency(metrics?.pendingQuotesAmount || 0)}
                 icon={FileText}
                 subtitle={`${metrics?.pendingQuotesCount || 0} quotes`}
-                href="/quotes"
+                onDrillDown={() => openDrill("Pending Quotes", [
+                  { key: "quoteNumber", label: "Quote #" },
+                  { key: "client", label: "Client" },
+                  { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
+                ], data?.drillData?.pendingQuotes || [], "/quotes")}
               />
             </>
           )}
         </div>
 
-        {/* Charts Row */}
+        {/* Charts Row 1: Revenue + Quote Funnel */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <DashboardRevenueChart />
-          <DashboardJobStatusChart />
+          <DashboardRevenueChart data={data?.revenueChartData} isLoading={isLoading} />
+          <QuoteConversionFunnel funnel={data?.quoteFunnel} />
+        </div>
+
+        {/* Charts Row 2: Job Status + Invoice Aging */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DashboardJobStatusChart data={data?.jobStatusData} isLoading={isLoading} />
+          <InvoiceAgingChart
+            agingBuckets={data?.agingBuckets}
+            onBucketClick={(bucket) => {
+              const invoices = data?.agingInvoices?.[bucket] || [];
+              openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, [
+                { key: "invoiceNumber", label: "Invoice #" },
+                { key: "client", label: "Client" },
+                { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
+                { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
+              ], invoices, "/invoices");
+            }}
+          />
+        </div>
+
+        {/* Charts Row 3: Top Customers */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TopCustomersChart customers={data?.topCustomers} />
+          <div className="grid gap-4">
+            {/* Summary stats cards could go here in future */}
+          </div>
         </div>
 
         {/* Tables Row */}
@@ -156,9 +225,6 @@ export default function Dashboard() {
           <OverdueInvoicesTable />
         </div>
 
-        {/* Email-to-Expense Promo */}
-        <ExpenseEmailBanner />
-
         {/* Activity Feeds */}
         <div className="grid gap-4 lg:grid-cols-2">
           <RecentActivityFeed />
@@ -166,10 +232,28 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Drill-Through Drawer */}
+      <DrillThroughDrawer
+        open={drillOpen}
+        onOpenChange={setDrillOpen}
+        title={drillTitle}
+        columns={drillColumns}
+        data={drillData}
+        linkPrefix={drillLink}
+      />
+
       {/* Onboarding Modal */}
       {showOnboarding && (
         <OnboardingModal open={true} onComplete={handleOnboardingComplete} />
       )}
     </DashboardLayout>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <DashboardFilterProvider>
+      <DashboardContent />
+    </DashboardFilterProvider>
   );
 }
