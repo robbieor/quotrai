@@ -40,35 +40,48 @@ serve(async (req) => {
     );
 
     switch (event.type) {
-      // Subscription lifecycle
+      // ── Subscription lifecycle (v2 tables) ──
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
         logStep("Subscription update", {
           id: subscription.id,
           status: subscription.status,
-          customer: subscription.customer,
+          customer: customerId,
         });
 
-        // Find team by stripe_customer_id
-        const { data: sub } = await supabase
-          .from("subscriptions")
-          .select("team_id")
-          .eq("stripe_customer_id", subscription.customer as string)
-          .single();
+        // Try to find org by stripe_customer_id in subscriptions_v2
+        const { data: subV2 } = await supabase
+          .from("subscriptions_v2")
+          .select("org_id")
+          .eq("stripe_customer_id", customerId)
+          .maybeSingle();
 
-        if (sub) {
+        // Also try subscription metadata for org_id (set during checkout)
+        const metadataOrgId = subscription.metadata?.org_id;
+        const orgId = subV2?.org_id || metadataOrgId;
+
+        if (orgId) {
+          const totalSeats = subscription.items.data.reduce(
+            (sum, item) => sum + (item.quantity || 0), 0
+          );
+
           await supabase
-            .from("subscriptions")
-            .update({
+            .from("subscriptions_v2")
+            .upsert({
+              org_id: orgId,
               status: subscription.status,
               stripe_subscription_id: subscription.id,
+              stripe_customer_id: customerId,
               current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              seat_count: totalSeats,
               updated_at: new Date().toISOString(),
-            })
-            .eq("team_id", sub.team_id);
-          logStep("Subscription updated in DB", { teamId: sub.team_id });
+            }, { onConflict: "org_id" });
+          logStep("subscriptions_v2 updated", { orgId, status: subscription.status, seats: totalSeats });
+        } else {
+          logStep("WARNING: Could not resolve org_id for customer", { customerId });
         }
         break;
       }
@@ -77,32 +90,28 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         logStep("Subscription cancelled", { id: subscription.id });
 
-        const { data: sub } = await supabase
-          .from("subscriptions")
-          .select("team_id")
+        const { data: subV2 } = await supabase
+          .from("subscriptions_v2")
+          .select("org_id")
           .eq("stripe_subscription_id", subscription.id)
-          .single();
+          .maybeSingle();
 
-        if (sub) {
+        if (subV2?.org_id) {
           await supabase
-            .from("subscriptions")
+            .from("subscriptions_v2")
             .update({ status: "canceled", updated_at: new Date().toISOString() })
-            .eq("team_id", sub.team_id);
-
-          await supabase.from("subscription_history").insert({
-            team_id: sub.team_id,
-            event_type: "subscription_cancelled",
-            stripe_event_id: event.id,
-          });
+            .eq("org_id", subV2.org_id);
+          logStep("subscriptions_v2 set to canceled", { orgId: subV2.org_id });
         }
         break;
       }
 
-      // Invoice payment (customer-facing invoices via Checkout)
+      // ── Checkout completed ──
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         logStep("Checkout completed", { id: session.id, mode: session.mode });
 
+        // Handle customer-facing invoice payments
         if (session.metadata?.type === "invoice_payment") {
           const invoiceId = session.metadata.invoice_id;
           const amount = (session.amount_total || 0) / 100;
@@ -110,13 +119,9 @@ serve(async (req) => {
           if (invoiceId) {
             await supabase
               .from("invoices")
-              .update({
-                status: "paid",
-                updated_at: new Date().toISOString(),
-              })
+              .update({ status: "paid", updated_at: new Date().toISOString() })
               .eq("id", invoiceId);
 
-            // Record payment
             const { data: invoice } = await supabase
               .from("invoices")
               .select("team_id")
@@ -133,6 +138,38 @@ serve(async (req) => {
               });
             }
             logStep("Invoice payment recorded", { invoiceId, amount });
+          }
+        }
+
+        // Handle subscription checkout — activate v2 record
+        if (session.mode === "subscription" && session.subscription) {
+          const customerId = session.customer as string;
+          const stripeSubId = session.subscription as string;
+
+          // Retrieve subscription for metadata and period info
+          const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
+          const orgId = stripeSub.metadata?.org_id || session.metadata?.org_id;
+
+          if (orgId) {
+            const totalSeats = stripeSub.items.data.reduce(
+              (sum, item) => sum + (item.quantity || 0), 0
+            );
+
+            await supabase
+              .from("subscriptions_v2")
+              .upsert({
+                org_id: orgId,
+                status: stripeSub.status,
+                stripe_subscription_id: stripeSubId,
+                stripe_customer_id: customerId,
+                current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
+                current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+                seat_count: totalSeats,
+                updated_at: new Date().toISOString(),
+              }, { onConflict: "org_id" });
+            logStep("subscriptions_v2 activated via checkout", { orgId, status: stripeSub.status });
+          } else {
+            logStep("WARNING: No org_id in subscription metadata for checkout", { stripeSubId });
           }
         }
         break;

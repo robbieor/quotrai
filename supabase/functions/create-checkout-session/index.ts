@@ -57,7 +57,7 @@ serve(async (req) => {
     const { seatCounts, interval = "month", isUpgrade = false } = body;
     const billingInterval: "month" | "year" = interval === "year" ? "year" : "month";
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Build line items from seat counts, or from org members if not provided
     let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];

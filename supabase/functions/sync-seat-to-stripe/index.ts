@@ -90,7 +90,7 @@ serve(async (req) => {
       desiredCounts[m.seat_type] = (desiredCounts[m.seat_type] || 0) + 1;
     });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get current subscription from Stripe
     const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);

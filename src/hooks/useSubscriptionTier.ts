@@ -57,7 +57,7 @@ export const PRICING = {
   ANNUAL_ENTERPRISE_SEAT: 499.80,
   ENTERPRISE_PLATFORM_FEE: 1.5,
   TEAM_SEAT: 15,
-  ANNUAL_TEAM_SEAT: Math.round(15 * 12 * (1 - 0.15)),
+  ANNUAL_TEAM_SEAT: 153,
 } as const;
 
 export interface PlanDetails {
