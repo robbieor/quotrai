@@ -336,12 +336,9 @@ export default function Settings() {
             <DataImportSection />
           </TabsContent>
 
-          <TabsContent value="team" className="max-w-2xl">
-            <TeamManagement />
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6 max-w-4xl">
+          <TabsContent value="team-billing" className="space-y-6 max-w-4xl">
             <SubscriptionOverview />
+            <TeamManagement />
             <SeatManagementTable />
             <SubscriptionPricing />
             <StripeConnectSetup />
