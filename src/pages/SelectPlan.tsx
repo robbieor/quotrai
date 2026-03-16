@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ArrowRight, MessageSquare } from "lucide-react";
+import { Check, ArrowRight, MessageSquare, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { track } from "@/utils/analytics";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 export default function SelectPlan() {
   const navigate = useNavigate();
