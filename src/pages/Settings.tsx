@@ -41,6 +41,7 @@ export default function Settings() {
   const { user } = useAuth();
   const { isTeamSeat } = useUserRole();
   const { canAccessGeorge, canAccessIntegrations } = useSeatAccess();
+  const isNative = useIsNative();
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("EUR");
