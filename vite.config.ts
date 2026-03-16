@@ -21,6 +21,8 @@ export default defineConfig(({ mode }) => ({
         registerType: "autoUpdate",
         includeAssets: ["favicon.ico", "icon-192.png"],
         workbox: {
+          skipWaiting: true,
+          clientsClaim: true,
           navigateFallbackDenylist: [/^\/~oauth/],
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB
