@@ -442,6 +442,7 @@ export type Database = {
           payment_receipt_enabled: boolean
           quote_followup_days: number
           quote_followup_enabled: boolean
+          require_confirmation_all_comms: boolean
           review_request_enabled: boolean | null
           review_request_hours: number | null
           team_id: string
@@ -461,6 +462,7 @@ export type Database = {
           payment_receipt_enabled?: boolean
           quote_followup_days?: number
           quote_followup_enabled?: boolean
+          require_confirmation_all_comms?: boolean
           review_request_enabled?: boolean | null
           review_request_hours?: number | null
           team_id: string
@@ -480,6 +482,7 @@ export type Database = {
           payment_receipt_enabled?: boolean
           quote_followup_days?: number
           quote_followup_enabled?: boolean
+          require_confirmation_all_comms?: boolean
           review_request_enabled?: boolean | null
           review_request_hours?: number | null
           team_id?: string
