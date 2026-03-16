@@ -54,6 +54,12 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Invisible component that initializes offline sync inside QueryClientProvider
+function OfflineSyncInit() {
+  useOfflineSync();
+  return null;
+}
+
 const App = () => {
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
