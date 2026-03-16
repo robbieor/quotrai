@@ -1,20 +1,55 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { useJobStatusChart } from "@/hooks/useDashboardData";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Sector } from "recharts";
+import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
+import { useState, useCallback } from "react";
 
-export function DashboardJobStatusChart() {
-  const { data, isLoading } = useJobStatusChart();
+interface JobStatusEntry {
+  status: string;
+  rawStatus: string;
+  count: number;
+  color: string;
+}
+
+interface DashboardJobStatusChartProps {
+  data?: JobStatusEntry[];
+  isLoading?: boolean;
+}
+
+function renderActiveShape(props: any) {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 8} textAnchor="middle" fill="hsl(var(--foreground))" fontSize={18} fontWeight={600}>
+        {value}
+      </text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize={11}>
+        {payload.status}
+      </text>
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius - 2}
+        outerRadius={outerRadius + 4}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+}
+
+export function DashboardJobStatusChart({ data, isLoading }: DashboardJobStatusChartProps) {
+  const { crossFilter, setCrossFilter } = useDashboardFilters();
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
+
+  const onPieEnter = useCallback((_: any, index: number) => setActiveIndex(index), []);
+  const onPieLeave = useCallback(() => setActiveIndex(undefined), []);
 
   if (isLoading) {
     return (
       <Card className="border-border">
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-32" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[240px] w-full" />
-        </CardContent>
+        <CardHeader className="pb-2"><Skeleton className="h-5 w-32" /></CardHeader>
+        <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
       </Card>
     );
   }
@@ -44,9 +79,25 @@ export function DashboardJobStatusChart() {
                 paddingAngle={2}
                 dataKey="count"
                 nameKey="status"
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
+                onMouseEnter={onPieEnter}
+                onMouseLeave={onPieLeave}
+                onClick={(entry: any) => {
+                  setCrossFilter(
+                    crossFilter?.value === entry.rawStatus
+                      ? null
+                      : { dimension: "jobStatus", value: entry.rawStatus }
+                  );
+                }}
+                cursor="pointer"
               >
                 {data?.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color}
+                    opacity={crossFilter?.dimension === "jobStatus" && crossFilter.value !== entry.rawStatus ? 0.3 : 1}
+                  />
                 ))}
               </Pie>
               <Tooltip 
