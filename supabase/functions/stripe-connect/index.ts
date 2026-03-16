@@ -29,23 +29,29 @@ serve(async (req) => {
 
     const userId = user.id;
 
+    // Get org membership (v2)
+    const { data: orgMember } = await supabaseClient
+      .from("org_members_v2")
+      .select("org_id, role, seat_type")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .single();
+
+    if (!orgMember?.org_id) throw new Error("User not in an organization");
+
+    // Check ownership — CEO role is the owner equivalent
+    if (orgMember.role !== "ceo" && orgMember.role !== "owner") {
+      throw new Error("Only team owners can set up payments");
+    }
+
+    // Also get profile for email/company info
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("team_id, email, company_name, country")
+      .select("email, company_name, country")
       .eq("id", userId)
       .single();
 
-    if (!profile?.team_id) throw new Error("User not in a team");
-
-    // Check ownership
-    const { data: membership } = await supabaseClient
-      .from("team_memberships")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("team_id", profile.team_id)
-      .single();
-
-    if (membership?.role !== "owner") throw new Error("Only team owners can set up payments");
+    const teamId = orgMember.org_id;
 
     const { action } = await req.json();
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
