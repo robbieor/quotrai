@@ -107,7 +107,7 @@ serve(async (req) => {
             name: profile?.company_name || undefined,
           },
           metadata: {
-            team_id: profile.team_id,
+            team_id: teamId,
             user_id: userId,
           },
         });
