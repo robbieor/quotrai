@@ -60,7 +60,7 @@ serve(async (req) => {
     const { data: team } = await supabaseClient
       .from("teams")
       .select("stripe_connect_account_id, stripe_connect_onboarding_complete")
-      .eq("id", profile.team_id)
+      .eq("id", teamId)
       .single();
 
     if (action === "status") {
