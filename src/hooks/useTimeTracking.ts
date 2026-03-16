@@ -226,7 +226,7 @@ export function useStaffLocations() {
   });
 }
 
-// Clock in mutation
+// Clock in mutation with offline fallback
 export function useClockIn() {
   const queryClient = useQueryClient();
 
@@ -257,39 +257,57 @@ export function useClockIn() {
         );
       }
 
-      const { data: entry, error } = await supabase
-        .from("time_entries")
-        .insert({
-          team_id: teamId,
-          user_id: user.id,
-          job_id: data.job_id,
-          job_site_id: jobSite?.id || null,
-          clock_in_at: new Date().toISOString(),
-          clock_in_latitude: data.latitude || null,
-          clock_in_longitude: data.longitude || null,
-          clock_in_accuracy: data.accuracy || null,
-          clock_in_verified: clockInVerified,
-          device_id: data.device_id || null,
-          status: "active",
-        })
-        .select("*, jobs(title, customers(name))")
-        .single();
+      const payload = {
+        team_id: teamId,
+        user_id: user.id,
+        job_id: data.job_id,
+        job_site_id: jobSite?.id || null,
+        clock_in_at: new Date().toISOString(),
+        clock_in_latitude: data.latitude || null,
+        clock_in_longitude: data.longitude || null,
+        clock_in_accuracy: data.accuracy || null,
+        clock_in_verified: clockInVerified,
+        device_id: data.device_id || null,
+        status: "active",
+      };
 
-      if (error) throw error;
+      try {
+        const { data: entry, error } = await supabase
+          .from("time_entries")
+          .insert(payload)
+          .select("*, jobs(title, customers(name))")
+          .single();
 
-      // Also log location ping
-      if (data.latitude && data.longitude) {
-        await supabase.from("location_pings").insert({
-          team_id: teamId,
-          user_id: user.id,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          accuracy: data.accuracy || null,
-          recorded_at: new Date().toISOString(),
-        });
+        if (error) throw error;
+
+        // Also log location ping
+        if (data.latitude && data.longitude) {
+          await supabase.from("location_pings").insert({
+            team_id: teamId,
+            user_id: user.id,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            accuracy: data.accuracy || null,
+            recorded_at: new Date().toISOString(),
+          });
+        }
+
+        // Trigger server-side validation async (don't await)
+        supabase.functions.invoke("validate-clock-event", {
+          body: { time_entry_id: entry.id, event_type: "clock_in" },
+        }).catch((err) => console.warn("Server validation failed:", err));
+
+        return entry;
+      } catch (networkError) {
+        // Offline fallback: enqueue for later sync
+        if (!navigator.onLine) {
+          const { enqueueOperation } = await import("@/lib/offlineQueue");
+          await enqueueOperation("clock_in", payload);
+          toast.info("Saved offline — will sync when connected");
+          return payload;
+        }
+        throw networkError;
       }
-
-      return entry;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["time-entries"] });
