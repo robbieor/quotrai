@@ -35,9 +35,12 @@ const FEATURE_MATRIX: FeatureRow[] = [
 ];
 
 export function SubscriptionPricing() {
-  const { useIsNative: _ } = require("@/hooks/useIsNative");
   const { formatCurrency } = useCurrency();
+  const isNative = useIsNative();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+
+  if (isNative) return null;
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const handleSubscribe = async (plan: PlanDetails) => {
