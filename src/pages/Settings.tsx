@@ -26,6 +26,7 @@ import { Users, CreditCard, User, Upload, Loader2, Palette, FileSpreadsheet, Mai
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { CURRENCY_OPTIONS, CurrencyCode } from "@/hooks/useCurrency";
 import { CommunicationsSettings } from "@/components/settings/CommunicationsSettings";
 import { useSearchParams } from "react-router-dom";
@@ -38,6 +39,7 @@ export default function Settings() {
   const { profile, updateProfile } = useProfile();
   const { user } = useAuth();
   const { isTeamSeat } = useUserRole();
+  const { canAccessGeorge, canAccessIntegrations } = useSeatAccess();
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("EUR");
@@ -76,24 +78,20 @@ export default function Settings() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
     }
 
-    // Validate file size (max 10MB for original before crop)
     if (file.size > 10 * 1024 * 1024) {
       toast.error("Image must be less than 10MB");
       return;
     }
 
-    // Create object URL for cropping
     const imageUrl = URL.createObjectURL(file);
     setSelectedImage(imageUrl);
     setCropDialogOpen(true);
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -105,10 +103,8 @@ export default function Settings() {
     setIsUploading(true);
 
     try {
-      // Create a unique filename
       const fileName = `${user.id}/avatar-${Date.now()}.jpg`;
 
-      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(fileName, croppedBlob, { 
@@ -118,12 +114,10 @@ export default function Settings() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from("avatars")
         .getPublicUrl(fileName);
 
-      // Add cache buster to force refresh
       setAvatarUrl(`${publicUrl}?t=${Date.now()}`);
       toast.success("Avatar uploaded successfully");
     } catch (error: any) {
@@ -131,7 +125,6 @@ export default function Settings() {
       toast.error(error.message || "Failed to upload avatar");
     } finally {
       setIsUploading(false);
-      // Clean up object URL
       if (selectedImage) {
         URL.revokeObjectURL(selectedImage);
         setSelectedImage("");
@@ -142,7 +135,6 @@ export default function Settings() {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      // Remove cache buster from URL before saving
       const cleanAvatarUrl = avatarUrl.split("?")[0];
       await updateProfile.mutateAsync({
         full_name: fullName,
@@ -156,6 +148,9 @@ export default function Settings() {
       setIsSaving(false);
     }
   };
+
+  // Show extra tabs only for non-team-seat users
+  const showManagementTabs = !isTeamSeat;
 
   return (
     <DashboardLayout>
@@ -172,7 +167,7 @@ export default function Settings() {
               <span className="hidden sm:inline">Profile</span>
               <span className="sm:hidden">Me</span>
             </TabsTrigger>
-            {!isTeamSeat && (
+            {showManagementTabs && (
               <>
                 <TabsTrigger value="branding" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <Palette className="h-3.5 w-3.5 md:h-4 md:w-4" />
@@ -193,16 +188,20 @@ export default function Settings() {
                   <span className="hidden sm:inline">Team & Billing</span>
                   <span className="sm:hidden">Team</span>
                 </TabsTrigger>
-                <TabsTrigger value="integrations" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
-                  <Plug className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                  <span className="hidden sm:inline">Integrations</span>
-                  <span className="sm:hidden">Integ</span>
-                </TabsTrigger>
-                <TabsTrigger value="ai" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
-                  <Brain className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                  <span className="hidden sm:inline">Foreman AI</span>
-                  <span className="sm:hidden">AI</span>
-                </TabsTrigger>
+                {canAccessIntegrations && (
+                  <TabsTrigger value="integrations" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                    <Plug className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                    <span className="hidden sm:inline">Integrations</span>
+                    <span className="sm:hidden">Integ</span>
+                  </TabsTrigger>
+                )}
+                {canAccessGeorge && (
+                  <TabsTrigger value="ai" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                    <Brain className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                    <span className="hidden sm:inline">Foreman AI</span>
+                    <span className="sm:hidden">AI</span>
+                  </TabsTrigger>
+                )}
               </>
             )}
           </TabsList>
@@ -346,20 +345,24 @@ export default function Settings() {
             <GeorgeBillingReports />
           </TabsContent>
 
-          <TabsContent value="integrations" className="space-y-6 max-w-3xl">
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Integrations</h2>
-              <p className="text-muted-foreground">
-                Connect your accounting and business tools.
-              </p>
-            </div>
-            <XeroConnectionCard />
-            <QuickBooksConnectionCard />
-          </TabsContent>
+          {canAccessIntegrations && (
+            <TabsContent value="integrations" className="space-y-6 max-w-3xl">
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold">Integrations</h2>
+                <p className="text-muted-foreground">
+                  Connect your accounting and business tools.
+                </p>
+              </div>
+              <XeroConnectionCard />
+              <QuickBooksConnectionCard />
+            </TabsContent>
+          )}
 
-          <TabsContent value="ai" className="space-y-6 max-w-3xl">
-            <ForemanAISettings />
-          </TabsContent>
+          {canAccessGeorge && (
+            <TabsContent value="ai" className="space-y-6 max-w-3xl">
+              <ForemanAISettings />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { VoiceAgentProvider } from "@/contexts/VoiceAgentContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
+import { SeatGuard } from "@/components/auth/SeatGuard";
 
 // Lazy-loaded pages
 const Landing = lazy(() => import("./pages/Landing"));
@@ -107,29 +108,32 @@ const App = () => {
                 <Route path="/customer/login" element={<CustomerLogin />} />
                 <Route path="/customer/dashboard" element={<CustomerDashboard />} />
 
-
                 {/* Onboarding */}
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/select-plan" element={<SelectPlan />} />
 
-                {/* Protected dashboard pages */}
+                {/* Protected dashboard pages — all seats */}
                 <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/calendar" element={<JobCalendar />} />
                 <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
                 <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
                 <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
-                <Route path="/expenses" element={<RoleGuard><Expenses /></RoleGuard>} />
-                <Route path="/leads" element={<RoleGuard><Leads /></RoleGuard>} />
-                <Route path="/george" element={<George />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/reports" element={<RoleGuard><Reports /></RoleGuard>} />
                 <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
-                <Route path="/documents" element={<RoleGuard><Documents /></RoleGuard>} />
-                <Route path="/certificates" element={<RoleGuard><Certificates /></RoleGuard>} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/time-tracking" element={<TimeTracking />} />
-                <Route path="/ai-audit" element={<RoleGuard><AIAuditHistory /></RoleGuard>} />
+                <Route path="/settings" element={<Settings />} />
+
+                {/* Connect+ seat required */}
+                <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />
+                <Route path="/george" element={<SeatGuard requiredSeat="connect"><George /></SeatGuard>} />
+                <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
+                <Route path="/reports" element={<RoleGuard><SeatGuard requiredSeat="connect"><Reports /></SeatGuard></RoleGuard>} />
+                <Route path="/documents" element={<RoleGuard><SeatGuard requiredSeat="connect"><Documents /></SeatGuard></RoleGuard>} />
+                <Route path="/certificates" element={<RoleGuard><SeatGuard requiredSeat="connect"><Certificates /></SeatGuard></RoleGuard>} />
+
+                {/* Grow seat required */}
+                <Route path="/leads" element={<RoleGuard><SeatGuard requiredSeat="grow"><Leads /></SeatGuard></RoleGuard>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
