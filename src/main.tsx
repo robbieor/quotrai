@@ -5,9 +5,10 @@ import "./index.css";
 
 console.log("[Quotr] Starting app...");
 
-const isPreviewEnvironment =
+const shouldCleanSW =
   window.location.hostname.includes("id-preview--") ||
-  window.location.hostname.includes("lovableproject.com");
+  window.location.hostname.includes("lovableproject.com") ||
+  window.location.hostname.includes("lovable.app");
 
 if (isPreviewEnvironment && "serviceWorker" in navigator) {
   void navigator.serviceWorker
