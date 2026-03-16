@@ -39,9 +39,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ sent: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Pre-fetch all team comms_settings to check per-team opt-in
+    const teamIds = [...new Set(reminders.map((r: any) => r.team_id))];
+    const { data: allCommsSettings } = await supabase
+      .from("comms_settings")
+      .select("team_id, visit_reminder_enabled")
+      .in("team_id", teamIds);
+    const commsMap = new Map((allCommsSettings || []).map((s: any) => [s.team_id, s]));
+
     let sentCount = 0;
 
     for (const reminder of reminders) {
+      // SAFETY: Check team-level opt-in for visit reminders
+      const teamComms = commsMap.get(reminder.team_id);
+      if (!teamComms || !teamComms.visit_reminder_enabled) {
+        console.log(`[SAFETY] Skipping job reminder ${reminder.id}: team visit_reminder_enabled is false or missing`);
+        continue;
+      }
+
       const customerEmail = reminder.customer?.email;
       if (!customerEmail) continue;
 

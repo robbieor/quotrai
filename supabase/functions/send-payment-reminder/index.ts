@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const today = new Date().toISOString().split('T')[0];
-    const results = { sent: 0, skipped: 0 };
+    const results = { sent: 0, skipped: 0, skipped_disabled: 0 };
 
     const { data: overdueInvoices } = await supabase
       .from('invoices')
@@ -34,7 +34,23 @@ Deno.serve(async (req) => {
       .in('status', ['pending', 'overdue'])
       .lt('due_date', today);
 
+    // Pre-fetch all team comms_settings to check per-team opt-in
+    const teamIds = [...new Set((overdueInvoices || []).map((i: any) => i.team_id))];
+    const { data: allCommsSettings } = await supabase
+      .from('comms_settings')
+      .select('team_id, invoice_reminder_enabled')
+      .in('team_id', teamIds);
+    const commsMap = new Map((allCommsSettings || []).map((s: any) => [s.team_id, s]));
+
     for (const inv of (overdueInvoices || [])) {
+      // SAFETY: Check team-level opt-in for invoice reminders
+      const teamComms = commsMap.get(inv.team_id);
+      if (!teamComms || !teamComms.invoice_reminder_enabled) {
+        console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: team invoice_reminder_enabled is false or missing`);
+        results.skipped_disabled++;
+        continue;
+      }
+
       if (inv.communication_suppressed) {
         console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: communication_suppressed`);
         results.skipped++;

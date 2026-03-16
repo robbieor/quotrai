@@ -554,59 +554,22 @@ serve(async (req) => {
           break;
         }
 
-        const resendApiKey = Deno.env.get("RESEND_API_KEY");
-        if (resendApiKey) {
-          try {
-            const emailResponse = await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${resendApiKey}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                from: "Quotr <invoices@mail.quotr.app>",
-                to: customerEmail,
-                subject: `Reminder: Invoice ${invoice.invoice_number} is overdue`,
-                html: `
-                  <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Payment Reminder</h2>
-                    <p>Hi ${customerName},</p>
-                    <p>This is a friendly reminder that invoice <strong>${invoice.invoice_number}</strong> for <strong>${currencySymbol}${parseFloat(invoice.total).toFixed(2)}</strong> was due on ${invoice.due_date}.</p>
-                    <p>Please arrange payment at your earliest convenience. If you've already paid, please disregard this reminder.</p>
-                    <p>Thank you for your business!</p>
-                  </div>
-                `,
-              }),
-            });
-
-            if (!emailResponse.ok) {
-              console.error("Resend error:", await emailResponse.text());
-              throw new Error("Failed to send email");
-            }
-
-            // Audit log for George-triggered send
-            await supabase.from("comms_audit_log").insert({
-              channel: "email",
-              record_type: "invoice",
-              record_id: invoice.id,
-              recipient: customerEmail,
-              template: "george-webhook:send_invoice_reminder",
-              manual_send: true,
-              confirmed_by_user: true,
-              allowed: true,
-              source_screen: "george_voice",
-              user_id: user_id,
-              team_id: company_id,
-            });
-          } catch (emailError) {
-            console.error("Email sending failed:", emailError);
-            response = {
-              success: false,
-              message: `I couldn't send the reminder email to ${customerEmail}. Please try again later.`
-            };
-            break;
-          }
-        }
+        // SAFETY FIX: Voice agent must NOT send emails directly.
+        // Instead, inform the user to send via the app UI where confirmation gates exist.
+        await supabase.from("comms_audit_log").insert({
+          channel: "email",
+          record_type: "invoice",
+          record_id: invoice.id,
+          recipient: customerEmail,
+          template: "george-webhook:send_invoice_reminder",
+          manual_send: false,
+          confirmed_by_user: false,
+          allowed: false,
+          blocked_reason: "Voice agent cannot send emails directly — requires UI confirmation",
+          source_screen: "george_voice",
+          user_id: user_id,
+          team_id: company_id,
+        });
 
         // Update invoice status to overdue if not already
         if (invoice.status !== "overdue") {
@@ -618,8 +581,8 @@ serve(async (req) => {
 
         response = {
           success: true,
-          message: `Done! I've sent a payment reminder for invoice ${invoice.invoice_number} (${currencySymbol}${parseFloat(invoice.total).toFixed(2)}) to ${customerName} at ${customerEmail}.`,
-          data: { invoice_id: invoice.id, email_sent_to: customerEmail }
+          message: `I've marked invoice ${invoice.invoice_number} (${currencySymbol}${parseFloat(invoice.total).toFixed(2)}) as overdue. To send a payment reminder to ${customerName} at ${customerEmail}, please use the invoice screen in the app — this ensures you can preview the email before it's sent.`,
+          data: { invoice_id: invoice.id, requires_manual_send: true }
         };
         break;
       }

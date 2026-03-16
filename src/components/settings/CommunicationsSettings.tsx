@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCommsSettings } from "@/hooks/useCommsSettings";
+import { CommsAuditLog } from "./CommsAuditLog";
 import { toast } from "sonner";
 import {
   Bell,
@@ -15,6 +16,7 @@ import {
   Receipt,
   CreditCard,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 
 interface CommToggleProps {
@@ -82,6 +84,19 @@ export function CommunicationsSettings() {
           </p>
         </div>
       </div>
+
+      {/* Global confirmation gate */}
+      <Card>
+        <CardContent className="pt-6">
+          <CommToggle
+            icon={<ShieldCheck className="h-5 w-5" />}
+            label="Require confirmation before any client communication"
+            description="When enabled, every outbound email (manual or scheduled) requires an explicit confirmation step before sending. Default: ON."
+            checked={settings.require_confirmation_all_comms}
+            onCheckedChange={(v) => handleToggle("require_confirmation_all_comms", v)}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -214,6 +229,8 @@ export function CommunicationsSettings() {
           />
         </CardContent>
       </Card>
+
+      <CommsAuditLog />
     </div>
   );
 }
