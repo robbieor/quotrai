@@ -3,9 +3,10 @@ import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { SeatType } from "@/hooks/useSubscriptionTier";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 interface SeatGuardProps {
   requiredSeat: SeatType;
