@@ -508,6 +508,7 @@ export function useDashboardAnalytics() {
         agingInvoices,
         topCustomers,
         insights,
+        healthInsights,
         drillData: {
           activeJobs: activeJobsList,
           outstanding: outstandingList,
