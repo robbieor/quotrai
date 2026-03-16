@@ -187,7 +187,7 @@ export default function Settings() {
                 </TabsTrigger>
                 <TabsTrigger value="team-billing" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                  <span className="hidden sm:inline">Team & Billing</span>
+                  <span className="hidden sm:inline">{isNative ? "Team" : "Team & Billing"}</span>
                   <span className="sm:hidden">Team</span>
                 </TabsTrigger>
                 {canAccessIntegrations && (

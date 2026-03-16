@@ -32,6 +32,9 @@ export function SubscriptionOverview() {
   const { data: members } = useOrgMembers();
   const { formatCurrency } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
+  const isNative = useIsNative();
+
+  if (isNative) return null;
 
   const handleManageBilling = async () => {
     setIsLoading(true);

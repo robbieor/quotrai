@@ -12,6 +12,9 @@ const TOM_VOICE_PRICE = 20;
 
 export function GeorgeBillingReports() {
   const { data: snapshots, isLoading } = useGeorgeUsageHistory();
+  const isNative = useIsNative();
+
+  if (isNative) return null;
 
   if (isLoading) {
     return (
