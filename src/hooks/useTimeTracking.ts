@@ -321,7 +321,7 @@ export function useClockIn() {
   });
 }
 
-// Clock out mutation
+// Clock out mutation with offline fallback
 export function useClockOut() {
   const queryClient = useQueryClient();
 
@@ -330,57 +330,76 @@ export function useClockOut() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get the time entry with job site
-      const { data: entry, error: fetchError } = await supabase
-        .from("time_entries")
-        .select("*, job_sites(*)")
-        .eq("id", data.time_entry_id)
-        .single();
+      const clockOutPayload = {
+        clock_out_at: new Date().toISOString(),
+        clock_out_latitude: data.latitude || null,
+        clock_out_longitude: data.longitude || null,
+        clock_out_accuracy: data.accuracy || null,
+        notes: data.notes || null,
+        status: "completed" as const,
+      };
 
-      if (fetchError) throw fetchError;
+      try {
+        // Get the time entry with job site for geofence check
+        const { data: entry, error: fetchError } = await supabase
+          .from("time_entries")
+          .select("*, job_sites(*)")
+          .eq("id", data.time_entry_id)
+          .single();
 
-      // Check if within geofence
-      let clockOutVerified = false;
-      if (entry.job_sites && data.latitude && data.longitude) {
-        clockOutVerified = isWithinGeofence(
-          data.latitude,
-          data.longitude,
-          entry.job_sites.latitude,
-          entry.job_sites.longitude,
-          entry.job_sites.geofence_radius
-        );
+        if (fetchError) throw fetchError;
+
+        // Check if within geofence
+        let clockOutVerified = false;
+        if (entry.job_sites && data.latitude && data.longitude) {
+          clockOutVerified = isWithinGeofence(
+            data.latitude,
+            data.longitude,
+            entry.job_sites.latitude,
+            entry.job_sites.longitude,
+            entry.job_sites.geofence_radius
+          );
+        }
+
+        const { data: updated, error } = await supabase
+          .from("time_entries")
+          .update({ ...clockOutPayload, clock_out_verified: clockOutVerified })
+          .eq("id", data.time_entry_id)
+          .select("*, jobs(title, customers(name))")
+          .single();
+
+        if (error) throw error;
+
+        // Log location ping
+        if (data.latitude && data.longitude) {
+          const { data: teamId } = await supabase.rpc("get_user_team_id");
+          await supabase.from("location_pings").insert({
+            team_id: teamId,
+            user_id: user.id,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            recorded_at: new Date().toISOString(),
+          });
+        }
+
+        // Trigger server-side validation async
+        supabase.functions.invoke("validate-clock-event", {
+          body: { time_entry_id: data.time_entry_id, event_type: "clock_out" },
+        }).catch((err) => console.warn("Server validation failed:", err));
+
+        return updated;
+      } catch (networkError) {
+        if (!navigator.onLine) {
+          const { enqueueOperation } = await import("@/lib/offlineQueue");
+          await enqueueOperation("clock_out", {
+            time_entry_id: data.time_entry_id,
+            ...clockOutPayload,
+          });
+          toast.info("Saved offline — will sync when connected");
+          return clockOutPayload;
+        }
+        throw networkError;
       }
-
-      const { data: updated, error } = await supabase
-        .from("time_entries")
-        .update({
-          clock_out_at: new Date().toISOString(),
-          clock_out_latitude: data.latitude || null,
-          clock_out_longitude: data.longitude || null,
-          clock_out_accuracy: data.accuracy || null,
-          clock_out_verified: clockOutVerified,
-          notes: data.notes || null,
-          status: "completed",
-        })
-        .eq("id", data.time_entry_id)
-        .select("*, jobs(title, customers(name))")
-        .single();
-
-      if (error) throw error;
-
-      // Log location ping
-      if (data.latitude && data.longitude) {
-        const { data: teamId } = await supabase.rpc("get_user_team_id");
-        await supabase.from("location_pings").insert({
-          team_id: teamId,
-          user_id: user.id,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          recorded_at: new Date().toISOString(),
-        });
-      }
-
-      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["time-entries"] });
