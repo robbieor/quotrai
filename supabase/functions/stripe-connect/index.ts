@@ -80,7 +80,7 @@ serve(async (req) => {
         await supabaseClient
           .from("teams")
           .update({ stripe_connect_onboarding_complete: isComplete })
-          .eq("id", profile.team_id);
+          .eq("id", teamId);
       }
 
       return new Response(
