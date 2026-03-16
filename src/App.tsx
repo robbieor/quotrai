@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -53,6 +54,12 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Invisible component that initializes offline sync inside QueryClientProvider
+function OfflineSyncInit() {
+  useOfflineSync();
+  return null;
+}
+
 const App = () => {
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
@@ -82,6 +89,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <OfflineSyncInit />
       <TooltipProvider>
         <Toaster />
         <Sonner />
