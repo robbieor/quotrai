@@ -222,12 +222,11 @@ export function useDashboardAnalytics() {
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5);
 
-      // --- Proactive insights ---
+      // --- Proactive insights (compact alerts) ---
       const insights: { id: string; type: "warning" | "success" | "info"; message: string; cta: string; href: string }[] = [];
 
       const severeOverdue = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 30);
       if (severeOverdue.length > 0) {
-        const total = severeOverdue.reduce((s, i) => s + (Number(i.total) || 0), 0);
         insights.push({
           id: "overdue-severe",
           type: "warning",
@@ -273,6 +272,166 @@ export function useDashboardAnalytics() {
           message: "No jobs scheduled for next week — fill the gap?",
           cta: "Schedule jobs",
           href: "/jobs",
+        });
+      }
+
+      // --- Business Health insights (plain-language summaries) ---
+      type HealthInsight = {
+        id: string;
+        icon: "revenue_up" | "revenue_down" | "revenue_flat" | "quotes_good" | "quotes_bad" | "overdue" | "workload_gap" | "top_customer" | "jobs_busy";
+        headline: string;
+        detail: string;
+        sentiment: "positive" | "negative" | "neutral";
+        cta?: { label: string; href: string };
+      };
+      const healthInsights: HealthInsight[] = [];
+
+      // 1. Revenue trend
+      if (revenueChartData.length >= 2) {
+        const recent = revenueChartData.slice(-2);
+        const prev = recent[0].revenue;
+        const curr = recent[1].revenue;
+        if (prev > 0) {
+          const pctChange = ((curr - prev) / prev) * 100;
+          if (pctChange > 5) {
+            healthInsights.push({
+              id: "health-revenue",
+              icon: "revenue_up",
+              headline: `Revenue is up ${pctChange.toFixed(0)}%`,
+              detail: `Your income grew from last month. Keep momentum going by following up on open quotes.`,
+              sentiment: "positive",
+              cta: { label: "View reports", href: "/reports" },
+            });
+          } else if (pctChange < -5) {
+            healthInsights.push({
+              id: "health-revenue",
+              icon: "revenue_down",
+              headline: `Revenue dropped ${Math.abs(pctChange).toFixed(0)}%`,
+              detail: `Income fell compared to last month. Check if quotes are being followed up and invoices collected on time.`,
+              sentiment: "negative",
+              cta: { label: "View reports", href: "/reports" },
+            });
+          } else {
+            healthInsights.push({
+              id: "health-revenue",
+              icon: "revenue_flat",
+              headline: "Revenue is holding steady",
+              detail: "Your income is consistent month-to-month. A good sign of business stability.",
+              sentiment: "neutral",
+            });
+          }
+        } else if (curr > 0) {
+          healthInsights.push({
+            id: "health-revenue",
+            icon: "revenue_up",
+            headline: "First revenue recorded!",
+            detail: "You've started earning. Keep sending quotes and completing jobs to build momentum.",
+            sentiment: "positive",
+          });
+        }
+      }
+
+      // 2. Quote conversion
+      if (quoteFunnel.sent > 0) {
+        const cr = conversionRate;
+        if (cr >= 50) {
+          healthInsights.push({
+            id: "health-quotes",
+            icon: "quotes_good",
+            headline: `Winning ${cr.toFixed(0)}% of quotes`,
+            detail: `You're converting more than half your quotes — that's strong. Consider raising your prices slightly.`,
+            sentiment: "positive",
+            cta: { label: "View quotes", href: "/quotes" },
+          });
+        } else if (cr >= 25) {
+          healthInsights.push({
+            id: "health-quotes",
+            icon: "quotes_good",
+            headline: `Quote win rate at ${cr.toFixed(0)}%`,
+            detail: `This is typical for trades. Following up within 48 hours can boost your conversion rate.`,
+            sentiment: "neutral",
+            cta: { label: "View quotes", href: "/quotes" },
+          });
+        } else {
+          healthInsights.push({
+            id: "health-quotes",
+            icon: "quotes_bad",
+            headline: `Only winning ${cr.toFixed(0)}% of quotes`,
+            detail: `Most of your quotes aren't converting. Review your pricing or try following up sooner after sending.`,
+            sentiment: "negative",
+            cta: { label: "Review quotes", href: "/quotes" },
+          });
+        }
+      }
+
+      // 3. Overdue invoice risk
+      const allOverdue = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 0);
+      const overdueTotal = allOverdue.reduce((s, i) => s + (Number(i.total) || 0), 0);
+      if (allOverdue.length > 0) {
+        healthInsights.push({
+          id: "health-overdue",
+          icon: "overdue",
+          headline: `${allOverdue.length} unpaid invoice${allOverdue.length > 1 ? "s" : ""} past due`,
+          detail: overdueTotal > 0
+            ? `You have money sitting uncollected. Send a friendly reminder — most clients just need a nudge.`
+            : `Some invoices have gone past their due date. Follow up to keep your cash flow healthy.`,
+          sentiment: "negative",
+          cta: { label: "Chase payments", href: "/invoices" },
+        });
+      } else if (outstandingInvoices.length === 0 && paidInvoices.length > 0) {
+        healthInsights.push({
+          id: "health-overdue",
+          icon: "quotes_good",
+          headline: "All invoices are paid up",
+          detail: "No overdue invoices — your cash flow is in great shape right now.",
+          sentiment: "positive",
+        });
+      }
+
+      // 4. Workload / scheduling
+      const thisWeekJobs = jobs.filter((j) => {
+        if (!j.scheduled_date) return false;
+        return j.scheduled_date >= format(now, "yyyy-MM-dd") && j.scheduled_date <= format(addDays(now, 7), "yyyy-MM-dd")
+          && ["pending", "scheduled", "in_progress"].includes(j.status);
+      });
+      if (nextWeekJobs.length === 0 && thisWeekJobs.length <= 1) {
+        healthInsights.push({
+          id: "health-workload",
+          icon: "workload_gap",
+          headline: "Your schedule is looking quiet",
+          detail: "You have few jobs lined up. Now's a good time to follow up on open quotes or reach out to past customers.",
+          sentiment: "negative",
+          cta: { label: "Schedule work", href: "/jobs" },
+        });
+      } else if (thisWeekJobs.length >= 5) {
+        healthInsights.push({
+          id: "health-workload",
+          icon: "jobs_busy",
+          headline: `${thisWeekJobs.length} jobs on the go this week`,
+          detail: "You've got a full schedule — make sure to send invoices promptly after each job to keep cash flowing.",
+          sentiment: "positive",
+          cta: { label: "View schedule", href: "/jobs" },
+        });
+      } else if (thisWeekJobs.length > 0) {
+        healthInsights.push({
+          id: "health-workload",
+          icon: "jobs_busy",
+          headline: `${thisWeekJobs.length} job${thisWeekJobs.length > 1 ? "s" : ""} scheduled this week`,
+          detail: "You've got work lined up. Stay on top of materials and customer communications.",
+          sentiment: "neutral",
+        });
+      }
+
+      // 5. Top customer highlight
+      if (topCustomers.length > 0 && topCustomers[0].revenue > 0) {
+        const top = topCustomers[0];
+        healthInsights.push({
+          id: "health-top-customer",
+          icon: "top_customer",
+          headline: `${top.name} is your biggest earner`,
+          detail: `They've brought in the most revenue with ${top.jobCount} job${top.jobCount !== 1 ? "s" : ""}. A thank-you or check-in call can go a long way.`,
+          sentiment: "positive",
+          cta: { label: "View customers", href: "/customers" },
         });
       }
 
@@ -349,6 +508,7 @@ export function useDashboardAnalytics() {
         agingInvoices,
         topCustomers,
         insights,
+        healthInsights,
         drillData: {
           activeJobs: activeJobsList,
           outstanding: outstandingList,

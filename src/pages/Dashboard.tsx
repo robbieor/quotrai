@@ -9,6 +9,7 @@ import { QuoteConversionFunnel } from "@/components/dashboard/QuoteConversionFun
 import { InvoiceAgingChart } from "@/components/dashboard/InvoiceAgingChart";
 import { TopCustomersChart } from "@/components/dashboard/TopCustomersChart";
 import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
+import { BusinessHealthPanel } from "@/components/dashboard/BusinessHealthPanel";
 import { JobsDueTable } from "@/components/dashboard/JobsDueTable";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { RecentActivityFeed } from "@/components/dashboard/RecentActivityFeed";
@@ -122,6 +123,9 @@ function DashboardContent() {
 
         {/* Filter Bar */}
         <DashboardFilterBar />
+
+        {/* Business Health Summary */}
+        <BusinessHealthPanel insights={data?.healthInsights} isLoading={isLoading} />
 
         {/* Proactive Insights */}
         <InsightAlerts insights={data?.insights} />
