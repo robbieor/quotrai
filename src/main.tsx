@@ -10,7 +10,7 @@ const shouldCleanSW =
   window.location.hostname.includes("lovableproject.com") ||
   window.location.hostname.includes("lovable.app");
 
-if (isPreviewEnvironment && "serviceWorker" in navigator) {
+if (shouldCleanSW && "serviceWorker" in navigator) {
   void navigator.serviceWorker
     .getRegistrations()
     .then((registrations) => {
