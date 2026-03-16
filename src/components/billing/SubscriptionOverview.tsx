@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { useState } from "react";
+import { useIsNative } from "@/hooks/useIsNative";
 
 const SEAT_PRICES: Record<SeatType, number> = {
   lite: PRICING.LITE_SEAT,
