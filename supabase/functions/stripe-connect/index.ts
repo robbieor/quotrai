@@ -117,7 +117,7 @@ serve(async (req) => {
         await supabaseClient
           .from("teams")
           .update({ stripe_connect_account_id: accountId })
-          .eq("id", profile.team_id);
+          .eq("id", teamId);
       }
 
       // Create onboarding link
