@@ -26,6 +26,7 @@ const SEAT_LABELS: Record<SeatType, string> = {
 export function SeatGuard({ requiredSeat, children }: SeatGuardProps) {
   const { user } = useAuth();
   const { canAccess, isLoading } = useSeatAccess();
+  const isNative = useIsNative();
 
   // Don't guard if not logged in or still loading
   if (!user || isLoading) return <>{children}</>;
