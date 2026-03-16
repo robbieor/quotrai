@@ -167,11 +167,14 @@ export function useStaffLocations() {
   return useQuery({
     queryKey: ["staff-locations"],
     queryFn: async () => {
-      // Get the latest location ping for each user
+      // Only fetch pings from the last 24 hours to avoid unbounded growth
+      const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: pings, error: pingsError } = await supabase
         .from("location_pings")
         .select("*")
-        .order("recorded_at", { ascending: false });
+        .gte("recorded_at", last24h)
+        .order("recorded_at", { ascending: false })
+        .limit(500);
 
       if (pingsError) throw pingsError;
 
