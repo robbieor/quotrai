@@ -3514,6 +3514,54 @@ export type Database = {
           },
         ]
       }
+      time_anomalies: {
+        Row: {
+          anomaly_type: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          reviewed: boolean | null
+          team_id: string
+          time_entry_id: string | null
+          user_id: string
+        }
+        Insert: {
+          anomaly_type: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          reviewed?: boolean | null
+          team_id: string
+          time_entry_id?: string | null
+          user_id: string
+        }
+        Update: {
+          anomaly_type?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          reviewed?: boolean | null
+          team_id?: string
+          time_entry_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_anomalies_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_anomalies_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "time_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       time_entries: {
         Row: {
           break_end_at: string | null
@@ -3522,11 +3570,13 @@ export type Database = {
           clock_in_at: string
           clock_in_latitude: number | null
           clock_in_longitude: number | null
+          clock_in_photo_url: string | null
           clock_in_verified: boolean | null
           clock_out_accuracy: number | null
           clock_out_at: string | null
           clock_out_latitude: number | null
           clock_out_longitude: number | null
+          clock_out_photo_url: string | null
           clock_out_verified: boolean | null
           created_at: string | null
           device_id: string | null
@@ -3551,11 +3601,13 @@ export type Database = {
           clock_in_at: string
           clock_in_latitude?: number | null
           clock_in_longitude?: number | null
+          clock_in_photo_url?: string | null
           clock_in_verified?: boolean | null
           clock_out_accuracy?: number | null
           clock_out_at?: string | null
           clock_out_latitude?: number | null
           clock_out_longitude?: number | null
+          clock_out_photo_url?: string | null
           clock_out_verified?: boolean | null
           created_at?: string | null
           device_id?: string | null
@@ -3580,11 +3632,13 @@ export type Database = {
           clock_in_at?: string
           clock_in_latitude?: number | null
           clock_in_longitude?: number | null
+          clock_in_photo_url?: string | null
           clock_in_verified?: boolean | null
           clock_out_accuracy?: number | null
           clock_out_at?: string | null
           clock_out_latitude?: number | null
           clock_out_longitude?: number | null
+          clock_out_photo_url?: string | null
           clock_out_verified?: boolean | null
           created_at?: string | null
           device_id?: string | null
@@ -3622,6 +3676,63 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_logs: {
+        Row: {
+          created_at: string | null
+          destination_address: string | null
+          distance_meters: number | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          origin_address: string | null
+          started_at: string
+          team_id: string
+          time_entry_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          destination_address?: string | null
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          origin_address?: string | null
+          started_at: string
+          team_id: string
+          time_entry_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          destination_address?: string | null
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          origin_address?: string | null
+          started_at?: string
+          team_id?: string
+          time_entry_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_logs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_logs_time_entry_id_fkey"
+            columns: ["time_entry_id"]
+            isOneToOne: false
+            referencedRelation: "time_entries"
             referencedColumns: ["id"]
           },
         ]
