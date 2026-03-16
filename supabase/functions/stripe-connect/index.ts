@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,32 +29,38 @@ serve(async (req) => {
 
     const userId = user.id;
 
+    // Get org membership (v2)
+    const { data: orgMember } = await supabaseClient
+      .from("org_members_v2")
+      .select("org_id, role, seat_type")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .single();
+
+    if (!orgMember?.org_id) throw new Error("User not in an organization");
+
+    // Check ownership — CEO role is the owner equivalent
+    if (orgMember.role !== "ceo" && orgMember.role !== "owner") {
+      throw new Error("Only team owners can set up payments");
+    }
+
+    // Also get profile for email/company info
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("team_id, email, company_name, country")
+      .select("email, company_name, country")
       .eq("id", userId)
       .single();
 
-    if (!profile?.team_id) throw new Error("User not in a team");
-
-    // Check ownership
-    const { data: membership } = await supabaseClient
-      .from("team_memberships")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("team_id", profile.team_id)
-      .single();
-
-    if (membership?.role !== "owner") throw new Error("Only team owners can set up payments");
+    const teamId = orgMember.org_id;
 
     const { action } = await req.json();
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Check existing Connect account
     const { data: team } = await supabaseClient
       .from("teams")
       .select("stripe_connect_account_id, stripe_connect_onboarding_complete")
-      .eq("id", profile.team_id)
+      .eq("id", teamId)
       .single();
 
     if (action === "status") {
@@ -74,7 +80,7 @@ serve(async (req) => {
         await supabaseClient
           .from("teams")
           .update({ stripe_connect_onboarding_complete: isComplete })
-          .eq("id", profile.team_id);
+          .eq("id", teamId);
       }
 
       return new Response(
@@ -96,12 +102,12 @@ serve(async (req) => {
         // Create a new Connect Express account
         const account = await stripe.accounts.create({
           type: "express",
-          email: profile.email || undefined,
+          email: profile?.email || undefined,
           business_profile: {
-            name: profile.company_name || undefined,
+            name: profile?.company_name || undefined,
           },
           metadata: {
-            team_id: profile.team_id,
+            team_id: teamId,
             user_id: userId,
           },
         });
@@ -111,7 +117,7 @@ serve(async (req) => {
         await supabaseClient
           .from("teams")
           .update({ stripe_connect_account_id: accountId })
-          .eq("id", profile.team_id);
+          .eq("id", teamId);
       }
 
       // Create onboarding link
