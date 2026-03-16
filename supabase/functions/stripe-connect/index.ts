@@ -54,7 +54,7 @@ serve(async (req) => {
     const teamId = orgMember.org_id;
 
     const { action } = await req.json();
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Check existing Connect account
     const { data: team } = await supabaseClient
