@@ -24,8 +24,19 @@ Deno.serve(async (req) => {
     if (!profiles || profiles.length === 0) return new Response(JSON.stringify({ processed: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     let sentCount = 0;
+    let skippedSuppressed = 0;
+
     for (const profile of profiles) {
       if (!profile.email || !profile.team_id) continue;
+
+      // SAFETY: Check suppression list before sending
+      const { data: suppressed } = await supabase.from("suppressed_emails").select("id").eq("email", profile.email).limit(1);
+      if (suppressed && suppressed.length > 0) {
+        console.log(`[SAFETY] Skipping churn email for ${profile.email}: address is suppressed`);
+        skippedSuppressed++;
+        continue;
+      }
+
       const { data: recentChurn } = await supabase.from("churn_events").select("id").eq("user_id", profile.id).gte("created_at", fourteenDaysAgo).limit(1);
       if (recentChurn && recentChurn.length > 0) continue;
 
@@ -46,11 +57,20 @@ Deno.serve(async (req) => {
         if (enqueueError) throw enqueueError;
 
         await supabase.from("churn_events").insert({ team_id: profile.team_id, user_id: profile.id, event_type: "reengagement_email", email_sent: true, sent_at: new Date().toISOString() });
+
+        // Audit log entry
+        await supabase.from("comms_audit_log").insert({
+          channel: "email", record_type: "churn_reengagement", record_id: profile.id,
+          recipient: profile.email, template: "churn-reengagement",
+          manual_send: false, confirmed_by_user: false,
+          allowed: true, source_screen: "cron",
+        });
+
         sentCount++;
       } catch (e) { console.error("Failed to send churn email:", e); }
     }
 
-    return new Response(JSON.stringify({ sent: sentCount }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ sent: sentCount, skipped_suppressed: skippedSuppressed }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("Error:", error);
     return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

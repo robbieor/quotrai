@@ -97,6 +97,14 @@ Deno.serve(async (req) => {
           queue_name: "transactional_emails",
           payload: { message_id: messageId, to: senderAddr, from: `Quotr Expenses <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `✅ Expense logged: ${description}`, html: confirmHtml, text: `Expense logged: ${description} - ${amount.toFixed(2)}`, purpose: "transactional", label: "expense-confirmation", queued_at: new Date().toISOString() },
         });
+
+        // Audit log entry
+        await adminSupabase.from("comms_audit_log").insert({
+          channel: "email", record_type: "expense_confirmation", record_id: expense.id,
+          recipient: senderAddr, template: "expense-confirmation",
+          manual_send: false, confirmed_by_user: false,
+          allowed: true, source_screen: "system",
+        });
       } catch (emailErr) { console.error("Failed to send confirmation email:", emailErr); }
     } else {
       console.log("[SAFETY] Expense confirmation email suppressed: kill switch is off");

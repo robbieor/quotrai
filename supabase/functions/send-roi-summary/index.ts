@@ -41,6 +41,14 @@ const handler = async (req: Request): Promise<Response> => {
     });
     if (enqueueError) throw enqueueError;
 
+    // Audit log entry
+    await supabase.from("comms_audit_log").insert({
+      channel: "email", record_type: "roi_summary", record_id: null,
+      recipient: data.email, template: "roi-summary",
+      manual_send: false, confirmed_by_user: false,
+      allowed: true, source_screen: "system",
+    });
+
     return new Response(JSON.stringify({ success: true, queued: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error: unknown) {
     console.error("Error:", error);

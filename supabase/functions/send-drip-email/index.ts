@@ -43,7 +43,17 @@ Deno.serve(async (req) => {
       });
 
       if (enqueueError) { console.error(`Failed drip ${row.drip_step} to ${row.email}:`, enqueueError); continue; }
+
       await supabase.from("drip_queue").update({ sent: true, sent_at: new Date().toISOString() }).eq("id", row.id);
+
+      // Audit log entry
+      await supabase.from("comms_audit_log").insert({
+        channel: "email", record_type: "drip_onboarding", record_id: row.id,
+        recipient: row.email, template: `drip:${row.drip_step}`,
+        manual_send: false, confirmed_by_user: false,
+        allowed: true, source_screen: "cron",
+      });
+
       sentCount++;
     }
 
