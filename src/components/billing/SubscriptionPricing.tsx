@@ -1,12 +1,37 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2, Star } from "lucide-react";
+import { Check, X, Loader2, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ALL_PLANS, PRICING, STRIPE_PRICES, type PlanDetails, type SeatType } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
+
+interface FeatureRow {
+  label: string;
+  lite: boolean;
+  connect: boolean;
+  grow: boolean;
+}
+
+const FEATURE_MATRIX: FeatureRow[] = [
+  { label: "Jobs / Calendar",        lite: true,  connect: true,  grow: true },
+  { label: "Time Tracking",          lite: true,  connect: true,  grow: true },
+  { label: "Customer Management",    lite: true,  connect: true,  grow: true },
+  { label: "Quotes & Invoices",      lite: true,  connect: true,  grow: true },
+  { label: "PDF & Email",            lite: true,  connect: true,  grow: true },
+  { label: "Team Collaboration",     lite: true,  connect: true,  grow: true },
+  { label: "George AI (text+voice)", lite: false, connect: true,  grow: true },
+  { label: "Expense Tracking",       lite: false, connect: true,  grow: true },
+  { label: "Documents",              lite: false, connect: true,  grow: true },
+  { label: "Reports / Dashboards",   lite: false, connect: true,  grow: true },
+  { label: "Recurring Invoices",     lite: false, connect: true,  grow: true },
+  { label: "Xero / QuickBooks",      lite: false, connect: false, grow: true },
+  { label: "Lead Management",        lite: false, connect: false, grow: true },
+  { label: "Advanced Reporting",     lite: false, connect: false, grow: true },
+  { label: "API Access",             lite: false, connect: false, grow: true },
+];
 
 export function SubscriptionPricing() {
   const { formatCurrency } = useCurrency();
@@ -70,6 +95,7 @@ export function SubscriptionPricing() {
             ? plan.price
             : Math.round(plan.annualPrice / 12);
           const isHighlighted = plan.highlighted;
+          const seatKey = plan.code as SeatType;
 
           return (
             <Card
@@ -111,13 +137,26 @@ export function SubscriptionPricing() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ul className="space-y-2">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
+                {/* Feature matrix */}
+                <ul className="space-y-1.5">
+                  {FEATURE_MATRIX.map((feature, idx) => {
+                    const included = feature[seatKey];
+                    return (
+                      <li
+                        key={idx}
+                        className={`flex items-center gap-2 text-sm ${
+                          included ? "" : "text-muted-foreground/50"
+                        }`}
+                      >
+                        {included ? (
+                          <Check className="h-4 w-4 text-primary shrink-0" />
+                        ) : (
+                          <X className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                        )}
+                        <span>{feature.label}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
                 <Button
                   className="w-full"
