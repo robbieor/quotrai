@@ -83,6 +83,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <OfflineSyncInit />
       <TooltipProvider>
         <Toaster />
         <Sonner />
