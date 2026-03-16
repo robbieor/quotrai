@@ -115,13 +115,31 @@ export function ClockInOutCard() {
   const handleClockIn = async () => {
     if (!selectedJobId) return;
 
-    await fetchLocation();
+    // Await fresh GPS position directly instead of reading stale state
+    setIsGettingLocation(true);
+    setLocationError(null);
+    let freshLocation: { lat: number; lng: number; accuracy: number } | null = null;
+    try {
+      const position = await getCurrentPosition();
+      freshLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      };
+      setCurrentLocation(freshLocation);
+    } catch (error) {
+      setLocationError(
+        error instanceof Error ? error.message : "Could not get location"
+      );
+    } finally {
+      setIsGettingLocation(false);
+    }
 
     clockIn.mutate({
       job_id: selectedJobId,
-      latitude: currentLocation?.lat,
-      longitude: currentLocation?.lng,
-      accuracy: currentLocation?.accuracy,
+      latitude: freshLocation?.lat,
+      longitude: freshLocation?.lng,
+      accuracy: freshLocation?.accuracy,
     });
   };
 
