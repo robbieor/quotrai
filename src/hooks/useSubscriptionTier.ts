@@ -39,9 +39,9 @@ export const PRICING = {
   CONNECT_SEAT: 29,
   GROW_SEAT: 49,
   ANNUAL_DISCOUNT: 0.15,
-  ANNUAL_LITE_SEAT: Math.round(15 * 12 * (1 - 0.15)),       // €153/year
-  ANNUAL_CONNECT_SEAT: Math.round(29 * 12 * (1 - 0.15)),    // €296/year
-  ANNUAL_GROW_SEAT: Math.round(49 * 12 * (1 - 0.15)),       // €500/year
+  ANNUAL_LITE_SEAT: 153,        // €153.00/year (matches Stripe)
+  ANNUAL_CONNECT_SEAT: 295.80,  // €295.80/year (matches Stripe)
+  ANNUAL_GROW_SEAT: 499.80,     // €499.80/year (matches Stripe)
   VOICE_MINUTES_PER_SEAT: 60,
   GROW_VOICE_MINUTES: -1, // unlimited
   PLATFORM_FEE: 2.5,
