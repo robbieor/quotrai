@@ -39,21 +39,38 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ sent: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Pre-fetch all team comms_settings to check per-team opt-in
+    // Pre-fetch all team comms_settings to check per-team opt-in AND confirmation gate
     const teamIds = [...new Set(reminders.map((r: any) => r.team_id))];
     const { data: allCommsSettings } = await supabase
       .from("comms_settings")
-      .select("team_id, visit_reminder_enabled")
+      .select("team_id, visit_reminder_enabled, require_confirmation_all_comms")
       .in("team_id", teamIds);
     const commsMap = new Map((allCommsSettings || []).map((s: any) => [s.team_id, s]));
 
     let sentCount = 0;
+    let skippedConfirmation = 0;
 
     for (const reminder of reminders) {
-      // SAFETY: Check team-level opt-in for visit reminders
       const teamComms = commsMap.get(reminder.team_id);
+
+      // SAFETY: Check team-level opt-in for visit reminders
       if (!teamComms || !teamComms.visit_reminder_enabled) {
         console.log(`[SAFETY] Skipping job reminder ${reminder.id}: team visit_reminder_enabled is false or missing`);
+        continue;
+      }
+
+      // SAFETY: Check require_confirmation_all_comms gate
+      if (teamComms.require_confirmation_all_comms) {
+        console.log(`[SAFETY] Skipping job reminder ${reminder.id}: require_confirmation_all_comms is ON`);
+        await supabase.from("comms_audit_log").insert({
+          channel: "email", record_type: "job_reminder", record_id: reminder.id,
+          recipient: reminder.customer?.email || null,
+          template: "send-job-reminders",
+          manual_send: false, confirmed_by_user: false,
+          allowed: false, blocked_reason: "requires_ui_confirmation",
+          source_screen: "cron",
+        });
+        skippedConfirmation++;
         continue;
       }
 
@@ -125,7 +142,7 @@ Deno.serve(async (req) => {
         .eq("id", reminder.id);
     }
 
-    return new Response(JSON.stringify({ sent: sentCount }), {
+    return new Response(JSON.stringify({ sent: sentCount, skipped_confirmation_required: skippedConfirmation }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
