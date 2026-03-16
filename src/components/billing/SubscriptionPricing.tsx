@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ALL_PLANS, PRICING, STRIPE_PRICES, type PlanDetails, type SeatType } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useIsNative } from "@/hooks/useIsNative";
 
 interface FeatureRow {
   label: string;
