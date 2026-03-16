@@ -124,15 +124,24 @@ export function useUpdateSeatType() {
       if (syncError) throw syncError;
       if (data?.error) throw new Error(data.error);
 
-      return data;
+      return { ...data, seatType };
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["org-members-v2"] });
       queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
-      toast.success("Seat type updated");
+      queryClient.invalidateQueries({ queryKey: ["user-seat-type"] });
+      queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
+      const label = variables.seatType.charAt(0).toUpperCase() + variables.seatType.slice(1);
+      toast.success(`Seat updated to ${label}`, {
+        description: "The change has been synced to your billing. It will take effect immediately.",
+        duration: 5000,
+      });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update seat type");
+      toast.error("Failed to update seat type", {
+        description: error.message || "Please try again or contact support.",
+        duration: 5000,
+      });
     },
   });
 }
