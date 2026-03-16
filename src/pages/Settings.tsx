@@ -188,14 +188,10 @@ export default function Settings() {
                   <FileSpreadsheet className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span>Import</span>
                 </TabsTrigger>
-                <TabsTrigger value="team" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <TabsTrigger value="team-billing" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                  <span>Team</span>
-                </TabsTrigger>
-                <TabsTrigger value="billing" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
-                  <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                  <span className="hidden sm:inline">Billing</span>
-                  <span className="sm:hidden">Bill</span>
+                  <span className="hidden sm:inline">Team & Billing</span>
+                  <span className="sm:hidden">Team</span>
                 </TabsTrigger>
                 <TabsTrigger value="integrations" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                   <Plug className="h-3.5 w-3.5 md:h-4 md:w-4" />
@@ -340,12 +336,9 @@ export default function Settings() {
             <DataImportSection />
           </TabsContent>
 
-          <TabsContent value="team" className="max-w-2xl">
-            <TeamManagement />
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6 max-w-4xl">
+          <TabsContent value="team-billing" className="space-y-6 max-w-4xl">
             <SubscriptionOverview />
+            <TeamManagement />
             <SeatManagementTable />
             <SubscriptionPricing />
             <StripeConnectSetup />
