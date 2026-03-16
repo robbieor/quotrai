@@ -124,6 +124,9 @@ function DashboardContent() {
         {/* Filter Bar */}
         <DashboardFilterBar />
 
+        {/* Business Health Summary */}
+        <BusinessHealthPanel insights={data?.healthInsights} isLoading={isLoading} />
+
         {/* Proactive Insights */}
         <InsightAlerts insights={data?.insights} />
 
