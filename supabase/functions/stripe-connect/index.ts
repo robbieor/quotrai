@@ -102,7 +102,7 @@ serve(async (req) => {
         // Create a new Connect Express account
         const account = await stripe.accounts.create({
           type: "express",
-          email: profile.email || undefined,
+          email: profile?.email || undefined,
           business_profile: {
             name: profile.company_name || undefined,
           },
