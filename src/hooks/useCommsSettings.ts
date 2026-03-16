@@ -18,6 +18,7 @@ export interface CommsSettings {
   invoice_reminder_enabled: boolean;
   invoice_reminder_days: number;
   payment_receipt_enabled: boolean;
+  require_confirmation_all_comms: boolean;
 }
 
 export function useCommsSettings() {
