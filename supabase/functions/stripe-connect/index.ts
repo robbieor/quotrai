@@ -24,10 +24,10 @@ serve(async (req) => {
     if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) throw new Error("Unauthorized");
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError || !user) throw new Error("Unauthorized");
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     const { data: profile } = await supabaseClient
       .from("profiles")
