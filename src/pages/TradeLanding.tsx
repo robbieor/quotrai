@@ -187,7 +187,7 @@ export default function TradeLanding() {
             Ready to run your {config.name.toLowerCase()} business smarter?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join hundreds of {config.plural.toLowerCase()} already using Quotr. 30-day free trial, no credit card.
+            30-day free trial, no credit card required. Cancel anytime.
           </p>
           <Link to="/signup">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">
