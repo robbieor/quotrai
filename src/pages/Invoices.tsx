@@ -31,12 +31,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
   pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800" },
   paid: { label: "Paid", className: "bg-green-100 text-green-800" },
   overdue: { label: "Overdue", className: "bg-red-100 text-red-800" },
 };
+
+const fallbackStatus = { label: "Unknown", className: "bg-muted text-muted-foreground" };
 
 const getDisplayStatus = (invoice: Invoice) => {
   if (invoice.status === "pending") {
@@ -229,8 +231,8 @@ export default function Invoices() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between">
-                    <Badge className={cn("text-xs", statusConfig[displayStatus].className)}>
-                      {statusConfig[displayStatus].label}
+                    <Badge className={cn("text-xs", (statusConfig[displayStatus] || fallbackStatus).className)}>
+                      {(statusConfig[displayStatus] || fallbackStatus).label}
                     </Badge>
                     <span className={cn(
                       "text-xs",
