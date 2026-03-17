@@ -5,28 +5,31 @@ import "./index.css";
 
 console.log("[Quotr] Starting app...");
 
-const shouldCleanSW =
-  window.location.hostname.includes("id-preview--") ||
-  window.location.hostname.includes("lovableproject.com") ||
-  window.location.hostname.includes("lovable.app");
-
-if (shouldCleanSW && "serviceWorker" in navigator) {
-  void navigator.serviceWorker
-    .getRegistrations()
-    .then((registrations) => {
-      registrations.forEach((registration) => {
-        void registration.unregister();
-      });
-    })
-    .catch(() => undefined);
-
-  if ("caches" in window) {
-    void caches
-      .keys()
-      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-      .catch(() => undefined);
+// Purge any legacy service workers and caches unconditionally.
+// If stale SW assets are found, reload once so the user never sees an old UI.
+(async () => {
+  let hadSW = false;
+  if ("serviceWorker" in navigator) {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) {
+        await r.unregister();
+        hadSW = true;
+      }
+    } catch { /* ignore */ }
   }
-}
+  if ("caches" in window) {
+    try {
+      const keys = await caches.keys();
+      if (keys.length > 0) hadSW = true;
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    } catch { /* ignore */ }
+  }
+  if (hadSW && !sessionStorage.getItem("__quotr_sw_purged__")) {
+    sessionStorage.setItem("__quotr_sw_purged__", "1");
+    window.location.reload();
+  }
+})();
 
 const rootEl = document.getElementById("root");
 if (rootEl) {
