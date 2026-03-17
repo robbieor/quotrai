@@ -77,7 +77,7 @@ export default function Signup() {
             <div>
               <h2 className="text-xl font-semibold text-foreground mb-1">Start your free trial</h2>
               <p className="text-sm text-muted-foreground">
-                Join hundreds of tradespeople running their business with Quotr.
+                Start running your business with Quotr.
               </p>
             </div>
             <ul className="space-y-3">
@@ -88,12 +88,6 @@ export default function Signup() {
                 </li>
               ))}
             </ul>
-            <blockquote className="border-l-2 border-primary/30 pl-3 text-sm text-muted-foreground italic">
-              "Quotr paid for itself in the first week. I sent 3 quotes before lunch on day one."
-              <span className="block mt-1 not-italic font-medium text-foreground text-xs">
-                — Electrician, Manchester
-              </span>
-            </blockquote>
           </div>
         )}
 
