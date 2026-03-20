@@ -210,7 +210,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
-        title="Quotr — AI-Powered Job Management for Trade Businesses"
+        title="Quotr — AI-Powered Job Management for Field Service Businesses"
         description="Talk to your business. It talks back. Quotes, invoices, expenses, scheduling — all voice-powered, all in one app. Built for field service pros."
         path="/"
       />

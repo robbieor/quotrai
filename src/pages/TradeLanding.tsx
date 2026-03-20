@@ -25,8 +25,8 @@ import { TradeSegments } from "@/components/landing/trade/TradeSegments";
 import { TradeValueProps } from "@/components/landing/trade/TradeValueProps";
 
 export default function TradeLanding() {
-  const { trade } = useParams<{ trade: string }>();
-  const config = trade ? TRADES[trade] : undefined;
+  const { tradeSlug } = useParams<{ tradeSlug: string }>();
+  const config = tradeSlug ? TRADES[tradeSlug] : undefined;
 
   useEffect(() => {
     if (config) {
