@@ -345,19 +345,6 @@ export default function Settings() {
             <StripeConnectSetup />
             <GeorgeVoiceOverview />
             <GeorgeBillingReports />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>App Store Assets</CardTitle>
-                <CardDescription>Icons, screenshots, and submission checklists for iOS & Android</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="outline" onClick={() => window.open("/app-store-assets", "_blank")} className="gap-2">
-                  <Palette className="h-4 w-4" />
-                  Open Marketing Assets
-                </Button>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {canAccessIntegrations && (
