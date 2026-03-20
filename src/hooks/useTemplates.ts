@@ -91,6 +91,21 @@ const EXTENDED_CATEGORY_LABELS: Record<string, string> = {
   property_maintenance: "Property Maintenance",
 };
 
+export const getTradeCategoryLabel = (category: string) => 
+  EXTENDED_CATEGORY_LABELS[category] || category;
+
+export const UNIT_LABELS: Record<TemplateUnit, string> = {
+  each: "Each",
+  hour: "Hour",
+  sqm: "Sq. Metre",
+  metre: "Metre",
+  job: "Job",
+  roll: "Roll",
+  per_visit: "Per Visit",
+};
+
+export const TEMPLATE_UNITS: TemplateUnit[] = ["each", "hour", "sqm", "metre", "job", "roll", "per_visit"];
+
 export const TRADE_CATEGORIES: TradeCategory[] = [
   "electrician",
   "plumber",
@@ -120,11 +135,7 @@ export const TRADE_CATEGORIES: TradeCategory[] = [
   "septic_well",
   "cabinet_countertop",
   "smart_home",
-  "cleaning",
-  "junk_removal",
-  "property_maintenance",
 ];
-
 async function getTeamId() {
   const { data } = await supabase.rpc("get_user_team_id");
   return data;
