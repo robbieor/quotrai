@@ -11,9 +11,11 @@ import {
   Mic,
   Building2,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { cn } from "@/lib/utils";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 const faqs = [
   {
@@ -43,7 +45,33 @@ const faqs = [
 ];
 
 export default function Pricing() {
+  const isNative = useIsNative();
   const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
+
+  if (isNative) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-sm w-full text-center space-y-6">
+          <img src={quotrLogo} alt="Quotr" className="h-16 w-16 rounded-2xl mx-auto" />
+          <h1 className="text-2xl font-bold">Manage Your Subscription</h1>
+          <p className="text-muted-foreground">
+            Subscriptions are managed through the Quotr website. Tap below to view plans and billing.
+          </p>
+          <Button
+            size="lg"
+            className="w-full gap-2"
+            onClick={() => openExternalUrl("https://quotr.work/settings")}
+          >
+            Open quotr.work
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+          <Link to="/dashboard">
+            <Button variant="ghost" size="sm" className="mt-2">Back to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const price = (monthly: number, annual: number) =>
     interval === "monthly" ? monthly : Math.round(annual / 12);
