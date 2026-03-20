@@ -35,6 +35,7 @@ const Certificates = lazy(() => import("./pages/Certificates"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const TimeTracking = lazy(() => import("./pages/TimeTracking"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const AppStoreAssets = lazy(() => import("./pages/AppStoreAssets"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const RequestAccess = lazy(() => import("./pages/RequestAccess"));
