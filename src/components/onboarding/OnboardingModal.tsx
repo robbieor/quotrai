@@ -33,7 +33,24 @@ const tradeTypes = [
   "Builder / General Contractor",
   "Landscaper",
   "Locksmith",
-  "Other"
+  "Handyman",
+  "Cleaning Services",
+  "Pest Control",
+  "Pool & Spa",
+  "Pressure Washing",
+  "Fencing",
+  "Appliance Repair",
+  "Auto Detailing",
+  "Garage Door Services",
+  "Tree Services",
+  "Restoration",
+  "Solar",
+  "Flooring",
+  "Tiler",
+  "Property Maintenance",
+  "Concrete & Masonry",
+  "Window & Door Installation",
+  "Other",
 ];
 
 const businessSizes = [
