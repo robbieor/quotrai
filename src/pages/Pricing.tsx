@@ -11,9 +11,11 @@ import {
   Mic,
   Building2,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { cn } from "@/lib/utils";
+import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 const faqs = [
   {
