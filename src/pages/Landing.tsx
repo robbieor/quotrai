@@ -72,17 +72,27 @@ const platformCapabilities = [
   },
 ];
 
-const trades = [
-  { icon: Plug, name: "Electricians" },
-  { icon: Droplets, name: "Plumbers" },
-  { icon: Wind, name: "HVAC Technicians" },
-  { icon: Hammer, name: "Carpenters" },
-  { icon: Paintbrush, name: "Painters & Decorators" },
-  { icon: Wrench, name: "Gas Engineers" },
-  { icon: Home, name: "Roofers" },
-  { icon: Building2, name: "General Contractors" },
-  { icon: Leaf, name: "Landscapers" },
-  { icon: Timer, name: "Fitters & Installers" },
+const industries = [
+  { icon: Plug, name: "Electricians", slug: "electricians" },
+  { icon: Droplets, name: "Plumbers", slug: "plumbers" },
+  { icon: Wind, name: "HVAC", slug: "hvac" },
+  { icon: Hammer, name: "Builders", slug: "builders" },
+  { icon: Paintbrush, name: "Painters", slug: "painting" },
+  { icon: Home, name: "Roofers", slug: "roofing" },
+  { icon: Leaf, name: "Landscapers", slug: "landscaping" },
+  { icon: Wrench, name: "Appliance Repair", slug: "appliance-repair" },
+  { icon: Globe, name: "Cleaning", slug: "cleaning" },
+  { icon: Briefcase, name: "Pest Control", slug: "pest-control" },
+  { icon: Droplets, name: "Pool & Spa", slug: "pool-spa" },
+  { icon: Zap, name: "Pressure Washing", slug: "pressure-washing" },
+  { icon: Building2, name: "Fencing", slug: "fencing" },
+  { icon: Wrench, name: "Locksmith", slug: "locksmith" },
+  { icon: Hammer, name: "Handyman", slug: "handyman" },
+  { icon: Home, name: "Restoration", slug: "restoration" },
+  { icon: Star, name: "Solar", slug: "solar" },
+  { icon: Briefcase, name: "Auto Detailing", slug: "auto-detailing" },
+  { icon: Building2, name: "Garage Doors", slug: "garage-doors" },
+  { icon: Timer, name: "Property Maintenance", slug: "handyman" },
 ];
 
 const exampleCommands = [
