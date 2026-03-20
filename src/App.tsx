@@ -111,6 +111,7 @@ const App = () => {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/request-access" element={<RequestAccess />} />
                 <Route path="/app-store-assets" element={<AppStoreAssets />} />
+                <Route path="/industries" element={<Industries />} />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
 
                 {/* Portal pages */}
