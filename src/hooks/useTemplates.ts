@@ -51,27 +51,48 @@ export interface UpdateTemplateInput extends Partial<CreateTemplateInput> {
   id: string;
 }
 
-const TRADE_CATEGORY_LABELS: Record<string, string> = {
+const EXTENDED_CATEGORY_LABELS: Record<string, string> = {
   electrician: "Electrician",
+  electrical: "Electrician",
   plumber: "Plumber",
+  plumbing: "Plumber",
   hvac: "HVAC",
   carpenter: "Carpenter",
+  carpentry: "Carpenter",
   painter: "Painter",
+  painting: "Painter",
   roofer: "Roofer",
+  roofing: "Roofer",
   landscaper: "Landscaper",
+  landscaping: "Landscaper",
   general: "General",
+  handyman: "Handyman",
+  locksmith: "Locksmith",
+  pest_control: "Pest Control",
+  pool_spa: "Pool & Spa",
+  pressure_washing: "Pressure Washing",
+  fencing: "Fencing",
+  appliance_repair: "Appliance Repair",
+  auto_detailing: "Auto Detailing",
+  garage_door: "Garage Door Services",
+  tree_service: "Tree Services",
+  restoration: "Restoration",
+  solar: "Solar",
+  flooring: "Flooring",
+  tiler: "Tiler",
+  concrete_masonry: "Concrete & Masonry",
+  window_door: "Window & Door",
+  chimney: "Chimney",
+  septic_well: "Septic & Well",
+  cabinet_countertop: "Cabinet & Countertop",
+  smart_home: "Smart Home",
+  cleaning: "Cleaning Services",
+  junk_removal: "Junk Removal",
+  property_maintenance: "Property Maintenance",
 };
 
-// Also add labels for the new categories we added via migration
-const EXTENDED_CATEGORY_LABELS: Record<string, string> = {
-  ...TRADE_CATEGORY_LABELS,
-  electrical: "Electrician",
-  plumbing: "Plumber",
-  carpentry: "Carpenter",
-  painting: "Painter",
-  roofing: "Roofer",
-  landscaping: "Landscaper",
-};
+export const getTradeCategoryLabel = (category: string) => 
+  EXTENDED_CATEGORY_LABELS[category] || category;
 
 export const UNIT_LABELS: Record<TemplateUnit, string> = {
   each: "Each",
@@ -85,9 +106,6 @@ export const UNIT_LABELS: Record<TemplateUnit, string> = {
 
 export const TEMPLATE_UNITS: TemplateUnit[] = ["each", "hour", "sqm", "metre", "job", "roll", "per_visit"];
 
-export const getTradeCategoryLabel = (category: string) => 
-  EXTENDED_CATEGORY_LABELS[category] || category;
-
 export const TRADE_CATEGORIES: TradeCategory[] = [
   "electrician",
   "plumber",
@@ -97,8 +115,27 @@ export const TRADE_CATEGORIES: TradeCategory[] = [
   "roofer",
   "landscaper",
   "general",
+  "handyman",
+  "locksmith",
+  "pest_control",
+  "pool_spa",
+  "pressure_washing",
+  "fencing",
+  "appliance_repair",
+  "auto_detailing",
+  "garage_door",
+  "tree_service",
+  "restoration",
+  "solar",
+  "flooring",
+  "tiler",
+  "concrete_masonry",
+  "window_door",
+  "chimney",
+  "septic_well",
+  "cabinet_countertop",
+  "smart_home",
 ];
-
 async function getTeamId() {
   const { data } = await supabase.rpc("get_user_team_id");
   return data;
