@@ -72,17 +72,27 @@ const platformCapabilities = [
   },
 ];
 
-const trades = [
-  { icon: Plug, name: "Electricians" },
-  { icon: Droplets, name: "Plumbers" },
-  { icon: Wind, name: "HVAC Technicians" },
-  { icon: Hammer, name: "Carpenters" },
-  { icon: Paintbrush, name: "Painters & Decorators" },
-  { icon: Wrench, name: "Gas Engineers" },
-  { icon: Home, name: "Roofers" },
-  { icon: Building2, name: "General Contractors" },
-  { icon: Leaf, name: "Landscapers" },
-  { icon: Timer, name: "Fitters & Installers" },
+const industries = [
+  { icon: Plug, name: "Electricians", slug: "electricians" },
+  { icon: Droplets, name: "Plumbers", slug: "plumbers" },
+  { icon: Wind, name: "HVAC", slug: "hvac" },
+  { icon: Hammer, name: "Builders", slug: "builders" },
+  { icon: Paintbrush, name: "Painters", slug: "painting" },
+  { icon: Home, name: "Roofers", slug: "roofing" },
+  { icon: Leaf, name: "Landscapers", slug: "landscaping" },
+  { icon: Wrench, name: "Appliance Repair", slug: "appliance-repair" },
+  { icon: Globe, name: "Cleaning", slug: "cleaning" },
+  { icon: Briefcase, name: "Pest Control", slug: "pest-control" },
+  { icon: Droplets, name: "Pool & Spa", slug: "pool-spa" },
+  { icon: Zap, name: "Pressure Washing", slug: "pressure-washing" },
+  { icon: Building2, name: "Fencing", slug: "fencing" },
+  { icon: Wrench, name: "Locksmith", slug: "locksmith" },
+  { icon: Hammer, name: "Handyman", slug: "handyman" },
+  { icon: Home, name: "Restoration", slug: "restoration" },
+  { icon: Star, name: "Solar", slug: "solar" },
+  { icon: Briefcase, name: "Auto Detailing", slug: "auto-detailing" },
+  { icon: Building2, name: "Garage Doors", slug: "garage-doors" },
+  { icon: Timer, name: "Property Maintenance", slug: "handyman" },
 ];
 
 const exampleCommands = [
@@ -417,23 +427,29 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Trades We Serve */}
+      {/* Industries We Serve */}
       <section className="py-12 sm:py-16 px-4 sm:px-6">
         <div className="container mx-auto">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Built for Every Trade</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Built for Every Field Service Business</h2>
             <p className="text-sm sm:text-base text-muted-foreground">If you quote it, invoice it, or schedule it — Quotr manages it</p>
           </div>
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            {trades.map((trade) => (
-              <div 
-                key={trade.name}
-                className="group flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border hover:border-primary/50 hover:scale-105 hover:-translate-y-0.5 transition-all duration-200 cursor-default"
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 max-w-5xl mx-auto">
+            {industries.map((industry) => (
+              <Link
+                key={industry.name}
+                to={`/trade/${industry.slug}`}
+                className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-medium hover:-translate-y-1 transition-all duration-200"
               >
-                <trade.icon className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium text-foreground">{trade.name}</span>
-              </div>
+                <industry.icon className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-foreground text-center">{industry.name}</span>
+              </Link>
             ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link to="/industries" className="text-sm text-primary hover:underline font-medium">
+              View all industries we serve →
+            </Link>
           </div>
         </div>
       </section>

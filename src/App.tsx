@@ -45,6 +45,7 @@ const InvoicePortal = lazy(() => import("./pages/InvoicePortal"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const AIAuditHistory = lazy(() => import("./pages/AIAuditHistory"));
+const Industries = lazy(() => import("./pages/Industries"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -110,6 +111,7 @@ const App = () => {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/request-access" element={<RequestAccess />} />
                 <Route path="/app-store-assets" element={<AppStoreAssets />} />
+                <Route path="/industries" element={<Industries />} />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
 
                 {/* Portal pages */}
