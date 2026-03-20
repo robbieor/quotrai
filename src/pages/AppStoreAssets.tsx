@@ -109,7 +109,7 @@ export default function AppStoreAssets() {
             {[128, 96, 64, 48, 32].map((size) => (
               <div key={size} className="text-center">
                 <img
-                  src="/icon-1024.png"
+                  src={quotrLogo}
                   alt={`Quotr icon ${size}px`}
                   className="rounded-2xl shadow-md"
                   style={{ width: size, height: size }}
