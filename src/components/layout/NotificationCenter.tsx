@@ -74,7 +74,7 @@ export function NotificationCenter() {
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notifications</span>
-          {unreadCount && unreadCount > 0 && (
+          {(unreadCount ?? 0) > 0 && (
             <Button
               variant="ghost"
               size="sm"

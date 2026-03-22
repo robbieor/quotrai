@@ -93,7 +93,7 @@ export default function Notifications() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Notifications</h1>
-            {unreadCount && unreadCount > 0 ? (
+            {(unreadCount ?? 0) > 0 ? (
               <Badge variant="destructive" className="text-sm">
                 {unreadCount} unread
               </Badge>
