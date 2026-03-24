@@ -205,6 +205,16 @@ export function DashboardFilterBar() {
           </SheetHeader>
           <div className="flex flex-col gap-4 mt-4">
             <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Staff</label>
+              <Select value={staffId} onValueChange={(v) => setStaffId(v)}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Staff" /></SelectTrigger>
+                <SelectContent>
+                  {STAFF_PRESETS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                  {staff?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Customer</label>
               <Select value={customerId || "__all__"} onValueChange={(v) => setCustomerId(v === "__all__" ? null : v)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Customers" /></SelectTrigger>
