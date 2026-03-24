@@ -1842,6 +1842,7 @@ export type Database = {
           description: string | null
           estimated_value: number | null
           id: string
+          quote_id: string | null
           recurring_job_id: string | null
           scheduled_date: string | null
           scheduled_time: string | null
@@ -1856,6 +1857,7 @@ export type Database = {
           description?: string | null
           estimated_value?: number | null
           id?: string
+          quote_id?: string | null
           recurring_job_id?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
@@ -1870,6 +1872,7 @@ export type Database = {
           description?: string | null
           estimated_value?: number | null
           id?: string
+          quote_id?: string | null
           recurring_job_id?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
@@ -1884,6 +1887,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
           {

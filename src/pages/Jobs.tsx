@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
 import { useCreateJobWithSite } from "@/hooks/useCreateJobWithSite";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Briefcase as BriefcaseIcon } from "lucide-react";
+import { JobDetailSheet } from "@/components/jobs/JobDetailSheet";
 
 const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
@@ -48,6 +49,7 @@ export default function Jobs() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [detailJob, setDetailJob] = useState<Job | null>(null);
 
   const { data: jobs, isLoading, error } = useJobs();
   const createJobWithSite = useCreateJobWithSite();
@@ -192,9 +194,10 @@ export default function Jobs() {
             ) : (
               <div className="space-y-1">
                 {filteredJobs?.map((job) => (
-                  <div
-                    key={job.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between py-3 md:py-4 border-b border-border last:border-0 hover:bg-muted/50 -mx-4 px-4 cursor-pointer transition-colors gap-2 sm:gap-4"
+                    <div
+                      key={job.id}
+                      onClick={() => setDetailJob(job)}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between py-3 md:py-4 border-b border-border last:border-0 hover:bg-muted/50 -mx-4 px-4 cursor-pointer transition-colors gap-2 sm:gap-4"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate text-sm md:text-base">{job.title}</p>
@@ -264,6 +267,12 @@ export default function Jobs() {
         job={selectedJob}
         onConfirm={handleDelete}
         isLoading={deleteJob.isPending}
+      />
+
+      <JobDetailSheet
+        open={!!detailJob}
+        onOpenChange={(open) => !open && setDetailJob(null)}
+        job={detailJob}
       />
     </DashboardLayout>
   );
