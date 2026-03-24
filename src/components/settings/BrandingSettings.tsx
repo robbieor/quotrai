@@ -27,9 +27,17 @@ import {
   AlignCenter,
   AlignRight,
   Eye,
+  Send,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { useCompanyBranding, CompanyBrandingInput } from "@/hooks/useCompanyBranding";
+import { useAuth } from "@/hooks/useAuth";
 import { DocumentPreview } from "./DocumentPreview";
+import { generateInvoicePdf } from "@/lib/pdf/invoicePdf";
+import { generateQuotePdf } from "@/lib/pdf/quotePdf";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ACCENT_COLORS = [
   { name: "Quotr Green", value: "#00FFB2" },
