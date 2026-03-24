@@ -7,6 +7,7 @@ import { useVoiceFailureHandler } from "@/hooks/useVoiceFailureHandler";
 import { useVoiceConnectionReliability } from "@/hooks/useVoiceConnectionReliability";
 
 const ELEVENLABS_AGENT_ID = "agent_2701kffwpjhvf4gvt2cxpsx6j3rb";
+const TOAST_DEBOUNCE_MS = 10000; // Suppress duplicate toasts within 10s
 
 interface AgentContext {
   userId?: string;
@@ -65,6 +66,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const contextRef = useRef<AgentContext>({});
   const queryClient = useQueryClient();
+  const lastToastRef = useRef<number>(0);
 
   // Webhook caller that invalidates relevant React Query caches after mutations
   const callGeorgeWebhook = useCallback(async (
@@ -108,40 +110,13 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const pendingContextRef = useRef<AgentContext | undefined>(undefined);
   const { handleFailure, getFailureReason } = useVoiceFailureHandler();
   
-  // Initialize reliability hook with callbacks
+  // Initialize reliability hook (no health monitoring — ElevenLabs SDK manages connection state)
   const {
     runPreflightCheck,
     withRetry,
-    startHealthMonitoring,
-    stopHealthMonitoring,
     resetRetryState,
     MAX_RETRIES,
-  } = useVoiceConnectionReliability({
-    onRetryAttempt: (attempt, maxRetries) => {
-      setRetryAttempt(attempt);
-      if (attempt > 1) {
-        toast.loading(`Reconnecting... (attempt ${attempt}/${maxRetries})`, { id: "voice-retry" });
-      }
-    },
-    onRetryExhausted: () => {
-      setRetryAttempt(0);
-      toast.dismiss("voice-retry");
-      toast.error("Unable to connect after multiple attempts", {
-        description: "Please try again later or use text chat",
-      });
-      setVoiceUnavailable(true);
-    },
-    onConnectionRestored: () => {
-      toast.dismiss("voice-retry");
-      // Only show restored toast if user was actively in a call (not background noise)
-      if (conversationIdRef.current) {
-        toast.success("Voice connection restored!", { duration: 2000 });
-      }
-    },
-    onHealthCheckFailed: () => {
-      console.log("[VoiceAgent] Health check detected disconnection");
-    },
-  });
+  } = useVoiceConnectionReliability();
 
   // Save message to database
   const saveMessage = useCallback(async (role: "user" | "assistant", content: string) => {
@@ -162,26 +137,30 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     }
   }, [queryClient]);
 
+  const debouncedToast = useCallback((type: 'success' | 'info', message: string, opts?: any) => {
+    const now = Date.now();
+    if (now - lastToastRef.current < TOAST_DEBOUNCE_MS) return;
+    lastToastRef.current = now;
+    if (type === 'success') toast.success(message, opts);
+    else toast.info(message, opts);
+  }, []);
+
   const conversation = useConversation({
     onConnect: () => {
       console.log("[VoiceAgent] ✅ Connected to Foreman AI");
-      toast.success("Connected to Foreman AI", { duration: 2000 });
+      debouncedToast('success', "Connected to Foreman AI", { duration: 2000 });
     },
     onDisconnect: () => {
       console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
-      toast.info("Call ended", { duration: 2000 });
-      // Clear conversation ref on disconnect
+      debouncedToast('info', "Call ended", { duration: 2000 });
       conversationIdRef.current = null;
       setCurrentConversationId(null);
     },
     onMessage: (message: any) => {
-      console.log("[VoiceAgent] 💬 Message:", message);
-      
       // Save user transcripts
       if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
         saveMessage("user", message.user_transcription_event.user_transcript);
       }
-      
       // Save agent responses
       if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
         saveMessage("assistant", message.agent_response_event.agent_response);
@@ -563,25 +542,22 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       // Step 5: Attempt connection with automatic retry
       const { success, error } = await withRetry(
         () => attemptConnection(preflightResult, dynamicVariables),
-        "ElevenLabs connection"
+        "ElevenLabs connection",
+        (attempt) => {
+          setRetryAttempt(attempt);
+          if (attempt > 1) {
+            toast.loading(`Reconnecting... (attempt ${attempt}/${MAX_RETRIES})`, { id: "voice-retry" });
+          }
+        }
       );
 
       if (!success) {
         console.error("[VoiceAgent] ❌ Connection failed after retries:", error);
-        const reason = getFailureReason(error);
-        handleFailure({ reason, error });
+        toast.dismiss("voice-retry");
+        toast.error("Unable to connect after multiple attempts", {
+          description: "Please try again later or use text chat",
+        });
         setVoiceUnavailable(true);
-      } else {
-        // Start health monitoring after successful connection
-        startHealthMonitoring(
-          () => conversation.status === "connected",
-          async () => {
-            // Auto-reconnect logic
-            if (pendingContextRef.current) {
-              await startConversation(pendingContextRef.current);
-            }
-          }
-        );
       }
     } catch (error: unknown) {
       console.error("[VoiceAgent] ❌ Failed to start conversation:", error);
@@ -597,16 +573,15 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       setRetryAttempt(0);
       toast.dismiss("voice-retry");
     }
-  }, [conversation, isConnecting, handleFailure, getFailureReason, runPreflightCheck, withRetry, attemptConnection, startHealthMonitoring]);
+  }, [conversation, isConnecting, handleFailure, getFailureReason, runPreflightCheck, withRetry, attemptConnection, MAX_RETRIES]);
 
   const stopConversation = useCallback(async () => {
     try {
-      stopHealthMonitoring();
       await conversation.endSession();
     } catch (error) {
       console.error("[VoiceAgent] Error stopping conversation:", error);
     }
-  }, [conversation, stopHealthMonitoring]);
+  }, [conversation]);
 
   const sendTextMessage = useCallback((text: string) => {
     if (conversation.status === "connected") {
