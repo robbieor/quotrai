@@ -28,6 +28,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { DashboardFilterProvider } from "@/contexts/DashboardFilterContext";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
+import { PlanGate } from "@/components/dashboard/PlanGate";
+import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useEffect } from "react";
 
 const quickActions = [
@@ -44,6 +46,7 @@ function DashboardContent() {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
   const queryClient = useQueryClient();
+  const { canAccessAdvancedReporting, canAccessGeorge } = useSeatAccess();
 
   // Drill-through state
   const [drillOpen, setDrillOpen] = useState(false);
@@ -121,7 +124,7 @@ function DashboardContent() {
 
         {/* 1. Control Header — operational summary */}
         <AnimatedSection delay={0}>
-          <ControlHeader data={data?.controlHeader} isLoading={isLoading} />
+          <ControlHeader data={data?.controlHeader} isLoading={isLoading} showAI={canAccessGeorge} />
         </AnimatedSection>
 
         {/* 2. KPI Strip — 5 key metrics */}
@@ -150,22 +153,26 @@ function DashboardContent() {
           </div>
         </AnimatedSection>
 
-        {/* 6. Management Insights — Profitability + Invoice Aging + Top Customers */}
+        {/* 6. Management Insights — gated to Grow */}
         <AnimatedSection delay={200}>
           <div className="grid gap-3 lg:grid-cols-2">
-            <CustomerProfitabilityScatter data={data?.customerProfitability} isLoading={isLoading} />
-            <InvoiceAgingChart
-              agingBuckets={data?.agingBuckets}
-              onBucketClick={(bucket) => {
-                const invoices = data?.agingInvoices?.[bucket] || [];
-                openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, [
-                  { key: "invoiceNumber", label: "Invoice #" },
-                  { key: "client", label: "Client" },
-                  { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
-                  { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
-                ], invoices, "/invoices");
-              }}
-            />
+            <PlanGate requiredSeat="grow" featureLabel="Customer Profitability">
+              <CustomerProfitabilityScatter data={data?.customerProfitability} isLoading={isLoading} />
+            </PlanGate>
+            <PlanGate requiredSeat="grow" featureLabel="Invoice Aging Analysis">
+              <InvoiceAgingChart
+                agingBuckets={data?.agingBuckets}
+                onBucketClick={(bucket) => {
+                  const invoices = data?.agingInvoices?.[bucket] || [];
+                  openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, [
+                    { key: "invoiceNumber", label: "Invoice #" },
+                    { key: "client", label: "Client" },
+                    { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
+                    { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
+                  ], invoices, "/invoices");
+                }}
+              />
+            </PlanGate>
           </div>
         </AnimatedSection>
 

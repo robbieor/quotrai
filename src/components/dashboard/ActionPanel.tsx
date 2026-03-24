@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { ActionAlert } from "@/hooks/useDashboardAnalytics";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
+import { useSeatAccess } from "@/hooks/useSeatAccess";
 
 interface ActionPanelProps {
   alerts: ActionAlert[] | undefined;
@@ -40,8 +41,14 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
   const navigate = useNavigate();
   const { segment } = useDashboardFilters();
   const { formatCurrency } = useCurrency();
+  const { canAccessGeorge } = useSeatAccess();
 
-  if (!alerts || alerts.length === 0) {
+  // Lite users only see critical/warning alerts, not AI-driven opportunities
+  const visibleAlerts = alerts?.filter(
+    (a) => canAccessGeorge || a.severity !== "opportunity"
+  );
+
+  if (!visibleAlerts || visibleAlerts.length === 0) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-4 py-2.5">
         <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
@@ -55,7 +62,7 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
   }
 
   // Sort: critical first, then warning, then opportunity
-  const sorted = [...alerts].sort((a, b) => {
+  const sorted = [...visibleAlerts].sort((a, b) => {
     const order = { critical: 0, warning: 1, opportunity: 2 };
     return order[a.severity] - order[b.severity];
   });
