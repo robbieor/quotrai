@@ -66,6 +66,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const contextRef = useRef<AgentContext>({});
   const queryClient = useQueryClient();
+  const lastToastRef = useRef<number>(0);
 
   // Webhook caller that invalidates relevant React Query caches after mutations
   const callGeorgeWebhook = useCallback(async (
