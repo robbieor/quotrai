@@ -55,6 +55,8 @@ export interface ActionAlert {
   severity: "critical" | "warning" | "opportunity";
   message: string;
   value: string;
+  rawValue?: number;
+  isCurrency?: boolean;
   href: string;
 }
 
@@ -405,7 +407,9 @@ export function useDashboardAnalytics() {
           id: "critical-overdue-30",
           severity: "critical",
           message: `${overdue30Plus.length} invoice${overdue30Plus.length > 1 ? "s" : ""} overdue 30+ days`,
-          value: `€${overdue30PlusAmount.toLocaleString()}`,
+          value: "",
+          rawValue: overdue30PlusAmount,
+          isCurrency: true,
           href: "/invoices?status=overdue",
         });
       }
@@ -417,7 +421,9 @@ export function useDashboardAnalytics() {
           id: "critical-overdue-60",
           severity: "critical",
           message: `${overdue60.length} invoice${overdue60.length > 1 ? "s" : ""} overdue 60+ days — escalate`,
-          value: `€${overdue60Amount.toLocaleString()}`,
+          value: "",
+          rawValue: overdue60Amount,
+          isCurrency: true,
           href: "/invoices?status=overdue",
         });
       }
@@ -427,7 +433,9 @@ export function useDashboardAnalytics() {
           id: "warning-stale-quotes",
           severity: "warning",
           message: `${staleQuotes.length} quote${staleQuotes.length > 1 ? "s" : ""} not followed up in 7+ days`,
-          value: `€${staleQuotesValue.toLocaleString()}`,
+          value: "",
+          rawValue: staleQuotesValue,
+          isCurrency: true,
           href: "/quotes?status=sent",
         });
       }
@@ -438,7 +446,9 @@ export function useDashboardAnalytics() {
           id: "warning-stuck-jobs",
           severity: "warning",
           message: `${stuckJobs.length} job${stuckJobs.length > 1 ? "s" : ""} stuck in same stage 7+ days`,
-          value: `€${stuckValue.toLocaleString()}`,
+          value: "",
+          rawValue: stuckValue,
+          isCurrency: true,
           href: "/jobs?status=in_progress",
         });
       }
