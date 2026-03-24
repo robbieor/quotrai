@@ -110,40 +110,13 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const pendingContextRef = useRef<AgentContext | undefined>(undefined);
   const { handleFailure, getFailureReason } = useVoiceFailureHandler();
   
-  // Initialize reliability hook with callbacks
+  // Initialize reliability hook (no health monitoring — ElevenLabs SDK manages connection state)
   const {
     runPreflightCheck,
     withRetry,
-    startHealthMonitoring,
-    stopHealthMonitoring,
     resetRetryState,
     MAX_RETRIES,
-  } = useVoiceConnectionReliability({
-    onRetryAttempt: (attempt, maxRetries) => {
-      setRetryAttempt(attempt);
-      if (attempt > 1) {
-        toast.loading(`Reconnecting... (attempt ${attempt}/${maxRetries})`, { id: "voice-retry" });
-      }
-    },
-    onRetryExhausted: () => {
-      setRetryAttempt(0);
-      toast.dismiss("voice-retry");
-      toast.error("Unable to connect after multiple attempts", {
-        description: "Please try again later or use text chat",
-      });
-      setVoiceUnavailable(true);
-    },
-    onConnectionRestored: () => {
-      toast.dismiss("voice-retry");
-      // Only show restored toast if user was actively in a call (not background noise)
-      if (conversationIdRef.current) {
-        toast.success("Voice connection restored!", { duration: 2000 });
-      }
-    },
-    onHealthCheckFailed: () => {
-      console.log("[VoiceAgent] Health check detected disconnection");
-    },
-  });
+  } = useVoiceConnectionReliability();
 
   // Save message to database
   const saveMessage = useCallback(async (role: "user" | "assistant", content: string) => {
