@@ -35,7 +35,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
           </span>
         </div>
       </CardHeader>
-      <CardContent className="px-0 pb-2">
+      <CardContent className="px-0 pb-2 overflow-x-auto">
         {!data || data.length === 0 ? (
           <div className="h-[180px] flex flex-col items-center justify-center px-4 gap-1.5">
             <CheckCircle2 className="h-5 w-5 text-primary/50" />
@@ -54,9 +54,9 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Total Due</TableHead>
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Oldest</TableHead>
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Days</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Avg Pay</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right hidden sm:table-cell">Avg Pay</TableHead>
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-center">Risk</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider w-[40px]"></TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider w-[40px] hidden sm:table-cell"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -78,7 +78,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                       )}>
                         {inv.daysOverdue}d
                       </TableCell>
-                      <TableCell className="text-[11px] text-right py-1 tabular-nums text-muted-foreground">
+                      <TableCell className="text-[11px] text-right py-1 tabular-nums text-muted-foreground hidden sm:table-cell">
                         {inv.avgDaysToPay > 0 ? `${Math.round(inv.avgDaysToPay)}d` : "—"}
                       </TableCell>
                       <TableCell className="py-1 text-center">
@@ -93,7 +93,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="py-1">
+                      <TableCell className="py-1 hidden sm:table-cell">
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate(`/invoices?highlight=${inv.id}`); }}>
                           <Mail className="h-3 w-3" />
                         </Button>
