@@ -276,7 +276,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     }
   };
 
-  const stepLabels = ["Profile", "Trade", "Preferences", "Comms"];
+  const stepLabels = ["Profile", "Trade", "Workflow", "Preferences", "Comms"];
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -294,14 +294,16 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             <h2 className="text-xl font-bold text-foreground mb-1">
               {step === 1 && "Welcome to Quotr!"}
               {step === 2 && "Tell us about your trade"}
-              {step === 3 && "Almost there!"}
-              {step === 4 && "Communication preferences"}
+              {step === 3 && "How do you work?"}
+              {step === 4 && "Almost there!"}
+              {step === 5 && "Communication preferences"}
             </h2>
             <p className="text-sm text-muted-foreground">
               {step === 1 && "Let's get your account set up in under 2 minutes"}
               {step === 2 && "We'll tailor your experience to your business"}
-              {step === 3 && "Just a couple more preferences, then you're ready"}
-              {step === 4 && "Choose which emails you'd like to send to clients"}
+              {step === 3 && "We'll set up Quotr to match your workflow"}
+              {step === 4 && "Just a couple more preferences, then you're ready"}
+              {step === 5 && "Choose which emails you'd like to send to clients"}
             </p>
           </div>
 
