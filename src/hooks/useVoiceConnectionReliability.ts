@@ -2,9 +2,9 @@ import { useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000; // 1 second
-const HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
-const CONNECTION_TIMEOUT = 10000; // 10 seconds
+const INITIAL_RETRY_DELAY = 2000; // 2 seconds (was 1s - too aggressive)
+const HEALTH_CHECK_INTERVAL = 60000; // 60 seconds (was 30s - caused toast spam)
+const CONNECTION_TIMEOUT = 15000; // 15 seconds (was 10s - too tight)
 
 interface RetryState {
   attempts: number;
@@ -148,15 +148,25 @@ export function useVoiceConnectionReliability(
         const isConnected = checkConnection();
         
         if (!isConnected && isMonitoringRef.current) {
+          // Only attempt recovery if we were previously connected (not on initial load)
+          const timeSinceLastAttempt = Date.now() - retryStateRef.current.lastAttempt;
+          if (timeSinceLastAttempt < 5000) {
+            // Debounce: skip if we just attempted recently
+            return;
+          }
+          
           console.warn("[VoiceReliability] ⚠️ Connection lost, attempting recovery...");
           options.onHealthCheckFailed?.();
 
           try {
+            retryStateRef.current.lastAttempt = Date.now();
             await onDisconnected();
             console.log("[VoiceReliability] ✅ Connection restored");
             options.onConnectionRestored?.();
           } catch (error) {
             console.error("[VoiceReliability] ❌ Failed to restore connection:", error);
+            // Stop monitoring after failed recovery to prevent infinite loops
+            stopHealthMonitoring();
           }
         }
       }, HEALTH_CHECK_INTERVAL);
