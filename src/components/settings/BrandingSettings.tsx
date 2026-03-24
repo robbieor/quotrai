@@ -227,7 +227,16 @@ export function BrandingSettings() {
     }
   };
 
+  if (isLoading) {
     return (
+      <div className="space-y-6">
+        <Skeleton className="h-48 rounded-lg" />
+        <Skeleton className="h-64 rounded-lg" />
+      </div>
+    );
+  }
+
+  return (
       <div className="space-y-6">
         <Skeleton className="h-48 rounded-lg" />
         <Skeleton className="h-64 rounded-lg" />
