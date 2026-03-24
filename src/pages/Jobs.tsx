@@ -133,10 +133,6 @@ export default function Jobs() {
   };
 
   const { formatCurrency } = useCurrency();
-  const fmtCurrency = (value: number | null) => {
-    if (value === null) return "-";
-    return formatCurrency(value);
-  };
 
   return (
     <DashboardLayout>
