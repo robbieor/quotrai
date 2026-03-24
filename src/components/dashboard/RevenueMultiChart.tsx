@@ -19,7 +19,7 @@ export function RevenueMultiChart({ data, isLoading }: RevenueMultiChartProps) {
   const { formatCurrency, symbol } = useCurrency();
 
   const formatAxis = (v: number) =>
-    v >= 1000 ? `${currencySymbol}${(v / 1000).toFixed(0)}k` : `${currencySymbol}${v}`;
+    v >= 1000 ? `${symbol}${(v / 1000).toFixed(0)}k` : `${symbol}${v}`;
 
   if (isLoading) {
     return (
