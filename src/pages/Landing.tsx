@@ -9,6 +9,7 @@ import { ArrowRight, Calculator, Menu, X } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { DemoVideoSection } from "@/components/landing/DemoVideoSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { SolutionSection } from "@/components/landing/SolutionSection";
 import { ForemanAISection } from "@/components/landing/ForemanAISection";
@@ -161,6 +162,8 @@ export default function Landing() {
       {/* Section 1: Hero */}
       <HeroSection formatPrice={formatPrice} />
 
+      {/* Demo Video */}
+      <DemoVideoSection />
       {/* Section 2: Problem */}
       <ProblemSection />
 
