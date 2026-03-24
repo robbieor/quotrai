@@ -75,6 +75,9 @@ interface OnboardingData {
   businessSize: string;
   currency: string;
   country: string;
+  sendsQuotes: boolean | null;
+  tracksJobs: boolean | null;
+  priority: string;
 }
 
 interface CommsPrefs {
