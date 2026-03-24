@@ -21,15 +21,17 @@ import {
   AlertTriangle,
   Loader2,
   Info,
-  List,
   ArrowRight,
   ArrowLeft,
-  Eye
+  Eye,
+  FileStack,
+  FileBarChart
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-type ImportType = "customers" | "invoices" | "invoice_items" | "quotes" | "quote_items" | "jobs";
+type ImportType = "customers" | "invoices" | "quotes" | "jobs";
+type ImportMode = "header_only" | "header_with_items";
 
 interface ImportResult {
   success: boolean;
@@ -49,14 +51,34 @@ interface ColumnMapping {
   dbField: string | null;
 }
 
-const IMPORT_CONFIGS: Record<ImportType, {
+const hasItemMode = (type: ImportType) => type === "invoices" || type === "quotes";
+
+const HEADER_ONLY_FIELDS: Record<string, { required: string[]; optional: string[] }> = {
+  invoices: {
+    required: ["customer_email", "invoice_number", "issue_date", "total"],
+    optional: ["due_date", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
+  },
+  quotes: {
+    required: ["customer_email", "quote_number", "total"],
+    optional: ["valid_until", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
+  },
+};
+
+const ITEM_EXTRA_FIELDS = {
+  required: ["description", "quantity", "unit_price"],
+  optional: ["line_total", "tax_rate"],
+};
+
+interface ImportConfig {
   label: string;
   icon: React.ElementType;
   description: string;
   requiredColumns: string[];
   optionalColumns: string[];
   sampleData: Record<string, string>[];
-}> = {
+}
+
+const IMPORT_CONFIGS: Record<ImportType, ImportConfig> = {
   customers: {
     label: "Customers",
     icon: Users,
@@ -71,7 +93,7 @@ const IMPORT_CONFIGS: Record<ImportType, {
   invoices: {
     label: "Invoices",
     icon: FileText,
-    description: "Import historical invoices",
+    description: "Import historical invoices (with or without line items)",
     requiredColumns: ["customer_email", "invoice_number", "issue_date", "total"],
     optionalColumns: ["due_date", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
     sampleData: [
@@ -79,39 +101,15 @@ const IMPORT_CONFIGS: Record<ImportType, {
       { customer_email: "contact@buildright.ie", invoice_number: "INV-002", issue_date: "2024-02-01", due_date: "2024-02-15", total: "2300.00", status: "sent", notes: "", tax_rate: "23", subtotal: "1869.92", tax_amount: "430.08" }
     ]
   },
-  invoice_items: {
-    label: "Invoice Items",
-    icon: List,
-    description: "Import line items for existing invoices",
-    requiredColumns: ["invoice_number", "description", "quantity", "unit_price"],
-    optionalColumns: [],
-    sampleData: [
-      { invoice_number: "INV-001", description: "Boiler repair - labour", quantity: "3", unit_price: "65.00" },
-      { invoice_number: "INV-001", description: "Replacement parts", quantity: "1", unit_price: "250.00" },
-      { invoice_number: "INV-002", description: "Pipe installation", quantity: "5", unit_price: "45.00" }
-    ]
-  },
   quotes: {
     label: "Quotes",
     icon: ClipboardList,
-    description: "Import estimates and quotes",
+    description: "Import estimates and quotes (with or without line items)",
     requiredColumns: ["customer_email", "quote_number", "total"],
     optionalColumns: ["valid_until", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
     sampleData: [
       { customer_email: "info@acme.ie", quote_number: "Q-001", total: "3500.00", valid_until: "2024-03-01", status: "sent", notes: "Kitchen renovation", tax_rate: "23", subtotal: "2845.53", tax_amount: "654.47" },
       { customer_email: "contact@buildright.ie", quote_number: "Q-002", total: "1200.00", valid_until: "2024-03-15", status: "accepted", notes: "Plumbing work", tax_rate: "23", subtotal: "975.61", tax_amount: "224.39" }
-    ]
-  },
-  quote_items: {
-    label: "Quote Items",
-    icon: List,
-    description: "Import line items for existing quotes",
-    requiredColumns: ["quote_number", "description", "quantity", "unit_price"],
-    optionalColumns: [],
-    sampleData: [
-      { quote_number: "Q-001", description: "Kitchen sink installation", quantity: "1", unit_price: "350.00" },
-      { quote_number: "Q-001", description: "Labour (hours)", quantity: "8", unit_price: "65.00" },
-      { quote_number: "Q-002", description: "Pipe replacement", quantity: "2", unit_price: "120.00" }
     ]
   },
   jobs: {
@@ -127,11 +125,50 @@ const IMPORT_CONFIGS: Record<ImportType, {
   }
 };
 
-function generateCSVTemplate(type: ImportType): string {
-  const config = IMPORT_CONFIGS[type];
-  const allColumns = [...config.requiredColumns, ...config.optionalColumns];
+function getFieldsForMode(type: ImportType, mode: ImportMode): { required: string[]; optional: string[] } {
+  if (!hasItemMode(type) || mode === "header_only") {
+    const cfg = IMPORT_CONFIGS[type];
+    return { required: cfg.requiredColumns, optional: cfg.optionalColumns };
+  }
+  const base = HEADER_ONLY_FIELDS[type];
+  return {
+    required: [...base.required, ...ITEM_EXTRA_FIELDS.required],
+    optional: [...base.optional, ...ITEM_EXTRA_FIELDS.optional.filter(f => !base.optional.includes(f))],
+  };
+}
+
+function generateCSVTemplate(type: ImportType, mode: ImportMode = "header_only"): string {
+  const { required, optional } = getFieldsForMode(type, mode);
+  const allColumns = [...required, ...optional];
   const header = allColumns.join(",");
-  const rows = config.sampleData.map(row => 
+
+  if (mode === "header_with_items" && hasItemMode(type)) {
+    const idField = type === "invoices" ? "invoice_number" : "quote_number";
+    const rows = [
+      allColumns.map(col => {
+        const vals: Record<string, string> = {
+          customer_email: "info@acme.ie", invoice_number: "INV-001", quote_number: "Q-001",
+          issue_date: "2024-01-15", total: "1500.00", due_date: "2024-01-29", status: "paid",
+          valid_until: "2024-03-01", description: "Labour - 3 hours", quantity: "3", unit_price: "65.00",
+          tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49", notes: "",
+        };
+        return vals[col] || "";
+      }).join(","),
+      allColumns.map(col => {
+        const vals: Record<string, string> = {
+          customer_email: "info@acme.ie", invoice_number: "INV-001", quote_number: "Q-001",
+          issue_date: "2024-01-15", total: "1500.00", due_date: "2024-01-29", status: "paid",
+          valid_until: "2024-03-01", description: "Replacement parts", quantity: "1", unit_price: "250.00",
+          tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49", notes: "",
+        };
+        return vals[col] || "";
+      }).join(","),
+    ];
+    return [header, ...rows].join("\n");
+  }
+
+  const cfg = IMPORT_CONFIGS[type];
+  const rows = cfg.sampleData.map(row =>
     allColumns.map(col => {
       const value = row[col] || "";
       if (value.includes(",") || value.includes('"')) {
@@ -143,13 +180,14 @@ function generateCSVTemplate(type: ImportType): string {
   return [header, ...rows].join("\n");
 }
 
-function downloadTemplate(type: ImportType) {
-  const csv = generateCSVTemplate(type);
+function downloadTemplate(type: ImportType, mode: ImportMode = "header_only") {
+  const csv = generateCSVTemplate(type, mode);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${type}_import_template.csv`;
+  const suffix = hasItemMode(type) && mode === "header_with_items" ? "_with_items" : "";
+  link.download = `${type}${suffix}_import_template.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -165,16 +203,11 @@ function parseCSV(text: string): ParsedData {
     const result: string[] = [];
     let current = "";
     let inQuotes = false;
-    
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
       if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else {
-          inQuotes = !inQuotes;
-        }
+        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+        else { inQuotes = !inQuotes; }
       } else if (char === "," && !inQuotes) {
         result.push(current.trim());
         current = "";
@@ -191,12 +224,9 @@ function parseCSV(text: string): ParsedData {
   const rawRows = lines.slice(1).map(parseLine);
   const rows = rawRows.map(values => {
     const row: Record<string, string> = {};
-    headers.forEach((header, i) => {
-      row[header] = values[i] || "";
-    });
+    headers.forEach((header, i) => { row[header] = values[i] || ""; });
     return row;
   });
-
   return { headers, rows, rawRows };
 }
 
@@ -205,11 +235,7 @@ function autoMapColumns(csvHeaders: string[], dbFields: string[]): ColumnMapping
     const normalized = csvCol.toLowerCase().replace(/\s+/g, "_");
     const exactMatch = dbFields.find(f => f === normalized);
     if (exactMatch) return { csvColumn: csvCol, dbField: exactMatch };
-    
-    // Try partial matches
-    const partialMatch = dbFields.find(f => 
-      normalized.includes(f) || f.includes(normalized)
-    );
+    const partialMatch = dbFields.find(f => normalized.includes(f) || f.includes(normalized));
     return { csvColumn: csvCol, dbField: partialMatch || null };
   });
 }
@@ -227,92 +253,80 @@ function applyMapping(rows: Record<string, string>[], mappings: ColumnMapping[])
   });
 }
 
+type WizardStep = "upload" | "mode" | "mapping" | "preview";
+
 export function DataImportSection() {
   const [activeType, setActiveType] = useState<ImportType>("customers");
   const [isImporting, setIsImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
-  
-  // Preview/Mapping state
-  const [step, setStep] = useState<"upload" | "mapping" | "preview">("upload");
+  const [importMode, setImportMode] = useState<ImportMode>("header_only");
+
+  const [step, setStep] = useState<WizardStep>("upload");
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([]);
 
-  const config = IMPORT_CONFIGS[activeType];
-  const allDbFields = [...config.requiredColumns, ...config.optionalColumns];
+  const showModeStep = hasItemMode(activeType);
+  const { required: activeRequired, optional: activeOptional } = getFieldsForMode(activeType, importMode);
+  const allDbFields = [...activeRequired, ...activeOptional];
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (!file.name.endsWith(".csv")) {
-      toast.error("Please upload a CSV file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File must be less than 5MB");
-      return;
-    }
+    if (!file.name.endsWith(".csv")) { toast.error("Please upload a CSV file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("File must be less than 5MB"); return; }
 
     try {
       const text = await file.text();
       const data = parseCSV(text);
-      
-      if (data.rows.length === 0) {
-        toast.error("No data rows found in the CSV file");
-        return;
-      }
-
+      if (data.rows.length === 0) { toast.error("No data rows found in the CSV file"); return; }
       setParsedData(data);
-      const mappings = autoMapColumns(data.headers, allDbFields);
-      setColumnMappings(mappings);
-      setStep("mapping");
       setResult(null);
-    } catch (error) {
+      if (showModeStep) {
+        setStep("mode");
+      } else {
+        const mappings = autoMapColumns(data.headers, allDbFields);
+        setColumnMappings(mappings);
+        setStep("mapping");
+      }
+    } catch {
       toast.error("Failed to parse CSV file");
     }
-
     event.target.value = "";
   };
 
+  const handleModeConfirm = () => {
+    if (!parsedData) return;
+    const fields = getFieldsForMode(activeType, importMode);
+    const all = [...fields.required, ...fields.optional];
+    const mappings = autoMapColumns(parsedData.headers, all);
+    setColumnMappings(mappings);
+    setStep("mapping");
+  };
+
   const handleMappingChange = (csvColumn: string, dbField: string | null) => {
-    setColumnMappings(prev => 
-      prev.map(m => m.csvColumn === csvColumn ? { ...m, dbField } : m)
-    );
+    setColumnMappings(prev => prev.map(m => m.csvColumn === csvColumn ? { ...m, dbField } : m));
   };
 
   const validateMappings = (): string[] => {
     const errors: string[] = [];
     const mappedFields = columnMappings.filter(m => m.dbField).map(m => m.dbField);
-    
-    config.requiredColumns.forEach(required => {
-      if (!mappedFields.includes(required)) {
-        errors.push(`Required field "${required}" is not mapped`);
-      }
+    activeRequired.forEach(req => {
+      if (!mappedFields.includes(req)) errors.push(`Required field "${req}" is not mapped`);
     });
-
-    // Check for duplicate mappings
     const duplicates = mappedFields.filter((f, i) => mappedFields.indexOf(f) !== i);
-    if (duplicates.length > 0) {
-      errors.push(`Duplicate mappings: ${[...new Set(duplicates)].join(", ")}`);
-    }
-
+    if (duplicates.length > 0) errors.push(`Duplicate mappings: ${[...new Set(duplicates)].join(", ")}`);
     return errors;
   };
 
   const handleProceedToPreview = () => {
     const errors = validateMappings();
-    if (errors.length > 0) {
-      toast.error(errors[0]);
-      return;
-    }
+    if (errors.length > 0) { toast.error(errors[0]); return; }
     setStep("preview");
   };
 
   const handleImport = async () => {
     if (!parsedData) return;
-
     setIsImporting(true);
     setProgress(10);
 
@@ -320,32 +334,22 @@ export function DataImportSection() {
       const mappedRows = applyMapping(parsedData.rows, columnMappings);
       setProgress(30);
 
-      const { data, error } = await supabase.functions.invoke("import-data", {
-        body: {
-          type: activeType,
-          rows: mappedRows
-        }
-      });
+      const body: Record<string, unknown> = { type: activeType, rows: mappedRows };
+      if (showModeStep) body.mode = importMode;
 
+      const { data, error } = await supabase.functions.invoke("import-data", { body });
       setProgress(100);
-
       if (error) throw error;
 
       setResult(data as ImportResult);
-      
       if (data.success) {
-        toast.success(`Successfully imported ${data.imported} ${config.label.toLowerCase()}`);
+        toast.success(`Successfully imported ${data.imported} ${IMPORT_CONFIGS[activeType].label.toLowerCase()}`);
         resetImport();
       }
     } catch (error: unknown) {
       console.error("Import error:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to import data";
-      setResult({
-        success: false,
-        imported: 0,
-        errors: [errorMessage],
-        warnings: []
-      });
+      setResult({ success: false, imported: 0, errors: [errorMessage], warnings: [] });
     } finally {
       setIsImporting(false);
     }
@@ -355,6 +359,7 @@ export function DataImportSection() {
     setStep("upload");
     setParsedData(null);
     setColumnMappings([]);
+    setImportMode("header_only");
   };
 
   const getMappedPreviewData = (): Record<string, string>[] => {
@@ -366,6 +371,10 @@ export function DataImportSection() {
   const previewData = getMappedPreviewData();
   const mappedDbFields = columnMappings.filter(m => m.dbField).map(m => m.dbField!);
 
+  const steps: { key: WizardStep; label: string }[] = showModeStep
+    ? [{ key: "upload", label: "1. Upload" }, { key: "mode", label: "2. Data Mode" }, { key: "mapping", label: "3. Map Columns" }, { key: "preview", label: "4. Preview & Import" }]
+    : [{ key: "upload", label: "1. Upload" }, { key: "mapping", label: "2. Map Columns" }, { key: "preview", label: "3. Preview & Import" }];
+
   return (
     <Card>
       <CardHeader>
@@ -374,20 +383,19 @@ export function DataImportSection() {
           Data Import
         </CardTitle>
         <CardDescription>
-          Import your existing data from Excel or CSV files. Download a template, fill it in, and upload to migrate your data.
+          Import your existing data from CSV files. Download a template, fill it in, and upload to migrate your data.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs value={activeType} onValueChange={(v) => { setActiveType(v as ImportType); resetImport(); setResult(null); }}>
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full h-auto gap-1">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto gap-1">
             {(Object.keys(IMPORT_CONFIGS) as ImportType[]).map((type) => {
               const cfg = IMPORT_CONFIGS[type];
               const Icon = cfg.icon;
               return (
                 <TabsTrigger key={type} value={type} className="gap-1 text-xs sm:text-sm px-2 py-1.5" disabled={step !== "upload"}>
                   <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">{cfg.label}</span>
-                  <span className="sm:hidden">{cfg.label.replace(" Items", "")}</span>
+                  {cfg.label}
                 </TabsTrigger>
               );
             })}
@@ -398,35 +406,27 @@ export function DataImportSection() {
             return (
               <TabsContent key={type} value={type} className="space-y-4 mt-4">
                 {/* Step Indicator */}
-                <div className="flex items-center justify-center gap-2 text-sm">
-                  <Badge variant={step === "upload" ? "default" : "secondary"} className="gap-1">
-                    1. Upload
-                  </Badge>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant={step === "mapping" ? "default" : "secondary"} className="gap-1">
-                    2. Map Columns
-                  </Badge>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  <Badge variant={step === "preview" ? "default" : "secondary"} className="gap-1">
-                    3. Preview & Import
-                  </Badge>
+                <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
+                  {steps.map((s, i) => (
+                    <div key={s.key} className="flex items-center gap-2">
+                      <Badge variant={step === s.key ? "default" : "secondary"} className="gap-1">
+                        {s.label}
+                      </Badge>
+                      {i < steps.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Step 1: Upload */}
+                {/* Step: Upload */}
                 {step === "upload" && (
                   <>
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between gap-3">
                         <div>
                           <h3 className="font-medium">{cfg.label} Import</h3>
                           <p className="text-sm text-muted-foreground">{cfg.description}</p>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => downloadTemplate(type)}
-                          className="gap-2 shrink-0"
-                        >
+                        <Button variant="outline" size="sm" onClick={() => downloadTemplate(type, importMode)} className="gap-2 shrink-0">
                           <Download className="h-4 w-4" />
                           Download Template
                         </Button>
@@ -435,46 +435,98 @@ export function DataImportSection() {
                       <div className="flex flex-wrap gap-2">
                         <span className="text-sm text-muted-foreground">Required:</span>
                         {cfg.requiredColumns.map(col => (
-                          <Badge key={col} variant="default" className="text-xs">
-                            {col}
-                          </Badge>
+                          <Badge key={col} variant="default" className="text-xs">{col}</Badge>
                         ))}
                       </div>
                       {cfg.optionalColumns.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           <span className="text-sm text-muted-foreground">Optional:</span>
                           {cfg.optionalColumns.map(col => (
-                            <Badge key={col} variant="secondary" className="text-xs">
-                              {col}
-                            </Badge>
+                            <Badge key={col} variant="secondary" className="text-xs">{col}</Badge>
                           ))}
                         </div>
                       )}
                     </div>
 
                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <input
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id={`file-upload-${type}`}
-                      />
-                      <label
-                        htmlFor={`file-upload-${type}`}
-                        className="cursor-pointer flex flex-col items-center gap-2"
-                      >
+                      <input type="file" accept=".csv" onChange={handleFileSelect} className="hidden" id={`file-upload-${type}`} />
+                      <label htmlFor={`file-upload-${type}`} className="cursor-pointer flex flex-col items-center gap-2">
                         <Upload className="h-10 w-10 text-muted-foreground" />
                         <span className="text-sm font-medium">Click to upload CSV</span>
-                        <span className="text-xs text-muted-foreground">
-                          Maximum file size: 5MB
-                        </span>
+                        <span className="text-xs text-muted-foreground">Maximum file size: 5MB</span>
                       </label>
                     </div>
                   </>
                 )}
 
-                {/* Step 2: Column Mapping */}
+                {/* Step: Mode Selection (invoices/quotes only) */}
+                {step === "mode" && showModeStep && parsedData && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">How complete is your data?</h3>
+                        <p className="text-sm text-muted-foreground">Found {parsedData.rows.length} rows in your CSV.</p>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={resetImport} className="gap-2">
+                        <ArrowLeft className="h-4 w-4" />
+                        Back
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => setImportMode("header_only")}
+                        className={`border rounded-lg p-4 text-left transition-colors ${importMode === "header_only" ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <FileBarChart className="h-5 w-5 text-primary" />
+                          <span className="font-medium">Header only</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          I only have totals and basic info (historical records). No line item detail needed.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setImportMode("header_with_items")}
+                        className={`border rounded-lg p-4 text-left transition-colors ${importMode === "header_with_items" ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <FileStack className="h-5 w-5 text-primary" />
+                          <span className="font-medium">Header + line items</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          My CSV includes line item detail per {type === "invoices" ? "invoice" : "quote"} (one row per item, header fields repeated).
+                        </p>
+                      </button>
+                    </div>
+
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertDescription className="text-sm">
+                        {importMode === "header_only"
+                          ? "Historical imports preserve your records as-is. New records created in Quotr will use structured line items."
+                          : `Each line item row should repeat the ${type === "invoices" ? "invoice" : "quote"} number. Items will be grouped and linked automatically.`
+                        }
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="flex justify-between">
+                      <Button variant="outline" size="sm" onClick={() => downloadTemplate(type, importMode)} className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Download {importMode === "header_with_items" ? "Items" : "Header"} Template
+                      </Button>
+                      <Button onClick={handleModeConfirm} className="gap-2">
+                        Continue
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step: Column Mapping */}
                 {step === "mapping" && parsedData && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -484,7 +536,7 @@ export function DataImportSection() {
                           Match your CSV columns to the database fields. Found {parsedData.rows.length} rows.
                         </p>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={resetImport} className="gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setStep(showModeStep ? "mode" : "upload")} className="gap-2">
                         <ArrowLeft className="h-4 w-4" />
                         Back
                       </Button>
@@ -496,9 +548,7 @@ export function DataImportSection() {
                         <AlertTitle>Mapping Issues</AlertTitle>
                         <AlertDescription>
                           <ul className="list-disc list-inside mt-1">
-                            {mappingErrors.map((err, i) => (
-                              <li key={i}>{err}</li>
-                            ))}
+                            {mappingErrors.map((err, i) => <li key={i}>{err}</li>)}
                           </ul>
                         </AlertDescription>
                       </Alert>
@@ -515,22 +565,16 @@ export function DataImportSection() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {columnMappings.map((mapping, idx) => {
+                          {columnMappings.map((mapping) => {
                             const sampleValue = parsedData.rows[0]?.[mapping.csvColumn.toLowerCase().replace(/\s+/g, "_")] || "";
-                            const isRequired = mapping.dbField && cfg.requiredColumns.includes(mapping.dbField);
                             return (
                               <TableRow key={mapping.csvColumn}>
-                                <TableCell className="font-medium">
-                                  {mapping.csvColumn}
-                                </TableCell>
+                                <TableCell className="font-medium">{mapping.csvColumn}</TableCell>
                                 <TableCell className="text-center">
                                   <ArrowRight className="h-4 w-4 mx-auto text-muted-foreground" />
                                 </TableCell>
                                 <TableCell>
-                                  <Select
-                                    value={mapping.dbField || "skip"}
-                                    onValueChange={(v) => handleMappingChange(mapping.csvColumn, v === "skip" ? null : v)}
-                                  >
+                                  <Select value={mapping.dbField || "skip"} onValueChange={(v) => handleMappingChange(mapping.csvColumn, v === "skip" ? null : v)}>
                                     <SelectTrigger className="w-full">
                                       <SelectValue placeholder="Skip this column" />
                                     </SelectTrigger>
@@ -540,7 +584,7 @@ export function DataImportSection() {
                                       </SelectItem>
                                       {allDbFields.map(field => {
                                         const alreadyMapped = columnMappings.some(m => m.dbField === field && m.csvColumn !== mapping.csvColumn);
-                                        const isReq = cfg.requiredColumns.includes(field);
+                                        const isReq = activeRequired.includes(field);
                                         return (
                                           <SelectItem key={field} value={field} disabled={alreadyMapped}>
                                             {field} {isReq && <span className="text-destructive">*</span>}
@@ -562,9 +606,7 @@ export function DataImportSection() {
                     </div>
 
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={resetImport}>
-                        Cancel
-                      </Button>
+                      <Button variant="outline" onClick={resetImport}>Cancel</Button>
                       <Button onClick={handleProceedToPreview} disabled={mappingErrors.length > 0} className="gap-2">
                         <Eye className="h-4 w-4" />
                         Preview Data
@@ -573,7 +615,7 @@ export function DataImportSection() {
                   </div>
                 )}
 
-                {/* Step 3: Preview & Import */}
+                {/* Step: Preview & Import */}
                 {step === "preview" && parsedData && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -581,6 +623,11 @@ export function DataImportSection() {
                         <h3 className="font-medium">Preview Import</h3>
                         <p className="text-sm text-muted-foreground">
                           Review the first 5 rows before importing all {parsedData.rows.length} records.
+                          {showModeStep && (
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                              {importMode === "header_only" ? "Header only" : "Header + items"}
+                            </Badge>
+                          )}
                         </p>
                       </div>
                       <Button variant="ghost" size="sm" onClick={() => setStep("mapping")} className="gap-2">
@@ -589,6 +636,15 @@ export function DataImportSection() {
                       </Button>
                     </div>
 
+                    {showModeStep && importMode === "header_only" && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-sm">
+                          These records will be imported as historical summaries. No outbound emails or automations will be triggered.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <ScrollArea className="border rounded-lg">
                       <Table>
                         <TableHeader>
@@ -596,9 +652,7 @@ export function DataImportSection() {
                             {mappedDbFields.map(field => (
                               <TableHead key={field} className="whitespace-nowrap">
                                 {field}
-                                {cfg.requiredColumns.includes(field) && (
-                                  <span className="text-destructive ml-1">*</span>
-                                )}
+                                {activeRequired.includes(field) && <span className="text-destructive ml-1">*</span>}
                               </TableHead>
                             ))}
                           </TableRow>
@@ -623,17 +677,13 @@ export function DataImportSection() {
                       </p>
                     )}
 
-                    {/* Progress */}
                     {isImporting && (
                       <div className="space-y-2">
                         <Progress value={progress} className="h-2" />
-                        <p className="text-sm text-muted-foreground text-center">
-                          Importing your data...
-                        </p>
+                        <p className="text-sm text-muted-foreground text-center">Importing your data...</p>
                       </div>
                     )}
 
-                    {/* Results */}
                     {result && (
                       <div className="space-y-3">
                         {result.success ? (
@@ -650,29 +700,20 @@ export function DataImportSection() {
                             <AlertTitle>Import Failed</AlertTitle>
                             <AlertDescription>
                               <ul className="list-disc list-inside mt-2">
-                                {result.errors.slice(0, 5).map((err, i) => (
-                                  <li key={i}>{err}</li>
-                                ))}
-                                {result.errors.length > 5 && (
-                                  <li>...and {result.errors.length - 5} more errors</li>
-                                )}
+                                {result.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
+                                {result.errors.length > 5 && <li>...and {result.errors.length - 5} more errors</li>}
                               </ul>
                             </AlertDescription>
                           </Alert>
                         )}
-
                         {result.warnings.length > 0 && (
                           <Alert className="border-accent/50 bg-accent/10">
                             <AlertTriangle className="h-4 w-4 text-accent-foreground" />
                             <AlertTitle className="text-accent-foreground">Warnings</AlertTitle>
                             <AlertDescription>
                               <ul className="list-disc list-inside mt-2">
-                                {result.warnings.slice(0, 5).map((warn, i) => (
-                                  <li key={i}>{warn}</li>
-                                ))}
-                                {result.warnings.length > 5 && (
-                                  <li>...and {result.warnings.length - 5} more warnings</li>
-                                )}
+                                {result.warnings.slice(0, 5).map((warn, i) => <li key={i}>{warn}</li>)}
+                                {result.warnings.length > 5 && <li>...and {result.warnings.length - 5} more warnings</li>}
                               </ul>
                             </AlertDescription>
                           </Alert>
@@ -681,15 +722,9 @@ export function DataImportSection() {
                     )}
 
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={resetImport}>
-                        Cancel
-                      </Button>
+                      <Button variant="outline" onClick={resetImport}>Cancel</Button>
                       <Button onClick={handleImport} disabled={isImporting} className="gap-2">
-                        {isImporting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Upload className="h-4 w-4" />
-                        )}
+                        {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                         {isImporting ? "Importing..." : `Import ${parsedData.rows.length} Records`}
                       </Button>
                     </div>
@@ -707,10 +742,10 @@ export function DataImportSection() {
             <AlertDescription className="text-sm">
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>Download the template first to see the correct column format</li>
-                <li>Your column names don't need to match exactly—you can map them in the next step</li>
+                <li>Your column names don't need to match exactly — you can map them in the next step</li>
                 <li>Dates should be in YYYY-MM-DD format (e.g., 2024-01-15)</li>
                 <li>Status values: draft, sent, accepted, declined, paid, overdue</li>
-                <li><strong>Line items:</strong> Import invoices/quotes first, then their line items</li>
+                <li><strong>Invoices &amp; Quotes:</strong> choose "Header only" for historical summaries or "Header + line items" for full detail</li>
               </ul>
             </AlertDescription>
           </Alert>
