@@ -256,7 +256,7 @@ async function importInvoicesWithItems(supabase: any, teamId: string, rows: Reco
 
       const { error: itemError } = await supabase.from("invoice_items").insert({
         invoice_id: invoice.id, description: itemRow.description.trim(),
-        quantity: qty, unit_price: unitPrice, total_price: lineTotal,
+        quantity: qty, unit_price: unitPrice,
       });
       if (itemError) { result.errors.push(`Invoice '${invoiceNumber}' item: ${itemError.message}`); }
     }
@@ -358,7 +358,7 @@ async function importQuotesWithItems(supabase: any, teamId: string, rows: Record
 
       const { error: itemError } = await supabase.from("quote_items").insert({
         quote_id: quote.id, description: itemRow.description.trim(),
-        quantity: qty, unit_price: unitPrice, total_price: lineTotal,
+        quantity: qty, unit_price: unitPrice,
       });
       if (itemError) { result.errors.push(`Quote '${quoteNumber}' item: ${itemError.message}`); }
     }
@@ -421,7 +421,7 @@ async function importInvoiceItems(supabase: any, teamId: string, rows: Record<st
 
     const { error } = await supabase.from("invoice_items").insert({
       invoice_id: invoice.id, description: row.description.trim(),
-      quantity, unit_price: unitPrice, total_price: quantity * unitPrice,
+      quantity, unit_price: unitPrice,
     });
 
     if (error) { result.errors.push(`Row ${rowNum}: ${error.message}`); } else { result.imported++; }
@@ -448,7 +448,7 @@ async function importQuoteItems(supabase: any, teamId: string, rows: Record<stri
 
     const { error } = await supabase.from("quote_items").insert({
       quote_id: quote.id, description: row.description.trim(),
-      quantity, unit_price: unitPrice, total_price: quantity * unitPrice,
+      quantity, unit_price: unitPrice,
     });
 
     if (error) { result.errors.push(`Row ${rowNum}: ${error.message}`); } else { result.imported++; }
