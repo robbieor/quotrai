@@ -218,7 +218,14 @@ export function BrandingSettings() {
       }
 
       setPreviewSent(true);
-      toast.success(`Preview queued to ${user.email}`);
+
+      if (data?.status === "queued_with_pdf") {
+        toast.success(`Preview with PDF sent to ${user.email}`);
+      } else if (data?.status === "queued_without_pdf") {
+        toast.warning(`Preview sent to ${user.email}, but PDF link could not be generated. You can still download from the preview panel.`);
+      } else {
+        toast.success(`Preview sent to ${user.email}`);
+      }
 
       // Reset success state after 5s
       setTimeout(() => setPreviewSent(false), 5000);

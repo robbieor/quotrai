@@ -58,38 +58,26 @@ const handler = async (req: Request): Promise<Response> => {
     const messageId = crypto.randomUUID();
     const idempotencyKey = `preview-${docLabel}-${messageId}`;
 
-    // Ensure app-email compliance by providing a stable unsubscribe token.
+    // Unsubscribe token for compliance
     let unsubscribeToken: string;
-    const { data: existingTokenRow, error: existingTokenError } = await supabase
+    const { data: existingTokenRow } = await supabase
       .from("email_unsubscribe_tokens")
       .select("token")
       .eq("email", recipientEmail)
       .maybeSingle();
 
-    if (existingTokenError) {
-      console.error("Failed to load unsubscribe token:", existingTokenError);
-      throw new Error("Failed to prepare preview email");
-    }
-
     if (existingTokenRow?.token) {
       unsubscribeToken = existingTokenRow.token;
     } else {
       unsubscribeToken = crypto.randomUUID();
-      const { error: tokenInsertError } = await supabase
+      await supabase
         .from("email_unsubscribe_tokens")
-        .insert({
-          email: recipientEmail,
-          token: unsubscribeToken,
-        });
-
-      if (tokenInsertError) {
-        console.error("Failed to create unsubscribe token:", tokenInsertError);
-        throw new Error("Failed to prepare preview email");
-      }
+        .insert({ email: recipientEmail, token: unsubscribeToken });
     }
 
     // Upload PDF to storage and get a signed download URL
     let pdfDownloadUrl: string | null = null;
+    let pdfUploadFailed = false;
     try {
       const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
       const filePath = `previews/preview-${docLabel}-${Date.now()}.pdf`;
@@ -106,11 +94,14 @@ const handler = async (req: Request): Promise<Response> => {
           .from("document-emails")
           .createSignedUrl(filePath, 60 * 60 * 24 * 7);
         pdfDownloadUrl = urlData?.signedUrl || null;
+        if (!pdfDownloadUrl) pdfUploadFailed = true;
       } else {
         console.error("PDF upload error:", uploadError);
+        pdfUploadFailed = true;
       }
     } catch (uploadErr) {
       console.error("Failed to upload preview PDF:", uploadErr);
+      pdfUploadFailed = true;
     }
 
     const htmlBody = `
@@ -141,9 +132,10 @@ const handler = async (req: Request): Promise<Response> => {
       template_name: `preview_${docLabel}`,
       recipient_email: recipientEmail,
       status: "pending",
+      metadata: { pdf_attached: !pdfUploadFailed },
     });
 
-    // Enqueue via the same queue system as document emails
+    // Enqueue
     const { error: enqueueError } = await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
       payload: {
@@ -167,7 +159,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to enqueue preview email");
     }
 
-    // Log as internal preview event
+    // Audit log
     const teamResult = await supabase
       .from("team_members")
       .select("team_id")
@@ -186,18 +178,32 @@ const handler = async (req: Request): Promise<Response> => {
         confirmed_by_user: true,
         source_screen: "branding_settings",
         record_type: "preview",
-        metadata: { type: "internal_preview", document_type: documentType, message_id: messageId },
+        metadata: {
+          type: "internal_preview",
+          document_type: documentType,
+          message_id: messageId,
+          pdf_attached: !pdfUploadFailed,
+        },
       });
     }
 
+    // Return explicit status so UI can show the right message
+    const status = pdfUploadFailed ? "queued_without_pdf" : "queued_with_pdf";
+
     return new Response(
-      JSON.stringify({ success: true, queued: true, sentTo: recipientEmail }),
+      JSON.stringify({
+        success: true,
+        queued: true,
+        status,
+        sentTo: recipientEmail,
+        message_id: messageId,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Preview email error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to send preview email" }),
+      JSON.stringify({ error: "Failed to send preview email", status: "failed" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
