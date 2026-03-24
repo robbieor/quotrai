@@ -125,3 +125,6 @@ verify_jwt = true
 
 [functions.sync-seat-to-stripe]
 verify_jwt = false
+
+[functions.scan-receipt]
+verify_jwt = false
