@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
-import { format, differenceInDays, subMonths, startOfMonth, addDays } from "date-fns";
+import { format, differenceInDays, subMonths, startOfMonth, endOfMonth, addDays } from "date-fns";
 
 // Job type keyword matching utility
 const JOB_TYPE_KEYWORDS: Record<string, string[]> = {
@@ -27,6 +27,76 @@ export function useAvailableJobTypes() {
   return Object.keys(JOB_TYPE_KEYWORDS).concat("Other");
 }
 
+export interface ControlHeaderData {
+  totalOverdue: number;
+  overdueCount: number;
+  quotesNeedFollowUp: number;
+  quotesFollowUpValue: number;
+  stuckJobs: number;
+  aiRecommendation: string;
+}
+
+export interface KPIData {
+  cashCollectedMTD: number;
+  cashCollectedCount: number;
+  outstandingAR: number;
+  outstandingARCount: number;
+  overdue30Plus: number;
+  overdue30PlusCount: number;
+  revenueMTD: number;
+  revenueLastMonth: number;
+  revenueChangePercent: number;
+  activeJobs: number;
+  stuckJobs: number;
+}
+
+export interface ActionAlert {
+  id: string;
+  severity: "critical" | "warning" | "opportunity";
+  message: string;
+  value: string;
+  href: string;
+}
+
+export interface JobAtRisk {
+  id: string;
+  title: string;
+  customer: string;
+  status: string;
+  daysInStage: number;
+  value: number;
+}
+
+export interface InvoiceAtRisk {
+  id: string;
+  customer: string;
+  totalDue: number;
+  oldestInvoice: string;
+  daysOverdue: number;
+  riskScore: "high" | "medium" | "low";
+}
+
+export interface QuoteFunnelData {
+  created: number;
+  sent: number;
+  won: number;
+  lost: number;
+  createdValue: number;
+  sentValue: number;
+  wonValue: number;
+  lostValue: number;
+  avgDaysToWin: number;
+  staleQuotes: number;
+}
+
+export interface CustomerProfitData {
+  id: string;
+  name: string;
+  revenue: number;
+  jobCount: number;
+  invoiceCount: number;
+}
+
 export function useDashboardAnalytics() {
   const { dateRange, customerId, staffId, jobType, crossFilter, filterQueryKey } = useDashboardFilters();
 
@@ -36,7 +106,6 @@ export function useDashboardAnalytics() {
       const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined;
       const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
 
-      // Build queries with date range filters
       let jobsQuery = supabase.from("jobs").select("id, title, status, scheduled_date, created_at, estimated_value, customer_id, customer:customers(name)");
       let invoicesQuery = supabase.from("invoices").select("id, invoice_number, status, total, issue_date, due_date, customer_id, customer:customers(name)");
       let quotesQuery = supabase.from("quotes").select("id, quote_number, status, total, created_at, customer_id, customer:customers(name)");
@@ -60,13 +129,10 @@ export function useDashboardAnalytics() {
         quotesQuery = quotesQuery.eq("customer_id", customerId);
       }
 
-      // Fetch staff time entries if staff filter applied
       let staffJobIds: Set<string> | null = null;
       if (staffId) {
         const { data: timeEntries } = await supabase
-          .from("time_entries")
-          .select("job_id")
-          .eq("user_id", staffId);
+          .from("time_entries").select("job_id").eq("user_id", staffId);
         staffJobIds = new Set((timeEntries || []).map((te: any) => te.job_id).filter(Boolean));
       }
 
@@ -84,19 +150,12 @@ export function useDashboardAnalytics() {
       let quotes = (quotesResult.data || []) as any[];
       let payments = (paymentsResult.data || []) as any[];
 
-      // Apply job type filter client-side
       if (jobType) {
         jobs = jobs.filter((j) => matchJobType(j.title) === jobType);
-        const jobIds = new Set(jobs.map((j) => j.id));
-        // Filter invoices/quotes linked to these jobs would be ideal but they may not have job_id
       }
-
-      // Apply staff filter
       if (staffJobIds) {
         jobs = jobs.filter((j) => staffJobIds!.has(j.id));
       }
-
-      // Apply cross-filter
       if (crossFilter) {
         if (crossFilter.dimension === "month") {
           jobs = jobs.filter((j) => format(new Date(j.created_at), "MMM yy") === crossFilter.value);
@@ -105,35 +164,85 @@ export function useDashboardAnalytics() {
         } else if (crossFilter.dimension === "jobStatus") {
           jobs = jobs.filter((j) => j.status === crossFilter.value);
         } else if (crossFilter.dimension === "customer") {
-          const custId = crossFilter.value;
-          jobs = jobs.filter((j) => j.customer_id === custId);
-          invoices = invoices.filter((i) => i.customer_id === custId);
-          quotes = quotes.filter((q) => q.customer_id === custId);
+          const cid = crossFilter.value;
+          jobs = jobs.filter((j) => j.customer_id === cid);
+          invoices = invoices.filter((i) => i.customer_id === cid);
+          quotes = quotes.filter((q) => q.customer_id === cid);
         }
       }
 
       const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      const lastMonthStart = startOfMonth(subMonths(now, 1));
+      const lastMonthEnd = endOfMonth(subMonths(now, 1));
 
-      // --- Metrics ---
+      // === CORE METRICS ===
       const activeJobs = jobs.filter((j) => ["pending", "scheduled", "in_progress"].includes(j.status));
       const paidInvoices = invoices.filter((i) => i.status === "paid");
-      const revenueMTD = paidInvoices.reduce((s, i) => s + (Number(i.total) || 0), 0);
       const outstandingInvoices = invoices.filter((i) => ["pending", "overdue"].includes(i.status));
       const outstandingAmount = outstandingInvoices.reduce((s, i) => s + (Number(i.total) || 0), 0);
+
+      // Cash collected MTD (payments this month)
+      const paymentsMTD = payments.filter((p) => {
+        const d = new Date(p.payment_date || p.created_at);
+        return d >= monthStart && d <= monthEnd;
+      });
+      const cashCollectedMTD = paymentsMTD.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+      // Revenue MTD (paid invoices this month)
+      const paidThisMonth = paidInvoices.filter((i) => {
+        const d = new Date(i.issue_date);
+        return d >= monthStart && d <= monthEnd;
+      });
+      const revenueMTD = paidThisMonth.reduce((s, i) => s + (Number(i.total) || 0), 0);
+
+      // Revenue last month
+      const paidLastMonth = paidInvoices.filter((i) => {
+        const d = new Date(i.issue_date);
+        return d >= lastMonthStart && d <= lastMonthEnd;
+      });
+      const revenueLastMonth = paidLastMonth.reduce((s, i) => s + (Number(i.total) || 0), 0);
+      const revenueChangePercent = revenueLastMonth > 0
+        ? ((revenueMTD - revenueLastMonth) / revenueLastMonth) * 100
+        : revenueMTD > 0 ? 100 : 0;
+
+      // 30+ day overdue
+      const overdue30Plus = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 30);
+      const overdue30PlusAmount = overdue30Plus.reduce((s, i) => s + (Number(i.total) || 0), 0);
+
+      // All overdue
+      const allOverdue = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 0);
+      const totalOverdue = allOverdue.reduce((s, i) => s + (Number(i.total) || 0), 0);
+
+      // Stuck jobs (in same stage > 7 days)
+      const stuckJobs = activeJobs.filter((j) => {
+        const daysSinceCreated = differenceInDays(now, new Date(j.created_at));
+        return daysSinceCreated > 7;
+      });
+
+      // Quotes needing follow-up (sent > 7 days ago, not accepted/rejected)
+      const staleQuotes = quotes.filter((q) => {
+        if (q.status !== "sent") return false;
+        return differenceInDays(now, new Date(q.created_at)) > 7;
+      });
+      const staleQuotesValue = staleQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
+
+      // Pending quotes
       const pendingQuotes = quotes.filter((q) => q.status === "sent");
       const pendingQuotesAmount = pendingQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
 
-      // Revenue goal from 3-month average
-      const threeMonthsAgo = subMonths(startOfMonth(now), 3);
+      // Revenue goal
+      const threeMonthsAgo = subMonths(monthStart, 3);
       const pastPaid = invoices.filter((inv) => {
         if (inv.status !== "paid") return false;
         const d = new Date(inv.issue_date);
-        return d >= threeMonthsAgo && d < startOfMonth(now);
+        return d >= threeMonthsAgo && d < monthStart;
       });
       const pastRevenue = pastPaid.reduce((s, i) => s + (Number(i.total) || 0), 0);
       const revenueGoal = Math.max(pastRevenue / 3, revenueMTD * 1.2, 1);
 
-      // Trend: jobs created this week vs last
+      // Job trend
       const lastWeekStart = addDays(now, -7);
       const jobsThisWeek = jobs.filter((j) => new Date(j.created_at) >= lastWeekStart).length;
       const jobsLastWeek = jobs.filter((j) => {
@@ -141,24 +250,298 @@ export function useDashboardAnalytics() {
         return d >= addDays(lastWeekStart, -7) && d < lastWeekStart;
       }).length;
 
-      // --- Revenue by month ---
-      const revenueByMonth: Record<string, number> = {};
+      // === CONTROL HEADER ===
+      let aiRecommendation = "All clear — keep going.";
+      if (totalOverdue > 0 && staleQuotes.length > 0) {
+        aiRecommendation = "Chase overdue invoices and follow up on stale quotes to recover cash flow.";
+      } else if (totalOverdue > 0) {
+        aiRecommendation = `You have uncollected cash — send reminders on ${allOverdue.length} overdue invoice${allOverdue.length > 1 ? "s" : ""}.`;
+      } else if (staleQuotes.length > 0) {
+        aiRecommendation = `${staleQuotes.length} quote${staleQuotes.length > 1 ? "s" : ""} sent over a week ago with no response — follow up today.`;
+      } else if (stuckJobs.length > 0) {
+        aiRecommendation = `${stuckJobs.length} job${stuckJobs.length > 1 ? "s" : ""} haven't progressed in 7+ days — check in with your team.`;
+      }
+
+      const controlHeader: ControlHeaderData = {
+        totalOverdue,
+        overdueCount: allOverdue.length,
+        quotesNeedFollowUp: staleQuotes.length,
+        quotesFollowUpValue: staleQuotesValue,
+        stuckJobs: stuckJobs.length,
+        aiRecommendation,
+      };
+
+      // === KPI DATA ===
+      const kpi: KPIData = {
+        cashCollectedMTD,
+        cashCollectedCount: paymentsMTD.length,
+        outstandingAR: outstandingAmount,
+        outstandingARCount: outstandingInvoices.length,
+        overdue30Plus: overdue30PlusAmount,
+        overdue30PlusCount: overdue30Plus.length,
+        revenueMTD,
+        revenueLastMonth,
+        revenueChangePercent,
+        activeJobs: activeJobs.length,
+        stuckJobs: stuckJobs.length,
+      };
+
+      // === ACTION ALERTS ===
+      const actionAlerts: ActionAlert[] = [];
+
+      if (overdue30Plus.length > 0) {
+        actionAlerts.push({
+          id: "critical-overdue-30",
+          severity: "critical",
+          message: `${overdue30Plus.length} invoice${overdue30Plus.length > 1 ? "s" : ""} overdue 30+ days`,
+          value: `€${overdue30PlusAmount.toLocaleString()}`,
+          href: "/invoices",
+        });
+      }
+
+      const overdue60 = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 60);
+      if (overdue60.length > 0) {
+        const overdue60Amount = overdue60.reduce((s, i) => s + (Number(i.total) || 0), 0);
+        actionAlerts.push({
+          id: "critical-overdue-60",
+          severity: "critical",
+          message: `${overdue60.length} invoice${overdue60.length > 1 ? "s" : ""} overdue 60+ days — escalate`,
+          value: `€${overdue60Amount.toLocaleString()}`,
+          href: "/invoices",
+        });
+      }
+
+      if (staleQuotes.length > 0) {
+        actionAlerts.push({
+          id: "warning-stale-quotes",
+          severity: "warning",
+          message: `${staleQuotes.length} quote${staleQuotes.length > 1 ? "s" : ""} not followed up in 7+ days`,
+          value: `€${staleQuotesValue.toLocaleString()}`,
+          href: "/quotes",
+        });
+      }
+
+      if (stuckJobs.length > 0) {
+        const stuckValue = stuckJobs.reduce((s, j) => s + (Number(j.estimated_value) || 0), 0);
+        actionAlerts.push({
+          id: "warning-stuck-jobs",
+          severity: "warning",
+          message: `${stuckJobs.length} job${stuckJobs.length > 1 ? "s" : ""} stuck in same stage 7+ days`,
+          value: `€${stuckValue.toLocaleString()}`,
+          href: "/jobs",
+        });
+      }
+
+      const conversionRate = pendingQuotes.length > 0 || quotes.filter((q) => q.status === "accepted").length > 0
+        ? (quotes.filter((q) => q.status === "accepted").length / Math.max(quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status)).length, 1)) * 100
+        : 0;
+      if (conversionRate > 60) {
+        actionAlerts.push({
+          id: "opp-high-conversion",
+          severity: "opportunity",
+          message: `Quote win rate at ${conversionRate.toFixed(0)}% — consider raising prices`,
+          value: `${conversionRate.toFixed(0)}%`,
+          href: "/quotes",
+        });
+      }
+
+      const nextWeek = addDays(now, 7);
+      const twoWeeks = addDays(now, 14);
+      const nextWeekJobs = jobs.filter((j) => {
+        if (!j.scheduled_date) return false;
+        const d = new Date(j.scheduled_date);
+        return d >= nextWeek && d <= twoWeeks && ["pending", "scheduled", "in_progress"].includes(j.status);
+      });
+      if (nextWeekJobs.length === 0 && activeJobs.length > 0) {
+        actionAlerts.push({
+          id: "opp-schedule-gap",
+          severity: "opportunity",
+          message: "No jobs scheduled next week — fill the gap",
+          value: `${pendingQuotes.length} pending quotes`,
+          href: "/jobs",
+        });
+      }
+
+      // === REVENUE CHART DATA (multi-series) ===
+      const revenueByMonth: Record<string, { revenue: number; cash: number; overdue: number }> = {};
+      // Initialize last 6 months
+      for (let i = 5; i >= 0; i--) {
+        const m = subMonths(now, i);
+        const key = format(m, "MMM yy");
+        revenueByMonth[key] = { revenue: 0, cash: 0, overdue: 0 };
+      }
       paidInvoices.forEach((inv) => {
         const key = format(new Date(inv.issue_date), "MMM yy");
-        revenueByMonth[key] = (revenueByMonth[key] || 0) + (Number(inv.total) || 0);
+        if (revenueByMonth[key]) revenueByMonth[key].revenue += Number(inv.total) || 0;
       });
-      const revenueChartData = Object.entries(revenueByMonth)
-        .map(([month, revenue]) => ({ month, revenue }))
-        .sort((a, b) => {
-          // Sort chronologically
-          const parseMonth = (m: string) => {
-            const [mon, yr] = m.split(" ");
-            return new Date(`${mon} 20${yr}`);
-          };
-          return parseMonth(a.month).getTime() - parseMonth(b.month).getTime();
-        });
+      payments.forEach((p) => {
+        const key = format(new Date(p.payment_date || p.created_at), "MMM yy");
+        if (revenueByMonth[key]) revenueByMonth[key].cash += Number(p.amount) || 0;
+      });
+      // For overdue, distribute by due_date month
+      allOverdue.forEach((inv) => {
+        const key = format(new Date(inv.due_date), "MMM yy");
+        if (revenueByMonth[key]) revenueByMonth[key].overdue += Number(inv.total) || 0;
+      });
 
-      // --- Job status counts ---
+      const revenueChartData = Object.entries(revenueByMonth).map(([month, data]) => ({
+        month,
+        revenue: data.revenue,
+        cash: data.cash,
+        overdue: data.overdue,
+      }));
+
+      // === QUOTE FUNNEL ===
+      const wonQuotes = quotes.filter((q) => q.status === "accepted");
+      const lostQuotes = quotes.filter((q) => q.status === "rejected");
+      const sentQuotes = quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status));
+
+      // Average days to win
+      const daysToWin = wonQuotes.map((q) => {
+        // Approximate: use created_at as baseline
+        return differenceInDays(now, new Date(q.created_at));
+      });
+      const avgDaysToWin = daysToWin.length > 0
+        ? Math.round(daysToWin.reduce((s, d) => s + d, 0) / daysToWin.length)
+        : 0;
+
+      const quoteFunnel: QuoteFunnelData = {
+        created: quotes.length,
+        sent: sentQuotes.length,
+        won: wonQuotes.length,
+        lost: lostQuotes.length,
+        createdValue: quotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        sentValue: sentQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        wonValue: wonQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        lostValue: lostQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        avgDaysToWin,
+        staleQuotes: staleQuotes.length,
+      };
+
+      // === INVOICE AGING ===
+      const agingBuckets = { current: 0, "1-30": 0, "31-60": 0, "60+": 0 };
+      const agingInvoices: Record<string, any[]> = { current: [], "1-30": [], "31-60": [], "60+": [] };
+      outstandingInvoices.forEach((inv) => {
+        const daysOverdue = differenceInDays(now, new Date(inv.due_date));
+        let bucket: string;
+        if (daysOverdue <= 0) bucket = "current";
+        else if (daysOverdue <= 30) bucket = "1-30";
+        else if (daysOverdue <= 60) bucket = "31-60";
+        else bucket = "60+";
+        agingBuckets[bucket as keyof typeof agingBuckets] += Number(inv.total) || 0;
+        agingInvoices[bucket].push({
+          id: inv.id, invoiceNumber: inv.invoice_number,
+          client: inv.customer?.name || "Unknown",
+          amount: Number(inv.total) || 0, daysOverdue: Math.max(0, daysOverdue),
+        });
+      });
+
+      // === TOP CUSTOMERS ===
+      const customerRevenue: Record<string, CustomerProfitData> = {};
+      paidInvoices.forEach((inv) => {
+        const cid = inv.customer_id;
+        const name = inv.customer?.name || "Unknown";
+        if (!customerRevenue[cid]) customerRevenue[cid] = { id: cid, name, revenue: 0, jobCount: 0, invoiceCount: 0 };
+        customerRevenue[cid].revenue += Number(inv.total) || 0;
+        customerRevenue[cid].invoiceCount++;
+      });
+      jobs.forEach((j) => {
+        if (customerRevenue[j.customer_id]) customerRevenue[j.customer_id].jobCount++;
+      });
+      const topCustomers = Object.values(customerRevenue)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 8);
+
+      // === JOBS AT RISK ===
+      const jobsAtRisk: JobAtRisk[] = stuckJobs
+        .sort((a, b) => differenceInDays(now, new Date(a.created_at)) - differenceInDays(now, new Date(b.created_at)))
+        .reverse()
+        .slice(0, 10)
+        .map((j) => ({
+          id: j.id,
+          title: j.title,
+          customer: j.customer?.name || "Unknown",
+          status: j.status,
+          daysInStage: differenceInDays(now, new Date(j.created_at)),
+          value: Number(j.estimated_value) || 0,
+        }));
+
+      // === INVOICE RISK TABLE ===
+      // Group overdue invoices by customer
+      const customerOverdue: Record<string, { customer: string; totalDue: number; oldestDate: Date; invoices: any[] }> = {};
+      allOverdue.forEach((inv) => {
+        const cid = inv.customer_id;
+        const name = inv.customer?.name || "Unknown";
+        if (!customerOverdue[cid]) customerOverdue[cid] = { customer: name, totalDue: 0, oldestDate: new Date(), invoices: [] };
+        customerOverdue[cid].totalDue += Number(inv.total) || 0;
+        const dueDate = new Date(inv.due_date);
+        if (dueDate < customerOverdue[cid].oldestDate) customerOverdue[cid].oldestDate = dueDate;
+        customerOverdue[cid].invoices.push(inv);
+      });
+
+      const invoicesAtRisk: InvoiceAtRisk[] = Object.entries(customerOverdue)
+        .map(([id, data]) => {
+          const daysOverdue = differenceInDays(now, data.oldestDate);
+          return {
+            id,
+            customer: data.customer,
+            totalDue: data.totalDue,
+            oldestInvoice: format(data.oldestDate, "dd MMM"),
+            daysOverdue,
+            riskScore: (daysOverdue > 60 ? "high" : daysOverdue > 30 ? "medium" : "low") as "high" | "medium" | "low",
+          };
+        })
+        .sort((a, b) => b.daysOverdue - a.daysOverdue)
+        .slice(0, 10);
+
+      // === DRILL DATA ===
+      const activeJobsList = activeJobs.map((j) => ({
+        id: j.id, title: j.title, client: j.customer?.name || "Unknown",
+        status: j.status, date: j.scheduled_date, value: j.estimated_value,
+      }));
+      const outstandingList = outstandingInvoices.map((inv) => ({
+        id: inv.id, invoiceNumber: inv.invoice_number, client: inv.customer?.name || "Unknown",
+        amount: Number(inv.total) || 0,
+        daysOverdue: Math.max(0, differenceInDays(now, new Date(inv.due_date))),
+        dueDate: inv.due_date,
+      }));
+      const pendingQuotesList = pendingQuotes.map((q) => ({
+        id: q.id, quoteNumber: q.quote_number, client: q.customer?.name || "Unknown",
+        amount: Number(q.total) || 0, date: q.created_at,
+      }));
+
+      // Jobs due this week
+      const today = format(now, "yyyy-MM-dd");
+      const nextWeekStr = format(addDays(now, 7), "yyyy-MM-dd");
+      const jobsDueThisWeek = jobs
+        .filter((j) => j.scheduled_date && j.scheduled_date >= today && j.scheduled_date <= nextWeekStr && ["pending", "scheduled", "in_progress"].includes(j.status))
+        .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+        .slice(0, 10)
+        .map((j) => ({ id: j.id, client: j.customer?.name || "Unknown", job: j.title, date: j.scheduled_date, value: j.estimated_value }));
+
+      // Overdue invoices list
+      const overdueList = allOverdue
+        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+        .slice(0, 10)
+        .map((inv) => ({
+          id: inv.id, client: inv.customer?.name || "Unknown",
+          invoiceNumber: inv.invoice_number, amount: Number(inv.total) || 0,
+          daysOverdue: differenceInDays(now, new Date(inv.due_date)),
+        }));
+
+      // Legacy metrics shape for backward compat
+      const metrics = {
+        activeJobs: activeJobs.length,
+        activeJobsTrend: jobsThisWeek - jobsLastWeek,
+        revenueMTD,
+        revenueGoal,
+        outstandingAmount,
+        outstandingCount: outstandingInvoices.length,
+        pendingQuotesAmount,
+        pendingQuotesCount: pendingQuotes.length,
+      };
+
+      // Job status data (kept for potential use)
       const statusLabels: Record<string, string> = {
         scheduled: "Scheduled", in_progress: "In Progress", completed: "Completed",
         pending: "Pending", cancelled: "Cancelled",
@@ -171,351 +554,35 @@ export function useDashboardAnalytics() {
       const jobStatusCounts: Record<string, number> = {};
       jobs.forEach((j) => { jobStatusCounts[j.status] = (jobStatusCounts[j.status] || 0) + 1; });
       const jobStatusData = Object.entries(jobStatusCounts).map(([status, count]) => ({
-        status: statusLabels[status] || status,
-        rawStatus: status,
-        count,
+        status: statusLabels[status] || status, rawStatus: status, count,
         color: statusColors[status] || "hsl(220, 9%, 46%)",
       }));
 
-      // --- Quote funnel ---
-      const quoteFunnel = {
-        created: quotes.length,
-        sent: quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status)).length,
-        won: quotes.filter((q) => q.status === "accepted").length,
-        createdValue: quotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
-        sentValue: quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status)).reduce((s, q) => s + (Number(q.total) || 0), 0),
-        wonValue: quotes.filter((q) => q.status === "accepted").reduce((s, q) => s + (Number(q.total) || 0), 0),
-      };
-
-      // --- Invoice aging ---
-      const agingBuckets = { current: 0, "1-30": 0, "31-60": 0, "60+": 0 };
-      const agingInvoices: Record<string, any[]> = { current: [], "1-30": [], "31-60": [], "60+": [] };
-      outstandingInvoices.forEach((inv) => {
-        const daysOverdue = differenceInDays(now, new Date(inv.due_date));
-        let bucket: string;
-        if (daysOverdue <= 0) bucket = "current";
-        else if (daysOverdue <= 30) bucket = "1-30";
-        else if (daysOverdue <= 60) bucket = "31-60";
-        else bucket = "60+";
-        agingBuckets[bucket as keyof typeof agingBuckets] += Number(inv.total) || 0;
-        agingInvoices[bucket].push({
-          id: inv.id,
-          invoiceNumber: inv.invoice_number,
-          client: inv.customer?.name || "Unknown",
-          amount: Number(inv.total) || 0,
-          daysOverdue: Math.max(0, daysOverdue),
-        });
-      });
-
-      // --- Top customers ---
-      const customerRevenue: Record<string, { name: string; id: string; revenue: number; jobCount: number }> = {};
-      paidInvoices.forEach((inv) => {
-        const cid = inv.customer_id;
-        const name = inv.customer?.name || "Unknown";
-        if (!customerRevenue[cid]) customerRevenue[cid] = { name, id: cid, revenue: 0, jobCount: 0 };
-        customerRevenue[cid].revenue += Number(inv.total) || 0;
-      });
-      jobs.forEach((j) => {
-        if (customerRevenue[j.customer_id]) customerRevenue[j.customer_id].jobCount++;
-      });
-      const topCustomers = Object.values(customerRevenue)
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
-
-      // --- Proactive insights (compact alerts) ---
-      const insights: { id: string; type: "warning" | "success" | "info"; message: string; cta: string; href: string }[] = [];
-
-      const severeOverdue = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 30);
-      if (severeOverdue.length > 0) {
-        insights.push({
-          id: "overdue-severe",
-          type: "warning",
-          message: `${severeOverdue.length} invoice${severeOverdue.length > 1 ? "s" : ""} overdue by 30+ days — at risk`,
-          cta: "View invoices",
-          href: "/invoices",
-        });
-      }
-
-      const conversionRate = quoteFunnel.sent > 0 ? (quoteFunnel.won / quoteFunnel.sent) * 100 : 0;
-      if (quoteFunnel.sent >= 3 && conversionRate < 30) {
-        insights.push({
-          id: "low-conversion",
-          type: "warning",
-          message: `Quote conversion at ${conversionRate.toFixed(0)}% — below target`,
-          cta: "Review quotes",
-          href: "/quotes",
-        });
-      }
-
-      if (topCustomers.length > 0) {
-        insights.push({
-          id: "top-customer",
-          type: "success",
-          message: `${topCustomers[0].name} is your top customer with ${topCustomers[0].jobCount} jobs`,
-          cta: "View customer",
-          href: "/customers",
-        });
-      }
-
-      // Workload gap
-      const nextWeek = addDays(now, 7);
-      const twoWeeks = addDays(now, 14);
-      const nextWeekJobs = jobs.filter((j) => {
-        if (!j.scheduled_date) return false;
-        const d = new Date(j.scheduled_date);
-        return d >= nextWeek && d <= twoWeeks && ["pending", "scheduled", "in_progress"].includes(j.status);
-      });
-      if (nextWeekJobs.length === 0) {
-        insights.push({
-          id: "workload-gap",
-          type: "info",
-          message: "No jobs scheduled for next week — fill the gap?",
-          cta: "Schedule jobs",
-          href: "/jobs",
-        });
-      }
-
-      // --- Business Health insights (plain-language summaries) ---
-      type HealthInsight = {
-        id: string;
-        icon: "revenue_up" | "revenue_down" | "revenue_flat" | "quotes_good" | "quotes_bad" | "overdue" | "workload_gap" | "top_customer" | "jobs_busy";
-        headline: string;
-        detail: string;
-        sentiment: "positive" | "negative" | "neutral";
-        cta?: { label: string; href: string };
-      };
-      const healthInsights: HealthInsight[] = [];
-
-      // 1. Revenue trend
-      if (revenueChartData.length >= 2) {
-        const recent = revenueChartData.slice(-2);
-        const prev = recent[0].revenue;
-        const curr = recent[1].revenue;
-        if (prev > 0) {
-          const pctChange = ((curr - prev) / prev) * 100;
-          if (pctChange > 5) {
-            healthInsights.push({
-              id: "health-revenue",
-              icon: "revenue_up",
-              headline: `Revenue is up ${pctChange.toFixed(0)}%`,
-              detail: `Your income grew from last month. Keep momentum going by following up on open quotes.`,
-              sentiment: "positive",
-              cta: { label: "View reports", href: "/reports" },
-            });
-          } else if (pctChange < -5) {
-            healthInsights.push({
-              id: "health-revenue",
-              icon: "revenue_down",
-              headline: `Revenue dropped ${Math.abs(pctChange).toFixed(0)}%`,
-              detail: `Income fell compared to last month. Check if quotes are being followed up and invoices collected on time.`,
-              sentiment: "negative",
-              cta: { label: "View reports", href: "/reports" },
-            });
-          } else {
-            healthInsights.push({
-              id: "health-revenue",
-              icon: "revenue_flat",
-              headline: "Revenue is holding steady",
-              detail: "Your income is consistent month-to-month. A good sign of business stability.",
-              sentiment: "neutral",
-            });
-          }
-        } else if (curr > 0) {
-          healthInsights.push({
-            id: "health-revenue",
-            icon: "revenue_up",
-            headline: "First revenue recorded!",
-            detail: "You've started earning. Keep sending quotes and completing jobs to build momentum.",
-            sentiment: "positive",
-          });
-        }
-      }
-
-      // 2. Quote conversion
-      if (quoteFunnel.sent > 0) {
-        const cr = conversionRate;
-        if (cr >= 50) {
-          healthInsights.push({
-            id: "health-quotes",
-            icon: "quotes_good",
-            headline: `Winning ${cr.toFixed(0)}% of quotes`,
-            detail: `You're converting more than half your quotes — that's strong. Consider raising your prices slightly.`,
-            sentiment: "positive",
-            cta: { label: "View quotes", href: "/quotes" },
-          });
-        } else if (cr >= 25) {
-          healthInsights.push({
-            id: "health-quotes",
-            icon: "quotes_good",
-            headline: `Quote win rate at ${cr.toFixed(0)}%`,
-            detail: `This is typical for trades. Following up within 48 hours can boost your conversion rate.`,
-            sentiment: "neutral",
-            cta: { label: "View quotes", href: "/quotes" },
-          });
-        } else {
-          healthInsights.push({
-            id: "health-quotes",
-            icon: "quotes_bad",
-            headline: `Only winning ${cr.toFixed(0)}% of quotes`,
-            detail: `Most of your quotes aren't converting. Review your pricing or try following up sooner after sending.`,
-            sentiment: "negative",
-            cta: { label: "Review quotes", href: "/quotes" },
-          });
-        }
-      }
-
-      // 3. Overdue invoice risk
-      const allOverdue = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 0);
-      const overdueTotal = allOverdue.reduce((s, i) => s + (Number(i.total) || 0), 0);
-      if (allOverdue.length > 0) {
-        healthInsights.push({
-          id: "health-overdue",
-          icon: "overdue",
-          headline: `${allOverdue.length} unpaid invoice${allOverdue.length > 1 ? "s" : ""} past due`,
-          detail: overdueTotal > 0
-            ? `You have money sitting uncollected. Send a friendly reminder — most clients just need a nudge.`
-            : `Some invoices have gone past their due date. Follow up to keep your cash flow healthy.`,
-          sentiment: "negative",
-          cta: { label: "Chase payments", href: "/invoices" },
-        });
-      } else if (outstandingInvoices.length === 0 && paidInvoices.length > 0) {
-        healthInsights.push({
-          id: "health-overdue",
-          icon: "quotes_good",
-          headline: "All invoices are paid up",
-          detail: "No overdue invoices — your cash flow is in great shape right now.",
-          sentiment: "positive",
-        });
-      }
-
-      // 4. Workload / scheduling
-      const thisWeekJobs = jobs.filter((j) => {
-        if (!j.scheduled_date) return false;
-        return j.scheduled_date >= format(now, "yyyy-MM-dd") && j.scheduled_date <= format(addDays(now, 7), "yyyy-MM-dd")
-          && ["pending", "scheduled", "in_progress"].includes(j.status);
-      });
-      if (nextWeekJobs.length === 0 && thisWeekJobs.length <= 1) {
-        healthInsights.push({
-          id: "health-workload",
-          icon: "workload_gap",
-          headline: "Your schedule is looking quiet",
-          detail: "You have few jobs lined up. Now's a good time to follow up on open quotes or reach out to past customers.",
-          sentiment: "negative",
-          cta: { label: "Schedule work", href: "/jobs" },
-        });
-      } else if (thisWeekJobs.length >= 5) {
-        healthInsights.push({
-          id: "health-workload",
-          icon: "jobs_busy",
-          headline: `${thisWeekJobs.length} jobs on the go this week`,
-          detail: "You've got a full schedule — make sure to send invoices promptly after each job to keep cash flowing.",
-          sentiment: "positive",
-          cta: { label: "View schedule", href: "/jobs" },
-        });
-      } else if (thisWeekJobs.length > 0) {
-        healthInsights.push({
-          id: "health-workload",
-          icon: "jobs_busy",
-          headline: `${thisWeekJobs.length} job${thisWeekJobs.length > 1 ? "s" : ""} scheduled this week`,
-          detail: "You've got work lined up. Stay on top of materials and customer communications.",
-          sentiment: "neutral",
-        });
-      }
-
-      // 5. Top customer highlight
-      if (topCustomers.length > 0 && topCustomers[0].revenue > 0) {
-        const top = topCustomers[0];
-        healthInsights.push({
-          id: "health-top-customer",
-          icon: "top_customer",
-          headline: `${top.name} is your biggest earner`,
-          detail: `They've brought in the most revenue with ${top.jobCount} job${top.jobCount !== 1 ? "s" : ""}. A thank-you or check-in call can go a long way.`,
-          sentiment: "positive",
-          cta: { label: "View customers", href: "/customers" },
-        });
-      }
-
-      // --- Drill-through data ---
-      const activeJobsList = activeJobs.map((j) => ({
-        id: j.id,
-        title: j.title,
-        client: j.customer?.name || "Unknown",
-        status: j.status,
-        date: j.scheduled_date,
-        value: j.estimated_value,
-      }));
-
-      const outstandingList = outstandingInvoices.map((inv) => ({
-        id: inv.id,
-        invoiceNumber: inv.invoice_number,
-        client: inv.customer?.name || "Unknown",
-        amount: Number(inv.total) || 0,
-        daysOverdue: Math.max(0, differenceInDays(now, new Date(inv.due_date))),
-        dueDate: inv.due_date,
-      }));
-
-      const pendingQuotesList = pendingQuotes.map((q) => ({
-        id: q.id,
-        quoteNumber: q.quote_number,
-        client: q.customer?.name || "Unknown",
-        amount: Number(q.total) || 0,
-        date: q.created_at,
-      }));
-
-      // Jobs due this week
-      const today = format(now, "yyyy-MM-dd");
-      const nextWeekStr = format(addDays(now, 7), "yyyy-MM-dd");
-      const jobsDueThisWeek = jobs
-        .filter((j) => j.scheduled_date && j.scheduled_date >= today && j.scheduled_date <= nextWeekStr && ["pending", "scheduled", "in_progress"].includes(j.status))
-        .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
-        .slice(0, 10)
-        .map((j) => ({
-          id: j.id,
-          client: j.customer?.name || "Unknown",
-          job: j.title,
-          date: j.scheduled_date,
-          value: j.estimated_value,
-        }));
-
-      // Overdue invoices
-      const overdueList = outstandingInvoices
-        .filter((inv) => differenceInDays(now, new Date(inv.due_date)) > 0)
-        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-        .slice(0, 10)
-        .map((inv) => ({
-          id: inv.id,
-          client: inv.customer?.name || "Unknown",
-          invoiceNumber: inv.invoice_number,
-          amount: Number(inv.total) || 0,
-          daysOverdue: differenceInDays(now, new Date(inv.due_date)),
-        }));
-
       return {
-        metrics: {
-          activeJobs: activeJobs.length,
-          activeJobsTrend: jobsThisWeek - jobsLastWeek,
-          revenueMTD,
-          revenueGoal,
-          outstandingAmount,
-          outstandingCount: outstandingInvoices.length,
-          pendingQuotesAmount,
-          pendingQuotesCount: pendingQuotes.length,
-        },
+        metrics,
+        controlHeader,
+        kpi,
+        actionAlerts,
         revenueChartData,
         jobStatusData,
         quoteFunnel,
         agingBuckets,
         agingInvoices,
         topCustomers,
-        insights,
-        healthInsights,
-        drillData: {
-          activeJobs: activeJobsList,
-          outstanding: outstandingList,
-          pendingQuotes: pendingQuotesList,
-        },
+        jobsAtRisk,
+        invoicesAtRisk,
+        drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList },
         jobsDueThisWeek,
         overdueInvoices: overdueList,
+        // Legacy compat
+        insights: actionAlerts.map((a) => ({
+          id: a.id,
+          type: a.severity === "critical" ? "warning" as const : a.severity === "warning" ? "info" as const : "success" as const,
+          message: a.message,
+          cta: "View",
+          href: a.href,
+        })),
+        healthInsights: [],
       };
     },
   });
