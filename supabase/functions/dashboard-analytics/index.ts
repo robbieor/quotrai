@@ -10,16 +10,18 @@ const corsHeaders = {
 function diffDays(a: Date, b: Date): number {
   return Math.floor((a.getTime() - b.getTime()) / 86_400_000);
 }
-function fmt(d: Date, pattern: "MMM yy" | "dd MMM" | "yyyy-MM-dd"): string {
+function fmt(d: Date, pattern: "MMM yy" | "dd MMM" | "yyyy-MM-dd" | "dd/MM"): string {
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   if (pattern === "MMM yy") return `${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
   if (pattern === "dd MMM") return `${String(d.getDate()).padStart(2,"0")} ${months[d.getMonth()]}`;
+  if (pattern === "dd/MM") return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}`;
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 function startOfMonth(d: Date): Date { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function endOfMonth(d: Date): Date { return new Date(d.getFullYear(), d.getMonth()+1, 0, 23, 59, 59, 999); }
 function subMonths(d: Date, n: number): Date { return new Date(d.getFullYear(), d.getMonth()-n, d.getDate()); }
 function addDays(d: Date, n: number): Date { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function startOfWeek(d: Date): Date { const r = new Date(d); r.setDate(r.getDate() - r.getDay() + 1); return r; }
 
 const JOB_TYPE_KEYWORDS: Record<string, string[]> = {
   "Plumbing & Heating": ["plumb","boiler","heating","radiator","pipe","water","leak","tap","shower","bathroom"],
@@ -94,10 +96,26 @@ Deno.serve(async (req) => {
       staffJobIds = new Set((te || []).map((t: any) => t.job_id).filter(Boolean));
     }
 
-    const [jobsR, invoicesR, quotesR, paymentsR, paymentScoresR, profitR] = await Promise.all([
+    // Also fetch comparison period data for invoices and payments
+    const rangeFrom = fromDate ? new Date(fromDate) : null;
+    const rangeTo = toDate ? new Date(toDate + "T23:59:59") : new Date();
+    const rangeDays = rangeFrom ? diffDays(rangeTo, rangeFrom) : 30;
+    const compFrom = rangeFrom ? new Date(rangeFrom.getTime() - rangeDays * 86_400_000) : subMonths(new Date(), 2);
+    const compTo = rangeFrom ? new Date(rangeFrom.getTime() - 1) : subMonths(new Date(), 1);
+    const compFromStr = fmt(compFrom, "yyyy-MM-dd");
+    const compToStr = fmt(compTo, "yyyy-MM-dd");
+
+    let compInvoicesQ = supabase.from("invoices").select("id, status, total, issue_date").gte("issue_date", compFromStr).lte("issue_date", compToStr);
+    let compPaymentsQ = supabase.from("payments").select("id, amount, payment_date").gte("payment_date", compFromStr).lte("payment_date", compToStr);
+    if (customerId) {
+      compInvoicesQ = compInvoicesQ.eq("customer_id", customerId);
+    }
+
+    const [jobsR, invoicesR, quotesR, paymentsR, paymentScoresR, profitR, compInvR, compPayR] = await Promise.all([
       jobsQ, invoicesQ, quotesQ, paymentsQ,
       supabase.from("customer_payment_scores").select("customer_id, avg_days_to_pay, late_payments_count, total_invoices_paid"),
       supabase.from("v_job_profitability" as any).select("customer_id, customer_name, estimated_value, total_cost, profit, profit_margin_pct"),
+      compInvoicesQ, compPaymentsQ,
     ]);
 
     if (jobsR.error) throw jobsR.error;
@@ -109,6 +127,8 @@ Deno.serve(async (req) => {
     let invoices = (invoicesR.data || []) as any[];
     let quotes = (quotesR.data || []) as any[];
     let payments = (paymentsR.data || []) as any[];
+    const compInvoices = (compInvR.data || []) as any[];
+    const compPayments = (compPayR.data || []) as any[];
 
     // Payment scores map
     const scoreMap: Record<string, { avgDaysToPay: number; lateRate: number }> = {};
@@ -180,12 +200,7 @@ Deno.serve(async (req) => {
       payments = payments.filter((p: any) => new Date(p.payment_date || p.created_at) >= ago7);
     }
 
-    // ── COMPUTE METRICS ─────────────────────────────────────────────
-    const mStart = startOfMonth(now);
-    const mEnd = endOfMonth(now);
-    const lmStart = startOfMonth(subMonths(now, 1));
-    const lmEnd = endOfMonth(subMonths(now, 1));
-
+    // ── COMPUTE METRICS (now uses FILTERED data, not hardcoded MTD) ─
     const activeJobs = jobs.filter((j: any) => ["pending","scheduled","in_progress"].includes(j.status));
     const paidInvoices = invoices.filter((i: any) => i.status === "paid");
     const outstandingInvoices = invoices.filter((i: any) => ["pending","overdue"].includes(i.status));
@@ -195,15 +210,21 @@ Deno.serve(async (req) => {
 
     const outstandingAmount = outstandingInvoices.reduce((s: number, i: any) => s + Math.max(0, (Number(i.total) || 0) - (paidByInv[i.id] || 0)), 0);
 
-    const paymentsMTD = payments.filter((p: any) => { const d = new Date(p.payment_date || p.created_at); return d >= mStart && d <= mEnd; });
-    const cashCollectedMTD = paymentsMTD.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+    // Cash & Revenue now use the FULL filtered dataset (respects fromDate/toDate)
+    const cashCollected = payments.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+    const revenueInRange = invoices.filter((i: any) => !["cancelled","draft"].includes(i.status)).reduce((s: number, i: any) => s + (Number(i.total) || 0), 0);
 
-    const invoicedThisMonth = invoices.filter((i: any) => { if (["cancelled","draft"].includes(i.status)) return false; const d = new Date(i.issue_date); return d >= mStart && d <= mEnd; });
-    const revenueMTD = invoicedThisMonth.reduce((s: number, i: any) => s + (Number(i.total) || 0), 0);
+    // Comparison period metrics
+    const compRevenue = compInvoices.filter((i: any) => !["cancelled","draft"].includes(i.status)).reduce((s: number, i: any) => s + (Number(i.total) || 0), 0);
+    const compCash = compPayments.reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+    const revenueChangePercent = compRevenue > 0 ? ((revenueInRange - compRevenue) / compRevenue) * 100 : revenueInRange > 0 ? 100 : 0;
 
-    const invoicedLastMonth = invoices.filter((i: any) => { if (["cancelled","draft"].includes(i.status)) return false; const d = new Date(i.issue_date); return d >= lmStart && d <= lmEnd; });
-    const revenueLastMonth = invoicedLastMonth.reduce((s: number, i: any) => s + (Number(i.total) || 0), 0);
-    const revenueChangePercent = revenueLastMonth > 0 ? ((revenueMTD - revenueLastMonth) / revenueLastMonth) * 100 : revenueMTD > 0 ? 100 : 0;
+    // Build comparison label
+    let comparisonLabel = "vs prev period";
+    if (rangeDays <= 8) comparisonLabel = "vs prev 7 days";
+    else if (rangeDays <= 32) comparisonLabel = "vs prev 30 days";
+    else if (rangeDays <= 95) comparisonLabel = "vs prev quarter";
+    else comparisonLabel = "vs prev period";
 
     const overdue30Plus = outstandingInvoices.filter((i: any) => diffDays(now, new Date(i.due_date)) > 30);
     const overdue30PlusAmount = overdue30Plus.reduce((s: number, i: any) => s + Math.max(0, (Number(i.total) || 0) - (paidByInv[i.id] || 0)), 0);
@@ -222,10 +243,7 @@ Deno.serve(async (req) => {
     const pendingQuotes = quotes.filter((q: any) => q.status === "sent");
     const pendingQuotesAmount = pendingQuotes.reduce((s: number, q: any) => s + (Number(q.total) || 0), 0);
 
-    const threeMonthsAgo = subMonths(mStart, 3);
-    const pastPaid = invoices.filter((inv: any) => { if (inv.status !== "paid") return false; const d = new Date(inv.issue_date); return d >= threeMonthsAgo && d < mStart; });
-    const pastRevenue = pastPaid.reduce((s: number, i: any) => s + (Number(i.total) || 0), 0);
-    const revenueGoal = Math.max(pastRevenue / 3, revenueMTD * 1.2, 1);
+    const revenueGoal = Math.max(compRevenue * 1.1, revenueInRange * 1.2, 1);
 
     const lastWeekStart = addDays(now, -7);
     const jobsThisWeek = jobs.filter((j: any) => new Date(j.created_at) >= lastWeekStart).length;
@@ -241,10 +259,11 @@ Deno.serve(async (req) => {
     const controlHeader = { totalOverdue, overdueCount: allOverdue.length, quotesNeedFollowUp: staleQuotes.length, quotesFollowUpValue: staleQuotesValue, stuckJobs: stuckJobs.length, aiRecommendation };
 
     const kpi = {
-      cashCollectedMTD, cashCollectedCount: paymentsMTD.length,
+      cashCollectedMTD: cashCollected, cashCollectedCount: payments.length,
       outstandingAR: outstandingAmount, outstandingARCount: outstandingInvoices.length,
       overdue30Plus: overdue30PlusAmount, overdue30PlusCount: overdue30Plus.length,
-      revenueMTD, revenueLastMonth, revenueChangePercent,
+      revenueMTD: revenueInRange, revenueLastMonth: compRevenue, revenueChangePercent,
+      comparisonLabel,
       activeJobs: activeJobs.length, stuckJobs: stuckJobs.length,
     };
 
@@ -270,13 +289,73 @@ Deno.serve(async (req) => {
     const nwJobs = jobs.filter((j: any) => { if (!j.scheduled_date) return false; const d = new Date(j.scheduled_date); return d >= nw && d <= tw && ["pending","scheduled","in_progress"].includes(j.status); });
     if (nwJobs.length === 0 && activeJobs.length > 0) actionAlerts.push({ id: "opp-schedule-gap", severity: "opportunity", message: "No jobs scheduled next week — fill the gap", value: `${pendingQuotes.length} pending quotes`, href: "/jobs?status=scheduled" });
 
-    // ── REVENUE CHART ───────────────────────────────────────────────
-    const revByMonth: Record<string, { revenue: number; cash: number; overdue: number }> = {};
-    for (let i = 5; i >= 0; i--) { const k = fmt(subMonths(now, i), "MMM yy"); revByMonth[k] = { revenue: 0, cash: 0, overdue: 0 }; }
-    paidInvoices.forEach((inv: any) => { const k = fmt(new Date(inv.issue_date), "MMM yy"); if (revByMonth[k]) revByMonth[k].revenue += Number(inv.total) || 0; });
-    payments.forEach((p: any) => { const k = fmt(new Date(p.payment_date || p.created_at), "MMM yy"); if (revByMonth[k]) revByMonth[k].cash += Number(p.amount) || 0; });
-    allOverdue.forEach((inv: any) => { const k = fmt(new Date(inv.due_date), "MMM yy"); if (revByMonth[k]) revByMonth[k].overdue += Number(inv.total) || 0; });
-    const revenueChartData = Object.entries(revByMonth).map(([month, d]) => ({ month, revenue: d.revenue, cash: d.cash, overdue: d.overdue }));
+    // ── REVENUE CHART (dynamic buckets based on date range) ─────────
+    const chartFrom = rangeFrom || subMonths(now, 5);
+    const chartTo = rangeTo;
+    const chartDays = diffDays(chartTo, chartFrom);
+
+    const revenueChartData: any[] = [];
+    if (chartDays <= 14) {
+      // Daily buckets
+      for (let i = 0; i <= chartDays; i++) {
+        const d = addDays(chartFrom, i);
+        const key = fmt(d, "dd/MM");
+        const dateStr = fmt(d, "yyyy-MM-dd");
+        const revenue = paidInvoices.filter((inv: any) => inv.issue_date === dateStr).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
+        const cash = payments.filter((p: any) => (p.payment_date || "").startsWith(dateStr)).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+        const overdue = allOverdue.filter((inv: any) => inv.due_date === dateStr).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
+        revenueChartData.push({ month: key, revenue, cash, overdue });
+      }
+    } else if (chartDays <= 90) {
+      // Weekly buckets
+      let cursor = startOfWeek(chartFrom);
+      while (cursor <= chartTo) {
+        const weekEnd = addDays(cursor, 6);
+        const key = `${fmt(cursor, "dd MMM")}`;
+        const revenue = paidInvoices.filter((inv: any) => { const d = new Date(inv.issue_date); return d >= cursor && d <= weekEnd; }).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
+        const cash = payments.filter((p: any) => { const d = new Date(p.payment_date || p.created_at); return d >= cursor && d <= weekEnd; }).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+        const overdue = allOverdue.filter((inv: any) => { const d = new Date(inv.due_date); return d >= cursor && d <= weekEnd; }).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
+        revenueChartData.push({ month: key, revenue, cash, overdue });
+        cursor = addDays(cursor, 7);
+      }
+    } else {
+      // Monthly buckets bounded by actual range
+      const monthCount = Math.ceil(chartDays / 30);
+      for (let i = monthCount - 1; i >= 0; i--) {
+        const mDate = subMonths(chartTo, i);
+        const k = fmt(mDate, "MMM yy");
+        const mS = startOfMonth(mDate);
+        const mE = endOfMonth(mDate);
+        const revenue = paidInvoices.filter((inv: any) => { const d = new Date(inv.issue_date); return d >= mS && d <= mE; }).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
+        const cash = payments.filter((p: any) => { const d = new Date(p.payment_date || p.created_at); return d >= mS && d <= mE; }).reduce((s: number, p: any) => s + (Number(p.amount) || 0), 0);
+        const overdue = allOverdue.filter((inv: any) => { const d = new Date(inv.due_date); return d >= mS && d <= mE; }).reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
+        revenueChartData.push({ month: k, revenue, cash, overdue });
+      }
+    }
+
+    // ── REVENUE BY JOB TYPE ─────────────────────────────────────────
+    const jobTypeMap: Record<string, string> = {};
+    jobs.forEach((j: any) => { jobTypeMap[j.id] = matchJobType(j.title); });
+    // Map invoices to job types via quote_id or customer correlation
+    const revenueByType: Record<string, { revenue: number; count: number }> = {};
+    // Direct: invoices linked to jobs via quotes
+    const quoteToJob: Record<string, string> = {};
+    jobs.forEach((j: any) => { /* jobs don't directly link to quotes, but invoices have quote_id */ });
+    // Use invoice's job connection: find jobs for each customer and assign types
+    const custJobTypes: Record<string, string> = {};
+    jobs.forEach((j: any) => {
+      const jt = matchJobType(j.title);
+      if (jt !== "Other" || !custJobTypes[j.customer_id]) custJobTypes[j.customer_id] = jt;
+    });
+    invoices.filter((i: any) => !["cancelled","draft"].includes(i.status)).forEach((inv: any) => {
+      const jt = custJobTypes[inv.customer_id] || "Other";
+      if (!revenueByType[jt]) revenueByType[jt] = { revenue: 0, count: 0 };
+      revenueByType[jt].revenue += Number(inv.total) || 0;
+      revenueByType[jt].count++;
+    });
+    const revenueByJobType = Object.entries(revenueByType)
+      .map(([type, d]) => ({ type, revenue: d.revenue, count: d.count }))
+      .sort((a, b) => b.revenue - a.revenue);
 
     // ── QUOTE FUNNEL ────────────────────────────────────────────────
     const acceptedQ = quotes.filter((q: any) => q.status === "accepted");
@@ -371,7 +450,7 @@ Deno.serve(async (req) => {
     const overdueList = allOverdue.sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()).slice(0, 10)
       .map((inv: any) => ({ id: inv.id, client: inv.customer?.name || "Unknown", invoiceNumber: inv.invoice_number, amount: Number(inv.total) || 0, daysOverdue: diffDays(now, new Date(inv.due_date)) }));
 
-    const metrics = { activeJobs: activeJobs.length, activeJobsTrend: jobsThisWeek - jobsLastWeek, revenueMTD, revenueGoal, outstandingAmount, outstandingCount: outstandingInvoices.length, pendingQuotesAmount, pendingQuotesCount: pendingQuotes.length };
+    const metrics = { activeJobs: activeJobs.length, activeJobsTrend: jobsThisWeek - jobsLastWeek, revenueMTD: revenueInRange, revenueGoal, outstandingAmount, outstandingCount: outstandingInvoices.length, pendingQuotesAmount, pendingQuotesCount: pendingQuotes.length };
 
     const statusLabels: Record<string, string> = { scheduled: "Scheduled", in_progress: "In Progress", completed: "Completed", pending: "Pending", cancelled: "Cancelled" };
     const statusColors: Record<string, string> = { scheduled: "hsl(221,83%,53%)", in_progress: "hsl(38,92%,50%)", completed: "hsl(142,71%,45%)", pending: "hsl(262,83%,58%)", cancelled: "hsl(0,84%,60%)" };
@@ -384,7 +463,7 @@ Deno.serve(async (req) => {
     const result = {
       metrics, controlHeader, kpi, actionAlerts, revenueChartData, jobStatusData, quoteFunnel,
       agingBuckets, agingInvoices, topCustomers, customerProfitability,
-      jobsAtRisk, invoicesAtRisk,
+      jobsAtRisk, invoicesAtRisk, revenueByJobType,
       drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList },
       jobsDueThisWeek, overdueInvoices: overdueList, insights, healthInsights: [],
     };

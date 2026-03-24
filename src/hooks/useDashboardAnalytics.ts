@@ -40,8 +40,15 @@ export interface KPIData {
   revenueMTD: number;
   revenueLastMonth: number;
   revenueChangePercent: number;
+  comparisonLabel: string;
   activeJobs: number;
   stuckJobs: number;
+}
+
+export interface RevenueByJobTypeData {
+  type: string;
+  revenue: number;
+  count: number;
 }
 
 export interface ActionAlert {
@@ -139,6 +146,7 @@ export function useDashboardAnalytics() {
         customerProfitability: ScatterCustomerData[];
         jobsAtRisk: JobAtRisk[];
         invoicesAtRisk: InvoiceAtRisk[];
+        revenueByJobType: RevenueByJobTypeData[];
         drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[] };
         jobsDueThisWeek: any[];
         overdueInvoices: any[];

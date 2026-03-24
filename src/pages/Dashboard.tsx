@@ -29,6 +29,7 @@ import { DashboardFilterProvider } from "@/contexts/DashboardFilterContext";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
+import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useEffect } from "react";
 
@@ -142,6 +143,14 @@ function DashboardContent() {
           <div className="grid gap-3 lg:grid-cols-2">
             <RevenueMultiChart data={data?.revenueChartData} isLoading={isLoading} />
             <QuotePipelineCard data={data?.quoteFunnel} />
+          </div>
+        </AnimatedSection>
+
+        {/* 4b. Revenue by Job Type */}
+        <AnimatedSection delay={140}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
+            <div /> {/* Placeholder for balance */}
           </div>
         </AnimatedSection>
 

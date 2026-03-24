@@ -116,8 +116,8 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
       <KPICard
         label={`Revenue ${suffix}`}
         value={formatCurrency(data.revenueMTD)}
-        subMetric={`vs ${formatCurrency(data.revenueLastMonth)} last month`}
-        context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% vs last month`}
+        subMetric={`vs ${formatCurrency(data.revenueLastMonth)} ${data.comparisonLabel || "prev period"}`}
+        context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% ${data.comparisonLabel || "vs prev period"}`}
         contextType={changeDir as "positive" | "negative" | "neutral"}
       />
       <KPICard
