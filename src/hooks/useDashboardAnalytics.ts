@@ -130,7 +130,7 @@ export function useDashboardAnalytics() {
       }
 
       let staffJobIds: Set<string> | null = null;
-      if (staffId) {
+      if (staffId && staffId !== "all" && staffId !== "overloaded" && staffId !== "underperforming") {
         const { data: timeEntries } = await supabase
           .from("time_entries").select("job_id").eq("user_id", staffId);
         staffJobIds = new Set((timeEntries || []).map((te: any) => te.job_id).filter(Boolean));
