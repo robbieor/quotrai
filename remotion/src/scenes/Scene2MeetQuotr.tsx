@@ -27,44 +27,44 @@ export const Scene2MeetQuotr: React.FC = () => {
   const quotrX = interpolate(frame, [30, 50], [30, 0], { extrapolateRight: "clamp" });
   const tagOpacity = interpolate(frame, [60, 80], [0, 1], { extrapolateRight: "clamp" });
   const tagY = interpolate(frame, [60, 80], [20, 0], { extrapolateRight: "clamp" });
-  const bgHue = interpolate(frame, [0, 150], [159, 165], { extrapolateRight: "clamp" });
+
+  // Animated teal gradient ring
+  const ringRotation = interpolate(frame, [0, 150], [0, 90], { extrapolateRight: "clamp" });
 
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(ellipse at 50% 40%, hsl(${bgHue}, 100%, 8%) 0%, #0f172a 70%)`,
+        background: `radial-gradient(ellipse at 50% 45%, #0a1628 0%, #060d1a 100%)`,
         justifyContent: "center",
         alignItems: "center",
         fontFamily,
+        WebkitFontSmoothing: "antialiased",
       }}
     >
-      {/* Floating accent circle */}
+      {/* Teal gradient ring */}
       <div
         style={{
           position: "absolute",
-          width: 500,
-          height: 500,
+          width: 400,
+          height: 400,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,255,178,0.08) 0%, transparent 70%)",
+          border: "2px solid transparent",
+          background: `conic-gradient(from ${ringRotation}deg, transparent 0%, rgba(0,255,178,0.15) 25%, transparent 50%, rgba(0,255,178,0.08) 75%, transparent 100%)`,
           transform: `scale(${logoScale})`,
+          opacity: 0.6,
         }}
       />
 
       {/* Actual Quotr logo */}
-      <div
-        style={{
-          transform: `scale(${logoScale})`,
-          marginBottom: 40,
-        }}
-      >
+      <div style={{ transform: `scale(${logoScale})`, marginBottom: 40 }}>
         <Img
           src={staticFile("images/quotr-logo.png")}
           style={{
-            width: 120,
-            height: 120,
-            borderRadius: 28,
+            width: 130,
+            height: 130,
+            borderRadius: 30,
             objectFit: "contain",
-            filter: `drop-shadow(0 0 40px rgba(0,255,178,0.4))`,
+            filter: `drop-shadow(0 0 50px rgba(0,255,178,0.5))`,
           }}
         />
       </div>
@@ -72,9 +72,9 @@ export const Scene2MeetQuotr: React.FC = () => {
       <div style={{ display: "flex", gap: 20, alignItems: "baseline" }}>
         <span
           style={{
-            fontSize: 80,
+            fontSize: 82,
             fontWeight: 400,
-            color: "rgba(255,255,255,0.7)",
+            color: "rgba(255,255,255,0.6)",
             opacity: meetOpacity,
             transform: `translateX(${meetX}px)`,
             letterSpacing: "-0.02em",
@@ -84,12 +84,13 @@ export const Scene2MeetQuotr: React.FC = () => {
         </span>
         <span
           style={{
-            fontSize: 96,
+            fontSize: 100,
             fontWeight: 800,
             color: "white",
             opacity: quotrOpacity,
             transform: `translateX(${quotrX}px)`,
-            letterSpacing: "-0.04em",
+            letterSpacing: "-0.05em",
+            textShadow: "0 0 80px rgba(0,255,178,0.2)",
           }}
         >
           Quotr
@@ -98,13 +99,14 @@ export const Scene2MeetQuotr: React.FC = () => {
 
       <p
         style={{
-          fontSize: 28,
+          fontSize: 30,
           color: TEAL,
-          marginTop: 24,
+          marginTop: 28,
           opacity: tagOpacity,
           transform: `translateY(${tagY}px)`,
           fontWeight: 700,
-          letterSpacing: "0.02em",
+          letterSpacing: "0.01em",
+          textShadow: "0 0 40px rgba(0,255,178,0.3)",
         }}
       >
         Talk to your business. It talks back.
