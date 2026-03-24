@@ -343,7 +343,7 @@ export default function Landing() {
               </div>
               
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Join the Beta Program to get 30% off — limited places available
+                30-day free trial • No credit card required • Cancel anytime
               </p>
             </div>
 
@@ -946,7 +946,7 @@ export default function Landing() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-xl mx-auto">
-               Join the Founding Member Program — 30% off for the first 200 field service businesses.
+               30-day free trial • No credit card required • Cancel anytime
              </p>
              <Link to="/signup">
                <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2 sm:gap-3">

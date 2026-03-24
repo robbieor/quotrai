@@ -20,28 +20,28 @@ export interface TeamSubscription {
 // Stripe Price ID Map — single source of truth
 export const STRIPE_PRICES = {
   lite: {
-    monthly: 'price_1T7b44DQETj2awNEVZC5FQn2',
-    annual: 'price_1T7b4eDQETj2awNEhlMGRoGE',
+    monthly: 'price_1TEa4dDQETj2awNErpoa1vHM',
+    annual: 'price_1TEa57DQETj2awNEESev15XR',
   },
   connect: {
-    monthly: 'price_1T7afYDQETj2awNEcXocEe7h',
-    annual: 'price_1T7apqDQETj2awNEXdefYkfs',
+    monthly: 'price_1TEa5SDQETj2awNE4qhL4fa7',
+    annual: 'price_1TEa5tDQETj2awNE2zfrsMkY',
   },
   grow: {
-    monthly: 'price_1T7agsDQETj2awNEeLQafzg5',
-    annual: 'price_1T7ahZDQETj2awNE5gr1v6DI',
+    monthly: 'price_1TEa6HDQETj2awNEycXwPCfc',
+    annual: 'price_1TEa6oDQETj2awNEHSl42OYl',
   },
 } as const;
 
 // Pricing constants - single source of truth
 export const PRICING = {
-  LITE_SEAT: 15,
-  CONNECT_SEAT: 29,
-  GROW_SEAT: 49,
+  LITE_SEAT: 19,
+  CONNECT_SEAT: 39,
+  GROW_SEAT: 69,
   ANNUAL_DISCOUNT: 0.15,
-  ANNUAL_LITE_SEAT: 153,        // €153.00/year (matches Stripe)
-  ANNUAL_CONNECT_SEAT: 295.80,  // €295.80/year (matches Stripe)
-  ANNUAL_GROW_SEAT: 499.80,     // €499.80/year (matches Stripe)
+  ANNUAL_LITE_SEAT: 193.80,      // €193.80/year (matches Stripe)
+  ANNUAL_CONNECT_SEAT: 397.80,   // €397.80/year (matches Stripe)
+  ANNUAL_GROW_SEAT: 703.80,      // €703.80/year (matches Stripe)
   VOICE_MINUTES_PER_SEAT: 60,
   GROW_VOICE_MINUTES: -1, // unlimited
   PLATFORM_FEE: 2.5,
@@ -49,15 +49,15 @@ export const PRICING = {
   BULK_DISCOUNT_THRESHOLD: 5,
   BULK_DISCOUNT: 0.10,
   // Legacy aliases
-  BASE_SEAT: 29,
-  STARTER_SEAT: 15,
-  ENTERPRISE_SEAT: 49,
-  ANNUAL_SEAT: 295.80,
-  ANNUAL_STARTER_SEAT: 153,
-  ANNUAL_ENTERPRISE_SEAT: 499.80,
+  BASE_SEAT: 39,
+  STARTER_SEAT: 19,
+  ENTERPRISE_SEAT: 69,
+  ANNUAL_SEAT: 397.80,
+  ANNUAL_STARTER_SEAT: 193.80,
+  ANNUAL_ENTERPRISE_SEAT: 703.80,
   ENTERPRISE_PLATFORM_FEE: 1.5,
-  TEAM_SEAT: 15,
-  ANNUAL_TEAM_SEAT: 153,
+  TEAM_SEAT: 19,
+  ANNUAL_TEAM_SEAT: 193.80,
 } as const;
 
 export interface PlanDetails {

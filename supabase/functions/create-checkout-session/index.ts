@@ -10,16 +10,16 @@ const corsHeaders = {
 // Stripe Price IDs (already configured in Stripe)
 const STRIPE_PRICES: Record<string, Record<string, string>> = {
   lite: {
-    month: "price_1T7b44DQETj2awNEVZC5FQn2",
-    year: "price_1T7b4eDQETj2awNEhlMGRoGE",
+    month: "price_1TEa4dDQETj2awNErpoa1vHM",
+    year: "price_1TEa57DQETj2awNEESev15XR",
   },
   connect: {
-    month: "price_1T7afYDQETj2awNEcXocEe7h",
-    year: "price_1T7apqDQETj2awNEXdefYkfs",
+    month: "price_1TEa5SDQETj2awNE4qhL4fa7",
+    year: "price_1TEa5tDQETj2awNE2zfrsMkY",
   },
   grow: {
-    month: "price_1T7agsDQETj2awNEeLQafzg5",
-    year: "price_1T7ahZDQETj2awNE5gr1v6DI",
+    month: "price_1TEa6HDQETj2awNEycXwPCfc",
+    year: "price_1TEa6oDQETj2awNEHSl42OYl",
   },
 };
 

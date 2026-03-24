@@ -21,10 +21,10 @@ const Industries = () => {
               <img src={quotrLogo} alt="Quotr" className="h-7 w-auto" />
             </Link>
             <Link
-              to="/request-access"
+              to="/signup"
               className="text-sm font-medium text-primary hover:underline"
             >
-              Get Founding Member Access
+              Start Free Trial
             </Link>
           </div>
         </header>
@@ -79,10 +79,10 @@ const Industries = () => {
               If you quote jobs and invoice clients, Quotr works for you. Get in touch — we'll set up templates for your specific trade.
             </p>
             <Link
-              to="/request-access"
+              to="/signup"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
             >
-              Get Founding Member Access
+              Start Free Trial
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
