@@ -3975,28 +3975,6 @@ export type Database = {
         }
         Relationships: []
       }
-      v_dashboard_kpis: {
-        Row: {
-          cash_collected_count: number | null
-          cash_collected_mtd: number | null
-          outstanding_ar: number | null
-          outstanding_ar_count: number | null
-          overdue_30_plus: number | null
-          overdue_30_plus_count: number | null
-          revenue_last_month: number | null
-          revenue_mtd: number | null
-          team_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       v_invoice_balances: {
         Row: {
           balance_due: number | null
