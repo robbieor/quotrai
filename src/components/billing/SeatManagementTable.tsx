@@ -70,18 +70,33 @@ export function SeatManagementTable() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Seat Management
-        </CardTitle>
-        <CardDescription>
-          {isCeo
-            ? "Assign seat types to control each member's access and cost"
-            : "View your team's seat assignments"
-          }
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Seat Management
+            </CardTitle>
+            <CardDescription>
+              {isCeo
+                ? "Assign seat types to control each member's access and cost"
+                : "View your team's seat assignments"
+              }
+            </CardDescription>
+          </div>
+          {isCeo && (
+            <Button 
+              size="sm" 
+              onClick={() => setShowAddSeatDialog(true)}
+              className="gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              Add Seat
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Header row - desktop */}
