@@ -38,7 +38,7 @@ export function TopCustomersTable({ data }: TopCustomersTableProps) {
                 <TableRow
                   key={customer.id}
                   className="hover:bg-muted/30 cursor-pointer h-8"
-                  onClick={() => navigate("/customers")}
+                  onClick={() => navigate(`/customers?highlight=${customer.id}`)}
                 >
                   <TableCell className="text-[11px] text-muted-foreground py-1 tabular-nums">{idx + 1}</TableCell>
                   <TableCell className="text-[11px] font-medium py-1 max-w-[150px] truncate">{customer.name}</TableCell>

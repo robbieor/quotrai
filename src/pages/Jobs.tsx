@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { format } from "date-fns";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,8 +45,9 @@ const statusColors: Record<JobStatus, string> = {
 };
 
 export default function Jobs() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") || "all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -55,6 +57,18 @@ export default function Jobs() {
   const createJobWithSite = useCreateJobWithSite();
   const updateJob = useUpdateJob();
   const deleteJob = useDeleteJob();
+
+  // Auto-open detail sheet from highlight param
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId && jobs && jobs.length > 0) {
+      const target = jobs.find((j) => j.id === highlightId);
+      if (target) {
+        setDetailJob(target);
+        setSearchParams((prev) => { prev.delete("highlight"); return prev; }, { replace: true });
+      }
+    }
+  }, [searchParams, jobs, setSearchParams]);
 
   const filteredJobs = jobs?.filter((job) => {
     const matchesSearch =

@@ -46,7 +46,7 @@ export function JobsAtRiskTable({ data }: JobsAtRiskTableProps) {
                 <TableRow
                   key={job.id}
                   className="hover:bg-muted/30 cursor-pointer h-8"
-                  onClick={() => navigate("/jobs")}
+                  onClick={() => navigate(`/jobs?highlight=${job.id}`)}
                 >
                   <TableCell className="text-[11px] font-medium py-1 max-w-[120px] truncate">{job.title}</TableCell>
                   <TableCell className="text-[11px] text-muted-foreground py-1 max-w-[100px] truncate">{job.customer}</TableCell>

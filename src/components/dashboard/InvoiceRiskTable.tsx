@@ -51,7 +51,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                   <TableRow
                     key={inv.id}
                     className="hover:bg-muted/30 cursor-pointer h-8"
-                    onClick={() => navigate("/invoices")}
+                    onClick={() => navigate(`/invoices?highlight=${inv.id}`)}
                   >
                     <TableCell className="text-[11px] font-medium py-1 max-w-[120px] truncate">{inv.customer}</TableCell>
                     <TableCell className="text-[11px] text-right py-1 tabular-nums font-medium">{formatCurrency(inv.totalDue)}</TableCell>
@@ -68,7 +68,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="py-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate("/invoices"); }}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate(`/invoices?highlight=${inv.id}`); }}>
                         <Mail className="h-3 w-3" />
                       </Button>
                     </TableCell>

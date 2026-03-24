@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format, isPast, isToday } from "date-fns";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,13 +52,14 @@ const getDisplayStatus = (invoice: Invoice) => {
 type StatusFilter = "all" | Invoice["status"];
 
 export default function Invoices() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: invoices, isLoading } = useInvoices();
   const updateStatus = useUpdateInvoiceStatus();
   const deleteInvoice = useDeleteInvoice();
   const { branding } = useCompanyBranding();
   const { symbol: currencySymbol } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get("status") as StatusFilter) || "all");
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [fromQuoteOpen, setFromQuoteOpen] = useState(false);
@@ -65,6 +67,19 @@ export default function Invoices() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  // Auto-open detail sheet from highlight param
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId && invoices && invoices.length > 0) {
+      const target = invoices.find((i) => i.id === highlightId);
+      if (target) {
+        setSelectedInvoice(target);
+        setDetailOpen(true);
+        setSearchParams((prev) => { prev.delete("highlight"); return prev; }, { replace: true });
+      }
+    }
+  }, [searchParams, invoices, setSearchParams]);
 
   const filteredInvoices = useMemo(() => {
     if (!invoices) return [];
