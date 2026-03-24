@@ -263,6 +263,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "certificates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "certificates_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -440,6 +447,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_queue_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "comms_queue_quote_id_fkey"
@@ -1187,6 +1201,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "expenses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "expenses_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -1695,6 +1716,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "invoices_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
@@ -1767,6 +1795,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "job_materials_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "job_materials_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -1837,6 +1872,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_reminders_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "job_reminders_team_id_fkey"
@@ -1935,6 +1977,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "job_sites_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "job_sites_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -1992,6 +2041,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_changes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "job_status_changes_team_id_fkey"
@@ -2203,6 +2259,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "leads_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
@@ -2388,6 +2451,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mileage_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "mileage_logs_team_id_fkey"
@@ -3043,6 +3113,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
           },
           {
             foreignKeyName: "quotes_team_id_fkey"
@@ -3921,6 +3998,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "time_entries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
             foreignKeyName: "time_entries_job_site_id_fkey"
             columns: ["job_site_id"]
             isOneToOne: false
@@ -4293,6 +4377,99 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "quotes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_segment_high_risk_customers: {
+        Row: {
+          customer_id: string | null
+          team_id: string | null
+        }
+        Relationships: []
+      }
+      v_segment_jobs_at_risk: {
+        Row: {
+          customer_id: string | null
+          days_since_update: number | null
+          job_id: string | null
+          risk_type: string | null
+          scheduled_date: string | null
+          status: Database["public"]["Enums"]["job_status"] | null
+          team_id: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          customer_id?: string | null
+          days_since_update?: never
+          job_id?: string | null
+          risk_type?: never
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["job_status"] | null
+          team_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          customer_id?: string | null
+          days_since_update?: never
+          job_id?: string | null
+          risk_type?: never
+          scheduled_date?: string | null
+          status?: Database["public"]["Enums"]["job_status"] | null
+          team_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_segment_recent_activity: {
+        Row: {
+          customer_id: string | null
+          event_date: string | null
+          event_type: string | null
+          record_id: string | null
+          team_id: string | null
+        }
+        Relationships: []
+      }
+      v_segment_top_customers: {
+        Row: {
+          customer_id: string | null
+          invoice_count: number | null
+          team_id: string | null
+          total_collected: number | null
+          total_invoiced: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
