@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, AlertCircle, TrendingUp, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/useCurrency";
 import type { ActionAlert } from "@/hooks/useDashboardAnalytics";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 
@@ -38,6 +39,7 @@ const severityConfig = {
 export function ActionPanel({ alerts }: ActionPanelProps) {
   const navigate = useNavigate();
   const { segment } = useDashboardFilters();
+  const { formatCurrency } = useCurrency();
 
   if (!alerts || alerts.length === 0) {
     return (
@@ -75,7 +77,9 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
             <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", config.dot)} />
             <Icon className={cn("h-3.5 w-3.5 shrink-0", config.iconColor)} />
             <p className="text-sm text-foreground flex-1 truncate">{alert.message}</p>
-            <span className={cn("text-sm tabular-nums shrink-0", config.valueColor)}>{alert.value}</span>
+            <span className={cn("text-sm tabular-nums shrink-0", config.valueColor)}>
+              {alert.isCurrency && alert.rawValue != null ? formatCurrency(alert.rawValue) : alert.value}
+            </span>
           </div>
         );
       })}
