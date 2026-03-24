@@ -81,14 +81,10 @@ function DashboardContent() {
         { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
         { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
       ], data?.drillData?.outstanding || [], "/invoices");
+    } else if (metric === "overdue30") {
+      navigate("/invoices?status=overdue");
     } else if (metric === "jobs") {
-      openDrill("Active Jobs", [
-        { key: "title", label: "Job" },
-        { key: "client", label: "Client" },
-        { key: "status", label: "Status" },
-        { key: "date", label: "Scheduled" },
-        { key: "value", label: "Value", align: "right", format: (v) => formatCurrency(v) },
-      ], data?.drillData?.activeJobs || [], "/jobs");
+      navigate("/jobs?status=in_progress");
     }
   };
 

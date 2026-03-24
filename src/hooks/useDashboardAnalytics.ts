@@ -406,7 +406,7 @@ export function useDashboardAnalytics() {
           severity: "critical",
           message: `${overdue30Plus.length} invoice${overdue30Plus.length > 1 ? "s" : ""} overdue 30+ days`,
           value: `€${overdue30PlusAmount.toLocaleString()}`,
-          href: "/invoices",
+          href: "/invoices?status=overdue",
         });
       }
 
@@ -418,7 +418,7 @@ export function useDashboardAnalytics() {
           severity: "critical",
           message: `${overdue60.length} invoice${overdue60.length > 1 ? "s" : ""} overdue 60+ days — escalate`,
           value: `€${overdue60Amount.toLocaleString()}`,
-          href: "/invoices",
+          href: "/invoices?status=overdue",
         });
       }
 
@@ -428,7 +428,7 @@ export function useDashboardAnalytics() {
           severity: "warning",
           message: `${staleQuotes.length} quote${staleQuotes.length > 1 ? "s" : ""} not followed up in 7+ days`,
           value: `€${staleQuotesValue.toLocaleString()}`,
-          href: "/quotes",
+          href: "/quotes?status=sent",
         });
       }
 
@@ -439,7 +439,7 @@ export function useDashboardAnalytics() {
           severity: "warning",
           message: `${stuckJobs.length} job${stuckJobs.length > 1 ? "s" : ""} stuck in same stage 7+ days`,
           value: `€${stuckValue.toLocaleString()}`,
-          href: "/jobs",
+          href: "/jobs?status=in_progress",
         });
       }
 
@@ -469,7 +469,7 @@ export function useDashboardAnalytics() {
           severity: "opportunity",
           message: "No jobs scheduled next week — fill the gap",
           value: `${pendingQuotes.length} pending quotes`,
-          href: "/jobs",
+          href: "/jobs?status=scheduled",
         });
       }
 
