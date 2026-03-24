@@ -78,7 +78,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                       )}>
                         {inv.daysOverdue}d
                       </TableCell>
-                      <TableCell className="text-[11px] text-right py-1 tabular-nums text-muted-foreground">
+                      <TableCell className="text-[11px] text-right py-1 tabular-nums text-muted-foreground hidden sm:table-cell">
                         {inv.avgDaysToPay > 0 ? `${Math.round(inv.avgDaysToPay)}d` : "—"}
                       </TableCell>
                       <TableCell className="py-1 text-center">
