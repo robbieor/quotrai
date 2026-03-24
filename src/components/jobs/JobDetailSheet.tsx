@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { format } from "date-fns";
+import { format, differenceInMinutes } from "date-fns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -32,7 +32,7 @@ function useJobPnL(jobId: string | null) {
       const [materialsRes, expensesRes, timeRes] = await Promise.all([
         supabase.from("job_materials").select("unit_cost, quantity").eq("job_id", jobId),
         supabase.from("expenses").select("amount").eq("job_id", jobId),
-        supabase.from("time_entries").select("clock_in_at, clock_out_at").eq("job_id", jobId),
+        supabase.from("time_entries").select("id, clock_in_at, clock_out_at, notes, status, clock_in_verified").eq("job_id", jobId).order("clock_in_at", { ascending: false }),
       ]);
 
       const materialsCost = (materialsRes.data || []).reduce(
@@ -43,14 +43,15 @@ function useJobPnL(jobId: string | null) {
         (sum, e) => sum + (Number(e.amount) || 0), 0
       );
 
-      // Calculate labor hours
-      const laborHours = (timeRes.data || []).reduce((sum, t) => {
-        if (!t.clock_in_at || !t.clock_out_at) return sum;
-        const ms = new Date(t.clock_out_at).getTime() - new Date(t.clock_in_at).getTime();
+      const timeEntries = timeRes.data || [];
+
+      const laborHours = timeEntries.reduce((sum, t) => {
+        if (!t.clock_in_at) return sum;
+        const end = t.clock_out_at ? new Date(t.clock_out_at) : new Date();
+        const ms = end.getTime() - new Date(t.clock_in_at).getTime();
         return sum + ms / 3600000;
       }, 0);
 
-      // Default hourly rate — in production this would come from profile settings
       const hourlyRate = 35;
       const laborCost = laborHours * hourlyRate;
 
@@ -60,6 +61,7 @@ function useJobPnL(jobId: string | null) {
         laborHours: Math.round(laborHours * 10) / 10,
         laborCost,
         totalCost: materialsCost + expensesCost + laborCost,
+        timeEntries,
       };
     },
     enabled: !!jobId,
@@ -88,6 +90,14 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
 
   const fmt = (v: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
+
+  const formatDuration = (clockIn: string, clockOut: string | null) => {
+    const end = clockOut ? new Date(clockOut) : new Date();
+    const minutes = differenceInMinutes(end, new Date(clockIn));
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -130,6 +140,45 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
 
           <Separator />
 
+          {/* Time Tracked Section */}
+          <div>
+            <h3 className="font-semibold text-base mb-4 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Time Tracked
+            </h3>
+
+            {pnlLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : pnl?.timeEntries && pnl.timeEntries.length > 0 ? (
+              <div className="space-y-2">
+                {pnl.timeEntries.map((entry: any) => (
+                  <div key={entry.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted text-sm">
+                    <div>
+                      <p className="font-medium">
+                        {format(new Date(entry.clock_in_at), "MMM d")} · {format(new Date(entry.clock_in_at), "h:mm a")}
+                        {entry.clock_out_at && ` – ${format(new Date(entry.clock_out_at), "h:mm a")}`}
+                      </p>
+                      {entry.notes && (
+                        <p className="text-xs text-muted-foreground">{entry.notes}</p>
+                      )}
+                    </div>
+                    <span className="font-medium">{formatDuration(entry.clock_in_at, entry.clock_out_at)}</span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2 border-t text-sm">
+                  <span className="text-muted-foreground">Total</span>
+                  <span className="font-semibold">{pnl.laborHours}h · {fmt(pnl.laborCost)}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No time entries recorded yet.</p>
+            )}
+          </div>
+
+          <Separator />
+
           {/* P&L Section */}
           <div>
             <h3 className="font-semibold text-base mb-4 flex items-center gap-2">
@@ -143,7 +192,6 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Profit Bar */}
                 {barSegments.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex h-4 rounded-full overflow-hidden">
@@ -167,7 +215,6 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
                   </div>
                 )}
 
-                {/* Cost Breakdown */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2 text-muted-foreground">

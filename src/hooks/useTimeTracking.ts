@@ -247,7 +247,7 @@ export function useClockIn() {
         clock_in_latitude: data.latitude || null,
         clock_in_longitude: data.longitude || null,
         clock_in_accuracy: data.accuracy || null,
-        clock_in_verified: clockInVerified,
+        clock_in_verified: false,
         device_id: data.device_id || null,
         status: "active",
       };
