@@ -61,6 +61,7 @@ interface ExpenseFormDialogProps {
 export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDialogProps) {
   const [receiptUrl, setReceiptUrl] = useState<string | null>(expense?.receipt_url || null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isScanningReceipt, setIsScanningReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createExpense = useCreateExpense();
