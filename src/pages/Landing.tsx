@@ -162,6 +162,8 @@ export default function Landing() {
       {/* Section 1: Hero */}
       <HeroSection formatPrice={formatPrice} />
 
+      {/* Demo Video */}
+      <DemoVideoSection />
       {/* Section 2: Problem */}
       <ProblemSection />
 
