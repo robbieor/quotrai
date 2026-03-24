@@ -17,6 +17,7 @@ const TIME_PRESETS: { value: TimePreset; label: string }[] = [
   { value: "30d", label: "30 days" },
   { value: "this_month", label: "This month" },
   { value: "last_month", label: "Last month" },
+  { value: "ytd", label: "Year to date" },
   { value: "custom", label: "Custom" },
 ];
 

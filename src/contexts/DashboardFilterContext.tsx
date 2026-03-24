@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { subDays, startOfMonth, endOfMonth, subMonths, startOfYear } from "date-fns";
 
-export type TimePreset = "7d" | "30d" | "this_month" | "last_month" | "custom";
+export type TimePreset = "7d" | "30d" | "this_month" | "last_month" | "ytd" | "custom";
 export type Segment = "all" | "high_risk" | "top_customers" | "jobs_at_risk" | "recent";
 export type StaffFilter = "all" | "overloaded" | "underperforming" | string; // string = specific user_id
 
@@ -18,6 +18,7 @@ function getDateRangeFromPreset(preset: TimePreset): DateRange {
     case "30d": return { from: subDays(now, 30), to: now };
     case "this_month": return { from: startOfMonth(now), to: now };
     case "last_month": return { from: startOfMonth(subMonths(now, 1)), to: endOfMonth(subMonths(now, 1)) };
+    case "ytd": return { from: startOfYear(now), to: now };
     case "custom": return { from: subDays(now, 30), to: now };
   }
 }
