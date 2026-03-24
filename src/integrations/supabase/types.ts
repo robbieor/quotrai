@@ -1591,6 +1591,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          balance_due: number | null
           communication_suppressed: boolean
           created_at: string
           currency: string
@@ -1615,6 +1616,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          balance_due?: number | null
           communication_suppressed?: boolean
           created_at?: string
           currency?: string
@@ -1639,6 +1641,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          balance_due?: number | null
           communication_suppressed?: boolean
           created_at?: string
           currency?: string
