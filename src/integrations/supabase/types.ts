@@ -4355,11 +4355,15 @@ export type Database = {
       }
       v_invoice_risk: {
         Row: {
+          avg_days_to_pay: number | null
           customer: string | null
+          days_overdue: number | null
           id: string | null
           invoice_count: number | null
-          max_days_overdue: number | null
+          late_payment_rate: number | null
           oldest_due_date: string | null
+          oldest_invoice: string | null
+          risk_points: number | null
           risk_score: string | null
           team_id: string | null
           total_due: number | null
