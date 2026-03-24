@@ -151,7 +151,7 @@ const competitorBaseEUR = [
   { name: "Traditional FSM Software A", eur: 34, ai: false, voice: false, portal: false, gps: true, xero: true },
   { name: "Traditional FSM Software B", eur: 40, ai: false, voice: false, portal: true, gps: false, xero: true },
   { name: "Traditional FSM Software C", eur: 49, ai: false, voice: false, portal: true, gps: true, xero: true },
-  { name: "Quotr", eur: 29, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
+  { name: "Quotr", eur: 39, ai: true, voice: true, portal: true, gps: true, xero: true, highlight: true },
 ];
 
 const comparisonFeatures = [
@@ -803,7 +803,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Lite</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-foreground">{formatPrice(15)}</span>
+                <span className="text-4xl font-extrabold text-foreground">{formatPrice(19)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
@@ -842,7 +842,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Connect</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-primary">{formatPrice(29)}</span>
+                <span className="text-4xl font-extrabold text-primary">{formatPrice(39)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
@@ -881,7 +881,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold text-foreground">Grow</h3>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-foreground">{formatPrice(49)}</span>
+                <span className="text-4xl font-extrabold text-foreground">{formatPrice(69)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
