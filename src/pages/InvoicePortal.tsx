@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useSearchParams } from "react-router-dom";
 import { format, isPast, isToday } from "date-fns";
 import { usePortalInvoice } from "@/hooks/usePortal";
@@ -59,12 +60,7 @@ export default function InvoicePortal() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   const getDisplayStatus = (status: string, dueDate: string) => {
     if (status === "pending") {

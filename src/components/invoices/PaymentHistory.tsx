@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useCurrency } from "@/hooks/useCurrency";
 import { Trash2, CreditCard, Banknote, Building2, FileCheck, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,12 +32,7 @@ export function PaymentHistory({ invoiceId }: PaymentHistoryProps) {
   const { data: payments, isLoading } = usePayments(invoiceId);
   const deletePayment = useDeletePayment();
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   const getMethodLabel = (method: string | null) => {
     const labels: Record<string, string> = {

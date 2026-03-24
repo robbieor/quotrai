@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useDeleteExpense, type Expense } from "@/hooks/useExpenses";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface DeleteExpenseDialogProps {
   open: boolean;
@@ -28,12 +29,7 @@ export function DeleteExpenseDialog({ open, onOpenChange, expense }: DeleteExpen
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

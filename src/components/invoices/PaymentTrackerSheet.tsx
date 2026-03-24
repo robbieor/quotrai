@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { DollarSign, Plus } from "lucide-react";
 import {
   Sheet,
@@ -34,12 +35,7 @@ export function PaymentTrackerSheet({ open, onOpenChange, invoice }: PaymentTrac
   const isPaidInFull = outstandingBalance === 0 && invoiceTotal > 0;
   const paymentProgress = invoiceTotal > 0 ? (totalPaid / invoiceTotal) * 100 : 0;
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   return (
     <>

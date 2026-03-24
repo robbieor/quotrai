@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { format } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -131,12 +132,10 @@ export default function Jobs() {
     setDeleteDialogOpen(true);
   };
 
-  const formatCurrency = (value: number | null) => {
+  const { formatCurrency } = useCurrency();
+  const fmtCurrency = (value: number | null) => {
     if (value === null) return "-";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+    return formatCurrency(value);
   };
 
   return (

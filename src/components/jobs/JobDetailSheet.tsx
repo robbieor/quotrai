@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { format, differenceInMinutes } from "date-fns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -88,8 +89,7 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
 
   if (!job) return null;
 
-  const fmt = (v: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
+  const { formatCurrency: fmt } = useCurrency();
 
   const formatDuration = (clockIn: string, clockOut: string | null) => {
     const end = clockOut ? new Date(clockOut) : new Date();
