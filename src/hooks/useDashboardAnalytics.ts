@@ -356,7 +356,7 @@ export function useDashboardAnalytics() {
       }
 
       const conversionRate = pendingQuotes.length > 0 || quotes.filter((q) => q.status === "accepted").length > 0
-        ? (quotes.filter((q) => q.status === "accepted").length / Math.max(quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status)).length, 1)) * 100
+        ? (quotes.filter((q) => q.status === "accepted").length / Math.max(quotes.filter((q) => ["sent", "accepted", "declined"].includes(q.status)).length, 1)) * 100
         : 0;
       if (conversionRate > 60) {
         actionAlerts.push({
