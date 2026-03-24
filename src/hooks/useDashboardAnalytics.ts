@@ -125,7 +125,7 @@ export function useDashboardAnalytics() {
       const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
 
       let jobsQuery = supabase.from("jobs").select("id, title, status, scheduled_date, created_at, updated_at, estimated_value, customer_id, customer:customers(name)");
-      let invoicesQuery = supabase.from("invoices").select("id, invoice_number, status, total, balance_due, issue_date, due_date, customer_id, customer:customers(name)");
+      let invoicesQuery = supabase.from("invoices").select("id, invoice_number, status, total, balance_due, issue_date, due_date, customer_id, quote_id, customer:customers(name)");
       let quotesQuery = supabase.from("quotes").select("id, quote_number, status, total, created_at, updated_at, customer_id, customer:customers(name)");
       let paymentsQuery = supabase.from("payments").select("id, amount, payment_date, created_at, invoice_id, invoice:invoices(invoice_number, customer_id, issue_date, customer:customers(name))");
 
