@@ -1,21 +1,48 @@
 
 
-# Fix: "0" Badge Bug in Notifications
+# AI-Powered Receipt Scanning
 
-## Problem
-The notification badge renders a literal "0" next to the bell icon when `unreadCount` is `0`. This is a well-known React gotcha: `{0 && <Component />}` evaluates to `0`, which React renders as text.
+## Overview
+When a user uploads a receipt image in the expense form, send it to a new edge function that uses Lovable AI (Gemini Vision) to extract vendor, amount, date, and category. Pre-fill the form fields with the extracted data.
 
-This bug exists in **3 places** across 2 files:
+## Architecture
+
+```text
+ExpenseFormDialog → upload image to storage → get public URL
+                  → call scan-receipt edge function with URL
+                  → edge function sends image to Lovable AI Gateway (Gemini Flash)
+                  → returns { vendor, amount, date, category, description }
+                  → form fields auto-populated
+```
+
+## Tasks
+
+### 1. Create `scan-receipt` Edge Function
+**File**: `supabase/functions/scan-receipt/index.ts`
+
+- Accept `{ image_url: string }` in request body
+- Use Lovable AI Gateway with `google/gemini-2.5-flash` (supports vision/multimodal)
+- Use tool calling to extract structured output: `{ vendor, amount, date, category, description }`
+- Map extracted category to the `ExpenseCategory` enum values
+- Return extracted fields as JSON
+- Handle 429/402 errors properly
+
+### 2. Update `ExpenseFormDialog.tsx`
+**File**: `src/components/expenses/ExpenseFormDialog.tsx`
+
+- After successful receipt upload (line 88-89), call the `scan-receipt` edge function with the receipt URL
+- Add `isScanningReceipt` loading state
+- On success, pre-fill form fields using `form.setValue()` for vendor, amount, expense_date, category, description
+- Show a toast: "Receipt scanned — fields pre-filled"
+- Show scanning indicator on the receipt upload area while processing
+- If scan fails, silently continue (receipt is still uploaded, user fills manually)
+
+### 3. No Database Changes
+No new tables or migrations needed. Uses existing receipt upload flow and form fields.
+
+## Files to Create
+- `supabase/functions/scan-receipt/index.ts`
 
 ## Files to Modify
-
-### `src/components/layout/NotificationCenter.tsx`
-- **Line 64**: `{unreadCount && unreadCount > 0 && (` → `{(unreadCount ?? 0) > 0 && (`
-- **Line 77**: Same fix
-
-### `src/pages/Notifications.tsx`
-- **Line 96**: `{unreadCount && unreadCount > 0 ? (` → `{(unreadCount ?? 0) > 0 ? (`
-
-## Dashboard Status
-The dashboard itself **is** the latest version — it includes Morning Briefing, Business Health Panel, BI charts with drill-through, filter bar, quote funnel, invoice aging, top customers, activity feeds, and team activity. The "0" badge in the header is the visual regression the screenshot shows.
+- `src/components/expenses/ExpenseFormDialog.tsx`
 
