@@ -110,9 +110,23 @@ serve(async (req) => {
 
 // ── Helpers ──────────────────────────────────────────────────
 
+const STATUS_ALIASES: Record<string, string> = {
+  sent: "pending",       // invoices: "sent" maps to "pending"
+  unpaid: "pending",
+  outstanding: "overdue",
+  approved: "accepted",  // quotes
+  rejected: "declined",
+  won: "accepted",
+  lost: "declined",
+};
+
 function validateStatus(status: string | undefined, validStatuses: string[]): string | null {
   if (!status) return null;
-  const normalized = status.trim().toLowerCase().replace(/\s+/g, "_");
+  let normalized = status.trim().toLowerCase().replace(/\s+/g, "_");
+  // Only apply alias if the value isn't already valid
+  if (!validStatuses.includes(normalized) && STATUS_ALIASES[normalized]) {
+    normalized = STATUS_ALIASES[normalized];
+  }
   return validStatuses.includes(normalized) ? normalized : null;
 }
 
@@ -182,11 +196,14 @@ async function importInvoices(supabase: any, teamId: string, rows: Record<string
     const taxRate = parseFloat(row.tax_rate) || 0;
     const subtotal = row.subtotal ? parseFloat(row.subtotal) : (taxRate > 0 ? total / (1 + taxRate / 100) : total);
     const taxAmount = row.tax_amount ? parseFloat(row.tax_amount) : total - subtotal;
-    const status = validateStatus(row.status, ["draft", "sent", "paid", "overdue", "cancelled"]) || "draft";
+    const status = validateStatus(row.status, ["draft", "pending", "paid", "overdue", "cancelled"]) || "draft";
+
+    const issueDate = row.issue_date.trim();
+    const dueDate = row.due_date?.trim() || new Date(new Date(issueDate).getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     const { error } = await supabase.from("invoices").insert({
       team_id: teamId, customer_id: customer.id, invoice_number: row.invoice_number.trim(),
-      issue_date: row.issue_date.trim(), due_date: row.due_date?.trim() || null, status,
+      issue_date: issueDate, due_date: dueDate, status,
       notes: row.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
     });
@@ -223,11 +240,14 @@ async function importInvoicesWithItems(supabase: any, teamId: string, rows: Reco
     const taxRate = parseFloat(headerRow.tax_rate) || 0;
     const subtotal = headerRow.subtotal ? parseFloat(headerRow.subtotal) : (taxRate > 0 ? total / (1 + taxRate / 100) : total);
     const taxAmount = headerRow.tax_amount ? parseFloat(headerRow.tax_amount) : total - subtotal;
-    const status = validateStatus(headerRow.status, ["draft", "sent", "paid", "overdue", "cancelled"]) || "draft";
+    const status = validateStatus(headerRow.status, ["draft", "pending", "paid", "overdue", "cancelled"]) || "draft";
+
+    const issueDate = headerRow.issue_date.trim();
+    const dueDate = headerRow.due_date?.trim() || new Date(new Date(issueDate).getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     const { data: invoice, error: invError } = await supabase.from("invoices").insert({
       team_id: teamId, customer_id: customer.id, invoice_number: invoiceNumber,
-      issue_date: headerRow.issue_date.trim(), due_date: headerRow.due_date?.trim() || null, status,
+      issue_date: issueDate, due_date: dueDate, status,
       notes: headerRow.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
     }).select("id").single();
@@ -245,7 +265,7 @@ async function importInvoicesWithItems(supabase: any, teamId: string, rows: Reco
 
       const { error: itemError } = await supabase.from("invoice_items").insert({
         invoice_id: invoice.id, description: itemRow.description.trim(),
-        quantity: qty, unit_price: unitPrice, total_price: lineTotal,
+        quantity: qty, unit_price: unitPrice,
       });
       if (itemError) { result.errors.push(`Invoice '${invoiceNumber}' item: ${itemError.message}`); }
     }
@@ -287,7 +307,7 @@ async function importQuotes(supabase: any, teamId: string, rows: Record<string, 
     const taxRate = parseFloat(row.tax_rate) || 0;
     const subtotal = row.subtotal ? parseFloat(row.subtotal) : (taxRate > 0 ? total / (1 + taxRate / 100) : total);
     const taxAmount = row.tax_amount ? parseFloat(row.tax_amount) : total - subtotal;
-    const status = validateStatus(row.status, ["draft", "sent", "accepted", "declined"]) || "draft";
+    const status = validateStatus(row.status, ["draft", "sent", "accepted", "declined", "expired"]) || "draft";
 
     const { error } = await supabase.from("quotes").insert({
       team_id: teamId, customer_id: customer.id, quote_number: row.quote_number.trim(),
@@ -326,7 +346,7 @@ async function importQuotesWithItems(supabase: any, teamId: string, rows: Record
     const taxRate = parseFloat(headerRow.tax_rate) || 0;
     const subtotal = headerRow.subtotal ? parseFloat(headerRow.subtotal) : (taxRate > 0 ? total / (1 + taxRate / 100) : total);
     const taxAmount = headerRow.tax_amount ? parseFloat(headerRow.tax_amount) : total - subtotal;
-    const status = validateStatus(headerRow.status, ["draft", "sent", "accepted", "declined"]) || "draft";
+    const status = validateStatus(headerRow.status, ["draft", "sent", "accepted", "declined", "expired"]) || "draft";
 
     const { data: quote, error: qError } = await supabase.from("quotes").insert({
       team_id: teamId, customer_id: customer.id, quote_number: quoteNumber,
@@ -347,7 +367,7 @@ async function importQuotesWithItems(supabase: any, teamId: string, rows: Record
 
       const { error: itemError } = await supabase.from("quote_items").insert({
         quote_id: quote.id, description: itemRow.description.trim(),
-        quantity: qty, unit_price: unitPrice, total_price: lineTotal,
+        quantity: qty, unit_price: unitPrice,
       });
       if (itemError) { result.errors.push(`Quote '${quoteNumber}' item: ${itemError.message}`); }
     }
@@ -410,7 +430,7 @@ async function importInvoiceItems(supabase: any, teamId: string, rows: Record<st
 
     const { error } = await supabase.from("invoice_items").insert({
       invoice_id: invoice.id, description: row.description.trim(),
-      quantity, unit_price: unitPrice, total_price: quantity * unitPrice,
+      quantity, unit_price: unitPrice,
     });
 
     if (error) { result.errors.push(`Row ${rowNum}: ${error.message}`); } else { result.imported++; }
@@ -437,7 +457,7 @@ async function importQuoteItems(supabase: any, teamId: string, rows: Record<stri
 
     const { error } = await supabase.from("quote_items").insert({
       quote_id: quote.id, description: row.description.trim(),
-      quantity, unit_price: unitPrice, total_price: quantity * unitPrice,
+      quantity, unit_price: unitPrice,
     });
 
     if (error) { result.errors.push(`Row ${rowNum}: ${error.message}`); } else { result.imported++; }
