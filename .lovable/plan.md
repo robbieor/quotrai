@@ -1,60 +1,85 @@
 
 
-# Payment Behaviour Tracking & Enhanced Invoice Risk Scoring
+# Import Wizard: Header-Only vs Header + Line Items
 
-## What we're building
-A customer payment behaviour system that tracks historical late-payment patterns and uses them to improve the Invoice Risk score — turning it from a simple "days overdue" check into a predictive risk indicator.
-
----
-
-## Database changes
-
-### 1. New table: `customer_payment_scores`
-Stores pre-computed payment behaviour per customer:
-- `customer_id` (FK to customers)
-- `team_id`
-- `total_invoices_paid` — lifetime count
-- `late_payments_count` — paid after due date
-- `avg_days_to_pay` — average calendar days from issue to payment
-- `avg_days_late` — average days past due (only for late ones)
-- `last_computed_at` — timestamp
-
-RLS: team-scoped read/write for authenticated users.
-
-### 2. Database function: `fn_compute_payment_scores()`
-A SQL function that:
-- Joins `invoices` → `payments` to find the earliest payment date per invoice
-- Compares payment date vs due date to classify late/on-time
-- Aggregates per customer into the scores table (upsert)
-- Can be called on-demand or via a cron trigger
-
-### 3. Updated view: `v_invoice_risk`
-Enhance the existing risk score formula by joining `customer_payment_scores`:
-- Current: purely `max_days_overdue` buckets (>60 = high, >30 = medium)
-- New: weighted score combining overdue days (60%) + late payment history (30%) + exposure size (10%)
-- Output a numeric `risk_points` column alongside the categorical `risk_score`
+## Summary
+Upgrade the import wizard so users importing invoices or quotes can choose between **Header Only** (summary totals, no line items needed) and **Header + Line Items** (structured data with parent-child mapping). This supports historical imports where detailed line items don't exist.
 
 ---
 
-## Frontend changes
+## Changes
 
-### 4. Update `InvoiceAtRisk` interface
-Add fields: `latePaymentRate`, `avgDaysToPay`, `riskPoints`
+### 1. Frontend — `DataImportSection.tsx`
 
-### 5. Update `InvoiceRiskTable.tsx`
-- Show `Avg Days to Pay` column (compact)
-- Sort by `riskPoints` descending instead of just `daysOverdue`
-- Tooltip on risk badge showing breakdown: "62 days overdue · 73% late history · £12k exposure"
+**Consolidate tabs**: Remove the separate "Invoice Items" and "Quote Items" tabs. Instead, when user selects "Invoices" or "Quotes", show a **data completeness prompt** between upload and mapping steps:
 
-### 6. Update `useDashboardAnalytics.ts`
-- Query `customer_payment_scores` alongside invoice data
-- Merge into the `InvoiceAtRisk` objects
-- Use the enhanced risk scoring in Action Panel alerts
+- New step inserted: `"mode"` (between `"upload"` and `"mapping"`)
+- Two radio options:
+  - **Header only** — "I only have totals and basic info (historical records)"
+  - **Header + line items** — "My CSV includes line item detail per invoice/quote"
+- Add new state: `importMode: "header_only" | "header_with_items"`
+
+**Header Only mode**:
+- Skip item columns entirely — required fields are just: invoice_number/quote_number, customer_email, issue_date (invoices only), total
+- Show info banner: *"Historical imports preserve your records as-is. New invoices created in Quotr will use structured line items."*
+- Send `{ type: "invoices", rows, mode: "header_only" }` to edge function
+
+**Header + Line Items mode**:
+- CSV must contain both header fields AND item fields in the same file (denormalized: one row per line item, header fields repeated)
+- Required item columns added: description, quantity, unit_price
+- Optional: line_total, tax_rate
+- Validation: warn if sum of line items doesn't match header total (soft warning, not blocking)
+- Send `{ type: "invoices", rows, mode: "header_with_items" }` to edge function
+
+**Step indicator**: Update from 3 steps to 4 for invoices/quotes: Upload → Data Mode → Map Columns → Preview & Import. Customers and Jobs keep the existing 3-step flow.
+
+**Remove tabs**: Remove `invoice_items` and `quote_items` as standalone import types — they're now handled inline via the "Header + Line Items" mode.
+
+### 2. Edge Function — `import-data/index.ts`
+
+**Updated `ImportRequest` interface**: Add optional `mode: "header_only" | "header_with_items"` field.
+
+**`importInvoices` changes**:
+- If `mode === "header_with_items"`: group rows by `invoice_number`, create the invoice header from the first row, then create `invoice_items` for each row in the group. Validate that item totals approximately match header total (warn if >1% discrepancy).
+- If `mode === "header_only"` (or no mode): current behaviour — create invoice record with totals, no items. Mark as `is_historical: true` if column exists, otherwise just rely on `communication_suppressed: true`.
+
+**`importQuotes` changes**: Same pattern as invoices — group by `quote_number`, create header + items when in `header_with_items` mode.
+
+**Keep standalone `importInvoiceItems` and `importQuoteItems`** functions for backward compatibility but they won't be reachable from the new UI.
+
+### 3. Updated CSV Templates
+
+**Invoice template (Header Only)**:
+`customer_email, invoice_number, issue_date, total, due_date, status, notes, tax_rate, subtotal, tax_amount`
+
+**Invoice template (Header + Line Items)**:
+`customer_email, invoice_number, issue_date, total, due_date, status, tax_rate, description, quantity, unit_price`
+
+Same pattern for quotes.
+
+### 4. Historical Import Safety
+
+All imported records already have:
+- `communication_suppressed: true` — prevents outbound emails
+- `delivery_status: "not_sent"` — no automation triggered
+
+No database migration needed — existing columns handle this.
 
 ---
 
 ## Files to modify
-1. New migration — `customer_payment_scores` table + `fn_compute_payment_scores` function + updated `v_invoice_risk` view
-2. `src/hooks/useDashboardAnalytics.ts` — add payment score query, merge into risk data
-3. `src/components/dashboard/InvoiceRiskTable.tsx` — add column, tooltip, sort by risk points
+
+| File | Change |
+|------|--------|
+| `src/components/settings/DataImportSection.tsx` | Add mode selection step, consolidate invoice/quote item imports, update step indicator, add historical import messaging |
+| `supabase/functions/import-data/index.ts` | Add `mode` handling, group-by logic for header+items, item creation within invoice/quote import |
+
+---
+
+## Technical details
+
+- **Row grouping** (header+items mode): Group parsed rows by `invoice_number`/`quote_number`. First occurrence provides header fields. All rows in group provide line item fields.
+- **Validation**: Soft warning when `sum(quantity * unit_price)` differs from `total` by more than 1%.
+- **Template download**: Dynamically generates correct template based on selected mode.
+- **No migration needed**: All required columns (`communication_suppressed`, `delivery_status`) already exist on invoices and quotes tables.
 
