@@ -796,6 +796,8 @@ export default function Landing() {
                 </Button>
               </Link>
             </div>
+            </div>
+          </div>
 
           {/* Platform Fee */}
           <div className="max-w-5xl mx-auto mt-8">
