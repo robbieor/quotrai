@@ -16,7 +16,7 @@ interface RevenueMultiChartProps {
 }
 
 export function RevenueMultiChart({ data, isLoading }: RevenueMultiChartProps) {
-  const { formatCurrency, currencySymbol } = useCurrency();
+  const { formatCurrency, symbol } = useCurrency();
 
   const formatAxis = (v: number) =>
     v >= 1000 ? `${currencySymbol}${(v / 1000).toFixed(0)}k` : `${currencySymbol}${v}`;
