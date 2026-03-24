@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -83,12 +84,7 @@ export default function Expenses() {
     });
   }, [expenses, searchQuery, categoryFilter]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   const getCategoryLabel = (category: ExpenseCategory) => {
     return EXPENSE_CATEGORIES.find((c) => c.value === category)?.label || category;

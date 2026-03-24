@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useNavigate, Link } from "react-router-dom";
 import { format, isPast, isToday } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -78,12 +79,7 @@ export default function CustomerDashboard() {
     navigate("/customer/login");
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   const getInvoiceDisplayStatus = (status: string, dueDate: string) => {
     if (status === "pending") {

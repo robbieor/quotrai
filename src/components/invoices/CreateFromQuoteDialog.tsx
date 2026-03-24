@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -32,12 +33,7 @@ export function CreateFromQuoteDialog({ open, onOpenChange }: CreateFromQuoteDia
   // Filter to only show accepted quotes
   const acceptedQuotes = quotes?.filter((q) => q.status === "accepted") || [];
 
-  const formatCurrency = (value: number | null) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value || 0);
-  };
+  const { formatCurrency } = useCurrency();
 
   const handleCreate = async () => {
     if (!selectedQuoteId) return;

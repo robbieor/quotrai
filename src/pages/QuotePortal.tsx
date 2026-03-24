@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { usePortalQuote, useAcceptQuoteFromPortal, useDeclineQuoteFromPortal } from "@/hooks/usePortal";
@@ -61,12 +62,7 @@ export default function QuotePortal() {
     setDeclineReason("");
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   if (isLoading) {
     return (
