@@ -13,6 +13,7 @@ import { GeorgeVoiceOverview } from "@/components/settings/GeorgeVoiceOverview";
 import { GeorgeBillingReports } from "@/components/billing/GeorgeBillingReports";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { DataImportSection } from "@/components/settings/DataImportSection";
+import { DataExportSection } from "@/components/settings/DataExportSection";
 import { ExpenseEmailForwarding } from "@/components/settings/ExpenseEmailForwarding";
 import { ForemanAISettings } from "@/components/settings/ForemanAISettings";
 
@@ -334,6 +335,7 @@ export default function Settings() {
 
           <TabsContent value="import" className="space-y-6 max-w-4xl">
             <ExpenseEmailForwarding />
+            <DataExportSection />
             <DataImportSection />
           </TabsContent>
 
