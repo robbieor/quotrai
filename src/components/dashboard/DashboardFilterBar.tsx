@@ -23,7 +23,7 @@ const TIME_PRESETS: { value: TimePreset; label: string }[] = [
 const SEGMENTS: { value: Segment; label: string; description: string }[] = [
   { value: "all", label: "All Data", description: "No filter applied" },
   { value: "high_risk", label: "High Risk", description: "Overdue invoices & stuck jobs" },
-  { value: "top_customers", label: "Top Customers", description: "By revenue" },
+  { value: "top_customers", label: "Top Customers", description: "By collected cash" },
   { value: "jobs_at_risk", label: "Jobs at Risk", description: "Stuck 7+ days" },
   { value: "recent", label: "Recent Activity", description: "Last 48 hours" },
 ];
@@ -133,10 +133,10 @@ export function DashboardFilterBar() {
         </PopoverContent>
       </Popover>
 
-      {/* Segment */}
+      {/* Focus (was Segment) */}
       <Popover>
         <PopoverTrigger asChild>
-          <div><CompactButton icon={Shield} label={segmentLabel} active={segment !== "all"} /></div>
+          <div><CompactButton icon={Shield} label={segment === "all" ? "Focus" : segmentLabel} active={segment !== "all"} /></div>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-56 p-1">
           {SEGMENTS.map((s) => (
@@ -237,19 +237,43 @@ export function DashboardFilterBar() {
         </SheetContent>
       </Sheet>
 
-      {/* Cross-filter badge */}
-      {crossFilter && (
-        <Badge variant="secondary" className="gap-1 cursor-pointer text-[10px] h-5" onClick={() => setCrossFilter(null)}>
-          {crossFilter.dimension}: {crossFilter.value}
-          <X className="h-2.5 w-2.5" />
-        </Badge>
-      )}
-
-      {/* Clear all indicator */}
-      {totalFilters > 0 && (
-        <button onClick={clearAll} className="text-[10px] text-muted-foreground hover:text-foreground underline">
-          Reset
-        </button>
+      {/* Active filter chips */}
+      {(segment !== "all" || staffId !== "all" || customerId || jobType || crossFilter) && (
+        <div className="flex items-center gap-1 ml-1 border-l border-border pl-2">
+          {segment !== "all" && (
+            <Badge variant="secondary" className="gap-1 cursor-pointer text-[10px] h-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors" onClick={() => setSegment("all")}>
+              {segmentLabel}
+              <X className="h-2.5 w-2.5" />
+            </Badge>
+          )}
+          {staffId !== "all" && (
+            <Badge variant="secondary" className="gap-1 cursor-pointer text-[10px] h-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors" onClick={() => setStaffId("all")}>
+              {staffLabel}
+              <X className="h-2.5 w-2.5" />
+            </Badge>
+          )}
+          {customerId && (
+            <Badge variant="secondary" className="gap-1 cursor-pointer text-[10px] h-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors" onClick={() => setCustomerId(null)}>
+              {customers?.find((c) => c.id === customerId)?.name || "Customer"}
+              <X className="h-2.5 w-2.5" />
+            </Badge>
+          )}
+          {jobType && (
+            <Badge variant="secondary" className="gap-1 cursor-pointer text-[10px] h-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors" onClick={() => setJobType(null)}>
+              {jobType}
+              <X className="h-2.5 w-2.5" />
+            </Badge>
+          )}
+          {crossFilter && (
+            <Badge variant="secondary" className="gap-1 cursor-pointer text-[10px] h-5 bg-accent/50 text-accent-foreground hover:bg-accent transition-colors" onClick={() => setCrossFilter(null)}>
+              {crossFilter.dimension}: {crossFilter.value}
+              <X className="h-2.5 w-2.5" />
+            </Badge>
+          )}
+          <button onClick={clearAll} className="text-[10px] text-muted-foreground hover:text-destructive ml-0.5 transition-colors">
+            Clear all
+          </button>
+        </div>
       )}
     </div>
   );
