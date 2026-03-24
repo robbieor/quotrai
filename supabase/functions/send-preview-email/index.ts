@@ -55,6 +55,38 @@ const handler = async (req: Request): Promise<Response> => {
     const recipientEmail = user.email;
     const docLabel = documentType === "invoice" ? "invoice" : "quote";
     const subject = `Your Quotr ${docLabel} preview`;
+    const messageId = crypto.randomUUID();
+    const idempotencyKey = `preview-${docLabel}-${messageId}`;
+
+    // Ensure app-email compliance by providing a stable unsubscribe token.
+    let unsubscribeToken: string;
+    const { data: existingTokenRow, error: existingTokenError } = await supabase
+      .from("email_unsubscribe_tokens")
+      .select("token")
+      .eq("email", recipientEmail)
+      .maybeSingle();
+
+    if (existingTokenError) {
+      console.error("Failed to load unsubscribe token:", existingTokenError);
+      throw new Error("Failed to prepare preview email");
+    }
+
+    if (existingTokenRow?.token) {
+      unsubscribeToken = existingTokenRow.token;
+    } else {
+      unsubscribeToken = crypto.randomUUID();
+      const { error: tokenInsertError } = await supabase
+        .from("email_unsubscribe_tokens")
+        .insert({
+          email: recipientEmail,
+          token: unsubscribeToken,
+        });
+
+      if (tokenInsertError) {
+        console.error("Failed to create unsubscribe token:", tokenInsertError);
+        throw new Error("Failed to prepare preview email");
+      }
+    }
 
     // Upload PDF to storage and get a signed download URL
     let pdfDownloadUrl: string | null = null;
@@ -103,9 +135,6 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    const messageId = crypto.randomUUID();
-    const idempotencyKey = `preview-${docLabel}-${messageId}`;
-
     // Log pending
     await supabase.from("email_send_log").insert({
       message_id: messageId,
@@ -120,6 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         idempotency_key: idempotencyKey,
+        unsubscribe_token: unsubscribeToken,
         to: recipientEmail,
         from: `Quotr <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
@@ -156,12 +186,12 @@ const handler = async (req: Request): Promise<Response> => {
         confirmed_by_user: true,
         source_screen: "branding_settings",
         record_type: "preview",
-        metadata: { type: "internal_preview", document_type: documentType },
+        metadata: { type: "internal_preview", document_type: documentType, message_id: messageId },
       });
     }
 
     return new Response(
-      JSON.stringify({ success: true, sentTo: recipientEmail }),
+      JSON.stringify({ success: true, queued: true, sentTo: recipientEmail }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
