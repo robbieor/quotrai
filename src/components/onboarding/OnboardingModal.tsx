@@ -118,11 +118,14 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     businessSize: "",
     currency: "EUR",
     country: "IE",
+    sendsQuotes: null,
+    tracksJobs: null,
+    priority: "",
   });
   const [commsPrefs, setCommsPrefs] = useState<CommsPrefs>(DEFAULT_COMMS);
   const { user } = useAuth();
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const updateData = (field: keyof OnboardingData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
