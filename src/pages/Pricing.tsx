@@ -228,7 +228,7 @@ export default function Pricing() {
                     </Badge>
                   )}
 
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-2">
                     <div className={cn(
                       "p-2.5 rounded-xl",
                       plan.popular ? "bg-primary/10" : "bg-muted"
@@ -239,6 +239,7 @@ export default function Pricing() {
                       <h3 className="font-bold text-lg">{plan.name}</h3>
                     </div>
                   </div>
+                  <p className="text-sm font-semibold text-primary mb-4">{plan.tagline}</p>
 
                   <div className="mb-6">
                     <div className="flex items-baseline gap-1">
