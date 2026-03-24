@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Mail, CheckCircle2 } from "lucide-react";
@@ -45,50 +46,64 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
             </p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="text-[10px] font-semibold uppercase tracking-wider">Customer</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Total Due</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Oldest</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Days</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-center">Risk</TableHead>
-                <TableHead className="text-[10px] font-semibold uppercase tracking-wider w-[40px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((inv) => {
-                const risk = riskConfig[inv.riskScore];
-                return (
-                  <TableRow
-                    key={inv.id}
-                    className="hover:bg-muted/30 cursor-pointer h-8"
-                    onClick={() => navigate(`/invoices?highlight=${inv.id}`)}
-                  >
-                    <TableCell className="text-[11px] font-medium py-1 max-w-[120px] truncate">{inv.customer}</TableCell>
-                    <TableCell className="text-[11px] text-right py-1 tabular-nums font-medium">{formatCurrency(inv.totalDue)}</TableCell>
-                    <TableCell className="text-[11px] text-right py-1 text-muted-foreground">{inv.oldestInvoice}</TableCell>
-                    <TableCell className={cn(
-                      "text-[11px] text-right py-1 tabular-nums font-medium",
-                      inv.daysOverdue > 60 ? "text-destructive" : inv.daysOverdue > 30 ? "text-amber-500" : "text-foreground"
-                    )}>
-                      {inv.daysOverdue}d
-                    </TableCell>
-                    <TableCell className="py-1 text-center">
-                      <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0", risk.className)}>
-                        {risk.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate(`/invoices?highlight=${inv.id}`); }}>
-                        <Mail className="h-3 w-3" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <TooltipProvider delayDuration={300}>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent h-8">
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider">Customer</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Total Due</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Oldest</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Days</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Avg Pay</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-center">Risk</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider w-[40px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((inv) => {
+                  const risk = riskConfig[inv.riskScore];
+                  const tooltipText = `${inv.daysOverdue}d overdue · ${inv.latePaymentRate}% late history · ${formatCurrency(inv.totalDue)} exposure`;
+                  return (
+                    <TableRow
+                      key={inv.id}
+                      className="hover:bg-muted/30 cursor-pointer h-8"
+                      onClick={() => navigate(`/invoices?highlight=${inv.id}`)}
+                    >
+                      <TableCell className="text-[11px] font-medium py-1 max-w-[120px] truncate">{inv.customer}</TableCell>
+                      <TableCell className="text-[11px] text-right py-1 tabular-nums font-medium">{formatCurrency(inv.totalDue)}</TableCell>
+                      <TableCell className="text-[11px] text-right py-1 text-muted-foreground">{inv.oldestInvoice}</TableCell>
+                      <TableCell className={cn(
+                        "text-[11px] text-right py-1 tabular-nums font-medium",
+                        inv.daysOverdue > 60 ? "text-destructive" : inv.daysOverdue > 30 ? "text-amber-500" : "text-foreground"
+                      )}>
+                        {inv.daysOverdue}d
+                      </TableCell>
+                      <TableCell className="text-[11px] text-right py-1 tabular-nums text-muted-foreground">
+                        {inv.avgDaysToPay > 0 ? `${Math.round(inv.avgDaysToPay)}d` : "—"}
+                      </TableCell>
+                      <TableCell className="py-1 text-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 cursor-help", risk.className)}>
+                              {risk.label}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="text-xs max-w-[220px]">
+                            {tooltipText}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="py-1">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate(`/invoices?highlight=${inv.id}`); }}>
+                          <Mail className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
         )}
       </CardContent>
     </Card>

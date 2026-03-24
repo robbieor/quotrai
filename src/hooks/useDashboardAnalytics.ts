@@ -76,6 +76,9 @@ export interface InvoiceAtRisk {
   oldestInvoice: string;
   daysOverdue: number;
   riskScore: "high" | "medium" | "low";
+  riskPoints: number;
+  avgDaysToPay: number;
+  latePaymentRate: number;
 }
 
 export interface QuoteFunnelData {
@@ -588,7 +591,19 @@ export function useDashboardAnalytics() {
           value: Number(j.estimated_value) || 0,
         }));
 
-      // === INVOICE RISK TABLE ===
+      // === INVOICE RISK TABLE (with payment behaviour scores) ===
+      // Fetch payment scores for enrichment
+      const { data: paymentScores } = await supabase
+        .from("customer_payment_scores")
+        .select("customer_id, avg_days_to_pay, late_payments_count, total_invoices_paid");
+      const scoreMap: Record<string, { avgDaysToPay: number; lateRate: number }> = {};
+      (paymentScores || []).forEach((ps: any) => {
+        const lateRate = ps.total_invoices_paid > 0
+          ? Math.round((ps.late_payments_count / ps.total_invoices_paid) * 100)
+          : 0;
+        scoreMap[ps.customer_id] = { avgDaysToPay: Number(ps.avg_days_to_pay) || 0, lateRate };
+      });
+
       // Group overdue invoices by customer
       const customerOverdue: Record<string, { customer: string; totalDue: number; oldestDate: Date; invoices: any[] }> = {};
       allOverdue.forEach((inv) => {
@@ -604,16 +619,26 @@ export function useDashboardAnalytics() {
       const invoicesAtRisk: InvoiceAtRisk[] = Object.entries(customerOverdue)
         .map(([id, data]) => {
           const daysOverdue = differenceInDays(now, data.oldestDate);
+          const ps = scoreMap[id] || { avgDaysToPay: 0, lateRate: 0 };
+          // Weighted risk: 60% overdue + 30% late history + 10% exposure
+          const riskPoints = Math.round(
+            (Math.min(daysOverdue, 120) / 120 * 60) +
+            (ps.lateRate / 100 * 30) +
+            (Math.min(data.totalDue / 10000, 1) * 10)
+          );
           return {
             id,
             customer: data.customer,
             totalDue: data.totalDue,
             oldestInvoice: format(data.oldestDate, "dd MMM"),
             daysOverdue,
-            riskScore: (daysOverdue > 60 ? "high" : daysOverdue > 30 ? "medium" : "low") as "high" | "medium" | "low",
+            riskScore: (riskPoints > 50 ? "high" : riskPoints > 25 ? "medium" : "low") as "high" | "medium" | "low",
+            riskPoints,
+            avgDaysToPay: ps.avgDaysToPay,
+            latePaymentRate: ps.lateRate,
           };
         })
-        .sort((a, b) => b.daysOverdue - a.daysOverdue)
+        .sort((a, b) => b.riskPoints - a.riskPoints)
         .slice(0, 10);
 
       // === DRILL DATA ===
