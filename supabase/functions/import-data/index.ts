@@ -198,9 +198,12 @@ async function importInvoices(supabase: any, teamId: string, rows: Record<string
     const taxAmount = row.tax_amount ? parseFloat(row.tax_amount) : total - subtotal;
     const status = validateStatus(row.status, ["draft", "pending", "paid", "overdue", "cancelled"]) || "draft";
 
+    const issueDate = row.issue_date.trim();
+    const dueDate = row.due_date?.trim() || new Date(new Date(issueDate).getTime() + 30 * 86400000).toISOString().split("T")[0];
+
     const { error } = await supabase.from("invoices").insert({
       team_id: teamId, customer_id: customer.id, invoice_number: row.invoice_number.trim(),
-      issue_date: row.issue_date.trim(), due_date: row.due_date?.trim() || null, status,
+      issue_date: issueDate, due_date: dueDate, status,
       notes: row.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
     });
@@ -239,9 +242,12 @@ async function importInvoicesWithItems(supabase: any, teamId: string, rows: Reco
     const taxAmount = headerRow.tax_amount ? parseFloat(headerRow.tax_amount) : total - subtotal;
     const status = validateStatus(headerRow.status, ["draft", "pending", "paid", "overdue", "cancelled"]) || "draft";
 
+    const issueDate = headerRow.issue_date.trim();
+    const dueDate = headerRow.due_date?.trim() || new Date(new Date(issueDate).getTime() + 30 * 86400000).toISOString().split("T")[0];
+
     const { data: invoice, error: invError } = await supabase.from("invoices").insert({
       team_id: teamId, customer_id: customer.id, invoice_number: invoiceNumber,
-      issue_date: headerRow.issue_date.trim(), due_date: headerRow.due_date?.trim() || null, status,
+      issue_date: issueDate, due_date: dueDate, status,
       notes: headerRow.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
     }).select("id").single();
