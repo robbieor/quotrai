@@ -23,8 +23,8 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
   return (
     <div
       className={cn(
-        "bg-card border border-border rounded-lg p-3 transition-colors min-w-0",
-        onClick && "cursor-pointer hover:border-primary/40 hover:bg-muted/20"
+        "bg-card border border-border rounded-lg p-3 transition-all duration-200 min-w-0 group relative",
+        onClick && "cursor-pointer hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm"
       )}
       onClick={onClick}
     >
@@ -43,6 +43,11 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
           {contextType === "neutral" && <Minus className="h-2.5 w-2.5" />}
           <span className="truncate">{context}</span>
         </div>
+      )}
+      {onClick && (
+        <span className="absolute top-2 right-2 text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors duration-200">
+          Click to drill ↗
+        </span>
       )}
     </div>
   );

@@ -13,9 +13,14 @@ export function TopCustomersTable({ data }: TopCustomersTableProps) {
   const { formatCurrency } = useCurrency();
 
   return (
-    <Card className="border-border">
+    <Card className="border-border group">
       <CardHeader className="pb-1 px-4 pt-4">
-        <CardTitle className="text-sm font-medium">Top Customers by Revenue</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium">Top Customers by Revenue</CardTitle>
+          <span className="text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors duration-200">
+            Click row to view
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="px-0 pb-2">
         {!data || data.length === 0 ? (
@@ -37,7 +42,7 @@ export function TopCustomersTable({ data }: TopCustomersTableProps) {
               {data.map((customer, idx) => (
                 <TableRow
                   key={customer.id}
-                  className="hover:bg-muted/30 cursor-pointer h-8"
+                  className="hover:bg-muted/30 cursor-pointer h-8 group/row"
                   onClick={() => navigate(`/customers?highlight=${customer.id}`)}
                 >
                   <TableCell className="text-[11px] text-muted-foreground py-1 tabular-nums">{idx + 1}</TableCell>
