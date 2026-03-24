@@ -26,6 +26,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useQueryClient } from "@tanstack/react-query";
 import { DashboardFilterProvider } from "@/contexts/DashboardFilterContext";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
+import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { useEffect } from "react";
 
 const quickActions = [
