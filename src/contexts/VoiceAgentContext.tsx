@@ -137,26 +137,30 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     }
   }, [queryClient]);
 
+  const debouncedToast = useCallback((type: 'success' | 'info', message: string, opts?: any) => {
+    const now = Date.now();
+    if (now - lastToastRef.current < TOAST_DEBOUNCE_MS) return;
+    lastToastRef.current = now;
+    if (type === 'success') toast.success(message, opts);
+    else toast.info(message, opts);
+  }, []);
+
   const conversation = useConversation({
     onConnect: () => {
       console.log("[VoiceAgent] ✅ Connected to Foreman AI");
-      toast.success("Connected to Foreman AI", { duration: 2000 });
+      debouncedToast('success', "Connected to Foreman AI", { duration: 2000 });
     },
     onDisconnect: () => {
       console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
-      toast.info("Call ended", { duration: 2000 });
-      // Clear conversation ref on disconnect
+      debouncedToast('info', "Call ended", { duration: 2000 });
       conversationIdRef.current = null;
       setCurrentConversationId(null);
     },
     onMessage: (message: any) => {
-      console.log("[VoiceAgent] 💬 Message:", message);
-      
       // Save user transcripts
       if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
         saveMessage("user", message.user_transcription_event.user_transcript);
       }
-      
       // Save agent responses
       if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
         saveMessage("assistant", message.agent_response_event.agent_response);
