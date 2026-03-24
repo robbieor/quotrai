@@ -1,79 +1,54 @@
 
+Fix preview email reliability and remove the misleading UX around it.
 
-# Fix: George Quotes Not Saving & Action Preview + Floating Button UX
+What I found
+- The latest preview email was not blocked by the email system. It was queued and later marked sent in the backend log for `robbieorourke@gmail.com`.
+- The real runtime problem is separate: the preview function tries to upload the generated PDF to a storage bucket named `document-emails`, but that bucket does not exist. That is why the email falls back to “could not be attached”.
+- The screenshot you uploaded confirms that at least one preview email did arrive, but without the PDF download link.
+- So there are two different inconsistencies:
+  1. delivery status messaging is too optimistic / unclear
+  2. PDF-link generation is broken because storage is misconfigured
 
-## Three Problems
+Plan
+1. Stabilize the preview email backend
+- Update `send-preview-email` so missing PDF storage does not look like a full success.
+- Add explicit status handling:
+  - `queued_with_pdf`
+  - `queued_without_pdf`
+  - `failed`
+- Keep the hard safety rule: only send to the logged-in user email.
 
-1. **AI says "saved" before user confirms** — the deferred execution flow works, but the AI's follow-up text claims the record was created
-2. **Duplicate messages** — both `onAssistantMessage` (text bubble) and `onStructuredResponse` (action plan card) fire, duplicating content
-3. **Floating button users have no feedback** — when using George from the floating button on any page (not /george), the user gets navigated to /george but may miss the confirmation gate entirely
+2. Fix the PDF storage path
+- Compare `send-preview-email` with the existing document email flow and either:
+  - create/use the correct storage bucket for preview PDFs, or
+  - reuse the existing document storage pattern already expected elsewhere in the app.
+- Ensure signed URL generation works before claiming the preview includes a downloadable PDF.
 
-## Changes
+3. Make the UI truthful
+- In `BrandingSettings.tsx`, stop showing a generic “Preview queued” success if the backend had to fall back.
+- Show one of these outcomes clearly:
+  - “Preview emailed to you with PDF link”
+  - “Preview emailed to you, but PDF link could not be generated”
+  - “Preview failed to send”
+- Add a retry action and a short note that preview emails go only to the signed-in user.
 
-### 1. Override AI message for deferred actions — `supabase/functions/george-chat/index.ts`
+4. Add delivery diagnostics
+- Log whether the preview email was:
+  - queued,
+  - sent,
+  - sent without PDF link,
+  - dead-lettered.
+- Include the message id in the internal audit metadata so support/debugging is straightforward.
 
-After the follow-up AI call (line ~948), when `deferredExecution` is true, force the message:
+5. Clean up related inconsistencies
+- Review the older `send-document-email` function too, because it uses the same `document-emails` bucket pattern and may have the same hidden PDF-link failure.
+- Align both flows so preview emails and customer document emails use the same reliable storage/email setup.
 
-```typescript
-if (deferredExecution) {
-  finalMessage = "I've prepared everything — please review and confirm below to save.";
-}
-```
+Files to update
+- `supabase/functions/send-preview-email/index.ts`
+- `src/components/settings/BrandingSettings.tsx`
+- likely `supabase/functions/send-document-email/index.ts` for consistency
 
-Also update the synthetic tool result (line 898) to be clearer:
-```
-"Action prepared — waiting for your confirmation before saving to the system"
-```
-
-### 2. Skip duplicate text bubble — `GeorgeAgentInput.tsx` & `GeorgeMobileInput.tsx`
-
-In both `handleSendMessage` and the quick action handler: when `response.data.action_plan` exists, do NOT call `onAssistantMessage`. Only call `onStructuredResponse`. The text is already embedded in `action_plan.text_response`.
-
-**GeorgeAgentInput.tsx** (lines 170-179):
-```typescript
-if (response.data.action_plan) {
-  onStructuredResponse?.(response.data, newConversationId);
-} else {
-  onAssistantMessage?.(assistantMessage, newConversationId);
-}
-```
-
-Same pattern in quick action handler (lines 114-120) and in **GeorgeMobileInput.tsx** (lines 127-135).
-
-### 3. Floating button: show toast confirmation instead of silent navigation — `FloatingTomButton.tsx`
-
-The floating button currently navigates to /george and fires a delayed event. This is fragile — the user lands on a new page and may not see the confirmation gate.
-
-**New behavior**: When a quick action from the floating button creates a record (after the user confirms on /george), show a **toast notification** with a link. But more importantly, the quick action handler already navigates to /george — the real fix is ensuring the action plan renders prominently when the user arrives.
-
-Add a toast after successful confirmation in `George.tsx` `handleConfirmation`:
-```typescript
-if (action === "confirm") {
-  toast.success("Record created successfully", {
-    action: { label: "View", onClick: () => navigate("/quotes") }
-  });
-}
-```
-
-### 4. Make confirmation gate unmissable — `ActionConfirmationGate.tsx`
-
-Add a pulsing amber border animation and auto-scroll-into-view when status is `needs_confirmation`:
-
-- Add `animate-pulse` on the border
-- Add `useEffect` with `scrollIntoView({ behavior: 'smooth' })` on mount
-- Increase padding and font size slightly
-
-### 5. Auto-scroll to confirmation on /george arrival from floating button
-
-In `George.tsx`, when `displayItems` changes and the last item is an action plan with `status === "needs_confirmation"`, auto-scroll to it. This ensures users arriving from the floating button see the gate immediately.
-
-## Files to modify
-
-| File | Change |
-|------|--------|
-| `supabase/functions/george-chat/index.ts` | Override `finalMessage` when deferred; clearer synthetic result |
-| `src/components/george/GeorgeAgentInput.tsx` | Skip `onAssistantMessage` when `action_plan` present |
-| `src/components/george/GeorgeMobileInput.tsx` | Same — skip duplicate message |
-| `src/components/george/action-mode/ActionConfirmationGate.tsx` | Pulsing border, auto-scroll into view |
-| `src/pages/George.tsx` | Toast with nav link on confirm; auto-scroll to pending confirmation |
-
+Expected result
+- Users will either receive a proper preview email with a working PDF link, or see an accurate partial-failure message instead of being told everything succeeded.
+- The preview flow will no longer feel random or dishonest because the UI will match the real backend outcome.
