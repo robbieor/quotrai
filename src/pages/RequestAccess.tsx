@@ -139,15 +139,15 @@ export default function RequestAccess() {
           {/* Left column — Why join */}
           <div className="space-y-6 order-2 lg:order-1">
             <div className="text-center lg:text-left mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Why Join the Beta?</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Why Choose Quotr?</h2>
               <p className="text-muted-foreground">We're building Quotr with real tradespeople — your feedback shapes the product.</p>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6">
-              <h3 className="font-semibold text-foreground mb-3">What you get as a Founding Member:</h3>
+              <h3 className="font-semibold text-foreground mb-3">What you get:</h3>
               <ul className="space-y-3">
                 {[
-                  "30% off your subscription — locked in for life",
+                  "30-day free trial — no credit card required",
                   "Direct access to the product team",
                   "Priority feature requests",
                   "Free onboarding & setup support",

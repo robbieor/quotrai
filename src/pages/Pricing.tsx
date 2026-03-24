@@ -87,9 +87,9 @@ export default function Pricing() {
         "Time tracking with GPS",
         "Customer management",
       ],
-      monthlyPrice: 15,
-      annualPrice: Math.round(15 * 12 * 0.85),
-      cta: "Get Founding Member Access",
+      monthlyPrice: 19,
+      annualPrice: Math.round(19 * 12 * 0.85),
+      cta: "Start Free Trial",
       popular: false,
     },
     {
@@ -103,9 +103,9 @@ export default function Pricing() {
         "Documents & certificates",
         "PDF generation & email",
       ],
-      monthlyPrice: 29,
-      annualPrice: Math.round(29 * 12 * 0.85),
-      cta: "Get Founding Member Access",
+      monthlyPrice: 39,
+      annualPrice: Math.round(39 * 12 * 0.85),
+      cta: "Start Free Trial",
       popular: true,
     },
     {
@@ -120,9 +120,9 @@ export default function Pricing() {
         "Priority support & onboarding",
         "API access & webhooks",
       ],
-      monthlyPrice: 49,
-      annualPrice: Math.round(49 * 12 * 0.85),
-      cta: "Contact Sales",
+      monthlyPrice: 69,
+      annualPrice: Math.round(69 * 12 * 0.85),
+      cta: "Start Free Trial",
       popular: false,
     },
   ];
@@ -145,9 +145,9 @@ export default function Pricing() {
             <Link to="/login">
               <Button variant="ghost" size="sm">Login</Button>
             </Link>
-            <Link to="/request-access">
+            <Link to="/signup">
               <Button size="sm" className="gap-1">
-                Get Founding Member Access
+                Start Free Trial
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -255,7 +255,7 @@ export default function Pricing() {
                     ))}
                   </ul>
 
-                  <Link to={plan.name === "Grow" ? "mailto:hello@quotr.ai" : "/request-access"}>
+                  <Link to="/signup">
                     <Button
                       className="w-full"
                       variant={plan.popular ? "default" : "outline"}
@@ -299,9 +299,9 @@ export default function Pricing() {
           <p className="text-muted-foreground text-lg mb-8">
             Join trade professionals who run their entire business from Quotr.
           </p>
-          <Link to="/request-access">
+          <Link to="/signup">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">
-              Get Founding Member Access
+              Start Free Trial
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
