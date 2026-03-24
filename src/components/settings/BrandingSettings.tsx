@@ -14,6 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Upload, 
   Trash2, 
@@ -28,8 +34,6 @@ import {
   AlignRight,
   Eye,
   Send,
-  Loader2,
-  CheckCircle2,
 } from "lucide-react";
 import { useCompanyBranding, CompanyBrandingInput } from "@/hooks/useCompanyBranding";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +42,8 @@ import { generateInvoicePdf } from "@/lib/pdf/invoicePdf";
 import { generateQuotePdf } from "@/lib/pdf/quotePdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AgentWorkingPanel, PREVIEW_EMAIL_STEPS } from "@/components/shared/AgentWorkingPanel";
+import { useAgentWorkflow } from "@/hooks/useAgentWorkflow";
 
 const ACCENT_COLORS = [
   { name: "Quotr Green", value: "#00FFB2" },
@@ -58,8 +64,8 @@ export function BrandingSettings() {
   const { branding, isLoading, upsertBranding, uploadLogo, removeLogo } = useCompanyBranding();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewSending, setPreviewSending] = useState(false);
-  const [previewSent, setPreviewSent] = useState(false);
+  const [showWorkflowDialog, setShowWorkflowDialog] = useState(false);
+  const workflow = useAgentWorkflow(PREVIEW_EMAIL_STEPS);
   
   const [formData, setFormData] = useState<CompanyBrandingInput>({
     company_name: "",
@@ -131,11 +137,15 @@ export function BrandingSettings() {
       return;
     }
 
-    setPreviewSending(true);
-    setPreviewSent(false);
+    setShowWorkflowDialog(true);
+    workflow.reset();
+    workflow.startWorkflow();
 
     try {
-      // Build a mock branding object from current form state (unsaved)
+      // Step 1: structure
+      await workflow.completeStep("structure");
+
+      // Step 2: branding
       const mockBranding = {
         id: branding?.id || "",
         team_id: branding?.team_id || "",
@@ -153,11 +163,14 @@ export function BrandingSettings() {
         created_at: branding?.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
+      await workflow.completeStep("branding");
 
+      // Step 3: layout
+      await workflow.completeStep("layout");
+
+      // Step 4: line items
       let pdfDoc;
-
       if (previewDocType === "invoice") {
-        // Build mock invoice data
         const mockInvoice = {
           id: "preview",
           invoice_number: "INV-2025-0042",
@@ -177,7 +190,6 @@ export function BrandingSettings() {
             { description: "Cable routing & containment", quantity: 1, unit_price: 175, total_price: 175, tax_rate: 23 },
           ],
         } as any;
-
         pdfDoc = await generateInvoicePdf(mockInvoice, mockBranding as any, "€");
       } else {
         const mockQuote = {
@@ -198,42 +210,35 @@ export function BrandingSettings() {
             { description: "Cable routing & containment", quantity: 1, unit_price: 175, total_price: 175, tax_rate: 23 },
           ],
         } as any;
-
         pdfDoc = await generateQuotePdf(mockQuote, mockBranding as any, "€");
       }
+      await workflow.completeStep("line_items");
 
-      // Convert to base64
+      // Step 5: totals
+      await workflow.completeStep("totals");
+
+      // Step 6: pdf
       const pdfBase64 = pdfDoc.output("datauristring").split(",")[1];
+      await workflow.completeStep("pdf");
 
+      // Step 7: email
       const { data, error } = await supabase.functions.invoke("send-preview-email", {
-        body: {
-          pdfBase64,
-          documentType: previewDocType,
-        },
+        body: { pdfBase64, documentType: previewDocType },
       });
 
       if (error) throw error;
-      if (!data?.queued) {
-        throw new Error("Preview email was not queued");
+      if (!data?.queued) throw new Error("Preview email was not queued");
+
+      await workflow.completeStep("email");
+
+      if (data?.status === "queued_without_pdf") {
+        toast.warning(`Preview sent but PDF link could not be generated.`);
       }
-
-      setPreviewSent(true);
-
-      if (data?.status === "queued_with_pdf") {
-        toast.success(`Preview with PDF sent to ${user.email}`);
-      } else if (data?.status === "queued_without_pdf") {
-        toast.warning(`Preview sent to ${user.email}, but PDF link could not be generated. You can still download from the preview panel.`);
-      } else {
-        toast.success(`Preview sent to ${user.email}`);
-      }
-
-      // Reset success state after 5s
-      setTimeout(() => setPreviewSent(false), 5000);
     } catch (err: any) {
       console.error("Preview send failed:", err);
-      toast.error(err?.message || "Failed to send preview. Please try again.");
-    } finally {
-      setPreviewSending(false);
+      const currentStep = PREVIEW_EMAIL_STEPS[workflow.state.currentStepIndex];
+      await workflow.failStep(currentStep?.id || "email", err?.message || "An unexpected error occurred");
+      toast.error(err?.message || "Failed to send preview");
     }
   };
 
@@ -616,24 +621,10 @@ export function BrandingSettings() {
               variant="outline"
               className="w-full"
               onClick={handleSendPreview}
-              disabled={previewSending}
+              disabled={workflow.state.isRunning}
             >
-              {previewSending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating & sending…
-                </>
-              ) : previewSent ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                  Queued to {user?.email}
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Preview to Myself
-                </>
-              )}
+              <Send className="h-4 w-4 mr-2" />
+              Send Preview to Myself
             </Button>
             <p className="text-[11px] text-muted-foreground text-center mt-1.5">
               Emails a test {previewDocType} PDF to your account email only
@@ -641,6 +632,37 @@ export function BrandingSettings() {
           </div>
         </div>
       </div>
+
+      {/* Agent Working Dialog */}
+      <Dialog open={showWorkflowDialog} onOpenChange={(open) => {
+        if (!workflow.state.isRunning) setShowWorkflowDialog(open);
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Preview Generation</DialogTitle>
+          </DialogHeader>
+          <AgentWorkingPanel
+            steps={PREVIEW_EMAIL_STEPS}
+            currentStepIndex={workflow.state.currentStepIndex}
+            completedSteps={workflow.state.completedSteps}
+            failedStep={workflow.state.failedStep}
+            isComplete={workflow.state.isComplete}
+            successMessage={`Preview sent to ${user?.email}`}
+            successActions={[
+              {
+                label: "Send Another",
+                onClick: handleSendPreview,
+                variant: "outline" as const,
+              },
+              {
+                label: "Close",
+                onClick: () => setShowWorkflowDialog(false),
+              },
+            ]}
+            onRetry={handleSendPreview}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
