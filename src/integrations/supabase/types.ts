@@ -249,6 +249,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "certificates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "certificates_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -411,6 +418,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_queue_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
           {
@@ -1145,6 +1159,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "expenses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "expenses_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -1538,6 +1559,13 @@ export type Database = {
             referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_invoice_balances"
+            referencedColumns: ["id"]
+          },
         ]
       }
       invoices: {
@@ -1629,6 +1657,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
@@ -1687,6 +1722,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "job_materials_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "job_materials_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -1742,6 +1784,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_reminders_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
           {
@@ -1824,6 +1873,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: true
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_sites_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
           {
@@ -2013,6 +2069,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leads_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
@@ -2183,6 +2246,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mileage_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
           {
@@ -2408,6 +2478,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "payment_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_invoice_balances"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "payment_reminders_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
@@ -2456,6 +2533,13 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "v_invoice_balances"
             referencedColumns: ["id"]
           },
           {
@@ -2810,6 +2894,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
           {
@@ -3675,6 +3766,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "time_entries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "time_entries_job_site_id_fkey"
             columns: ["job_site_id"]
             isOneToOne: false
@@ -3876,6 +3974,120 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      v_invoice_balances: {
+        Row: {
+          balance_due: number | null
+          customer_id: string | null
+          days_overdue: number | null
+          due_date: string | null
+          id: string | null
+          invoice_number: string | null
+          issue_date: string | null
+          payment_status: string | null
+          status: Database["public"]["Enums"]["invoice_status"] | null
+          team_id: string | null
+          total: number | null
+          total_paid: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_invoice_risk: {
+        Row: {
+          customer: string | null
+          id: string | null
+          invoice_count: number | null
+          max_days_overdue: number | null
+          oldest_due_date: string | null
+          risk_score: string | null
+          team_id: string | null
+          total_due: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_jobs_at_risk: {
+        Row: {
+          customer_id: string | null
+          customer_name: string | null
+          days_in_stage: number | null
+          estimated_value: number | null
+          id: string | null
+          scheduled_date: string | null
+          status: Database["public"]["Enums"]["job_status"] | null
+          team_id: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_quote_conversion: {
+        Row: {
+          avg_days_to_win: number | null
+          created_value: number | null
+          lost_value: number | null
+          sent_value: number | null
+          stale_quotes: number | null
+          team_id: string | null
+          total_created: number | null
+          total_lost: number | null
+          total_sent: number | null
+          total_won: number | null
+          won_value: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

@@ -106,9 +106,9 @@ export function useDashboardAnalytics() {
       const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined;
       const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
 
-      let jobsQuery = supabase.from("jobs").select("id, title, status, scheduled_date, created_at, estimated_value, customer_id, customer:customers(name)");
+      let jobsQuery = supabase.from("jobs").select("id, title, status, scheduled_date, created_at, updated_at, estimated_value, customer_id, customer:customers(name)");
       let invoicesQuery = supabase.from("invoices").select("id, invoice_number, status, total, issue_date, due_date, customer_id, customer:customers(name)");
-      let quotesQuery = supabase.from("quotes").select("id, quote_number, status, total, created_at, customer_id, customer:customers(name)");
+      let quotesQuery = supabase.from("quotes").select("id, quote_number, status, total, created_at, updated_at, customer_id, customer:customers(name)");
       let paymentsQuery = supabase.from("payments").select("id, amount, payment_date, created_at, invoice_id, invoice:invoices(invoice_number, customer_id, issue_date, customer:customers(name))");
 
       if (fromDate) {
@@ -181,7 +181,19 @@ export function useDashboardAnalytics() {
       const activeJobs = jobs.filter((j) => ["pending", "scheduled", "in_progress"].includes(j.status));
       const paidInvoices = invoices.filter((i) => i.status === "paid");
       const outstandingInvoices = invoices.filter((i) => ["pending", "overdue"].includes(i.status));
-      const outstandingAmount = outstandingInvoices.reduce((s, i) => s + (Number(i.total) || 0), 0);
+
+      // Build payment totals per invoice for accurate balance_due
+      const paymentsByInvoice: Record<string, number> = {};
+      payments.forEach((p) => {
+        const iid = p.invoice_id;
+        paymentsByInvoice[iid] = (paymentsByInvoice[iid] || 0) + (Number(p.amount) || 0);
+      });
+
+      // Outstanding AR = total - payments received (accounts for partial payments)
+      const outstandingAmount = outstandingInvoices.reduce((s, i) => {
+        const paid = paymentsByInvoice[i.id] || 0;
+        return s + Math.max(0, (Number(i.total) || 0) - paid);
+      }, 0);
 
       // Cash collected MTD (payments this month)
       const paymentsMTD = payments.filter((p) => {
@@ -190,38 +202,49 @@ export function useDashboardAnalytics() {
       });
       const cashCollectedMTD = paymentsMTD.reduce((s, p) => s + (Number(p.amount) || 0), 0);
 
-      // Revenue MTD (paid invoices this month)
-      const paidThisMonth = paidInvoices.filter((i) => {
+      // Revenue MTD (invoiced this month — all non-cancelled/draft invoices by issue_date)
+      const invoicedThisMonth = invoices.filter((i) => {
+        if (["cancelled", "draft"].includes(i.status)) return false;
         const d = new Date(i.issue_date);
         return d >= monthStart && d <= monthEnd;
       });
-      const revenueMTD = paidThisMonth.reduce((s, i) => s + (Number(i.total) || 0), 0);
+      const revenueMTD = invoicedThisMonth.reduce((s, i) => s + (Number(i.total) || 0), 0);
 
-      // Revenue last month
-      const paidLastMonth = paidInvoices.filter((i) => {
+      // Revenue last month (same logic)
+      const invoicedLastMonth = invoices.filter((i) => {
+        if (["cancelled", "draft"].includes(i.status)) return false;
         const d = new Date(i.issue_date);
         return d >= lastMonthStart && d <= lastMonthEnd;
       });
-      const revenueLastMonth = paidLastMonth.reduce((s, i) => s + (Number(i.total) || 0), 0);
+      const revenueLastMonth = invoicedLastMonth.reduce((s, i) => s + (Number(i.total) || 0), 0);
       const revenueChangePercent = revenueLastMonth > 0
         ? ((revenueMTD - revenueLastMonth) / revenueLastMonth) * 100
         : revenueMTD > 0 ? 100 : 0;
 
-      // 30+ day overdue
+      // 30+ day overdue (using balance_due, not total)
       const overdue30Plus = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 30);
-      const overdue30PlusAmount = overdue30Plus.reduce((s, i) => s + (Number(i.total) || 0), 0);
+      const overdue30PlusAmount = overdue30Plus.reduce((s, i) => {
+        const paid = paymentsByInvoice[i.id] || 0;
+        return s + Math.max(0, (Number(i.total) || 0) - paid);
+      }, 0);
 
-      // All overdue
-      const allOverdue = outstandingInvoices.filter((i) => differenceInDays(now, new Date(i.due_date)) > 0);
-      const totalOverdue = allOverdue.reduce((s, i) => s + (Number(i.total) || 0), 0);
+      // All overdue (balance_due aware)
+      const allOverdue = outstandingInvoices.filter((i) => {
+        const balanceDue = Math.max(0, (Number(i.total) || 0) - (paymentsByInvoice[i.id] || 0));
+        return differenceInDays(now, new Date(i.due_date)) > 0 && balanceDue > 0;
+      });
+      const totalOverdue = allOverdue.reduce((s, i) => {
+        const paid = paymentsByInvoice[i.id] || 0;
+        return s + Math.max(0, (Number(i.total) || 0) - paid);
+      }, 0);
 
-      // Stuck jobs (in same stage > 7 days)
+      // Stuck jobs (using updated_at for actual stage duration, not created_at)
       const stuckJobs = activeJobs.filter((j) => {
-        const daysSinceCreated = differenceInDays(now, new Date(j.created_at));
-        return daysSinceCreated > 7;
+        const daysSinceUpdate = differenceInDays(now, new Date(j.updated_at || j.created_at));
+        return daysSinceUpdate > 7;
       });
 
-      // Quotes needing follow-up (sent > 7 days ago, not accepted/rejected)
+      // Quotes needing follow-up (sent > 7 days ago — uses "declined" not "rejected")
       const staleQuotes = quotes.filter((q) => {
         if (q.status !== "sent") return false;
         return differenceInDays(now, new Date(q.created_at)) > 7;
@@ -333,7 +356,7 @@ export function useDashboardAnalytics() {
       }
 
       const conversionRate = pendingQuotes.length > 0 || quotes.filter((q) => q.status === "accepted").length > 0
-        ? (quotes.filter((q) => q.status === "accepted").length / Math.max(quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status)).length, 1)) * 100
+        ? (quotes.filter((q) => q.status === "accepted").length / Math.max(quotes.filter((q) => ["sent", "accepted", "declined"].includes(q.status)).length, 1)) * 100
         : 0;
       if (conversionRate > 60) {
         actionAlerts.push({
@@ -393,13 +416,14 @@ export function useDashboardAnalytics() {
 
       // === QUOTE FUNNEL ===
       const wonQuotes = quotes.filter((q) => q.status === "accepted");
-      const lostQuotes = quotes.filter((q) => q.status === "rejected");
-      const sentQuotes = quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status));
+      const lostQuotes = quotes.filter((q) => q.status === "declined");
+      const sentQuotes = quotes.filter((q) => ["sent", "accepted", "declined"].includes(q.status));
 
-      // Average days to win
+      // Average days to win: created_at → updated_at (when status changed to accepted)
       const daysToWin = wonQuotes.map((q) => {
-        // Approximate: use created_at as baseline
-        return differenceInDays(now, new Date(q.created_at));
+        const accepted = new Date(q.updated_at || q.created_at);
+        const created = new Date(q.created_at);
+        return Math.max(0, differenceInDays(accepted, created));
       });
       const avgDaysToWin = daysToWin.length > 0
         ? Math.round(daysToWin.reduce((s, d) => s + d, 0) / daysToWin.length)
@@ -454,7 +478,7 @@ export function useDashboardAnalytics() {
 
       // === JOBS AT RISK ===
       const jobsAtRisk: JobAtRisk[] = stuckJobs
-        .sort((a, b) => differenceInDays(now, new Date(a.created_at)) - differenceInDays(now, new Date(b.created_at)))
+        .sort((a, b) => differenceInDays(now, new Date(a.updated_at || a.created_at)) - differenceInDays(now, new Date(b.updated_at || b.created_at)))
         .reverse()
         .slice(0, 10)
         .map((j) => ({
@@ -462,7 +486,7 @@ export function useDashboardAnalytics() {
           title: j.title,
           customer: j.customer?.name || "Unknown",
           status: j.status,
-          daysInStage: differenceInDays(now, new Date(j.created_at)),
+          daysInStage: differenceInDays(now, new Date(j.updated_at || j.created_at)),
           value: Number(j.estimated_value) || 0,
         }));
 
