@@ -108,7 +108,7 @@ export function DashboardFilterBar() {
     || "All Staff";
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto scrollbar-none">
       {/* Time Preset */}
       <Popover>
         <PopoverTrigger asChild>
