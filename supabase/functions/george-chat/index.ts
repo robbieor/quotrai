@@ -880,26 +880,39 @@ IMPORTANT RULES:
     let toolResults: any[] = [];
 
     // ─── TOOL EXECUTION ───────────────────────────────────────────
+    const recordCreators = ["create_quote", "create_invoice", "create_invoice_from_template", "use_template_for_quote", "create_job", "log_expense", "send_invoice_reminder"];
+    const pendingToolCalls: Array<{ function_name: string; parameters: any }> = [];
+    let deferredExecution = false;
+
     if (toolCalls.length > 0) {
       for (const toolCall of toolCalls) {
         const functionName = toolCall.function.name;
         let parameters = {};
         try { parameters = JSON.parse(toolCall.function.arguments || "{}"); } catch {}
 
-        console.log(`george-chat: Calling webhook ${functionName}`, parameters);
+        // Check if this tool call needs confirmation — if so, defer execution
+        if (recordCreators.includes(functionName)) {
+          console.log(`george-chat: Deferring ${functionName} — requires confirmation`);
+          pendingToolCalls.push({ function_name: functionName, parameters });
+          // Push a synthetic result so the follow-up AI call works
+          toolResults.push({ name: functionName, result: { message: `Draft ${functionName.replace("create_", "")} prepared — awaiting user confirmation`, deferred: true } });
+          deferredExecution = true;
+        } else {
+          console.log(`george-chat: Calling webhook ${functionName}`, parameters);
 
-        const webhookResponse = await fetch(`${supabaseUrl}/functions/v1/george-webhook`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: authHeader,
-          },
-          body: JSON.stringify({ function_name: functionName, parameters }),
-        });
+          const webhookResponse = await fetch(`${supabaseUrl}/functions/v1/george-webhook`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: authHeader,
+            },
+            body: JSON.stringify({ function_name: functionName, parameters }),
+          });
 
-        const webhookData = await webhookResponse.json();
-        console.log(`george-chat: Webhook response for ${functionName}:`, webhookData);
-        toolResults.push({ name: functionName, result: webhookData });
+          const webhookData = await webhookResponse.json();
+          console.log(`george-chat: Webhook response for ${functionName}:`, webhookData);
+          toolResults.push({ name: functionName, result: webhookData });
+        }
       }
 
       // Follow-up AI call with tool results
@@ -965,19 +978,22 @@ IMPORTANT RULES:
     const hasAction = toolCalls.length > 0;
     const anyFailed = steps.some((s: any) => s.status === "failed");
 
-    const actionPlan = {
+    const actionPlan: any = {
       action_id: actionId,
-      status: confirmation ? "needs_confirmation" : anyFailed ? "failed" : "completed",
+      status: deferredExecution ? "needs_confirmation" : (confirmation ? "needs_confirmation" : anyFailed ? "failed" : "completed"),
       input_source: "typed",
       command_text: message,
       timestamp: now.toISOString(),
       intent: intentInfo.intent,
       intent_label: intentInfo.label,
       entities,
-      steps,
-      output,
+      steps: deferredExecution 
+        ? steps.map((s: any) => ({ ...s, status: s.status === "complete" ? "complete" : s.status }))
+        : steps,
+      output: deferredExecution ? buildOutput(intentInfo, toolCalls, toolResults) : output,
       text_response: finalMessage,
-      confirmation_gate: confirmation,
+      confirmation_gate: deferredExecution ? needsConfirmation(toolCalls) : confirmation,
+      pending_tool_calls: deferredExecution ? pendingToolCalls : undefined,
       memory_context: Object.keys(updatedMemory).length > 0 ? updatedMemory : undefined,
       conversation_id: activeConversationId,
     };
