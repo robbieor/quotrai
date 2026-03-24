@@ -9,6 +9,7 @@ import { InvoiceAgingChart } from "@/components/dashboard/InvoiceAgingChart";
 import { JobsAtRiskTable } from "@/components/dashboard/JobsAtRiskTable";
 import { InvoiceRiskTable } from "@/components/dashboard/InvoiceRiskTable";
 import { TopCustomersTable } from "@/components/dashboard/TopCustomersTable";
+import { CustomerProfitabilityScatter } from "@/components/dashboard/CustomerProfitabilityScatter";
 import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
 import { DrillThroughDrawer, DrillColumn } from "@/components/dashboard/DrillThroughDrawer";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -149,9 +150,10 @@ function DashboardContent() {
           </div>
         </AnimatedSection>
 
-        {/* 6. Management Insights — Invoice Aging + Top Customers */}
+        {/* 6. Management Insights — Profitability + Invoice Aging + Top Customers */}
         <AnimatedSection delay={200}>
           <div className="grid gap-3 lg:grid-cols-2">
+            <CustomerProfitabilityScatter data={data?.customerProfitability} isLoading={isLoading} />
             <InvoiceAgingChart
               agingBuckets={data?.agingBuckets}
               onBucketClick={(bucket) => {
@@ -164,8 +166,11 @@ function DashboardContent() {
                 ], invoices, "/invoices");
               }}
             />
-            <TopCustomersTable data={data?.topCustomers} />
           </div>
+        </AnimatedSection>
+
+        <AnimatedSection delay={240}>
+          <TopCustomersTable data={data?.topCustomers} />
         </AnimatedSection>
       </div>
 
