@@ -278,9 +278,8 @@ export function useUpdateQuoteStatus() {
 
             await (supabase.from("jobs").insert(jobPayload as any) as any);
 
-              toast.success("Job auto-created from accepted quote");
-              queryClient.invalidateQueries({ queryKey: ["jobs"] });
-            }
+            toast.success("Job auto-created from accepted quote");
+            queryClient.invalidateQueries({ queryKey: ["jobs"] });
           }
         } catch (jobErr) {
           console.warn("Auto-create job failed:", jobErr);
