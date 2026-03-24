@@ -138,8 +138,10 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
       case 2:
         return data.tradeType !== "" && data.businessSize !== "";
       case 3:
-        return true;
+        return data.sendsQuotes !== null && data.tracksJobs !== null && data.priority !== "";
       case 4:
+        return true;
+      case 5:
         return true;
       default:
         return false;
