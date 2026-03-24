@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Upload, X, FileImage } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X, FileImage, ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   useCreateExpense, 
@@ -37,6 +37,8 @@ import {
   type ExpenseCategory 
 } from "@/hooks/useExpenses";
 import { useJobs } from "@/hooks/useJobs";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
@@ -59,6 +61,7 @@ interface ExpenseFormDialogProps {
 export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDialogProps) {
   const [receiptUrl, setReceiptUrl] = useState<string | null>(expense?.receipt_url || null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isScanningReceipt, setIsScanningReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createExpense = useCreateExpense();
@@ -87,6 +90,34 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
     try {
       const url = await uploadReceipt.mutateAsync(file);
       setReceiptUrl(url);
+
+      // Auto-scan receipt with AI if it's an image
+      if (file.type.startsWith("image/")) {
+        setIsScanningReceipt(true);
+        try {
+          const { data, error } = await supabase.functions.invoke("scan-receipt", {
+            body: { image_url: url },
+          });
+
+          if (!error && data && !data.error) {
+            if (data.vendor) form.setValue("vendor", data.vendor);
+            if (data.amount) form.setValue("amount", Number(data.amount));
+            if (data.category) form.setValue("category", data.category);
+            if (data.description) form.setValue("description", data.description);
+            if (data.date) {
+              try {
+                const parsed = new Date(data.date);
+                if (!isNaN(parsed.getTime())) form.setValue("expense_date", parsed);
+              } catch {}
+            }
+            toast.success("Receipt scanned — fields pre-filled");
+          }
+        } catch {
+          // Scan failed silently — user fills manually
+        } finally {
+          setIsScanningReceipt(false);
+        }
+      }
     } finally {
       setIsUploading(false);
     }
@@ -248,14 +279,24 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
             />
             {receiptUrl ? (
               <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/50">
-                <FileImage className="h-5 w-5 text-primary" />
-                <span className="flex-1 text-sm truncate">Receipt uploaded</span>
+                {isScanningReceipt ? (
+                  <>
+                    <ScanLine className="h-5 w-5 text-primary animate-pulse" />
+                    <span className="flex-1 text-sm">Scanning receipt with AI…</span>
+                  </>
+                ) : (
+                  <>
+                    <FileImage className="h-5 w-5 text-primary" />
+                    <span className="flex-1 text-sm truncate">Receipt uploaded</span>
+                  </>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => setReceiptUrl(null)}
+                  disabled={isScanningReceipt}
                 >
                   <X className="h-4 w-4" />
                 </Button>
