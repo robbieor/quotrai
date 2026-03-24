@@ -1,10 +1,22 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Users, Loader2 } from "lucide-react";
-import { useOrgMembers, useUpdateSeatType } from "@/hooks/useSubscription";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Users, Loader2, Plus } from "lucide-react";
+import { useOrgMembers, useUpdateSeatType, useAddSeat } from "@/hooks/useSubscription";
 import { PRICING, type SeatType } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -29,8 +41,10 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export function SeatManagementTable() {
+  const [showAddSeatDialog, setShowAddSeatDialog] = useState(false);
   const { data: members, isLoading } = useOrgMembers();
   const updateSeatType = useUpdateSeatType();
+  const addSeatMutation = useAddSeat();
   const { formatCurrency } = useCurrency();
   const { isOwner } = useUserRole();
 
@@ -56,18 +70,33 @@ export function SeatManagementTable() {
   };
 
   return (
+    <>
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Seat Management
-        </CardTitle>
-        <CardDescription>
-          {isCeo
-            ? "Assign seat types to control each member's access and cost"
-            : "View your team's seat assignments"
-          }
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Seat Management
+            </CardTitle>
+            <CardDescription>
+              {isCeo
+                ? "Assign seat types to control each member's access and cost"
+                : "View your team's seat assignments"
+              }
+            </CardDescription>
+          </div>
+          {isCeo && (
+            <Button 
+              size="sm" 
+              onClick={() => setShowAddSeatDialog(true)}
+              className="gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              Add Seat
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Header row - desktop */}
@@ -156,5 +185,32 @@ export function SeatManagementTable() {
         </div>
       </CardContent>
     </Card>
+
+    {/* Add Seat Dialog */}
+    <AlertDialog open={showAddSeatDialog} onOpenChange={setShowAddSeatDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Add Another Seat</AlertDialogTitle>
+          <AlertDialogDescription>
+            Adding a seat will update your subscription billing.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={async () => {
+              try {
+                await addSeatMutation.mutateAsync();
+                setShowAddSeatDialog(false);
+              } catch { /* handled by mutation */ }
+            }} 
+            disabled={addSeatMutation.isPending}
+          >
+            {addSeatMutation.isPending ? "Adding..." : "Add Seat"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
