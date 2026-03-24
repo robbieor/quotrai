@@ -64,8 +64,8 @@ export function BrandingSettings() {
   const { branding, isLoading, upsertBranding, uploadLogo, removeLogo } = useCompanyBranding();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewSending, setPreviewSending] = useState(false);
-  const [previewSent, setPreviewSent] = useState(false);
+  const [showWorkflowDialog, setShowWorkflowDialog] = useState(false);
+  const workflow = useAgentWorkflow(PREVIEW_EMAIL_STEPS);
   
   const [formData, setFormData] = useState<CompanyBrandingInput>({
     company_name: "",
