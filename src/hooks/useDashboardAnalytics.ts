@@ -478,7 +478,7 @@ export function useDashboardAnalytics() {
 
       // === JOBS AT RISK ===
       const jobsAtRisk: JobAtRisk[] = stuckJobs
-        .sort((a, b) => differenceInDays(now, new Date(a.created_at)) - differenceInDays(now, new Date(b.created_at)))
+        .sort((a, b) => differenceInDays(now, new Date(a.updated_at || a.created_at)) - differenceInDays(now, new Date(b.updated_at || b.created_at)))
         .reverse()
         .slice(0, 10)
         .map((j) => ({
@@ -486,7 +486,7 @@ export function useDashboardAnalytics() {
           title: j.title,
           customer: j.customer?.name || "Unknown",
           status: j.status,
-          daysInStage: differenceInDays(now, new Date(j.created_at)),
+          daysInStage: differenceInDays(now, new Date(j.updated_at || j.created_at)),
           value: Number(j.estimated_value) || 0,
         }));
 
