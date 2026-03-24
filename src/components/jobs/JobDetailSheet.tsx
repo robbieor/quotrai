@@ -30,13 +30,13 @@ function useJobPnL(jobId: string | null) {
       if (!jobId) return null;
 
       const [materialsRes, expensesRes, timeRes] = await Promise.all([
-        supabase.from("job_materials").select("cost, quantity").eq("job_id", jobId),
+        supabase.from("job_materials").select("unit_cost, quantity").eq("job_id", jobId),
         supabase.from("expenses").select("amount").eq("job_id", jobId),
         supabase.from("time_entries").select("clock_in_at, clock_out_at").eq("job_id", jobId),
       ]);
 
       const materialsCost = (materialsRes.data || []).reduce(
-        (sum, m) => sum + (Number(m.cost) || 0) * (Number(m.quantity) || 1), 0
+        (sum, m) => sum + (Number(m.unit_cost) || 0) * (Number(m.quantity) || 1), 0
       );
 
       const expensesCost = (expensesRes.data || []).reduce(
