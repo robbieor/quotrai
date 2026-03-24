@@ -236,13 +236,6 @@ export function BrandingSettings() {
     );
   }
 
-  return (
-      <div className="space-y-6">
-        <Skeleton className="h-48 rounded-lg" />
-        <Skeleton className="h-64 rounded-lg" />
-      </div>
-    );
-  }
 
   const alignButtons: { value: LogoAlign; icon: typeof AlignLeft }[] = [
     { value: "left", icon: AlignLeft },
