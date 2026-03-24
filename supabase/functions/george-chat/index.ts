@@ -895,7 +895,7 @@ IMPORTANT RULES:
           console.log(`george-chat: Deferring ${functionName} — requires confirmation`);
           pendingToolCalls.push({ function_name: functionName, parameters });
           // Push a synthetic result so the follow-up AI call works
-          toolResults.push({ name: functionName, result: { message: `Draft ${functionName.replace("create_", "")} prepared — awaiting user confirmation`, deferred: true } });
+          toolResults.push({ name: functionName, result: { message: `Action prepared — waiting for your confirmation before saving to the system. DO NOT tell the user this has been saved or created yet.`, deferred: true } });
           deferredExecution = true;
         } else {
           console.log(`george-chat: Calling webhook ${functionName}`, parameters);
@@ -947,6 +947,10 @@ IMPORTANT RULES:
           const followUpData = await followUpResponse.json();
           finalMessage = followUpData.choices?.[0]?.message?.content ||
             toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
+          // Override misleading AI message when execution is deferred
+          if (deferredExecution) {
+            finalMessage = "I've prepared everything — please review and confirm below to save.";
+          }
         } else {
           finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
         }

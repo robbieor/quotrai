@@ -246,7 +246,24 @@ export default function George() {
     );
 
     if (action === "confirm") {
-      addMessage("assistant", "✅ Action confirmed and completed.");
+      addMessage("assistant", "✅ Done! Your record has been created.");
+      // Determine where to navigate based on the tool calls
+      const firstTool = plan?.type === "action_plan" ? plan.data.pending_tool_calls?.[0]?.function_name : null;
+      const routeMap: Record<string, string> = {
+        create_quote: "/quotes",
+        create_invoice: "/invoices",
+        create_invoice_from_template: "/invoices",
+        use_template_for_quote: "/quotes",
+        create_job: "/jobs",
+        log_expense: "/expenses",
+      };
+      const targetRoute = firstTool ? routeMap[firstTool] : null;
+      if (targetRoute) {
+        const { toast: sonnerToast } = await import("sonner");
+        sonnerToast.success("Record created successfully", {
+          action: { label: "View", onClick: () => navigate(targetRoute) },
+        });
+      }
     } else if (action === "cancel") {
       addMessage("assistant", "❌ Action cancelled. No records were created.");
     } else {
