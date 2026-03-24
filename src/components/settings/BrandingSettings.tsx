@@ -213,15 +213,18 @@ export function BrandingSettings() {
       });
 
       if (error) throw error;
+      if (!data?.queued) {
+        throw new Error("Preview email was not queued");
+      }
 
       setPreviewSent(true);
-      toast.success(`Preview sent to ${user.email}`);
+      toast.success(`Preview queued to ${user.email}`);
 
       // Reset success state after 5s
       setTimeout(() => setPreviewSent(false), 5000);
     } catch (err: any) {
       console.error("Preview send failed:", err);
-      toast.error("Failed to send preview. Please try again.");
+      toast.error(err?.message || "Failed to send preview. Please try again.");
     } finally {
       setPreviewSending(false);
     }
@@ -616,7 +619,7 @@ export function BrandingSettings() {
               ) : previewSent ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                  Sent to {user?.email}
+                  Queued to {user?.email}
                 </>
               ) : (
                 <>
