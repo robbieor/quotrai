@@ -17,11 +17,18 @@ import {
   ArrowLeft,
   CheckCircle2,
   Sparkles,
+  FileText,
+  Receipt,
+  Briefcase,
+  Clock,
+  Target,
+  Zap,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";
+import { computeWorkflowMode } from "@/hooks/useWorkflowMode";
 
 const tradeTypes = [
   "Electrician",
@@ -68,6 +75,9 @@ interface OnboardingData {
   businessSize: string;
   currency: string;
   country: string;
+  sendsQuotes: boolean | null;
+  tracksJobs: boolean | null;
+  priority: string;
 }
 
 interface CommsPrefs {
@@ -108,11 +118,14 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     businessSize: "",
     currency: "EUR",
     country: "IE",
+    sendsQuotes: null,
+    tracksJobs: null,
+    priority: "",
   });
   const [commsPrefs, setCommsPrefs] = useState<CommsPrefs>(DEFAULT_COMMS);
   const { user } = useAuth();
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const updateData = (field: keyof OnboardingData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -125,8 +138,10 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
       case 2:
         return data.tradeType !== "" && data.businessSize !== "";
       case 3:
-        return true;
+        return data.sendsQuotes !== null && data.tracksJobs !== null && data.priority !== "";
       case 4:
+        return true;
+      case 5:
         return true;
       default:
         return false;
@@ -151,6 +166,13 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
 
     setSubmitting(true);
     try {
+      const workflowMode = computeWorkflowMode({
+        sendsQuotes: data.sendsQuotes ?? false,
+        tracksJobs: data.tracksJobs ?? false,
+        teamSize: data.businessSize,
+        priority: data.priority,
+      });
+
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -161,6 +183,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
           business_size: data.businessSize,
           currency: data.currency,
           country: data.country,
+          workflow_mode: workflowMode,
           onboarding_completed: true,
         })
         .eq("id", user.id);
@@ -242,7 +265,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
         }
       }
 
-      track("onboarding_completed", { trade: data.tradeType, size: data.businessSize });
+      track("onboarding_completed", { trade: data.tradeType, size: data.businessSize, workflowMode });
       toast.success("Welcome to Quotr! You're all set.");
       onComplete();
     } catch (error: any) {
@@ -253,7 +276,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     }
   };
 
-  const stepLabels = ["Profile", "Trade", "Preferences", "Comms"];
+  const stepLabels = ["Profile", "Trade", "Workflow", "Preferences", "Comms"];
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -271,14 +294,16 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             <h2 className="text-xl font-bold text-foreground mb-1">
               {step === 1 && "Welcome to Quotr!"}
               {step === 2 && "Tell us about your trade"}
-              {step === 3 && "Almost there!"}
-              {step === 4 && "Communication preferences"}
+              {step === 3 && "How do you work?"}
+              {step === 4 && "Almost there!"}
+              {step === 5 && "Communication preferences"}
             </h2>
             <p className="text-sm text-muted-foreground">
               {step === 1 && "Let's get your account set up in under 2 minutes"}
               {step === 2 && "We'll tailor your experience to your business"}
-              {step === 3 && "Just a couple more preferences, then you're ready"}
-              {step === 4 && "Choose which emails you'd like to send to clients"}
+              {step === 3 && "We'll set up Quotr to match your workflow"}
+              {step === 4 && "Just a couple more preferences, then you're ready"}
+              {step === 5 && "Choose which emails you'd like to send to clients"}
             </p>
           </div>
 
@@ -382,8 +407,98 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             </Card>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3 — Workflow Questions */}
           {step === 3 && (
+            <Card className="animate-fade-up border-0 shadow-none">
+              <CardHeader className="text-center pb-2 px-0">
+                <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>How Do You Work?</CardTitle>
+                <CardDescription>We'll tailor Quotr to match your day-to-day</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-4 px-0">
+                {/* Q1: Send quotes? */}
+                <div className="space-y-3">
+                  <Label>Do you send quotes to customers?</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: true, label: "Yes, regularly", icon: FileText },
+                      { value: false, label: "No, I just invoice", icon: Receipt },
+                    ].map((opt) => (
+                      <button
+                        key={String(opt.value)}
+                        type="button"
+                        onClick={() => setData(prev => ({ ...prev, sendsQuotes: opt.value }))}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          data.sendsQuotes === opt.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <opt.icon className={`h-5 w-5 mb-2 ${data.sendsQuotes === opt.value ? "text-primary" : "text-muted-foreground"}`} />
+                        <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Q2: Track jobs? */}
+                <div className="space-y-3">
+                  <Label>Do you track individual jobs or projects?</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: true, label: "Yes, I schedule work", icon: Briefcase },
+                      { value: false, label: "No, I just do the work", icon: Wrench },
+                    ].map((opt) => (
+                      <button
+                        key={String(opt.value)}
+                        type="button"
+                        onClick={() => setData(prev => ({ ...prev, tracksJobs: opt.value }))}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          data.tracksJobs === opt.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <opt.icon className={`h-5 w-5 mb-2 ${data.tracksJobs === opt.value ? "text-primary" : "text-muted-foreground"}`} />
+                        <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Q3: Priority */}
+                <div className="space-y-3">
+                  <Label>What do you need most right now?</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      { value: "get_paid_faster", label: "Get paid faster", icon: Zap },
+                      { value: "stay_organised", label: "Stay organised", icon: Briefcase },
+                      { value: "reduce_admin", label: "Reduce admin", icon: Clock },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateData("priority", opt.value)}
+                        className={`p-4 rounded-lg border-2 text-center transition-all ${
+                          data.priority === opt.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <opt.icon className={`h-5 w-5 mx-auto mb-2 ${data.priority === opt.value ? "text-primary" : "text-muted-foreground"}`} />
+                        <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 4 — Preferences */}
+          {step === 4 && (
             <Card className="animate-fade-up border-0 shadow-none">
               <CardHeader className="text-center pb-2 px-0">
                 <div className="mx-auto h-12 w-12 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(160,100%,45%)] flex items-center justify-center mb-2">
@@ -427,8 +542,8 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             </Card>
           )}
 
-          {/* Step 4 */}
-          {step === 4 && (
+          {/* Step 5 — Comms */}
+          {step === 5 && (
             <OnboardingCommsStep prefs={commsPrefs} onChange={setCommsPrefs} />
           )}
 
