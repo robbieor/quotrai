@@ -22,12 +22,16 @@ export function useJobs() {
   return useQuery({
     queryKey: ["jobs"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from("jobs")
-        .select("*, customers(name)")
-        .order("created_at", { ascending: false });
+        .select("*, customers(name)", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(5000);
 
       if (error) throw error;
+      if (count && count >= 5000) {
+        console.warn(`Jobs query returned ${count} rows — pagination recommended`);
+      }
       return data as Job[];
     },
   });

@@ -11,12 +11,16 @@ export function useCustomers() {
   return useQuery({
     queryKey: ["customers"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from("customers")
-        .select("*")
-        .order("client_number", { ascending: true });
+        .select("*", { count: "exact" })
+        .order("client_number", { ascending: true })
+        .limit(5000);
 
       if (error) throw error;
+      if (count && count >= 5000) {
+        console.warn(`Customers query returned ${count} rows — pagination recommended`);
+      }
       return data as Customer[];
     },
   });
