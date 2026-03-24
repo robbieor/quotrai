@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,16 +38,30 @@ const statusConfig = {
 type StatusFilter = "all" | Quote["status"];
 
 export default function Quotes() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
   const { symbol: currencySymbol } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get("status") as StatusFilter) || "all");
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+
+  // Auto-open detail sheet from highlight param
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId && quotes && quotes.length > 0) {
+      const target = quotes.find((q) => q.id === highlightId);
+      if (target) {
+        setSelectedQuote(target);
+        setDetailOpen(true);
+        setSearchParams((prev) => { prev.delete("highlight"); return prev; }, { replace: true });
+      }
+    }
+  }, [searchParams, quotes, setSearchParams]);
 
   const filteredQuotes = useMemo(() => {
     if (!quotes) return [];
