@@ -416,13 +416,14 @@ export function useDashboardAnalytics() {
 
       // === QUOTE FUNNEL ===
       const wonQuotes = quotes.filter((q) => q.status === "accepted");
-      const lostQuotes = quotes.filter((q) => q.status === "rejected");
-      const sentQuotes = quotes.filter((q) => ["sent", "accepted", "rejected"].includes(q.status));
+      const lostQuotes = quotes.filter((q) => q.status === "declined");
+      const sentQuotes = quotes.filter((q) => ["sent", "accepted", "declined"].includes(q.status));
 
-      // Average days to win
+      // Average days to win: created_at → updated_at (when status changed to accepted)
       const daysToWin = wonQuotes.map((q) => {
-        // Approximate: use created_at as baseline
-        return differenceInDays(now, new Date(q.created_at));
+        const accepted = new Date(q.updated_at || q.created_at);
+        const created = new Date(q.created_at);
+        return Math.max(0, differenceInDays(accepted, created));
       });
       const avgDaysToWin = daysToWin.length > 0
         ? Math.round(daysToWin.reduce((s, d) => s + d, 0) / daysToWin.length)
