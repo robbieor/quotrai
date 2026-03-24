@@ -588,6 +588,40 @@ export function useDashboardAnalytics() {
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 8);
 
+      // === CUSTOMER PROFITABILITY SCATTER (from v_job_profitability view + payment scores) ===
+      const { data: profitRows } = await supabase
+        .from("v_job_profitability" as any)
+        .select("customer_id, customer_name, estimated_value, total_cost, profit, profit_margin_pct");
+      
+      const custProfit: Record<string, { revenue: number; profit: number; jobCount: number; costCount: number }> = {};
+      (profitRows || []).forEach((r: any) => {
+        const cid = r.customer_id;
+        if (!custProfit[cid]) custProfit[cid] = { revenue: 0, profit: 0, jobCount: 0, costCount: 0 };
+        custProfit[cid].revenue += Number(r.estimated_value) || 0;
+        custProfit[cid].profit += Number(r.profit) || 0;
+        custProfit[cid].jobCount++;
+        if (Number(r.total_cost) > 0) custProfit[cid].costCount++;
+      });
+
+      const customerProfitability: ScatterCustomerData[] = Object.entries(custProfit)
+        .filter(([, d]) => d.revenue > 0 && d.costCount > 0)
+        .map(([cid, d]) => {
+          const ps = scoreMap[cid] || { avgDaysToPay: 0, lateRate: 0 };
+          const row = (profitRows || []).find((r: any) => r.customer_id === cid) as any;
+          return {
+            id: cid,
+            name: row?.customer_name || "Unknown",
+            revenue: d.revenue,
+            profit: d.profit,
+            profitMargin: d.revenue > 0 ? (d.profit / d.revenue) * 100 : 0,
+            jobCount: d.jobCount,
+            avgDaysToPay: ps.avgDaysToPay,
+            latePaymentRate: ps.lateRate,
+          };
+        })
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 30);
+
       // === JOBS AT RISK ===
       const jobsAtRisk: JobAtRisk[] = stuckJobs
         .sort((a, b) => differenceInDays(now, new Date(a.updated_at || a.created_at)) - differenceInDays(now, new Date(b.updated_at || b.created_at)))
