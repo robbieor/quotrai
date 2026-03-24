@@ -71,14 +71,25 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
 
       {/* AI Recommendation + Actions */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3">
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <div className="h-7 w-7 rounded-lg overflow-hidden border border-primary/20 shrink-0">
-            <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+        {showAI && (
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="h-7 w-7 rounded-lg overflow-hidden border border-primary/20 shrink-0">
+              <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+            </div>
+            <p className="text-sm text-muted-foreground truncate">
+              <span className="font-medium text-foreground">Foreman AI:</span> {data.aiRecommendation}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground truncate">
-            <span className="font-medium text-foreground">Foreman AI:</span> {data.aiRecommendation}
-          </p>
-        </div>
+        )}
+        {!showAI && (
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-muted-foreground">
+              {data.overdueCount > 0 || data.quotesNeedFollowUp > 0 || data.stuckJobs > 0
+                ? "Action required — review items below."
+                : "All clear — no outstanding issues."}
+            </p>
+          </div>
+        )}
         <div className="flex items-center gap-1.5 flex-wrap shrink-0">
           {data.overdueCount > 0 && (
             <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => navigate("/invoices?status=overdue")}>
@@ -95,9 +106,11 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
               <Briefcase className="h-3 w-3" /> Jobs
             </Button>
           )}
-          <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/george")}>
-            <Sparkles className="h-3 w-3" /> Ask AI
-          </Button>
+          {showAI && (
+            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/george")}>
+              <Sparkles className="h-3 w-3" /> Ask AI
+            </Button>
+          )}
         </div>
       </div>
     </div>
