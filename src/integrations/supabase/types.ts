@@ -1940,6 +1940,65 @@ export type Database = {
           },
         ]
       }
+      job_status_changes: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          job_id: string
+          new_status: string
+          old_status: string | null
+          team_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          job_id: string
+          new_status: string
+          old_status?: string | null
+          team_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          job_id?: string
+          new_status?: string
+          old_status?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_status_changes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_changes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_changes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_changes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           actual_cost: number | null
