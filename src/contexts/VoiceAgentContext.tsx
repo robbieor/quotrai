@@ -538,25 +538,22 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       // Step 5: Attempt connection with automatic retry
       const { success, error } = await withRetry(
         () => attemptConnection(preflightResult, dynamicVariables),
-        "ElevenLabs connection"
+        "ElevenLabs connection",
+        (attempt) => {
+          setRetryAttempt(attempt);
+          if (attempt > 1) {
+            toast.loading(`Reconnecting... (attempt ${attempt}/${MAX_RETRIES})`, { id: "voice-retry" });
+          }
+        }
       );
 
       if (!success) {
         console.error("[VoiceAgent] ❌ Connection failed after retries:", error);
-        const reason = getFailureReason(error);
-        handleFailure({ reason, error });
+        toast.dismiss("voice-retry");
+        toast.error("Unable to connect after multiple attempts", {
+          description: "Please try again later or use text chat",
+        });
         setVoiceUnavailable(true);
-      } else {
-        // Start health monitoring after successful connection
-        startHealthMonitoring(
-          () => conversation.status === "connected",
-          async () => {
-            // Auto-reconnect logic
-            if (pendingContextRef.current) {
-              await startConversation(pendingContextRef.current);
-            }
-          }
-        );
       }
     } catch (error: unknown) {
       console.error("[VoiceAgent] ❌ Failed to start conversation:", error);
@@ -572,7 +569,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       setRetryAttempt(0);
       toast.dismiss("voice-retry");
     }
-  }, [conversation, isConnecting, handleFailure, getFailureReason, runPreflightCheck, withRetry, attemptConnection, startHealthMonitoring]);
+  }, [conversation, isConnecting, handleFailure, getFailureReason, runPreflightCheck, withRetry, attemptConnection, MAX_RETRIES]);
 
   const stopConversation = useCallback(async () => {
     try {
