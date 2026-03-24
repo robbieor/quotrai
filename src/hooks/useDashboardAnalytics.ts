@@ -102,6 +102,17 @@ export interface CustomerProfitData {
   invoiceCount: number;
 }
 
+export interface ScatterCustomerData {
+  id: string;
+  name: string;
+  revenue: number;
+  profit: number;
+  profitMargin: number;
+  jobCount: number;
+  avgDaysToPay: number;
+  latePaymentRate: number;
+}
+
 export function useDashboardAnalytics() {
   const { dateRange, customerId, staffId, jobType, segment, crossFilter, filterQueryKey } = useDashboardFilters();
 
