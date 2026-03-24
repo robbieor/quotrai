@@ -600,6 +600,35 @@ export function BrandingSettings() {
               documentType: previewDocType,
             }}
           />
+          {/* Send Preview Button */}
+          <div className="pt-2 border-t border-border">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleSendPreview}
+              disabled={previewSending}
+            >
+              {previewSending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating & sending…
+                </>
+              ) : previewSent ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                  Sent to {user?.email}
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Preview to Myself
+                </>
+              )}
+            </Button>
+            <p className="text-[11px] text-muted-foreground text-center mt-1.5">
+              Emails a test {previewDocType} PDF to your account email only
+            </p>
+          </div>
         </div>
       </div>
     </div>
