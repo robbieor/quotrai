@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
-import { format, differenceInDays, subMonths, startOfMonth, endOfMonth, addDays } from "date-fns";
+import { format, differenceInDays, subMonths, subDays, startOfMonth, endOfMonth, addDays } from "date-fns";
 
 // Job type keyword matching utility
 const JOB_TYPE_KEYWORDS: Record<string, string[]> = {
