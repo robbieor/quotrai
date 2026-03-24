@@ -761,6 +761,7 @@ export function useDashboardAnalytics() {
         agingBuckets,
         agingInvoices,
         topCustomers,
+        customerProfitability,
         jobsAtRisk,
         invoicesAtRisk,
         drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList },
