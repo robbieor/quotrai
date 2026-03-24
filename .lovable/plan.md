@@ -1,79 +1,101 @@
 
 
-# Remove Beta References, Increase Pricing, Update Stripe
+# Deep-Link Dashboard Interactions to Exact Data
 
-## Summary
-Remove all Beta/Founding Member messaging across the app, increase prices to be competitive with Jobber/Tradify, update Stripe products to match, and confirm annual savings (currently 15% — keeping it).
+## Problem
+Every clickable element in the dashboard (KPI cards, Control Header buttons, Action Panel rows, Jobs at Risk rows, Invoice Risk rows, DrillThroughDrawer links) navigates to generic pages like `/jobs` or `/invoices` with no query parameters. Users land on unfiltered lists and must manually find the relevant records.
 
-## New Pricing (aligned with competitor benchmarks)
-
-| Tier | Current | New Monthly | New Annual (per year) | Annual Saving |
-|------|---------|-------------|----------------------|---------------|
-| Lite | €15/mo | **€19/mo** | €193.80 (€16.15/mo) | 15% = €34.20/yr |
-| Connect | €29/mo | **€39/mo** | €397.80 (€33.15/mo) | 15% = €70.20/yr |
-| Grow | €49/mo | **€69/mo** | €703.80 (€58.65/mo) | 15% = €124.20/yr |
-
-Annual discount stays at **15%** — this is already in place and competitive. The savings become more meaningful at higher prices.
+## Solution
+Wire URL search parameters into the listing pages and pass specific filters from every dashboard interaction.
 
 ---
 
-## Tasks
+## Technical Approach
 
-### 1. Update Stripe Products (6 new prices)
-Create 6 new Stripe prices on the existing per-seat products using the Stripe tools:
-- Lite Monthly: €19 (1900 cents) on `prod_U5mdIRlyTDSXFP`
-- Lite Annual: €193.80 (19380 cents) on `prod_U5mds3ov1uVoW1`
-- Connect Monthly: €39 (3900 cents) on `prod_U4kWNzIcgH30nj`
-- Connect Annual: €397.80 (39780 cents) on `prod_U4k4bpHX67gPHT`
-- Grow Monthly: €69 (6900 cents) on `prod_U4lFaztatcCXOx`
-- Grow Annual: €703.80 (70380 cents) on `prod_U4k4OHG479fr4X`
+### 1. Add URL parameter support to listing pages
 
-### 2. Update `useSubscriptionTier.ts` — single source of truth
-- Update `PRICING` constants: `LITE_SEAT: 19`, `CONNECT_SEAT: 39`, `GROW_SEAT: 69`
-- Update annual amounts: `ANNUAL_LITE_SEAT: 193.80`, `ANNUAL_CONNECT_SEAT: 397.80`, `ANNUAL_GROW_SEAT: 703.80`
-- Update legacy aliases to match
-- Update `STRIPE_PRICES` to use new price IDs from step 1
+**Jobs page** (`src/pages/Jobs.tsx`):
+- Read `?status=` from URL on mount using `useSearchParams`
+- If present, set `statusFilter` state from it
+- Example: `/jobs?status=pending` pre-selects "Pending" filter
 
-### 3. Remove Beta/Founding references from Landing page
-**File**: `src/pages/Landing.tsx`
-- Line 345-347: Remove "Join the Beta Program to get 30% off" paragraph
-- Line 948-949: Change "Join the Founding Member Program — 30% off..." to "30-day free trial • No credit card required • Cancel anytime"
+**Invoices page** (`src/pages/Invoices.tsx`):
+- Read `?status=` from URL (e.g. `overdue`, `pending`)
+- If present, set `statusFilter` state from it
+- Example: `/invoices?status=overdue` shows only overdue invoices
 
-### 4. Remove Beta/Founding references from Pricing page
-**File**: `src/pages/Pricing.tsx`
-- Lines 92, 108: Change CTA text from "Get Founding Member Access" to "Start Free Trial"
-- Lines 148-153: Change nav CTA to "Start Free Trial" linking to `/signup`
-- Lines 302-306: Change final CTA to "Start Free Trial" linking to `/signup`
-- Update `monthlyPrice` values: 15→19, 29→39, 49→69
-- Update `annualPrice` calculations to match
+**Quotes page** (`src/pages/Quotes.tsx`):
+- Read `?status=` from URL (e.g. `sent`, `draft`)
+- If present, set `statusFilter` state from it
 
-### 5. Remove Beta/Founding references from Industries page
-**File**: `src/pages/Industries.tsx`
-- Line 27: Change "Get Founding Member Access" to "Start Free Trial", link to `/signup`
-- Line 85: Same change for CTA button
+All three pages: also support `?highlight=<id>` to auto-open the detail sheet for a specific record.
 
-### 6. Remove Beta/Founding references from RequestAccess page
-**File**: `src/pages/RequestAccess.tsx`
-- Line 142: "Why Join the Beta?" → "Why Choose Quotr?"
-- Line 147: "What you get as a Founding Member:" → "What you get:"
-- Line 150: Remove "30% off your subscription — locked in for life"
+### 2. Update Dashboard navigation targets
 
-### 7. Clean up edge function email copy
-**File**: `supabase/functions/request-early-access/index.ts`
-- Line 46: Remove "Welcome to the Quotr Beta!" → "Welcome to Quotr!"
-- Line 52: Remove "Beta Waitlist" from subject line
+**ControlHeader.tsx**:
+- "Chase" button → `/invoices?status=overdue`
+- "Quotes" button → `/quotes?status=sent` (stale quotes are sent but not followed up)
+- "Jobs" button → `/jobs?status=in_progress` (stuck jobs)
 
-### 8. Keep Email-to-Expense Beta badge
-**File**: `src/components/settings/ExpenseEmailForwarding.tsx` — this is a legitimate feature-level beta tag, leave it.
+**KPIStrip.tsx** — `onDrillDown` callback:
+- "cash" → open drill drawer (already works)
+- "outstanding" → open drill drawer (already works)
+- "overdue30" → `/invoices?status=overdue`
+- "jobs" → `/jobs?status=in_progress`
 
-## Files to Modify
-- `src/hooks/useSubscriptionTier.ts` — pricing + Stripe price IDs
-- `src/pages/Landing.tsx` — remove beta copy
-- `src/pages/Pricing.tsx` — remove founding member CTAs, update prices
-- `src/pages/Industries.tsx` — remove founding member CTAs
-- `src/pages/RequestAccess.tsx` — remove beta messaging
-- `supabase/functions/request-early-access/index.ts` — clean email copy
+**ActionPanel.tsx**:
+- Each alert already has an `href` field — update the analytics hook to generate precise URLs:
+  - Overdue quotes alert → `/quotes?status=sent`
+  - Stuck jobs alert → `/jobs?status=in_progress`
+  - Quote win rate opportunity → `/quotes`
+  - No jobs scheduled → `/jobs?status=scheduled`
 
-## Stripe Actions (via tools, before code changes)
-- Create 6 new prices on existing products
+**JobsAtRiskTable.tsx**:
+- Row click → `/jobs?highlight=<job.id>` (opens that specific job's detail sheet)
+
+**InvoiceRiskTable.tsx**:
+- Row click → `/invoices?status=overdue` (filtered to overdue)
+- Mail button → `/invoices?highlight=<invoice.id>` (opens specific invoice)
+
+**TopCustomersTable.tsx**:
+- Row click → `/customers?highlight=<customer.id>`
+
+**DrillThroughDrawer.tsx**:
+- External link button per row → navigate to `linkPrefix + "?highlight=" + row.id`
+
+### 3. Detail sheet auto-open logic
+
+In each listing page, after data loads:
+- Check for `highlight` param
+- Find the matching record
+- Set it as `selectedJob`/`selectedInvoice`/`selectedQuote`
+- Open the detail sheet automatically
+- Clear the URL param after opening (using `replace` to avoid polluting history)
+
+### 4. Update analytics hook href generation
+
+In `useDashboardAnalytics.ts`, update the `ActionAlert.href` values to include query params instead of bare paths.
+
+---
+
+## Files to modify
+
+1. `src/pages/Jobs.tsx` — add `useSearchParams`, sync status filter + auto-open detail
+2. `src/pages/Invoices.tsx` — same pattern
+3. `src/pages/Quotes.tsx` — same pattern
+4. `src/pages/Customers.tsx` — add highlight support
+5. `src/components/dashboard/ControlHeader.tsx` — update navigate calls with query params
+6. `src/components/dashboard/KPIStrip.tsx` — add direct navigation for overdue30 and jobs
+7. `src/components/dashboard/ActionPanel.tsx` — no changes needed (already uses `alert.href`)
+8. `src/components/dashboard/JobsAtRiskTable.tsx` — navigate with `?highlight=<id>`
+9. `src/components/dashboard/InvoiceRiskTable.tsx` — navigate with `?status=overdue` and `?highlight=<id>`
+10. `src/components/dashboard/TopCustomersTable.tsx` — navigate with `?highlight=<id>`
+11. `src/components/dashboard/DrillThroughDrawer.tsx` — append `?highlight=<row.id>` to link
+12. `src/hooks/useDashboardAnalytics.ts` — update `href` values in action alerts to include query params
+
+## Decisions this enables
+- Click "132 stuck jobs" → land on Jobs page showing only in-progress jobs
+- Click a specific stuck job row → land on Jobs page with that job's detail sheet open
+- Click "Chase" → land on Invoices page filtered to overdue
+- Click an invoice risk row → land on that specific invoice's detail
 
