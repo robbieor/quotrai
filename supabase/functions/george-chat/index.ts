@@ -978,19 +978,22 @@ IMPORTANT RULES:
     const hasAction = toolCalls.length > 0;
     const anyFailed = steps.some((s: any) => s.status === "failed");
 
-    const actionPlan = {
+    const actionPlan: any = {
       action_id: actionId,
-      status: confirmation ? "needs_confirmation" : anyFailed ? "failed" : "completed",
+      status: deferredExecution ? "needs_confirmation" : (confirmation ? "needs_confirmation" : anyFailed ? "failed" : "completed"),
       input_source: "typed",
       command_text: message,
       timestamp: now.toISOString(),
       intent: intentInfo.intent,
       intent_label: intentInfo.label,
       entities,
-      steps,
-      output,
+      steps: deferredExecution 
+        ? steps.map((s: any) => ({ ...s, status: s.status === "complete" ? "complete" : s.status }))
+        : steps,
+      output: deferredExecution ? buildOutput(intentInfo, toolCalls, toolResults) : output,
       text_response: finalMessage,
-      confirmation_gate: confirmation,
+      confirmation_gate: deferredExecution ? needsConfirmation(toolCalls) : confirmation,
+      pending_tool_calls: deferredExecution ? pendingToolCalls : undefined,
       memory_context: Object.keys(updatedMemory).length > 0 ? updatedMemory : undefined,
       conversation_id: activeConversationId,
     };
