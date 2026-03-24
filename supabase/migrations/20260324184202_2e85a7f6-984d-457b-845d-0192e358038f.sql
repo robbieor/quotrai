@@ -1,0 +1,1 @@
+ALTER TABLE public.jobs ADD COLUMN quote_id UUID REFERENCES public.quotes(id) ON DELETE SET NULL;
