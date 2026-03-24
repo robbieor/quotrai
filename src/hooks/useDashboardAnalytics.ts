@@ -98,7 +98,7 @@ export interface CustomerProfitData {
 }
 
 export function useDashboardAnalytics() {
-  const { dateRange, customerId, staffId, jobType, crossFilter, filterQueryKey } = useDashboardFilters();
+  const { dateRange, customerId, staffId, jobType, segment, crossFilter, filterQueryKey } = useDashboardFilters();
 
   return useQuery({
     queryKey: ["dashboard-analytics", ...filterQueryKey],
