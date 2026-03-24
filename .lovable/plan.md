@@ -1,80 +1,79 @@
 
 
-# Dashboard Data Logic is Broken — Root Cause & Fix Plan
+# Fix: George Quotes Not Saving & Action Preview + Floating Button UX
 
-## Problems Found
+## Three Problems
 
-### Problem 1: Revenue & Cash metrics IGNORE the time filter
-The edge function receives `fromDate`/`toDate` and filters the raw data correctly. But then **all KPI calculations use hardcoded `mStart`/`mEnd` (current month)** regardless of the selected time range.
+1. **AI says "saved" before user confirms** — the deferred execution flow works, but the AI's follow-up text claims the record was created
+2. **Duplicate messages** — both `onAssistantMessage` (text bubble) and `onStructuredResponse` (action plan card) fire, duplicating content
+3. **Floating button users have no feedback** — when using George from the floating button on any page (not /george), the user gets navigated to /george but may miss the confirmation gate entirely
 
-Lines 184-206 of `dashboard-analytics/index.ts`:
-- `cashCollectedMTD` filters payments by `mStart`–`mEnd` (current calendar month)
-- `revenueMTD` filters invoices by `mStart`–`mEnd` (current calendar month)  
-- `revenueLastMonth` uses `lmStart`–`lmEnd` (previous calendar month)
+## Changes
 
-So when you select "YTD" (Jan 1 – today), the KPI still shows **this month's revenue as €66k** and compares it to **last month's €152k**. The label says "YTD" but the number is MTD. That's the core bug.
+### 1. Override AI message for deferred actions — `supabase/functions/george-chat/index.ts`
 
-### Problem 2: "Revenue vs last month" comparison is meaningless for non-MTD presets
-When you select "7 days" or "YTD", comparing against "last month" makes no sense. The comparison period should match the selected period (e.g., YTD this year vs YTD last year, or last 7 days vs previous 7 days).
+After the follow-up AI call (line ~948), when `deferredExecution` is true, force the message:
 
-### Problem 3: Revenue chart is hardcoded to last 6 months
-Line 275: `for (let i = 5; i >= 0; i--)` — always shows 6 months regardless of filter. If you pick "7 days", you still see a 6-month chart.
+```typescript
+if (deferredExecution) {
+  finalMessage = "I've prepared everything — please review and confirm below to save.";
+}
+```
 
-### Problem 4: No "Revenue by Job Type" chart on dashboard
-The edge function computes `jobStatusData` (jobs by status) but there is **no job type breakdown** returned. The `matchJobType()` function exists but is only used for filtering, not for generating a "Revenue by Job Type" dataset.
+Also update the synthetic tool result (line 898) to be clearer:
+```
+"Action prepared — waiting for your confirmation before saving to the system"
+```
 
----
+### 2. Skip duplicate text bubble — `GeorgeAgentInput.tsx` & `GeorgeMobileInput.tsx`
 
-## Fix Plan
+In both `handleSendMessage` and the quick action handler: when `response.data.action_plan` exists, do NOT call `onAssistantMessage`. Only call `onStructuredResponse`. The text is already embedded in `action_plan.text_response`.
 
-### 1. Make KPI metrics respect the date filter — `dashboard-analytics/index.ts`
+**GeorgeAgentInput.tsx** (lines 170-179):
+```typescript
+if (response.data.action_plan) {
+  onStructuredResponse?.(response.data, newConversationId);
+} else {
+  onAssistantMessage?.(assistantMessage, newConversationId);
+}
+```
 
-Replace the hardcoded MTD calculations with filter-aware logic:
+Same pattern in quick action handler (lines 114-120) and in **GeorgeMobileInput.tsx** (lines 127-135).
 
-- **Cash Collected**: Sum all payments within `fromDate`–`toDate` (the already-filtered `payments` array), not just current month
-- **Revenue**: Sum all non-draft/cancelled invoices within `fromDate`–`toDate` (the already-filtered `invoices` array), not just current month
-- **Comparison period**: Calculate dynamically based on the time range length:
-  - If range = 30 days, compare to previous 30 days
-  - If range = YTD, compare to same period last year
-  - If range = this month, compare to last month (current behavior)
-  - If range = 7 days, compare to previous 7 days
+### 3. Floating button: show toast confirmation instead of silent navigation — `FloatingTomButton.tsx`
 
-This means removing `mStart`/`mEnd` from KPI calculations and using the full filtered dataset instead.
+The floating button currently navigates to /george and fires a delayed event. This is fragile — the user lands on a new page and may not see the confirmation gate.
 
-### 2. Update comparison label — `KPIStrip.tsx`
+**New behavior**: When a quick action from the floating button creates a record (after the user confirms on /george), show a **toast notification** with a link. But more importantly, the quick action handler already navigates to /george — the real fix is ensuring the action plan renders prominently when the user arrives.
 
-Change the subMetric from hardcoded `"vs ${formatCurrency(data.revenueLastMonth)} last month"` to a dynamic label the edge function returns (e.g., `"vs €152k prev period"` or `"vs €X same period last year"`).
+Add a toast after successful confirmation in `George.tsx` `handleConfirmation`:
+```typescript
+if (action === "confirm") {
+  toast.success("Record created successfully", {
+    action: { label: "View", onClick: () => navigate("/quotes") }
+  });
+}
+```
 
-Add a `comparisonLabel` field to the `KPIData` interface so the edge function can return the correct context string.
+### 4. Make confirmation gate unmissable — `ActionConfirmationGate.tsx`
 
-### 3. Make revenue chart respect date range — `dashboard-analytics/index.ts`
+Add a pulsing amber border animation and auto-scroll-into-view when status is `needs_confirmation`:
 
-Instead of always showing 6 months, derive chart buckets from `fromDate`–`toDate`:
-- Under 14 days: daily buckets
-- 14 days – 3 months: weekly buckets
-- Over 3 months: monthly buckets (current behavior but bounded by the actual range)
+- Add `animate-pulse` on the border
+- Add `useEffect` with `scrollIntoView({ behavior: 'smooth' })` on mount
+- Increase padding and font size slightly
 
-### 4. Add "Revenue by Job Type" dataset — `dashboard-analytics/index.ts`
+### 5. Auto-scroll to confirmation on /george arrival from floating button
 
-Use the existing `matchJobType()` to group paid invoices (via their linked jobs) by job type. Return a `revenueByJobType` array: `[{ type: "Electrical", revenue: X, count: Y }, ...]`
-
-### 5. Add Revenue by Job Type chart — new component + `Dashboard.tsx`
-
-Create a simple bar/donut chart showing revenue broken down by job type. Place it in the Analytics Zone alongside the Revenue chart.
-
----
+In `George.tsx`, when `displayItems` changes and the last item is an action plan with `status === "needs_confirmation"`, auto-scroll to it. This ensures users arriving from the floating button see the gate immediately.
 
 ## Files to modify
 
 | File | Change |
 |------|--------|
-| `supabase/functions/dashboard-analytics/index.ts` | Fix KPI calculations to use filtered date range; add dynamic comparison period; add revenue-by-job-type dataset; make chart buckets respect date range |
-| `src/hooks/useDashboardAnalytics.ts` | Add `comparisonLabel` and `revenueByJobType` to interfaces |
-| `src/components/dashboard/KPIStrip.tsx` | Use `comparisonLabel` from data instead of hardcoded "last month" |
-| `src/components/dashboard/RevenueByJobTypeChart.tsx` | New chart component for job type breakdown |
-| `src/pages/Dashboard.tsx` | Add the job type chart to the analytics grid |
-
-## Why this fixes the confusion
-
-The dashboard currently fetches data for the selected range but then throws it away and recalculates everything for the current calendar month. After this fix, every metric will reflect exactly the period you selected, with an appropriate comparison period, eliminating the "€66k YTD vs €152k last month" nonsense.
+| `supabase/functions/george-chat/index.ts` | Override `finalMessage` when deferred; clearer synthetic result |
+| `src/components/george/GeorgeAgentInput.tsx` | Skip `onAssistantMessage` when `action_plan` present |
+| `src/components/george/GeorgeMobileInput.tsx` | Same — skip duplicate message |
+| `src/components/george/action-mode/ActionConfirmationGate.tsx` | Pulsing border, auto-scroll into view |
+| `src/pages/George.tsx` | Toast with nav link on confirm; auto-scroll to pending confirmation |
 
