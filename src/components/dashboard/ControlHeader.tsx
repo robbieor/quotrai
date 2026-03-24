@@ -9,9 +9,11 @@ import tomAvatar from "@/assets/tom-avatar.png";
 interface ControlHeaderProps {
   data: ControlHeaderData | undefined;
   isLoading?: boolean;
+  /** Whether to show AI recommendation and Ask AI button (Connect+ only) */
+  showAI?: boolean;
 }
 
-export function ControlHeader({ data, isLoading }: ControlHeaderProps) {
+export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderProps) {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
 
