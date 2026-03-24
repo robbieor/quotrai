@@ -123,7 +123,10 @@ const STATUS_ALIASES: Record<string, string> = {
 function validateStatus(status: string | undefined, validStatuses: string[]): string | null {
   if (!status) return null;
   let normalized = status.trim().toLowerCase().replace(/\s+/g, "_");
-  if (STATUS_ALIASES[normalized]) normalized = STATUS_ALIASES[normalized];
+  // Only apply alias if the value isn't already valid
+  if (!validStatuses.includes(normalized) && STATUS_ALIASES[normalized]) {
+    normalized = STATUS_ALIASES[normalized];
+  }
   return validStatuses.includes(normalized) ? normalized : null;
 }
 
