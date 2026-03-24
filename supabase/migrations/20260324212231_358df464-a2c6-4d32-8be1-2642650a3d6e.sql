@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS workflow_mode text DEFAULT 'standard' CHECK (workflow_mode IN ('simple', 'standard', 'advanced'));
