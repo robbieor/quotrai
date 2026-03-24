@@ -34,14 +34,14 @@ export function HowItWorksSection() {
     <section id="how-it-works" className="py-16 sm:py-24 px-4 sm:px-6">
       <div className="container mx-auto max-w-5xl">
         <div className="text-center mb-10 sm:mb-14 animate-fade-up">
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4">
-            Quote to paid.{" "}
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-4">
+            Simple from{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-              Four steps.
+              day one.
             </span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            No training manual. No onboarding call. Just start working.
+            No training. No onboarding call. Just start working.
           </p>
         </div>
 
