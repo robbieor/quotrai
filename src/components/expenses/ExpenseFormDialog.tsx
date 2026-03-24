@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Upload, X, FileImage } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X, FileImage, ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   useCreateExpense, 
@@ -37,6 +37,8 @@ import {
   type ExpenseCategory 
 } from "@/hooks/useExpenses";
 import { useJobs } from "@/hooks/useJobs";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
