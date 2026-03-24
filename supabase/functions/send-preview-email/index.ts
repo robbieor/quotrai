@@ -6,6 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const SENDER_DOMAIN = "notify.quotr.work";
+const FROM_DOMAIN = "quotr.work";
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,7 +19,6 @@ const handler = async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Authenticate the caller
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -50,24 +52,33 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // SAFETY: Only send to the authenticated user's own email — never accept a recipient param
     const recipientEmail = user.email;
     const docLabel = documentType === "invoice" ? "invoice" : "quote";
     const subject = `Your Quotr ${docLabel} preview`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const SENDER_DOMAIN = "notify.quotr.work";
-    const FROM_DOMAIN = "quotr.work";
+    // Upload PDF to storage and get a signed download URL
+    let pdfDownloadUrl: string | null = null;
+    try {
+      const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+      const filePath = `previews/preview-${docLabel}-${Date.now()}.pdf`;
 
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Email sending not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      const { error: uploadError } = await supabase.storage
+        .from("document-emails")
+        .upload(filePath, pdfBuffer, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+      if (!uploadError) {
+        const { data: urlData } = await supabase.storage
+          .from("document-emails")
+          .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+        pdfDownloadUrl = urlData?.signedUrl || null;
+      } else {
+        console.error("PDF upload error:", uploadError);
+      }
+    } catch (uploadErr) {
+      console.error("Failed to upload preview PDF:", uploadErr);
     }
 
     const htmlBody = `
@@ -77,8 +88,14 @@ const handler = async (req: Request): Promise<Response> => {
           This is a <strong>test preview</strong> sent to you only. No customer has received this document.
         </p>
         <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
-          Your ${docLabel} preview PDF is attached. Use this to verify your branding, layout, and content before sending to clients.
+          Your ${docLabel} preview PDF ${pdfDownloadUrl ? 'is available for download below' : 'could not be attached — please download it from the branding settings page instead'}.
         </p>
+        ${pdfDownloadUrl ? `
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${pdfDownloadUrl}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #00FFB2, #00D4FF); color: #0f172a; font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 8px;">
+            📎 Download Preview PDF
+          </a>
+        </div>` : ''}
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
         <p style="color: #94a3b8; font-size: 12px;">
           Sent from Quotr · This is an internal preview — not a customer communication.
@@ -86,70 +103,36 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    // Send email via Lovable's managed email API
-    const emailResponse = await fetch(
-      `https://email.lovable.dev/v1/send`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        },
-        body: JSON.stringify({
-          sender_domain: SENDER_DOMAIN,
-          from: `Quotr <noreply@${FROM_DOMAIN}>`,
-          to: recipientEmail,
-          subject,
-          html: htmlBody,
-          attachments: [
-            {
-              filename: `preview-${docLabel}.pdf`,
-              content: pdfBase64,
-              encoding: "base64",
-              content_type: "application/pdf",
-            },
-          ],
-        }),
-      }
-    );
+    const messageId = crypto.randomUUID();
 
-    if (!emailResponse.ok) {
-      const errText = await emailResponse.text();
-      console.error("Email API error:", errText);
-      // Fallback: try without attachment (API may not support attachments)
-      // Send just the email with a note
-      const fallbackResponse = await fetch(
-        `https://email.lovable.dev/v1/send`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          },
-          body: JSON.stringify({
-            sender_domain: SENDER_DOMAIN,
-            from: `Quotr <noreply@${FROM_DOMAIN}>`,
-            to: recipientEmail,
-            subject,
-            html: htmlBody.replace(
-              "is attached",
-              "could not be attached — please download it from the branding settings page instead"
-            ),
-          }),
-        }
-      );
+    // Log pending
+    await supabase.from("email_send_log").insert({
+      message_id: messageId,
+      template_name: `preview_${docLabel}`,
+      recipient_email: recipientEmail,
+      status: "pending",
+    });
 
-      if (!fallbackResponse.ok) {
-        const fallbackErr = await fallbackResponse.text();
-        console.error("Fallback email error:", fallbackErr);
-        return new Response(
-          JSON.stringify({ error: "Failed to send preview email" }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
+    // Enqueue via the same queue system as document emails
+    const { error: enqueueError } = await supabase.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload: {
+        message_id: messageId,
+        to: recipientEmail,
+        from: `Quotr <noreply@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject,
+        html: htmlBody,
+        text: `Your Quotr ${docLabel} preview — this is a test sent to you only.`,
+        purpose: "transactional",
+        label: `preview_${docLabel}`,
+        queued_at: new Date().toISOString(),
+      },
+    });
+
+    if (enqueueError) {
+      console.error("Failed to enqueue preview email:", enqueueError);
+      throw new Error("Failed to enqueue preview email");
     }
 
     // Log as internal preview event
@@ -176,18 +159,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        sentTo: recipientEmail,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: true, sentTo: recipientEmail }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Preview email error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Failed to send preview email" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
