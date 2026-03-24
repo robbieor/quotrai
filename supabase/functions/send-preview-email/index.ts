@@ -104,6 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const messageId = crypto.randomUUID();
+    const idempotencyKey = `preview-${docLabel}-${messageId}`;
 
     // Log pending
     await supabase.from("email_send_log").insert({
@@ -118,6 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
       queue_name: "transactional_emails",
       payload: {
         message_id: messageId,
+        idempotency_key: idempotencyKey,
         to: recipientEmail,
         from: `Quotr <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
