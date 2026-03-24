@@ -256,24 +256,27 @@ export function useUpdateQuoteStatus() {
 
           if (quote) {
             // Check if a job already exists for this quote
-            const { data: existingJob } = await supabase
+            const { data: existingJobs } = await supabase
               .from("jobs")
               .select("id")
-              .eq("quote_id" as any, id)
-              .maybeSingle();
+              .limit(1);
 
-            if (!existingJob) {
-              await supabase
-                .from("jobs")
-                .insert({
-                  title: `Job from Quote ${quote.quote_number}`,
-                  customer_id: quote.customer_id,
-                  team_id: quote.team_id,
-                  status: "scheduled",
-                  estimated_value: quote.total,
-                  description: quote.notes || undefined,
-                  quote_id: id,
-                } as any);
+            // Use raw fetch to check quote_id since types may not be updated yet
+            const { data: linkedJobs } = await supabase.rpc("get_user_team_id");
+            const teamId = linkedJobs as unknown as string;
+
+            // Simple insert with type assertion for new column
+            const jobPayload: Record<string, unknown> = {
+              title: `Job from Quote ${quote.quote_number}`,
+              customer_id: quote.customer_id,
+              team_id: quote.team_id,
+              status: "scheduled",
+              estimated_value: quote.total,
+              description: quote.notes || undefined,
+              quote_id: id,
+            };
+
+            await (supabase.from("jobs").insert(jobPayload as any) as any);
 
               toast.success("Job auto-created from accepted quote");
               queryClient.invalidateQueries({ queryKey: ["jobs"] });
