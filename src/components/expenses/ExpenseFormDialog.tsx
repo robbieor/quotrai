@@ -90,6 +90,34 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
     try {
       const url = await uploadReceipt.mutateAsync(file);
       setReceiptUrl(url);
+
+      // Auto-scan receipt with AI if it's an image
+      if (file.type.startsWith("image/")) {
+        setIsScanningReceipt(true);
+        try {
+          const { data, error } = await supabase.functions.invoke("scan-receipt", {
+            body: { image_url: url },
+          });
+
+          if (!error && data && !data.error) {
+            if (data.vendor) form.setValue("vendor", data.vendor);
+            if (data.amount) form.setValue("amount", Number(data.amount));
+            if (data.category) form.setValue("category", data.category);
+            if (data.description) form.setValue("description", data.description);
+            if (data.date) {
+              try {
+                const parsed = new Date(data.date);
+                if (!isNaN(parsed.getTime())) form.setValue("expense_date", parsed);
+              } catch {}
+            }
+            toast.success("Receipt scanned — fields pre-filled");
+          }
+        } catch {
+          // Scan failed silently — user fills manually
+        } finally {
+          setIsScanningReceipt(false);
+        }
+      }
     } finally {
       setIsUploading(false);
     }
