@@ -47,6 +47,9 @@ import quotrLogo from "@/assets/quotr-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ROICalculator } from "@/components/landing/ROICalculator";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { BeforeAfterSection } from "@/components/landing/BeforeAfterSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 
 // 4 capability cards matching quotr.work
 const platformCapabilities = [
