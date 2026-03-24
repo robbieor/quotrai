@@ -796,7 +796,6 @@ export default function Landing() {
                 </Button>
               </Link>
             </div>
-            </div>
           </div>
 
           {/* Platform Fee */}
