@@ -171,7 +171,35 @@ export function useDashboardAnalytics() {
         }
       }
 
+      // === SEGMENT FILTERING ===
       const now = new Date();
+      if (segment === "high_risk") {
+        invoices = invoices.filter((i) => i.status === "overdue" || (["pending"].includes(i.status) && differenceInDays(now, new Date(i.due_date)) > 0));
+        jobs = jobs.filter((j) => {
+          if (!["pending", "scheduled", "in_progress"].includes(j.status)) return false;
+          return differenceInDays(now, new Date(j.updated_at || j.created_at)) > 7;
+        });
+      } else if (segment === "top_customers") {
+        // Get top customer IDs by invoice total
+        const customerTotals: Record<string, number> = {};
+        invoices.forEach((i) => { customerTotals[i.customer_id] = (customerTotals[i.customer_id] || 0) + (Number(i.total) || 0); });
+        const topIds = Object.entries(customerTotals).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([id]) => id);
+        const topSet = new Set(topIds);
+        jobs = jobs.filter((j) => topSet.has(j.customer_id));
+        invoices = invoices.filter((i) => topSet.has(i.customer_id));
+        quotes = quotes.filter((q) => topSet.has(q.customer_id));
+      } else if (segment === "jobs_at_risk") {
+        jobs = jobs.filter((j) => {
+          if (!["pending", "scheduled", "in_progress"].includes(j.status)) return false;
+          return differenceInDays(now, new Date(j.updated_at || j.created_at)) > 7;
+        });
+      } else if (segment === "recent") {
+        const twoDaysAgo = subDays(now, 2);
+        jobs = jobs.filter((j) => new Date(j.created_at) >= twoDaysAgo);
+        invoices = invoices.filter((i) => new Date(i.issue_date) >= twoDaysAgo);
+        quotes = quotes.filter((q) => new Date(q.created_at) >= twoDaysAgo);
+      }
+
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
       const lastMonthStart = startOfMonth(subMonths(now, 1));
