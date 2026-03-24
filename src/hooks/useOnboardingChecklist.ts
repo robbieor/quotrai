@@ -5,6 +5,7 @@ import { useInvoices } from "@/hooks/useInvoices";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 import { useTeamMembers } from "@/hooks/useTeam";
+import { useWorkflowMode } from "@/hooks/useWorkflowMode";
 
 export interface ChecklistItem {
   id: string;
@@ -21,6 +22,7 @@ export function useOnboardingChecklist() {
   const { data: quotes } = useQuotes();
   const { branding } = useCompanyBranding();
   const { data: teamMembers } = useTeamMembers();
+  const { mode } = useWorkflowMode();
 
   const checklist = useMemo<ChecklistItem[]>(() => {
     const hasCustomers = (customers?.length ?? 0) > 0;
@@ -30,7 +32,7 @@ export function useOnboardingChecklist() {
     const hasBranding = !!(branding?.company_name && branding?.company_email);
     const hasTeam = (teamMembers?.length ?? 0) > 1;
 
-    return [
+    const items: ChecklistItem[] = [
       {
         id: "branding",
         label: "Add your logo & details",
@@ -45,36 +47,55 @@ export function useOnboardingChecklist() {
         completed: hasCustomers,
         route: "/customers",
       },
-      {
+    ];
+
+    // Simple mode: invoice-first — skip quote & job steps
+    if (mode === "simple") {
+      items.push({
+        id: "invoice",
+        label: "Send your first invoice",
+        description: "Create an invoice and get paid — that's what this is all about",
+        completed: hasInvoices,
+        route: "/invoices",
+      });
+    } else {
+      // Standard + Advanced: full workflow
+      items.push({
         id: "quote",
         label: "Send your first quote",
         description: "The moment it clicks — see your quote land in a customer's inbox",
         completed: hasQuotes,
         route: "/quotes",
-      },
-      {
+      });
+      items.push({
         id: "invoice",
         label: "Get paid",
         description: "Create an invoice and track payment",
         completed: hasInvoices,
         route: "/invoices",
-      },
-      {
+      });
+      items.push({
         id: "job",
         label: "Schedule a job",
         description: "Track work with a scheduled job on your calendar",
         completed: hasJobs,
         route: "/jobs",
-      },
-      {
+      });
+    }
+
+    // Team invite — skip for solo/simple
+    if (mode !== "simple") {
+      items.push({
         id: "team",
         label: "Invite your crew",
         description: "Add a team member to collaborate",
         completed: hasTeam,
         route: "/settings",
-      },
-    ];
-  }, [customers, jobs, invoices, quotes, branding, teamMembers]);
+      });
+    }
+
+    return items;
+  }, [customers, jobs, invoices, quotes, branding, teamMembers, mode]);
 
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
