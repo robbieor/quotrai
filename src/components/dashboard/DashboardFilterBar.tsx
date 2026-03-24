@@ -153,10 +153,10 @@ export function DashboardFilterBar() {
         </PopoverContent>
       </Popover>
 
-      {/* Staff */}
+      {/* Staff — hidden on small screens, available in advanced panel */}
       <Popover>
         <PopoverTrigger asChild>
-          <div><CompactButton icon={Users} label={staffLabel} active={staffId !== "all"} /></div>
+          <div className="hidden sm:block"><CompactButton icon={Users} label={staffLabel} active={staffId !== "all"} /></div>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-52 p-1">
           {STAFF_PRESETS.map((s) => (
