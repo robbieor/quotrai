@@ -47,6 +47,9 @@ import quotrLogo from "@/assets/quotr-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { ROICalculator } from "@/components/landing/ROICalculator";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { BeforeAfterSection } from "@/components/landing/BeforeAfterSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 
 // 4 capability cards matching quotr.work
 const platformCapabilities = [
@@ -307,125 +310,13 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-teal-500/5 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="container mx-auto max-w-6xl relative">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Left — Copy */}
-            <div className="animate-fade-up text-center lg:text-left">
+      <HeroSection formatPrice={formatPrice} />
 
+      {/* How It Works */}
+      <HowItWorksSection />
 
-
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
-                Talk to your business.<br />
-                <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                  It talks back.
-                </span>
-              </h1>
-              
-              <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Quotes, invoices, expenses, scheduling, price lists, customer portal — all voice-powered, all in one app. 
-                <span className="font-semibold text-foreground"> Built for field service pros, not accountants.</span>
-              </p>
-              
-              <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-6">
-                <Link to="/signup" className="w-full sm:w-auto">
-                  <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
-                    Start Free Trial
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-              
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                30-day free trial • No credit card required • Cancel anytime
-              </p>
-            </div>
-
-            {/* Right — Foreman AI Chat Mockup */}
-            <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
-                {/* Chat header */}
-                <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-primary/30">
-                    <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm text-foreground">Foreman AI</p>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-xs text-muted-foreground">Online</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground/30" />
-                  </div>
-                </div>
-                
-                {/* Chat messages */}
-                <div className="p-5 space-y-4">
-                  {/* User message */}
-                  <div className="flex justify-end">
-                    <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
-                      <p className="text-sm text-foreground">"Create a quote for Mrs. Patterson — EV charger install, 7kW unit"</p>
-                    </div>
-                  </div>
-                  
-                  {/* AI response */}
-                  <div className="flex gap-2.5">
-                    <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                      <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-                      <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> created:</p>
-                      <div className="space-y-1 text-xs text-muted-foreground">
-                        <p>• 7kW EV Charger Unit — {formatPrice(1180, 2)}</p>
-                        <p>• Installation & Cabling — {formatPrice(420, 2)}</p>
-                        <p>• SEAI Grant Applied — -{formatPrice(300, 2)}</p>
-                        <p className="font-semibold text-foreground pt-1">Total: {formatPrice(1300, 2)}</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">Want me to send it to her email?</p>
-                    </div>
-                  </div>
-
-                  {/* User confirm */}
-                  <div className="flex justify-end">
-                    <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5">
-                      <p className="text-sm text-foreground">"Yes, send it"</p>
-                    </div>
-                  </div>
-                  
-                  {/* AI confirm */}
-                  <div className="flex gap-2.5">
-                    <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                      <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5">
-                      <p className="text-sm text-foreground">✅ Sent to patterson@gmail.com — she'll get a branded PDF with one-click approval.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chat input mock */}
-                <div className="px-5 py-3 border-t border-border bg-muted/20">
-                  <div className="flex items-center gap-2 bg-background rounded-xl border border-border px-4 py-2.5">
-                    <Mic className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-muted-foreground flex-1">Talk or type to Foreman AI...</span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Before / After */}
+      <BeforeAfterSection />
 
       {/* Industries We Serve */}
       <section className="py-12 sm:py-16 px-4 sm:px-6">
