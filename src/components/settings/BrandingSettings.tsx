@@ -125,7 +125,108 @@ export function BrandingSettings() {
     }
   };
 
-  if (isLoading) {
+  const handleSendPreview = async () => {
+    if (!user?.email) {
+      toast.error("No email found on your account");
+      return;
+    }
+
+    setPreviewSending(true);
+    setPreviewSent(false);
+
+    try {
+      // Build a mock branding object from current form state (unsaved)
+      const mockBranding = {
+        id: branding?.id || "",
+        team_id: branding?.team_id || "",
+        company_name: formData.company_name || null,
+        company_address: formData.company_address || null,
+        company_phone: formData.company_phone || null,
+        company_email: formData.company_email || null,
+        company_website: formData.company_website || null,
+        logo_url: branding?.logo_url || null,
+        accent_color: formData.accent_color || "#00FFB2",
+        footer_message: formData.footer_message || "Thank you for your business!",
+        payment_terms: formData.payment_terms || null,
+        bank_details: formData.bank_details || null,
+        show_logo: formData.show_logo ?? true,
+        created_at: branding?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      let pdfDoc;
+
+      if (previewDocType === "invoice") {
+        // Build mock invoice data
+        const mockInvoice = {
+          id: "preview",
+          invoice_number: "INV-2025-0042",
+          issue_date: new Date().toISOString(),
+          due_date: new Date(Date.now() + 14 * 86400000).toISOString(),
+          status: "sent" as const,
+          total: 2060.25,
+          subtotal: 1675.00,
+          tax_rate: 23,
+          tax_amount: 385.25,
+          currency: "EUR",
+          notes: "Sample invoice generated for branding preview.",
+          customer: { name: "Sarah Johnson", email: "sarah@example.com" },
+          invoice_items: [
+            { description: "EV Charger Installation", quantity: 1, unit_price: 850, total_price: 850, tax_rate: 23 },
+            { description: "7kW Wallbox Unit", quantity: 1, unit_price: 650, total_price: 650, tax_rate: 23 },
+            { description: "Cable routing & containment", quantity: 1, unit_price: 175, total_price: 175, tax_rate: 23 },
+          ],
+        } as any;
+
+        pdfDoc = await generateInvoicePdf(mockInvoice, mockBranding as any, "€");
+      } else {
+        const mockQuote = {
+          id: "preview",
+          quote_number: "QTE-2025-0018",
+          created_at: new Date().toISOString(),
+          valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
+          status: "draft" as const,
+          total: 2060.25,
+          subtotal: 1675.00,
+          tax_rate: 23,
+          tax_amount: 385.25,
+          notes: "Sample quote generated for branding preview.",
+          customer: { name: "Sarah Johnson", email: "sarah@example.com" },
+          quote_items: [
+            { description: "EV Charger Installation", quantity: 1, unit_price: 850, total_price: 850, tax_rate: 23 },
+            { description: "7kW Wallbox Unit", quantity: 1, unit_price: 650, total_price: 650, tax_rate: 23 },
+            { description: "Cable routing & containment", quantity: 1, unit_price: 175, total_price: 175, tax_rate: 23 },
+          ],
+        } as any;
+
+        pdfDoc = await generateQuotePdf(mockQuote, mockBranding as any, "€");
+      }
+
+      // Convert to base64
+      const pdfBase64 = pdfDoc.output("datauristring").split(",")[1];
+
+      const { data, error } = await supabase.functions.invoke("send-preview-email", {
+        body: {
+          pdfBase64,
+          documentType: previewDocType,
+        },
+      });
+
+      if (error) throw error;
+
+      setPreviewSent(true);
+      toast.success(`Preview sent to ${user.email}`);
+
+      // Reset success state after 5s
+      setTimeout(() => setPreviewSent(false), 5000);
+    } catch (err: any) {
+      console.error("Preview send failed:", err);
+      toast.error("Failed to send preview. Please try again.");
+    } finally {
+      setPreviewSending(false);
+    }
+  };
+
     return (
       <div className="space-y-6">
         <Skeleton className="h-48 rounded-lg" />
