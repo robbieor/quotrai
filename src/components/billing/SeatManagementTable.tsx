@@ -41,8 +41,10 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export function SeatManagementTable() {
+  const [showAddSeatDialog, setShowAddSeatDialog] = useState(false);
   const { data: members, isLoading } = useOrgMembers();
   const updateSeatType = useUpdateSeatType();
+  const addSeatMutation = useAddSeat();
   const { formatCurrency } = useCurrency();
   const { isOwner } = useUserRole();
 
