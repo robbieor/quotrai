@@ -185,5 +185,32 @@ export function SeatManagementTable() {
         </div>
       </CardContent>
     </Card>
+
+    {/* Add Seat Dialog */}
+    <AlertDialog open={showAddSeatDialog} onOpenChange={setShowAddSeatDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Add Another Seat</AlertDialogTitle>
+          <AlertDialogDescription>
+            Adding a seat will update your subscription billing.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={async () => {
+              try {
+                await addSeatMutation.mutateAsync();
+                setShowAddSeatDialog(false);
+              } catch { /* handled by mutation */ }
+            }} 
+            disabled={addSeatMutation.isPending}
+          >
+            {addSeatMutation.isPending ? "Adding..." : "Add Seat"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
