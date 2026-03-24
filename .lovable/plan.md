@@ -1,101 +1,60 @@
 
 
-# Deep-Link Dashboard Interactions to Exact Data
+# Payment Behaviour Tracking & Enhanced Invoice Risk Scoring
 
-## Problem
-Every clickable element in the dashboard (KPI cards, Control Header buttons, Action Panel rows, Jobs at Risk rows, Invoice Risk rows, DrillThroughDrawer links) navigates to generic pages like `/jobs` or `/invoices` with no query parameters. Users land on unfiltered lists and must manually find the relevant records.
-
-## Solution
-Wire URL search parameters into the listing pages and pass specific filters from every dashboard interaction.
+## What we're building
+A customer payment behaviour system that tracks historical late-payment patterns and uses them to improve the Invoice Risk score — turning it from a simple "days overdue" check into a predictive risk indicator.
 
 ---
 
-## Technical Approach
+## Database changes
 
-### 1. Add URL parameter support to listing pages
+### 1. New table: `customer_payment_scores`
+Stores pre-computed payment behaviour per customer:
+- `customer_id` (FK to customers)
+- `team_id`
+- `total_invoices_paid` — lifetime count
+- `late_payments_count` — paid after due date
+- `avg_days_to_pay` — average calendar days from issue to payment
+- `avg_days_late` — average days past due (only for late ones)
+- `last_computed_at` — timestamp
 
-**Jobs page** (`src/pages/Jobs.tsx`):
-- Read `?status=` from URL on mount using `useSearchParams`
-- If present, set `statusFilter` state from it
-- Example: `/jobs?status=pending` pre-selects "Pending" filter
+RLS: team-scoped read/write for authenticated users.
 
-**Invoices page** (`src/pages/Invoices.tsx`):
-- Read `?status=` from URL (e.g. `overdue`, `pending`)
-- If present, set `statusFilter` state from it
-- Example: `/invoices?status=overdue` shows only overdue invoices
+### 2. Database function: `fn_compute_payment_scores()`
+A SQL function that:
+- Joins `invoices` → `payments` to find the earliest payment date per invoice
+- Compares payment date vs due date to classify late/on-time
+- Aggregates per customer into the scores table (upsert)
+- Can be called on-demand or via a cron trigger
 
-**Quotes page** (`src/pages/Quotes.tsx`):
-- Read `?status=` from URL (e.g. `sent`, `draft`)
-- If present, set `statusFilter` state from it
+### 3. Updated view: `v_invoice_risk`
+Enhance the existing risk score formula by joining `customer_payment_scores`:
+- Current: purely `max_days_overdue` buckets (>60 = high, >30 = medium)
+- New: weighted score combining overdue days (60%) + late payment history (30%) + exposure size (10%)
+- Output a numeric `risk_points` column alongside the categorical `risk_score`
 
-All three pages: also support `?highlight=<id>` to auto-open the detail sheet for a specific record.
+---
 
-### 2. Update Dashboard navigation targets
+## Frontend changes
 
-**ControlHeader.tsx**:
-- "Chase" button → `/invoices?status=overdue`
-- "Quotes" button → `/quotes?status=sent` (stale quotes are sent but not followed up)
-- "Jobs" button → `/jobs?status=in_progress` (stuck jobs)
+### 4. Update `InvoiceAtRisk` interface
+Add fields: `latePaymentRate`, `avgDaysToPay`, `riskPoints`
 
-**KPIStrip.tsx** — `onDrillDown` callback:
-- "cash" → open drill drawer (already works)
-- "outstanding" → open drill drawer (already works)
-- "overdue30" → `/invoices?status=overdue`
-- "jobs" → `/jobs?status=in_progress`
+### 5. Update `InvoiceRiskTable.tsx`
+- Show `Avg Days to Pay` column (compact)
+- Sort by `riskPoints` descending instead of just `daysOverdue`
+- Tooltip on risk badge showing breakdown: "62 days overdue · 73% late history · £12k exposure"
 
-**ActionPanel.tsx**:
-- Each alert already has an `href` field — update the analytics hook to generate precise URLs:
-  - Overdue quotes alert → `/quotes?status=sent`
-  - Stuck jobs alert → `/jobs?status=in_progress`
-  - Quote win rate opportunity → `/quotes`
-  - No jobs scheduled → `/jobs?status=scheduled`
-
-**JobsAtRiskTable.tsx**:
-- Row click → `/jobs?highlight=<job.id>` (opens that specific job's detail sheet)
-
-**InvoiceRiskTable.tsx**:
-- Row click → `/invoices?status=overdue` (filtered to overdue)
-- Mail button → `/invoices?highlight=<invoice.id>` (opens specific invoice)
-
-**TopCustomersTable.tsx**:
-- Row click → `/customers?highlight=<customer.id>`
-
-**DrillThroughDrawer.tsx**:
-- External link button per row → navigate to `linkPrefix + "?highlight=" + row.id`
-
-### 3. Detail sheet auto-open logic
-
-In each listing page, after data loads:
-- Check for `highlight` param
-- Find the matching record
-- Set it as `selectedJob`/`selectedInvoice`/`selectedQuote`
-- Open the detail sheet automatically
-- Clear the URL param after opening (using `replace` to avoid polluting history)
-
-### 4. Update analytics hook href generation
-
-In `useDashboardAnalytics.ts`, update the `ActionAlert.href` values to include query params instead of bare paths.
+### 6. Update `useDashboardAnalytics.ts`
+- Query `customer_payment_scores` alongside invoice data
+- Merge into the `InvoiceAtRisk` objects
+- Use the enhanced risk scoring in Action Panel alerts
 
 ---
 
 ## Files to modify
-
-1. `src/pages/Jobs.tsx` — add `useSearchParams`, sync status filter + auto-open detail
-2. `src/pages/Invoices.tsx` — same pattern
-3. `src/pages/Quotes.tsx` — same pattern
-4. `src/pages/Customers.tsx` — add highlight support
-5. `src/components/dashboard/ControlHeader.tsx` — update navigate calls with query params
-6. `src/components/dashboard/KPIStrip.tsx` — add direct navigation for overdue30 and jobs
-7. `src/components/dashboard/ActionPanel.tsx` — no changes needed (already uses `alert.href`)
-8. `src/components/dashboard/JobsAtRiskTable.tsx` — navigate with `?highlight=<id>`
-9. `src/components/dashboard/InvoiceRiskTable.tsx` — navigate with `?status=overdue` and `?highlight=<id>`
-10. `src/components/dashboard/TopCustomersTable.tsx` — navigate with `?highlight=<id>`
-11. `src/components/dashboard/DrillThroughDrawer.tsx` — append `?highlight=<row.id>` to link
-12. `src/hooks/useDashboardAnalytics.ts` — update `href` values in action alerts to include query params
-
-## Decisions this enables
-- Click "132 stuck jobs" → land on Jobs page showing only in-progress jobs
-- Click a specific stuck job row → land on Jobs page with that job's detail sheet open
-- Click "Chase" → land on Invoices page filtered to overdue
-- Click an invoice risk row → land on that specific invoice's detail
+1. New migration — `customer_payment_scores` table + `fn_compute_payment_scores` function + updated `v_invoice_risk` view
+2. `src/hooks/useDashboardAnalytics.ts` — add payment score query, merge into risk data
+3. `src/components/dashboard/InvoiceRiskTable.tsx` — add column, tooltip, sort by risk points
 
