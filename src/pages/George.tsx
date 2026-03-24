@@ -144,7 +144,13 @@ export default function George() {
     if (responseData.action_plan) {
       addActionPlan(responseData.action_plan);
     }
-  }, [addActionPlan]);
+    // Invalidate data caches so new records appear on other pages
+    queryClient.invalidateQueries({ queryKey: ["quotes"] });
+    queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    queryClient.invalidateQueries({ queryKey: ["customers"] });
+  }, [addActionPlan, queryClient]);
 
   const handleQuickAction = useCallback(async (action: string, message: string) => {
     addMessage("user", message);
@@ -195,7 +201,33 @@ export default function George() {
     setPhotoQuoteSuggestion(null);
   }, [navigate]);
 
-  const handleConfirmation = useCallback((planId: string, action: "confirm" | "review" | "cancel") => {
+  const handleConfirmation = useCallback(async (planId: string, action: "confirm" | "review" | "cancel") => {
+    const plan = displayItems.find(i => i.type === "action_plan" && i.data.action_id === planId);
+    
+    if (action === "confirm" && plan?.type === "action_plan" && plan.data.pending_tool_calls?.length) {
+      // Execute deferred tool calls
+      setIsProcessing(true);
+      try {
+        for (const tc of plan.data.pending_tool_calls) {
+          await supabase.functions.invoke("george-webhook", {
+            body: { function_name: tc.function_name, parameters: tc.parameters },
+          });
+        }
+        // Invalidate caches after executing
+        queryClient.invalidateQueries({ queryKey: ["quotes"] });
+        queryClient.invalidateQueries({ queryKey: ["invoices"] });
+        queryClient.invalidateQueries({ queryKey: ["jobs"] });
+        queryClient.invalidateQueries({ queryKey: ["expenses"] });
+        queryClient.invalidateQueries({ queryKey: ["customers"] });
+      } catch (err) {
+        console.error("Failed to execute confirmed action:", err);
+        addMessage("assistant", "❌ Something went wrong executing the action. Please try again.");
+        setIsProcessing(false);
+        return;
+      }
+      setIsProcessing(false);
+    }
+
     setDisplayItems(prev =>
       prev.map(item => {
         if (item.type === "action_plan" && item.data.action_id === planId) {
@@ -205,6 +237,7 @@ export default function George() {
               ...item.data,
               status: action === "confirm" ? "completed" as const : action === "cancel" ? "failed" as const : item.data.status,
               confirmation_gate: undefined,
+              pending_tool_calls: undefined,
             },
           };
         }
@@ -215,11 +248,11 @@ export default function George() {
     if (action === "confirm") {
       addMessage("assistant", "✅ Action confirmed and completed.");
     } else if (action === "cancel") {
-      addMessage("assistant", "❌ Action cancelled.");
+      addMessage("assistant", "❌ Action cancelled. No records were created.");
     } else {
       addMessage("assistant", "Opening for review...");
     }
-  }, [addMessage]);
+  }, [addMessage, displayItems, queryClient]);
 
   const handleOutputAction = useCallback((planId: string, action: string) => {
     if (action === "edit") {
