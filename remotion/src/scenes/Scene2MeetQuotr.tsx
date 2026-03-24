@@ -1,5 +1,7 @@
 import {
   AbsoluteFill,
+  Img,
+  staticFile,
   useCurrentFrame,
   interpolate,
   spring,
@@ -12,26 +14,19 @@ const { fontFamily } = loadFont("normal", {
   subsets: ["latin"],
 });
 
+const TEAL = "#00FFB2";
+
 export const Scene2MeetQuotr: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Logo circle scales in
   const logoScale = spring({ frame, fps, config: { damping: 15, stiffness: 180 } });
-
-  // "Meet" fades in
   const meetOpacity = interpolate(frame, [15, 35], [0, 1], { extrapolateRight: "clamp" });
   const meetX = interpolate(frame, [15, 35], [-30, 0], { extrapolateRight: "clamp" });
-
-  // "Quotr" slides in
   const quotrOpacity = interpolate(frame, [30, 50], [0, 1], { extrapolateRight: "clamp" });
   const quotrX = interpolate(frame, [30, 50], [30, 0], { extrapolateRight: "clamp" });
-
-  // Tagline
   const tagOpacity = interpolate(frame, [60, 80], [0, 1], { extrapolateRight: "clamp" });
   const tagY = interpolate(frame, [60, 80], [20, 0], { extrapolateRight: "clamp" });
-
-  // Subtle background gradient pulse
   const bgHue = interpolate(frame, [0, 150], [159, 165], { extrapolateRight: "clamp" });
 
   return (
@@ -55,31 +50,23 @@ export const Scene2MeetQuotr: React.FC = () => {
         }}
       />
 
-      {/* Logo mark */}
+      {/* Actual Quotr logo */}
       <div
         style={{
-          width: 120,
-          height: 120,
-          borderRadius: 28,
-          background: "linear-gradient(135deg, #00FFB2, #00CC8E)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
           transform: `scale(${logoScale})`,
-          boxShadow: "0 0 60px rgba(0,255,178,0.3)",
           marginBottom: 40,
         }}
       >
-        <span
+        <Img
+          src={staticFile("images/quotr-logo.png")}
           style={{
-            fontSize: 56,
-            fontWeight: 800,
-            color: "#0f172a",
-            letterSpacing: "-0.04em",
+            width: 120,
+            height: 120,
+            borderRadius: 28,
+            objectFit: "contain",
+            filter: `drop-shadow(0 0 40px rgba(0,255,178,0.4))`,
           }}
-        >
-          Q
-        </span>
+        />
       </div>
 
       <div style={{ display: "flex", gap: 20, alignItems: "baseline" }}>
@@ -112,7 +99,7 @@ export const Scene2MeetQuotr: React.FC = () => {
       <p
         style={{
           fontSize: 28,
-          color: "#00FFB2",
+          color: TEAL,
           marginTop: 24,
           opacity: tagOpacity,
           transform: `translateY(${tagY}px)`,

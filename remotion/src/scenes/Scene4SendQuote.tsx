@@ -1,5 +1,7 @@
 import {
   AbsoluteFill,
+  Img,
+  staticFile,
   useCurrentFrame,
   interpolate,
   spring,
@@ -14,38 +16,26 @@ const { fontFamily } = loadFont("normal", {
 
 const TEAL = "#00FFB2";
 const NAVY = "#0f172a";
-const CARD_BG = "#1e293b";
-const BORDER = "#334155";
 
 export const Scene4SendQuote: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // User message types
   const msg = "Send it to the client";
   const typedChars = Math.min(
     msg.length,
     Math.floor(interpolate(frame, [5, 35], [0, msg.length], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))
   );
-
   const userOpacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
-
-  // AI response
   const aiOpacity = interpolate(frame, [50, 65], [0, 1], { extrapolateRight: "clamp" });
   const aiScale = frame >= 50 ? spring({ frame: frame - 50, fps, config: { damping: 20 } }) : 0;
 
-  // Email sent animation — envelope flies out
   const envelopeScale = frame >= 80 ? spring({ frame: frame - 80, fps, config: { damping: 12, stiffness: 100 } }) : 0;
   const envelopeX = interpolate(frame, [80, 130], [0, 400], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const envelopeOpacity = interpolate(frame, [110, 130], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
-  // "Sent" badge
   const sentScale = frame >= 140 ? spring({ frame: frame - 140, fps, config: { damping: 10 } }) : 0;
-
-  // Status text
   const statusOpacity = interpolate(frame, [160, 180], [0, 1], { extrapolateRight: "clamp" });
-
-  // Branded doc preview
   const docOpacity = interpolate(frame, [100, 120], [0, 1], { extrapolateRight: "clamp" });
   const docY = interpolate(frame, [100, 120], [40, 0], { extrapolateRight: "clamp" });
 
@@ -63,29 +53,33 @@ export const Scene4SendQuote: React.FC = () => {
     >
       {/* Left: Chat */}
       <div style={{ flex: "0 0 500px", display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* User */}
+        {/* George header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4, opacity: userOpacity }}>
+          <Img src={staticFile("images/quotr-logo.png")} style={{ width: 32, height: 32, borderRadius: 8 }} />
+          <span style={{ fontSize: 15, color: "#94a3b8", fontWeight: 600 }}>George · Foreman AI</span>
+        </div>
+
+        {/* User message */}
         <div style={{ opacity: userOpacity, alignSelf: "flex-end", maxWidth: 400 }}>
           <div
             style={{
-              background: "rgba(0,255,178,0.1)",
-              border: "1px solid rgba(0,255,178,0.2)",
+              background: "rgba(0,255,178,0.12)",
+              border: "1px solid rgba(0,255,178,0.25)",
               borderRadius: "20px 20px 6px 20px",
               padding: "16px 24px",
             }}
           >
-            <p style={{ fontSize: 22, color: "white", margin: 0 }}>
-              "{msg.slice(0, typedChars)}"
-            </p>
+            <p style={{ fontSize: 22, color: "white", margin: 0 }}>"{msg.slice(0, typedChars)}"</p>
           </div>
         </div>
 
-        {/* AI */}
+        {/* AI response */}
         {frame >= 50 && (
           <div style={{ opacity: aiOpacity, transform: `scale(${aiScale})`, transformOrigin: "top left" }}>
             <div
               style={{
                 background: "rgba(30,41,59,0.8)",
-                border: `1px solid ${BORDER}`,
+                border: "1px solid #334155",
                 borderRadius: "6px 20px 20px 20px",
                 padding: "16px 24px",
               }}
@@ -100,14 +94,13 @@ export const Scene4SendQuote: React.FC = () => {
           </div>
         )}
 
-        {/* Status indicator */}
         <div style={{ opacity: statusOpacity, display: "flex", gap: 12, alignItems: "center", paddingLeft: 8, marginTop: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: TEAL }} />
           <span style={{ fontSize: 16, color: "#94a3b8" }}>Waiting for client approval</span>
         </div>
       </div>
 
-      {/* Right: Document preview */}
+      {/* Right: White document preview matching app */}
       <div style={{ flex: 1, opacity: docOpacity, transform: `translateY(${docY}px)` }}>
         <div
           style={{
@@ -118,23 +111,13 @@ export const Scene4SendQuote: React.FC = () => {
             boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
           }}
         >
-          {/* Header */}
+          {/* Header with actual logo */}
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
             <div>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  background: `linear-gradient(135deg, ${TEAL}, #00CC8E)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 8,
-                }}
-              >
-                <span style={{ fontSize: 24, fontWeight: 800, color: NAVY }}>Q</span>
-              </div>
+              <Img
+                src={staticFile("images/quotr-logo.png")}
+                style={{ width: 48, height: 48, borderRadius: 12, marginBottom: 8 }}
+              />
               <p style={{ fontSize: 12, color: "#64748b", margin: 0, fontWeight: 600 }}>Your Company Ltd</p>
             </div>
             <div style={{ textAlign: "right" }}>
@@ -143,7 +126,7 @@ export const Scene4SendQuote: React.FC = () => {
             </div>
           </div>
 
-          {/* Mini line items */}
+          {/* Line items */}
           <div style={{ borderTop: "2px solid #e2e8f0", paddingTop: 16 }}>
             {["7kW EV Charger Unit", "Installation Labour", "Cable & Trunking", "Consumer Unit Upgrade"].map((item, i) => (
               <div
@@ -180,13 +163,7 @@ export const Scene4SendQuote: React.FC = () => {
 
           {/* Sent badge */}
           {sentScale > 0 && (
-            <div
-              style={{
-                marginTop: 20,
-                textAlign: "center",
-                transform: `scale(${sentScale})`,
-              }}
-            >
+            <div style={{ marginTop: 20, textAlign: "center", transform: `scale(${sentScale})` }}>
               <span
                 style={{
                   background: "rgba(0,255,178,0.15)",

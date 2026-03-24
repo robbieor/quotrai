@@ -1,5 +1,7 @@
 import {
   AbsoluteFill,
+  Img,
+  staticFile,
   useCurrentFrame,
   interpolate,
   spring,
@@ -14,25 +16,19 @@ const { fontFamily } = loadFont("normal", {
 
 const TEAL = "#00FFB2";
 const NAVY = "#0f172a";
-const CARD_BG = "#1e293b";
-const BORDER = "#334155";
 
 export const Scene5ConvertJob: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // User message
   const msg = "Convert to job and send invoice";
   const typedChars = Math.min(
     msg.length,
     Math.floor(interpolate(frame, [5, 40], [0, msg.length], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }))
   );
   const userOpacity = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
-
-  // AI response
   const aiOpacity = interpolate(frame, [55, 70], [0, 1], { extrapolateRight: "clamp" });
 
-  // 3 status cards stagger in
   const cards = [
     { icon: "📋", label: "Job Created", detail: "J-0092 · Scheduled for Thursday", delay: 90 },
     { icon: "📄", label: "Invoice Sent", detail: "INV-0067 · €1,300.00", delay: 130 },
@@ -54,11 +50,17 @@ export const Scene5ConvertJob: React.FC = () => {
     >
       {/* Chat area */}
       <div style={{ maxWidth: 700, width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* George header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: userOpacity }}>
+          <Img src={staticFile("images/quotr-logo.png")} style={{ width: 28, height: 28, borderRadius: 7 }} />
+          <span style={{ fontSize: 14, color: "#94a3b8", fontWeight: 600 }}>George · Foreman AI</span>
+        </div>
+
         <div style={{ opacity: userOpacity, alignSelf: "flex-end", maxWidth: 480 }}>
           <div
             style={{
-              background: "rgba(0,255,178,0.1)",
-              border: "1px solid rgba(0,255,178,0.2)",
+              background: "rgba(0,255,178,0.12)",
+              border: "1px solid rgba(0,255,178,0.25)",
               borderRadius: "20px 20px 6px 20px",
               padding: "14px 22px",
             }}
@@ -72,7 +74,7 @@ export const Scene5ConvertJob: React.FC = () => {
             <div
               style={{
                 background: "rgba(30,41,59,0.8)",
-                border: `1px solid ${BORDER}`,
+                border: "1px solid #334155",
                 borderRadius: "6px 20px 20px 20px",
                 padding: "14px 22px",
               }}
@@ -85,7 +87,7 @@ export const Scene5ConvertJob: React.FC = () => {
         )}
       </div>
 
-      {/* Status cards */}
+      {/* Status cards — WHITE cards matching app */}
       <div style={{ display: "flex", gap: 24, maxWidth: 900, width: "100%" }}>
         {cards.map((card, i) => {
           const cardScale = frame >= card.delay
@@ -101,22 +103,21 @@ export const Scene5ConvertJob: React.FC = () => {
               key={i}
               style={{
                 flex: 1,
-                background: CARD_BG,
-                border: `1px solid ${BORDER}`,
+                background: "white",
                 borderRadius: 16,
                 padding: "28px 24px",
                 opacity: cardOpacity,
                 transform: `scale(${cardScale}) translateY(${interpolate(cardScale, [0, 1], [20, 0])}px)`,
                 transformOrigin: "bottom center",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
               }}
             >
               <div style={{ fontSize: 36, marginBottom: 12 }}>{card.icon}</div>
-              <p style={{ fontSize: 18, color: "white", fontWeight: 700, margin: "0 0 6px 0" }}>
+              <p style={{ fontSize: 18, color: NAVY, fontWeight: 700, margin: "0 0 6px 0" }}>
                 {card.label}
               </p>
-              <p style={{ fontSize: 14, color: "#94a3b8", margin: 0 }}>{card.detail}</p>
+              <p style={{ fontSize: 14, color: "#64748b", margin: 0 }}>{card.detail}</p>
 
-              {/* Check mark */}
               {frame >= card.delay + 30 && (
                 <div
                   style={{
@@ -124,7 +125,7 @@ export const Scene5ConvertJob: React.FC = () => {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
-                    background: "rgba(0,255,178,0.1)",
+                    background: "rgba(0,255,178,0.12)",
                     borderRadius: 8,
                     padding: "4px 12px",
                     opacity: interpolate(frame, [card.delay + 30, card.delay + 40], [0, 1], {
@@ -133,7 +134,7 @@ export const Scene5ConvertJob: React.FC = () => {
                     }),
                   }}
                 >
-                  <span style={{ color: TEAL, fontSize: 14, fontWeight: 700 }}>✓ Complete</span>
+                  <span style={{ color: "#059669", fontSize: 14, fontWeight: 700 }}>✓ Complete</span>
                 </div>
               )}
             </div>
