@@ -17,17 +17,21 @@ export function useInvoices() {
   return useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from("invoices")
         .select(`
           *,
           customer:customers(name, country_code),
           invoice_items(*),
           quote:quotes(quote_number)
-        `)
-        .order("created_at", { ascending: false });
+        `, { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(5000);
 
       if (error) throw error;
+      if (count && count >= 5000) {
+        console.warn(`Invoices query returned ${count} rows — pagination recommended`);
+      }
       return data as Invoice[];
     },
   });

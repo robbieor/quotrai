@@ -17,17 +17,21 @@ export function useQuotes() {
   return useQuery({
     queryKey: ["quotes"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from("quotes")
         .select(`
           *,
           customer:customers(name, country_code),
           job:jobs(id, title),
           quote_items(*)
-        `)
-        .order("created_at", { ascending: false });
+        `, { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(5000);
 
       if (error) throw error;
+      if (count && count >= 5000) {
+        console.warn(`Quotes query returned ${count} rows — pagination recommended`);
+      }
       return data as Quote[];
     },
   });
