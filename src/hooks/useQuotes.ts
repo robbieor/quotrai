@@ -244,6 +244,45 @@ export function useUpdateQuoteStatus() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Auto-create job when quote is accepted
+      if (status === "accepted") {
+        try {
+          const { data: quote } = await supabase
+            .from("quotes")
+            .select("*, customer:customers(name)")
+            .eq("id", id)
+            .single();
+
+          if (quote) {
+            // Check if a job already exists for this quote
+            const { data: existingJob } = await supabase
+              .from("jobs")
+              .select("id")
+              .eq("quote_id" as any, id)
+              .maybeSingle();
+
+            if (!existingJob) {
+              await supabase
+                .from("jobs")
+                .insert({
+                  title: `Job from Quote ${quote.quote_number}`,
+                  customer_id: quote.customer_id,
+                  team_id: quote.team_id,
+                  status: "scheduled",
+                  estimated_value: quote.total,
+                  description: quote.notes || undefined,
+                  quote_id: id,
+                } as any);
+
+              toast.success("Job auto-created from accepted quote");
+              queryClient.invalidateQueries({ queryKey: ["jobs"] });
+            }
+          }
+        } catch (jobErr) {
+          console.warn("Auto-create job failed:", jobErr);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotes"] });
