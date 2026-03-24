@@ -7,6 +7,7 @@ import { useVoiceFailureHandler } from "@/hooks/useVoiceFailureHandler";
 import { useVoiceConnectionReliability } from "@/hooks/useVoiceConnectionReliability";
 
 const ELEVENLABS_AGENT_ID = "agent_2701kffwpjhvf4gvt2cxpsx6j3rb";
+const TOAST_DEBOUNCE_MS = 10000; // Suppress duplicate toasts within 10s
 
 interface AgentContext {
   userId?: string;
