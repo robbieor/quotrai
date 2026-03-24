@@ -238,35 +238,16 @@ export function useClockIn() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get job site for verification
-      const { data: jobSite } = await supabase
-        .from("job_sites")
-        .select("*")
-        .eq("job_id", data.job_id)
-        .maybeSingle();
-
-      // Check if within geofence
-      let clockInVerified = false;
-      if (jobSite && data.latitude && data.longitude) {
-        clockInVerified = isWithinGeofence(
-          data.latitude,
-          data.longitude,
-          jobSite.latitude,
-          jobSite.longitude,
-          jobSite.geofence_radius
-        );
-      }
-
+      // GPS verification is now handled server-side by validate-clock-event
       const payload = {
         team_id: teamId,
         user_id: user.id,
         job_id: data.job_id,
-        job_site_id: jobSite?.id || null,
         clock_in_at: new Date().toISOString(),
         clock_in_latitude: data.latitude || null,
         clock_in_longitude: data.longitude || null,
         clock_in_accuracy: data.accuracy || null,
-        clock_in_verified: clockInVerified,
+        clock_in_verified: false,
         device_id: data.device_id || null,
         status: "active",
       };
@@ -340,30 +321,10 @@ export function useClockOut() {
       };
 
       try {
-        // Get the time entry with job site for geofence check
-        const { data: entry, error: fetchError } = await supabase
-          .from("time_entries")
-          .select("*, job_sites(*)")
-          .eq("id", data.time_entry_id)
-          .single();
-
-        if (fetchError) throw fetchError;
-
-        // Check if within geofence
-        let clockOutVerified = false;
-        if (entry.job_sites && data.latitude && data.longitude) {
-          clockOutVerified = isWithinGeofence(
-            data.latitude,
-            data.longitude,
-            entry.job_sites.latitude,
-            entry.job_sites.longitude,
-            entry.job_sites.geofence_radius
-          );
-        }
-
+        // GPS verification is now handled server-side by validate-clock-event
         const { data: updated, error } = await supabase
           .from("time_entries")
-          .update({ ...clockOutPayload, clock_out_verified: clockOutVerified })
+          .update(clockOutPayload)
           .eq("id", data.time_entry_id)
           .select("*, jobs(title, customers(name))")
           .single();

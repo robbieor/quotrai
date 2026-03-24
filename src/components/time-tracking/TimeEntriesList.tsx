@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { format, differenceInMinutes } from "date-fns";
+import { format, differenceInMinutes, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, differenceInSeconds } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,13 +36,17 @@ import {
   CheckCircle2,
   AlertCircle,
   MapPin,
+  Download,
+  BarChart3,
 } from "lucide-react";
 import { useTimeEntries, useDeleteTimeEntry, type TimeEntry } from "@/hooks/useTimeTracking";
+import { toast } from "sonner";
 
 export function TimeEntriesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deleteEntry, setDeleteEntry] = useState<TimeEntry | null>(null);
+  const [showWeekly, setShowWeekly] = useState(false);
 
   const { data: entries, isLoading } = useTimeEntries();
   const deleteTimeEntry = useDeleteTimeEntry();
@@ -60,6 +64,42 @@ export function TimeEntriesList() {
     });
   }, [entries, searchQuery, statusFilter]);
 
+  // Weekly summary data
+  const weeklySummary = useMemo(() => {
+    if (!entries) return [];
+    const now = new Date();
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+    return days.map((day) => {
+      const dayEntries = entries.filter((e) =>
+        isSameDay(new Date(e.clock_in_at), day)
+      );
+      const totalSeconds = dayEntries.reduce((sum, e) => {
+        const end = e.clock_out_at ? new Date(e.clock_out_at) : new Date();
+        return sum + differenceInSeconds(end, new Date(e.clock_in_at));
+      }, 0);
+      return {
+        day,
+        label: format(day, "EEE"),
+        date: format(day, "MMM d"),
+        hours: Math.round((totalSeconds / 3600) * 10) / 10,
+        entries: dayEntries.length,
+      };
+    });
+  }, [entries]);
+
+  const weeklyTotal = useMemo(
+    () => weeklySummary.reduce((sum, d) => sum + d.hours, 0),
+    [weeklySummary]
+  );
+
+  const maxDailyHours = useMemo(
+    () => Math.max(...weeklySummary.map((d) => d.hours), 1),
+    [weeklySummary]
+  );
+
   const formatDuration = (clockIn: string, clockOut: string | null) => {
     if (!clockOut) return "In progress";
     const minutes = differenceInMinutes(new Date(clockOut), new Date(clockIn));
@@ -74,6 +114,41 @@ export function TimeEntriesList() {
         onSuccess: () => setDeleteEntry(null),
       });
     }
+  };
+
+  const handleExport = () => {
+    if (!entries || entries.length === 0) {
+      toast.error("No time entries to export");
+      return;
+    }
+    const rows = [
+      ["Date", "Job", "Customer", "Clock In", "Clock Out", "Duration", "Status", "GPS Verified", "Notes"].join(","),
+      ...entries.map((e) => {
+        const duration = e.clock_out_at
+          ? formatDuration(e.clock_in_at, e.clock_out_at)
+          : "In progress";
+        return [
+          format(new Date(e.clock_in_at), "yyyy-MM-dd"),
+          `"${e.jobs?.title || ""}"`,
+          `"${e.jobs?.customers?.name || ""}"`,
+          format(new Date(e.clock_in_at), "HH:mm"),
+          e.clock_out_at ? format(new Date(e.clock_out_at), "HH:mm") : "",
+          duration,
+          e.status,
+          e.clock_in_verified ? "Yes" : "No",
+          `"${e.notes || ""}"`,
+        ].join(",");
+      }),
+    ].join("\n");
+
+    const blob = new Blob([rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `timesheet-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Timesheet exported");
   };
 
   if (isLoading) {
@@ -104,11 +179,59 @@ export function TimeEntriesList() {
 
   return (
     <>
+      {/* Weekly Summary */}
+      {showWeekly && (
+        <Card className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              This Week — {Math.round(weeklyTotal * 10) / 10}h total
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-24">
+              {weeklySummary.map((day) => (
+                <div key={day.label} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full flex flex-col items-center">
+                    <span className="text-xs text-muted-foreground mb-1">
+                      {day.hours > 0 ? `${day.hours}h` : ""}
+                    </span>
+                    <div
+                      className="w-full rounded-t bg-primary/80 transition-all min-h-[2px]"
+                      style={{
+                        height: `${Math.max((day.hours / maxDailyHours) * 64, day.hours > 0 ? 4 : 2)}px`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium">{day.label}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Time Entries
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Time Entries
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant={showWeekly ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setShowWeekly(!showWeekly)}
+              >
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Weekly
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-1" />
+                Export
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -169,7 +292,7 @@ export function TimeEntriesList() {
 
                   <div className="flex items-center gap-4">
                     {/* Location verification badges */}
-                    <div className="flex items-center gap-1">
+                    <div className="hidden sm:flex items-center gap-1">
                       {entry.clock_in_verified ? (
                         <Badge
                           variant="outline"

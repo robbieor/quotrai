@@ -1,16 +1,9 @@
-import { useState, useEffect } from "react";
-import { format, differenceInSeconds } from "date-fns";
+import { useState, useEffect, useMemo } from "react";
+import { format, differenceInSeconds, isToday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,21 +13,22 @@ import {
 } from "@/components/ui/dialog";
 import {
   Clock,
-  MapPin,
   Play,
   Square,
   Loader2,
   CheckCircle2,
   AlertCircle,
   Navigation,
+  Coffee,
+  Timer,
+  Briefcase,
 } from "lucide-react";
 import {
   useActiveTimeEntry,
   useClockIn,
   useClockOut,
   useGeolocation,
-  useJobSites,
-  isWithinGeofence,
+  useTimeEntries,
 } from "@/hooks/useTimeTracking";
 import { useJobs } from "@/hooks/useJobs";
 
@@ -53,10 +47,42 @@ export function ClockInOutCard() {
 
   const { data: activeEntry, isLoading: loadingActive } = useActiveTimeEntry();
   const { data: jobs } = useJobs();
-  const { data: jobSites } = useJobSites();
+  const { data: allEntries } = useTimeEntries();
   const clockIn = useClockIn();
   const clockOut = useClockOut();
   const { getCurrentPosition } = useGeolocation();
+
+  // Today's scheduled/in-progress jobs
+  const todaysJobs = useMemo(() => {
+    if (!jobs) return [];
+    return jobs.filter(
+      (job) =>
+        (job.status === "scheduled" || job.status === "in_progress") &&
+        job.scheduled_date &&
+        isToday(new Date(job.scheduled_date))
+    );
+  }, [jobs]);
+
+  // Available jobs (all scheduled/in_progress, for fallback)
+  const availableJobs = useMemo(() => {
+    if (!jobs) return [];
+    return jobs.filter(
+      (job) => job.status === "scheduled" || job.status === "in_progress"
+    );
+  }, [jobs]);
+
+  // Daily summary
+  const dailySummary = useMemo(() => {
+    if (!allEntries) return { totalSeconds: 0, entryCount: 0 };
+    const todayEntries = allEntries.filter((e) =>
+      isToday(new Date(e.clock_in_at))
+    );
+    const totalSeconds = todayEntries.reduce((sum, e) => {
+      const end = e.clock_out_at ? new Date(e.clock_out_at) : new Date();
+      return sum + differenceInSeconds(end, new Date(e.clock_in_at));
+    }, 0);
+    return { totalSeconds, entryCount: todayEntries.length };
+  }, [allEntries]);
 
   // Get current location
   const fetchLocation = async () => {
@@ -78,7 +104,6 @@ export function ClockInOutCard() {
     }
   };
 
-  // Fetch location on mount
   useEffect(() => {
     fetchLocation();
   }, []);
@@ -89,7 +114,6 @@ export function ClockInOutCard() {
       setElapsedTime(0);
       return;
     }
-
     const updateElapsed = () => {
       const seconds = differenceInSeconds(
         new Date(),
@@ -97,7 +121,6 @@ export function ClockInOutCard() {
       );
       setElapsedTime(seconds);
     };
-
     updateElapsed();
     const interval = setInterval(updateElapsed, 1000);
     return () => clearInterval(interval);
@@ -112,10 +135,13 @@ export function ClockInOutCard() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleClockIn = async () => {
-    if (!selectedJobId) return;
+  const formatHoursMinutes = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
 
-    // Await fresh GPS position directly instead of reading stale state
+  const handleClockIn = async (jobId: string) => {
     setIsGettingLocation(true);
     setLocationError(null);
     let freshLocation: { lat: number; lng: number; accuracy: number } | null = null;
@@ -136,7 +162,7 @@ export function ClockInOutCard() {
     }
 
     clockIn.mutate({
-      job_id: selectedJobId,
+      job_id: jobId,
       latitude: freshLocation?.lat,
       longitude: freshLocation?.lng,
       accuracy: freshLocation?.accuracy,
@@ -145,8 +171,6 @@ export function ClockInOutCard() {
 
   const handleClockOut = async () => {
     if (!activeEntry) return;
-
-    // Await fresh GPS position directly instead of reading stale state
     setIsGettingLocation(true);
     setLocationError(null);
     let freshLocation: { lat: number; lng: number; accuracy: number } | null = null;
@@ -183,25 +207,6 @@ export function ClockInOutCard() {
     );
   };
 
-  // Find nearby job site
-  const nearbyJobSite = jobSites?.find((site) => {
-    if (!currentLocation) return false;
-    return isWithinGeofence(
-      currentLocation.lat,
-      currentLocation.lng,
-      site.latitude,
-      site.longitude,
-      site.geofence_radius
-    );
-  });
-
-  // Auto-select job if nearby
-  useEffect(() => {
-    if (nearbyJobSite && !selectedJobId && !activeEntry) {
-      setSelectedJobId(nearbyJobSite.job_id);
-    }
-  }, [nearbyJobSite, selectedJobId, activeEntry]);
-
   if (loadingActive) {
     return (
       <Card>
@@ -221,8 +226,8 @@ export function ClockInOutCard() {
             Time Clock
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Current Time */}
+        <CardContent className="space-y-5">
+          {/* Current Time & Date */}
           <div className="text-center">
             <div className="text-3xl font-bold">
               {format(new Date(), "HH:mm")}
@@ -237,14 +242,12 @@ export function ClockInOutCard() {
             {isGettingLocation ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-muted-foreground">
-                  Getting location...
-                </span>
+                <span className="text-muted-foreground">Getting location...</span>
               </>
             ) : locationError ? (
               <>
                 <AlertCircle className="h-4 w-4 text-destructive" />
-                <span className="text-destructive">{locationError}</span>
+                <span className="text-destructive text-xs">{locationError}</span>
                 <Button variant="ghost" size="sm" onClick={fetchLocation}>
                   Retry
                 </Button>
@@ -253,29 +256,34 @@ export function ClockInOutCard() {
               <>
                 <Navigation className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">
-                  Location: ±{Math.round(currentLocation.accuracy)}m accuracy
+                  ±{Math.round(currentLocation.accuracy)}m accuracy
                 </span>
               </>
             ) : null}
           </div>
 
-          {/* Nearby Job Site Alert */}
-          {nearbyJobSite && !activeEntry && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <MapPin className="h-5 w-5 text-primary" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  You're near: {nearbyJobSite.jobs?.title}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {nearbyJobSite.address}
+          {/* Daily Summary Strip */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+              <Timer className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Today</p>
+                <p className="text-sm font-semibold">
+                  {formatHoursMinutes(dailySummary.totalSeconds)}
                 </p>
               </div>
             </div>
-          )}
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+              <Briefcase className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Entries</p>
+                <p className="text-sm font-semibold">{dailySummary.entryCount}</p>
+              </div>
+            </div>
+          </div>
 
           {activeEntry ? (
-            /* Clocked In State */
+            /* ===== CLOCKED IN STATE ===== */
             <div className="space-y-4">
               <div className="text-center p-6 rounded-lg bg-primary/10">
                 <div className="text-4xl font-mono font-bold text-primary">
@@ -324,40 +332,85 @@ export function ClockInOutCard() {
               </Button>
             </div>
           ) : (
-            /* Clocked Out State */
+            /* ===== CLOCKED OUT STATE — Today's Schedule ===== */
             <div className="space-y-4">
-              <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a job to clock in" />
-                </SelectTrigger>
-                <SelectContent>
-                  {jobs
-                    ?.filter(
-                      (job) =>
-                        job.status === "scheduled" ||
-                        job.status === "in_progress"
-                    )
-                    .map((job) => (
-                      <SelectItem key={job.id} value={job.id}>
-                        {job.title} - {job.customers?.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              {todaysJobs.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Today's Schedule
+                  </h3>
+                  {todaysJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{job.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {job.customers?.name}
+                          {job.scheduled_date &&
+                            ` • ${format(new Date(job.scheduled_date), "h:mm a")}`}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleClockIn(job.id)}
+                        disabled={clockIn.isPending}
+                      >
+                        {clockIn.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-1" />
+                        )}
+                        Start
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleClockIn}
-                disabled={!selectedJobId || clockIn.isPending}
-              >
-                {clockIn.isPending ? (
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                ) : (
-                  <Play className="h-5 w-5 mr-2" />
-                )}
-                Clock In
-              </Button>
+              {/* Fallback: all available jobs if none today */}
+              {todaysJobs.length === 0 && availableJobs.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Available Jobs
+                  </h3>
+                  {availableJobs.slice(0, 5).map((job) => (
+                    <div
+                      key={job.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{job.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {job.customers?.name}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleClockIn(job.id)}
+                        disabled={clockIn.isPending}
+                      >
+                        {clockIn.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-1" />
+                        )}
+                        Start
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {availableJobs.length === 0 && (
+                <div className="text-center py-8">
+                  <Briefcase className="mx-auto h-10 w-10 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    No active jobs to clock into
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
