@@ -93,7 +93,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-                      <TableCell className="py-1">
+                      <TableCell className="py-1 hidden sm:table-cell">
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); navigate(`/invoices?highlight=${inv.id}`); }}>
                           <Mail className="h-3 w-3" />
                         </Button>
