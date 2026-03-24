@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,7 +26,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Upload, X, FileImage, ScanLine } from "lucide-react";
+import { CalendarIcon, Loader2, Upload, X, FileImage, ScanLine, Camera } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { 
   useCreateExpense, 
@@ -63,6 +64,8 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
   const [isUploading, setIsUploading] = useState(false);
   const [isScanningReceipt, setIsScanningReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
@@ -277,6 +280,14 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
               onChange={handleFileChange}
               className="hidden"
             />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
+            />
             {receiptUrl ? (
               <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/50">
                 {isScanningReceipt ? (
@@ -302,20 +313,38 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
                 </Button>
               </div>
             ) : (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="mr-2 h-4 w-4" />
+              <div className={cn("flex gap-2", isMobile ? "flex-col" : "")}>
+                {isMobile && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => cameraInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="mr-2 h-4 w-4" />
+                    )}
+                    Take Photo
+                  </Button>
                 )}
-                Upload Receipt
-              </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
+                  Upload Receipt
+                </Button>
+              </div>
             )}
           </div>
 

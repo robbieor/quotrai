@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { LayoutDashboard, Briefcase, Users, Receipt, Wallet, Settings, CalendarDays, Clock, FolderOpen, LogOut, Bot, LucideIcon } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Receipt, Wallet, Settings, CalendarDays, Clock, FolderOpen, LogOut, Bot, FileText, UserPlus, LucideIcon } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
@@ -38,6 +38,7 @@ const navGroups: NavGroup[] = [
   {
     label: "MONEY",
     items: [
+      { id: "quotes", title: "Quotes", url: "/quotes", icon: FileText },
       { id: "invoices", title: "Invoices", url: "/invoices", icon: Receipt },
       { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
     ],
@@ -46,6 +47,7 @@ const navGroups: NavGroup[] = [
     label: "PEOPLE",
     items: [
       { id: "customers", title: "Customers", url: "/customers", icon: Users },
+      { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
     ],
   },
   {
