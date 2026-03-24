@@ -6,7 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Upload, 
   Trash2, 
@@ -15,9 +22,14 @@ import {
   FileText, 
   CreditCard,
   Image,
-  Save
+  Save,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Eye,
 } from "lucide-react";
 import { useCompanyBranding, CompanyBrandingInput } from "@/hooks/useCompanyBranding";
+import { DocumentPreview } from "./DocumentPreview";
 
 const ACCENT_COLORS = [
   { name: "Quotr Green", value: "#00FFB2" },
@@ -29,6 +41,10 @@ const ACCENT_COLORS = [
   { name: "Pink", value: "#EC4899" },
   { name: "Slate", value: "#64748B" },
 ];
+
+type TemplateStyle = "modern" | "classic" | "compact";
+type LogoAlign = "left" | "center" | "right";
+type DocType = "invoice" | "quote";
 
 export function BrandingSettings() {
   const { branding, isLoading, upsertBranding, uploadLogo, removeLogo } = useCompanyBranding();
@@ -48,8 +64,12 @@ export function BrandingSettings() {
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [templateStyle, setTemplateStyle] = useState<TemplateStyle>("modern");
+  const [logoAlign, setLogoAlign] = useState<LogoAlign>("left");
+  const [previewDocType, setPreviewDocType] = useState<DocType>("invoice");
+  const [showPaymentTerms, setShowPaymentTerms] = useState(true);
+  const [showBankDetails, setShowBankDetails] = useState(true);
 
-  // Load branding data into form
   useEffect(() => {
     if (branding) {
       setFormData({
@@ -99,258 +119,374 @@ export function BrandingSettings() {
       <div className="space-y-6">
         <Skeleton className="h-48 rounded-lg" />
         <Skeleton className="h-64 rounded-lg" />
-        <Skeleton className="h-48 rounded-lg" />
       </div>
     );
   }
 
+  const alignButtons: { value: LogoAlign; icon: typeof AlignLeft }[] = [
+    { value: "left", icon: AlignLeft },
+    { value: "center", icon: AlignCenter },
+    { value: "right", icon: AlignRight },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Logo Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Image className="h-5 w-5" />
-            Company Logo
-          </CardTitle>
-          <CardDescription>
-            Your logo appears on invoices, quotes, and customer-facing documents
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-6">
-            <div className="flex-shrink-0">
-              {branding?.logo_url ? (
-                <div className="relative group">
-                  <img
-                    src={branding.logo_url}
-                    alt="Company logo"
-                    className="h-24 w-24 object-contain rounded-lg border bg-white p-2"
-                  />
-                  <button
-                    onClick={handleRemoveLogo}
-                    className="absolute -top-2 -right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+    <div className="flex flex-col lg:flex-row gap-6">
+      {/* LEFT — Settings Forms */}
+      <div className="flex-1 min-w-0 space-y-6">
+        {/* Template + Preview Controls */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Document Style
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Template</Label>
+                <Select value={templateStyle} onValueChange={(v) => setTemplateStyle(v as TemplateStyle)}>
+                  <SelectTrigger className="w-[140px] h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="modern">Modern</SelectItem>
+                    <SelectItem value="classic">Classic</SelectItem>
+                    <SelectItem value="compact">Compact</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Preview</Label>
+                <div className="flex gap-1">
+                  <Button
+                    variant={previewDocType === "invoice" ? "default" : "outline"}
+                    size="sm"
+                    className="h-9 text-xs"
+                    onClick={() => setPreviewDocType("invoice")}
                   >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                    Invoice
+                  </Button>
+                  <Button
+                    variant={previewDocType === "quote" ? "default" : "outline"}
+                    size="sm"
+                    className="h-9 text-xs"
+                    onClick={() => setPreviewDocType("quote")}
+                  >
+                    Quote
+                  </Button>
                 </div>
-              ) : (
-                <div className="h-24 w-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center bg-muted/50">
-                  <Image className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 space-y-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/svg+xml"
-                onChange={handleLogoUpload}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadLogo.isPending}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {uploadLogo.isPending ? "Uploading..." : "Upload Logo"}
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                PNG, JPG or SVG. Max 2MB. Recommended: 400x400px or higher.
-              </p>
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="show-logo"
-                  checked={formData.show_logo}
-                  onCheckedChange={(v) => updateField("show_logo", v)}
-                />
-                <Label htmlFor="show-logo" className="text-sm">
-                  Show logo on documents
-                </Label>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Company Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Company Details
-          </CardTitle>
-          <CardDescription>
-            This information appears in the header of your invoices and quotes
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="company_name">Company Name</Label>
-              <Input
-                id="company_name"
-                placeholder="Acme Electrical Ltd"
-                value={formData.company_name || ""}
-                onChange={(e) => updateField("company_name", e.target.value)}
-              />
+        {/* Logo Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              Company Logo
+            </CardTitle>
+            <CardDescription>
+              Your logo appears on invoices, quotes, and customer-facing documents
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-6">
+              <div className="flex-shrink-0">
+                {branding?.logo_url ? (
+                  <div className="relative group">
+                    <img
+                      src={branding.logo_url}
+                      alt="Company logo"
+                      className="h-24 w-24 object-contain rounded-lg border bg-white p-2"
+                    />
+                    <button
+                      onClick={handleRemoveLogo}
+                      className="absolute -top-2 -right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-24 w-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center bg-muted/50">
+                    <Image className="h-8 w-8 text-muted-foreground/50" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 space-y-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadLogo.isPending}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadLogo.isPending ? "Uploading..." : "Upload Logo"}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG or SVG. Max 2MB. Auto-scaled to fit.
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="show-logo"
+                      checked={formData.show_logo}
+                      onCheckedChange={(v) => updateField("show_logo", v)}
+                    />
+                    <Label htmlFor="show-logo" className="text-sm">
+                      Show logo
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-1 border rounded-md">
+                    {alignButtons.map(({ value, icon: Icon }) => (
+                      <button
+                        key={value}
+                        onClick={() => setLogoAlign(value)}
+                        className={`p-1.5 rounded transition-colors ${
+                          logoAlign === value
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted text-muted-foreground"
+                        }`}
+                        title={`Align ${value}`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Company Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Company Details
+            </CardTitle>
+            <CardDescription>
+              This information appears in the header of your documents
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="company_name">Company Name</Label>
+                <Input
+                  id="company_name"
+                  placeholder="Acme Electrical Ltd"
+                  value={formData.company_name || ""}
+                  onChange={(e) => updateField("company_name", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company_phone">Phone</Label>
+                <Input
+                  id="company_phone"
+                  placeholder="+353 1 234 5678"
+                  value={formData.company_phone || ""}
+                  onChange={(e) => updateField("company_phone", e.target.value)}
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="company_phone">Phone</Label>
-              <Input
-                id="company_phone"
-                placeholder="+353 1 234 5678"
-                value={formData.company_phone || ""}
-                onChange={(e) => updateField("company_phone", e.target.value)}
+              <Label htmlFor="company_address">Address</Label>
+              <Textarea
+                id="company_address"
+                placeholder={"123 Main Street\nDublin 1\nIreland"}
+                rows={3}
+                value={formData.company_address || ""}
+                onChange={(e) => updateField("company_address", e.target.value)}
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="company_address">Address</Label>
-            <Textarea
-              id="company_address"
-              placeholder="123 Main Street&#10;Dublin 1&#10;Ireland"
-              rows={3}
-              value={formData.company_address || ""}
-              onChange={(e) => updateField("company_address", e.target.value)}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="company_email">Email</Label>
+                <Input
+                  id="company_email"
+                  type="email"
+                  placeholder="info@company.com"
+                  value={formData.company_email || ""}
+                  onChange={(e) => updateField("company_email", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company_website">Website</Label>
+                <Input
+                  id="company_website"
+                  placeholder="www.company.com"
+                  value={formData.company_website || ""}
+                  onChange={(e) => updateField("company_website", e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Accent Color */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              Brand Color
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {ACCENT_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  onClick={() => updateField("accent_color", color.value)}
+                  className={`w-10 h-10 rounded-full border-2 transition-all ${
+                    formData.accent_color === color.value
+                      ? "border-foreground scale-110 ring-2 ring-offset-2 ring-foreground/20"
+                      : "border-transparent hover:scale-105"
+                  }`}
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                />
+              ))}
+              <div className="flex items-center gap-2 ml-2">
+                <Label htmlFor="custom-color" className="text-sm text-muted-foreground">Custom:</Label>
+                <Input
+                  id="custom-color"
+                  type="color"
+                  value={formData.accent_color || "#00FFB2"}
+                  onChange={(e) => updateField("accent_color", e.target.value)}
+                  className="w-10 h-10 p-1 cursor-pointer"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer & Payment */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Footer & Terms
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="company_email">Email</Label>
+              <Label htmlFor="footer_message">Footer Message</Label>
               <Input
-                id="company_email"
-                type="email"
-                placeholder="info@company.com"
-                value={formData.company_email || ""}
-                onChange={(e) => updateField("company_email", e.target.value)}
+                id="footer_message"
+                placeholder="Thank you for your business!"
+                value={formData.footer_message || ""}
+                onChange={(e) => updateField("footer_message", e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="company_website">Website</Label>
-              <Input
-                id="company_website"
-                placeholder="www.company.com"
-                value={formData.company_website || ""}
-                onChange={(e) => updateField("company_website", e.target.value)}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="payment_terms">Payment Terms</Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="show-payment-terms"
+                    checked={showPaymentTerms}
+                    onCheckedChange={setShowPaymentTerms}
+                  />
+                  <Label htmlFor="show-payment-terms" className="text-xs text-muted-foreground">Show on docs</Label>
+                </div>
+              </div>
+              <Textarea
+                id="payment_terms"
+                placeholder={"Payment due within 14 days of invoice date.\nLate payments may incur a 2% monthly charge."}
+                rows={2}
+                value={formData.payment_terms || ""}
+                onChange={(e) => updateField("payment_terms", e.target.value)}
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Accent Color */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
-            Brand Color
-          </CardTitle>
-          <CardDescription>
-            Choose an accent color for table headers and highlights in your documents
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            {ACCENT_COLORS.map((color) => (
-              <button
-                key={color.value}
-                onClick={() => updateField("accent_color", color.value)}
-                className={`w-10 h-10 rounded-full border-2 transition-all ${
-                  formData.accent_color === color.value
-                    ? "border-foreground scale-110 ring-2 ring-offset-2 ring-foreground/20"
-                    : "border-transparent hover:scale-105"
-                }`}
-                style={{ backgroundColor: color.value }}
-                title={color.name}
-              />
-            ))}
-            <div className="flex items-center gap-2 ml-2">
-              <Label htmlFor="custom-color" className="text-sm text-muted-foreground">
-                Custom:
-              </Label>
-              <Input
-                id="custom-color"
-                type="color"
-                value={formData.accent_color || "#00FFB2"}
-                onChange={(e) => updateField("accent_color", e.target.value)}
-                className="w-10 h-10 p-1 cursor-pointer"
+        {/* Bank Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Bank Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bank_details">Bank Account Information</Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="show-bank-details"
+                    checked={showBankDetails}
+                    onCheckedChange={setShowBankDetails}
+                  />
+                  <Label htmlFor="show-bank-details" className="text-xs text-muted-foreground">Show on docs</Label>
+                </div>
+              </div>
+              <Textarea
+                id="bank_details"
+                placeholder={"Bank: AIB\nIBAN: IE12 AIBK 1234 5678 9012 34\nBIC: AIBKIE2D"}
+                rows={3}
+                value={formData.bank_details || ""}
+                onChange={(e) => updateField("bank_details", e.target.value)}
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Footer & Payment */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Footer & Terms
-          </CardTitle>
-          <CardDescription>
-            Customize the footer message and payment terms on your documents
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="footer_message">Footer Message</Label>
-            <Input
-              id="footer_message"
-              placeholder="Thank you for your business!"
-              value={formData.footer_message || ""}
-              onChange={(e) => updateField("footer_message", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="payment_terms">Payment Terms</Label>
-            <Textarea
-              id="payment_terms"
-              placeholder="Payment due within 14 days of invoice date.&#10;Late payments may incur a 2% monthly charge."
-              rows={2}
-              value={formData.payment_terms || ""}
-              onChange={(e) => updateField("payment_terms", e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+        {/* Save Button */}
+        <div className="flex justify-end pb-4">
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || upsertBranding.isPending}
+            size="lg"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {upsertBranding.isPending ? "Saving..." : "Save Branding Settings"}
+          </Button>
+        </div>
+      </div>
 
-      {/* Bank Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Bank Details
-          </CardTitle>
-          <CardDescription>
-            Add your bank account details to appear on invoices
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="bank_details">Bank Account Information</Label>
-            <Textarea
-              id="bank_details"
-              placeholder="Bank: AIB&#10;IBAN: IE12 AIBK 1234 5678 9012 34&#10;BIC: AIBKIE2D"
-              rows={3}
-              value={formData.bank_details || ""}
-              onChange={(e) => updateField("bank_details", e.target.value)}
-            />
+      {/* RIGHT — Live Preview */}
+      <div className="lg:w-[380px] xl:w-[420px] shrink-0">
+        <div className="lg:sticky lg:top-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">
+              <Eye className="h-3 w-3 mr-1" />
+              Live Preview
+            </Badge>
+            <span className="text-xs text-muted-foreground">Updates as you type</span>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || upsertBranding.isPending}
-          size="lg"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {upsertBranding.isPending ? "Saving..." : "Save Branding Settings"}
-        </Button>
+          <DocumentPreview
+            data={{
+              logoUrl: branding?.logo_url,
+              showLogo: formData.show_logo ?? true,
+              logoAlign,
+              companyName: formData.company_name || "",
+              companyAddress: formData.company_address || "",
+              companyPhone: formData.company_phone || "",
+              companyEmail: formData.company_email || "",
+              companyWebsite: formData.company_website || "",
+              accentColor: formData.accent_color || "#00FFB2",
+              footerMessage: formData.footer_message || "",
+              paymentTerms: formData.payment_terms || "",
+              bankDetails: formData.bank_details || "",
+              showPaymentTerms,
+              showBankDetails,
+              templateStyle,
+              documentType: previewDocType,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
