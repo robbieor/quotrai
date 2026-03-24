@@ -54,9 +54,9 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Total Due</TableHead>
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Oldest</TableHead>
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Days</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right">Avg Pay</TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-right hidden sm:table-cell">Avg Pay</TableHead>
                   <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-center">Risk</TableHead>
-                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider w-[40px]"></TableHead>
+                  <TableHead className="text-[10px] font-semibold uppercase tracking-wider w-[40px] hidden sm:table-cell"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
