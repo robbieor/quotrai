@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "@/hooks/useCurrency";
-import { Mail } from "lucide-react";
+import { Mail, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 import type { InvoiceAtRisk } from "@/hooks/useDashboardAnalytics";
 
 interface InvoiceRiskTableProps {
@@ -21,6 +22,7 @@ const riskConfig = {
 export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
+  const { segment } = useDashboardFilters();
 
   return (
     <Card className="border-border">
@@ -29,8 +31,13 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
       </CardHeader>
       <CardContent className="px-0 pb-2">
         {!data || data.length === 0 ? (
-          <div className="h-[180px] flex items-center justify-center px-4">
-            <p className="text-xs text-muted-foreground">No overdue invoices — great cash flow</p>
+          <div className="h-[180px] flex flex-col items-center justify-center px-4 gap-1.5">
+            <CheckCircle2 className="h-5 w-5 text-primary/50" />
+            <p className="text-xs text-muted-foreground text-center">
+              {segment !== "all"
+                ? "No invoice risks in this focus — try a different view."
+                : "No overdue invoices — great cash flow"}
+            </p>
           </div>
         ) : (
           <Table>

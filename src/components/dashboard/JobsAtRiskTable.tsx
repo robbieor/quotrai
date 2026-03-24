@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
+import { CheckCircle2 } from "lucide-react";
+import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 import type { JobAtRisk } from "@/hooks/useDashboardAnalytics";
 
 interface JobsAtRiskTableProps {
@@ -19,6 +21,7 @@ const statusLabels: Record<string, string> = {
 export function JobsAtRiskTable({ data }: JobsAtRiskTableProps) {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
+  const { segment } = useDashboardFilters();
 
   return (
     <Card className="border-border">
@@ -27,8 +30,13 @@ export function JobsAtRiskTable({ data }: JobsAtRiskTableProps) {
       </CardHeader>
       <CardContent className="px-0 pb-2">
         {!data || data.length === 0 ? (
-          <div className="h-[180px] flex items-center justify-center px-4">
-            <p className="text-xs text-muted-foreground">No stuck jobs — all on track</p>
+          <div className="h-[180px] flex flex-col items-center justify-center px-4 gap-1.5">
+            <CheckCircle2 className="h-5 w-5 text-primary/50" />
+            <p className="text-xs text-muted-foreground text-center">
+              {segment !== "all"
+                ? "No stuck jobs in this focus — try a different view."
+                : "No stuck jobs — all on track"}
+            </p>
           </div>
         ) : (
           <Table>
