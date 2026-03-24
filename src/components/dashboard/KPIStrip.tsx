@@ -3,6 +3,18 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 import type { KPIData } from "@/hooks/useDashboardAnalytics";
+import { useDashboardFilters, type TimePreset } from "@/contexts/DashboardFilterContext";
+
+function getTimeSuffix(preset: TimePreset): string {
+  switch (preset) {
+    case "7d": return "7D";
+    case "30d": return "30D";
+    case "this_month": return "MTD";
+    case "last_month": return "Last Month";
+    case "ytd": return "YTD";
+    case "custom": return "Period";
+  }
+}
 
 interface KPIStripProps {
   data: KPIData | undefined;
@@ -55,6 +67,8 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
 
 export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const { formatCurrency } = useCurrency();
+  const { timePreset } = useDashboardFilters();
+  const suffix = getTimeSuffix(timePreset);
 
   if (isLoading) {
     return (
@@ -78,7 +92,7 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   return (
     <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
       <KPICard
-        label="Cash Collected MTD"
+        label={`Cash Collected ${suffix}`}
         value={formatCurrency(data.cashCollectedMTD)}
         subMetric={`${data.cashCollectedCount} payment${data.cashCollectedCount !== 1 ? "s" : ""}`}
         onClick={() => onDrillDown?.("cash")}
@@ -100,7 +114,7 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
         onClick={() => onDrillDown?.("overdue30")}
       />
       <KPICard
-        label="Revenue MTD"
+        label={`Revenue ${suffix}`}
         value={formatCurrency(data.revenueMTD)}
         subMetric={`vs ${formatCurrency(data.revenueLastMonth)} last month`}
         context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% vs last month`}
