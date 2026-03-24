@@ -2058,6 +2058,72 @@ export type Database = {
           },
         ]
       }
+      job_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          from_status: Database["public"]["Enums"]["job_status"] | null
+          id: string
+          job_id: string
+          team_id: string
+          to_status: Database["public"]["Enums"]["job_status"]
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: Database["public"]["Enums"]["job_status"] | null
+          id?: string
+          job_id: string
+          team_id: string
+          to_status: Database["public"]["Enums"]["job_status"]
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: Database["public"]["Enums"]["job_status"] | null
+          id?: string
+          job_id?: string
+          team_id?: string
+          to_status?: Database["public"]["Enums"]["job_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_status_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_status_history_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           actual_cost: number | null
@@ -4402,28 +4468,6 @@ export type Database = {
           team_id: string | null
           title: string | null
           updated_at: string | null
-        }
-        Insert: {
-          customer_id?: string | null
-          days_since_update?: never
-          job_id?: string | null
-          risk_type?: never
-          scheduled_date?: string | null
-          status?: Database["public"]["Enums"]["job_status"] | null
-          team_id?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          customer_id?: string | null
-          days_since_update?: never
-          job_id?: string | null
-          risk_type?: never
-          scheduled_date?: string | null
-          status?: Database["public"]["Enums"]["job_status"] | null
-          team_id?: string | null
-          title?: string | null
-          updated_at?: string | null
         }
         Relationships: [
           {
