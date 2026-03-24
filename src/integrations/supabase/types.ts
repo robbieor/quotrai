@@ -252,6 +252,13 @@ export type Database = {
             foreignKeyName: "certificates_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
@@ -418,6 +425,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_queue_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
             referencedColumns: ["id"]
           },
           {
@@ -1162,6 +1176,13 @@ export type Database = {
             foreignKeyName: "expenses_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
@@ -1660,6 +1681,13 @@ export type Database = {
             foreignKeyName: "invoices_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
@@ -1725,6 +1753,13 @@ export type Database = {
             foreignKeyName: "job_materials_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_materials_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
@@ -1784,6 +1819,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_reminders_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
             referencedColumns: ["id"]
           },
           {
@@ -1879,6 +1921,13 @@ export type Database = {
             foreignKeyName: "job_sites_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: true
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_sites_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
@@ -1893,11 +1942,14 @@ export type Database = {
       }
       jobs: {
         Row: {
+          actual_cost: number | null
           created_at: string
           customer_id: string
           description: string | null
           estimated_value: number | null
           id: string
+          labour_cost: number | null
+          materials_cost: number | null
           quote_id: string | null
           recurring_job_id: string | null
           scheduled_date: string | null
@@ -1908,11 +1960,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          actual_cost?: number | null
           created_at?: string
           customer_id: string
           description?: string | null
           estimated_value?: number | null
           id?: string
+          labour_cost?: number | null
+          materials_cost?: number | null
           quote_id?: string | null
           recurring_job_id?: string | null
           scheduled_date?: string | null
@@ -1923,11 +1978,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          actual_cost?: number | null
           created_at?: string
           customer_id?: string
           description?: string | null
           estimated_value?: number | null
           id?: string
+          labour_cost?: number | null
+          materials_cost?: number | null
           quote_id?: string | null
           recurring_job_id?: string | null
           scheduled_date?: string | null
@@ -2066,6 +2124,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
             referencedColumns: ["id"]
           },
           {
@@ -2246,6 +2311,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mileage_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
             referencedColumns: ["id"]
           },
           {
@@ -2894,6 +2966,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
             referencedColumns: ["id"]
           },
           {
@@ -3769,6 +3848,13 @@ export type Database = {
             foreignKeyName: "time_entries_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
             referencedRelation: "v_jobs_at_risk"
             referencedColumns: ["id"]
           },
@@ -4028,6 +4114,40 @@ export type Database = {
           },
           {
             foreignKeyName: "invoices_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_job_profitability: {
+        Row: {
+          actual_cost: number | null
+          customer_id: string | null
+          customer_name: string | null
+          estimated_value: number | null
+          expense_total: number | null
+          id: string | null
+          labour_cost: number | null
+          materials_cost: number | null
+          profit: number | null
+          profit_margin_pct: number | null
+          status: Database["public"]["Enums"]["job_status"] | null
+          team_id: string | null
+          title: string | null
+          total_cost: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
