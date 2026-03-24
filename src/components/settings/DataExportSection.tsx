@@ -16,19 +16,19 @@ const EXPORT_OPTIONS: { value: ExportEntity; label: string; icon: React.ElementT
   { value: "jobs", label: "Jobs", icon: Briefcase, description: "Job titles, statuses, dates, values" },
 ];
 
-async function fetchAllRows<T>(table: string, select: string, orderBy: string): Promise<T[]> {
+async function fetchAllRows(table: string, select: string, orderBy: string): Promise<Record<string, unknown>[]> {
   const PAGE = 1000;
-  let all: T[] = [];
+  let all: Record<string, unknown>[] = [];
   let from = 0;
   while (true) {
     const { data, error } = await supabase
-      .from(table)
+      .from(table as "customers")
       .select(select)
       .order(orderBy, { ascending: false })
       .range(from, from + PAGE - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;
-    all = all.concat(data as T[]);
+    all = all.concat(data as unknown as Record<string, unknown>[]);
     if (data.length < PAGE) break;
     from += PAGE;
   }
