@@ -407,8 +407,98 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             </Card>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3 — Workflow Questions */}
           {step === 3 && (
+            <Card className="animate-fade-up border-0 shadow-none">
+              <CardHeader className="text-center pb-2 px-0">
+                <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>How Do You Work?</CardTitle>
+                <CardDescription>We'll tailor Quotr to match your day-to-day</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-4 px-0">
+                {/* Q1: Send quotes? */}
+                <div className="space-y-3">
+                  <Label>Do you send quotes to customers?</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: true, label: "Yes, regularly", icon: FileText },
+                      { value: false, label: "No, I just invoice", icon: Receipt },
+                    ].map((opt) => (
+                      <button
+                        key={String(opt.value)}
+                        type="button"
+                        onClick={() => setData(prev => ({ ...prev, sendsQuotes: opt.value }))}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          data.sendsQuotes === opt.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <opt.icon className={`h-5 w-5 mb-2 ${data.sendsQuotes === opt.value ? "text-primary" : "text-muted-foreground"}`} />
+                        <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Q2: Track jobs? */}
+                <div className="space-y-3">
+                  <Label>Do you track individual jobs or projects?</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: true, label: "Yes, I schedule work", icon: Briefcase },
+                      { value: false, label: "No, I just do the work", icon: Wrench },
+                    ].map((opt) => (
+                      <button
+                        key={String(opt.value)}
+                        type="button"
+                        onClick={() => setData(prev => ({ ...prev, tracksJobs: opt.value }))}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          data.tracksJobs === opt.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <opt.icon className={`h-5 w-5 mb-2 ${data.tracksJobs === opt.value ? "text-primary" : "text-muted-foreground"}`} />
+                        <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Q3: Priority */}
+                <div className="space-y-3">
+                  <Label>What do you need most right now?</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      { value: "get_paid_faster", label: "Get paid faster", icon: Zap },
+                      { value: "stay_organised", label: "Stay organised", icon: Briefcase },
+                      { value: "reduce_admin", label: "Reduce admin", icon: Clock },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateData("priority", opt.value)}
+                        className={`p-4 rounded-lg border-2 text-center transition-all ${
+                          data.priority === opt.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <opt.icon className={`h-5 w-5 mx-auto mb-2 ${data.priority === opt.value ? "text-primary" : "text-muted-foreground"}`} />
+                        <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 4 — Preferences */}
+          {step === 4 && (
             <Card className="animate-fade-up border-0 shadow-none">
               <CardHeader className="text-center pb-2 px-0">
                 <div className="mx-auto h-12 w-12 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(160,100%,45%)] flex items-center justify-center mb-2">
@@ -452,8 +542,8 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             </Card>
           )}
 
-          {/* Step 4 */}
-          {step === 4 && (
+          {/* Step 5 — Comms */}
+          {step === 5 && (
             <OnboardingCommsStep prefs={commsPrefs} onChange={setCommsPrefs} />
           )}
 
