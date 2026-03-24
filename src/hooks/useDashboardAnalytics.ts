@@ -133,7 +133,7 @@ export function useDashboardAnalytics() {
         revenueChartData: any[];
         jobStatusData: any[];
         quoteFunnel: QuoteFunnelData;
-        agingBuckets: Record<string, number>;
+        agingBuckets: { current: number; "1-30": number; "31-60": number; "60+": number };
         agingInvoices: Record<string, any[]>;
         topCustomers: CustomerProfitData[];
         customerProfitability: ScatterCustomerData[];
