@@ -98,9 +98,12 @@ function DashboardContent() {
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
-        {/* Header bar with quick actions */}
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
+        {/* Header bar with filters + quick actions */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
+            <DashboardFilterBar />
+          </div>
           <div className="flex items-center gap-1.5">
             {quickActions.map((action) => (
               <Button
@@ -117,9 +120,6 @@ function DashboardContent() {
             ))}
           </div>
         </div>
-
-        {/* Filter Bar */}
-        <DashboardFilterBar />
 
         {/* 1. Control Header — operational summary */}
         <ControlHeader data={data?.controlHeader} isLoading={isLoading} />
