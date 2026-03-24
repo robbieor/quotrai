@@ -158,9 +158,9 @@ export default function Pricing() {
       {/* Hero */}
       <section className="pt-16 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 text-center">
         <div className="container mx-auto max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-6">
             <Zap className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Simple, transparent pricing</span>
+            <span className="text-sm font-semibold text-foreground">Simple, transparent pricing</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
             One platform, one price per seat.
