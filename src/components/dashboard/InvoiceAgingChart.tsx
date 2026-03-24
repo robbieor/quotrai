@@ -48,9 +48,16 @@ export function InvoiceAgingChart({ agingBuckets, onBucketClick }: InvoiceAgingC
   const hasData = data.some((d) => d.amount > 0);
 
   return (
-    <Card className="border-border">
+    <Card className="border-border group">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Invoice Aging</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-medium">Invoice Aging</CardTitle>
+          {onBucketClick && (
+            <span className="text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors duration-200">
+              Click bar to drill down
+            </span>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {!hasData ? (

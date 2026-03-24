@@ -24,9 +24,14 @@ export function JobsAtRiskTable({ data }: JobsAtRiskTableProps) {
   const { segment } = useDashboardFilters();
 
   return (
-    <Card className="border-border">
+    <Card className="border-border group">
       <CardHeader className="pb-1 px-4 pt-4">
-        <CardTitle className="text-sm font-medium">Jobs at Risk</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium">Jobs at Risk</CardTitle>
+          <span className="text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors duration-200">
+            Click row to view
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="px-0 pb-2">
         {!data || data.length === 0 ? (
