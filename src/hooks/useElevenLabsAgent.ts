@@ -1,4 +1,4 @@
-import { useConversation } from "@/contexts/elevenlabs-stub";
+import { useConversation } from "@elevenlabs/react";
 import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";

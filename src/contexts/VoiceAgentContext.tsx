@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
-import { useConversation } from "./elevenlabs-stub";
+import { useConversation } from "@elevenlabs/react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -133,7 +133,10 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     },
     onConnectionRestored: () => {
       toast.dismiss("voice-retry");
-      toast.success("Voice connection restored!");
+      // Only show restored toast if user was actively in a call (not background noise)
+      if (conversationIdRef.current) {
+        toast.success("Voice connection restored!", { duration: 2000 });
+      }
     },
     onHealthCheckFailed: () => {
       console.log("[VoiceAgent] Health check detected disconnection");
