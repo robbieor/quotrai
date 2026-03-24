@@ -253,6 +253,8 @@ export default function Pricing() {
                     )}
                   </div>
 
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{plan.description}</p>
+
                   <ul className="space-y-3 mb-8 flex-1">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-sm">
