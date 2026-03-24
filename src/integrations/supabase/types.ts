@@ -4244,6 +4244,35 @@ export type Database = {
           },
         ]
       }
+      v_payment_behavior: {
+        Row: {
+          avg_days_to_pay: number | null
+          customer_id: string | null
+          customer_name: string | null
+          late_payment_pct: number | null
+          outstanding_invoices: number | null
+          paid_invoices: number | null
+          reliability_score: number | null
+          team_id: string | null
+          total_invoices: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_quote_conversion: {
         Row: {
           avg_days_to_win: number | null
