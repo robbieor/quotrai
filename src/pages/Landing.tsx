@@ -687,26 +687,25 @@ export default function Landing() {
           <div className="grid md:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {/* Lite */}
             <div className="group rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col animate-fade-up hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-2">
                 <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center">
                   <Users className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Lite</h3>
               </div>
-              <div className="mb-6">
+              <p className="text-sm font-semibold text-primary mb-4">Run your business</p>
+              <div className="mb-4">
                 <span className="text-4xl font-extrabold text-foreground">{formatPrice(19)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Dashboard, jobs, quotes, invoices, calendar. No AI.
-              </p>
+              <p className="text-sm text-muted-foreground mb-6">Everything you need to quote, schedule, and invoice — without the clutter.</p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  "Dashboard & business overview",
-                  "Jobs, quotes & invoices",
-                  "Job scheduling & calendar",
-                  "Time tracking with GPS",
-                  "Customer management",
+                  "Create and send quotes in seconds",
+                  "Schedule jobs with drag-and-drop",
+                  "Invoice customers and track payments",
+                  "GPS-verified time tracking",
+                  "Full customer management",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
@@ -726,28 +725,26 @@ export default function Landing() {
               <Badge className="absolute -top-3 left-6 bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold animate-pulse-glow">
                 Most Popular
               </Badge>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-2">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Mic className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Connect</h3>
               </div>
-              <div className="mb-6">
+              <p className="text-sm font-semibold text-primary mb-4">Automate your business</p>
+              <div className="mb-4">
                 <span className="text-4xl font-extrabold text-primary">{formatPrice(39)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Everything in Lite + Foreman AI & expenses.
-              </p>
+              <p className="text-sm text-muted-foreground mb-6">Let Foreman AI handle the admin — so you stay on the tools, not the laptop.</p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
                   "Everything in Lite",
-                  "Foreman AI voice & text assistant",
+                  "Foreman AI — create quotes and invoices by voice or text",
                   "60 voice minutes/month",
-                  "Create quotes & invoices by voice",
-                  "Expense tracking & receipts",
-                  "Documents & certificates",
-                  "PDF generation & email",
+                  "Automated payment reminders",
+                  "Snap receipts and track expenses",
+                  "Send branded PDFs instantly",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
@@ -765,26 +762,25 @@ export default function Landing() {
 
             {/* Grow */}
             <div className="group rounded-2xl border border-border bg-card p-6 sm:p-8 flex flex-col animate-fade-up hover:-translate-y-1 hover:shadow-xl transition-all duration-300" style={{ animationDelay: "200ms" }}>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-2">
                 <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Grow</h3>
               </div>
-              <div className="mb-6">
+              <p className="text-sm font-semibold text-primary mb-4">Scale your business</p>
+              <div className="mb-4">
                 <span className="text-4xl font-extrabold text-foreground">{formatPrice(69)}</span>
                 <span className="text-muted-foreground">/seat/month</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Everything in Connect + reporting, accounting sync & leads.
-              </p>
+              <p className="text-sm text-muted-foreground mb-6">Full visibility, accounting sync, and the data you need to grow profitably.</p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
                   "Everything in Connect",
                   "200 voice minutes/month",
-                  "Advanced reporting & P&L",
-                  "Xero & QuickBooks sync",
-                  "Lead management pipeline",
+                  "Revenue, P&L, and job profitability reports",
+                  "Xero & QuickBooks auto-sync",
+                  "Lead pipeline to close more work",
                   "Priority support & onboarding",
                   "API access & webhooks",
                 ].map((f) => (
@@ -796,7 +792,7 @@ export default function Landing() {
               </ul>
               <Link to="/signup" className="w-full">
                 <Button variant="outline" className="w-full" size="lg">
-                  Contact Sales
+                  Start Free Trial
                 </Button>
               </Link>
             </div>

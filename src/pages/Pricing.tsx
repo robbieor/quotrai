@@ -79,13 +79,15 @@ export default function Pricing() {
   const plans = [
     {
       name: "Lite",
+      tagline: "Run your business",
       icon: Users,
+      description: "Everything you need to quote, schedule, and invoice — without the clutter.",
       features: [
-        "Dashboard & business overview",
-        "Jobs, quotes & invoices",
-        "Job scheduling & calendar",
-        "Time tracking with GPS",
-        "Customer management",
+        "Create and send quotes in seconds",
+        "Schedule jobs with drag-and-drop",
+        "Invoice customers and track payments",
+        "GPS-verified time tracking",
+        "Full customer management",
       ],
       monthlyPrice: 19,
       annualPrice: Math.round(19 * 12 * 0.85),
@@ -94,14 +96,16 @@ export default function Pricing() {
     },
     {
       name: "Connect",
+      tagline: "Automate your business",
       icon: Mic,
+      description: "Let Foreman AI handle the admin — so you stay on the tools, not the laptop.",
       features: [
         "Everything in Lite",
-        "Foreman AI voice & text assistant",
+        "Foreman AI — create quotes and invoices by voice or text",
         "60 voice minutes/month",
-        "Expense tracking & receipts",
-        "Documents & certificates",
-        "PDF generation & email",
+        "Automated payment reminders",
+        "Snap receipts and track expenses",
+        "Send branded PDFs instantly",
       ],
       monthlyPrice: 39,
       annualPrice: Math.round(39 * 12 * 0.85),
@@ -110,13 +114,15 @@ export default function Pricing() {
     },
     {
       name: "Grow",
+      tagline: "Scale your business",
       icon: Building2,
+      description: "Full visibility, accounting sync, and the data you need to grow profitably.",
       features: [
         "Everything in Connect",
         "200 voice minutes/month",
-        "Advanced reporting & P&L",
-        "Xero & QuickBooks sync",
-        "Lead management pipeline",
+        "Revenue, P&L, and job profitability reports",
+        "Xero & QuickBooks auto-sync",
+        "Lead pipeline to close more work",
         "Priority support & onboarding",
         "API access & webhooks",
       ],
@@ -222,7 +228,7 @@ export default function Pricing() {
                     </Badge>
                   )}
 
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-2">
                     <div className={cn(
                       "p-2.5 rounded-xl",
                       plan.popular ? "bg-primary/10" : "bg-muted"
@@ -233,6 +239,7 @@ export default function Pricing() {
                       <h3 className="font-bold text-lg">{plan.name}</h3>
                     </div>
                   </div>
+                  <p className="text-sm font-semibold text-primary mb-4">{plan.tagline}</p>
 
                   <div className="mb-6">
                     <div className="flex items-baseline gap-1">
@@ -245,6 +252,8 @@ export default function Pricing() {
                       </p>
                     )}
                   </div>
+
+                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{plan.description}</p>
 
                   <ul className="space-y-3 mb-8 flex-1">
                     {plan.features.map((feature, i) => (
