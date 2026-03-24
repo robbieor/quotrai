@@ -573,12 +573,11 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
 
   const stopConversation = useCallback(async () => {
     try {
-      stopHealthMonitoring();
       await conversation.endSession();
     } catch (error) {
       console.error("[VoiceAgent] Error stopping conversation:", error);
     }
-  }, [conversation, stopHealthMonitoring]);
+  }, [conversation]);
 
   const sendTextMessage = useCallback((text: string) => {
     if (conversation.status === "connected") {
