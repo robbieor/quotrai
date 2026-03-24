@@ -195,6 +195,50 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             .from("comms_settings")
             .insert({ team_id: profile.team_id, ...commsPrefs });
         }
+
+        // Seed sample data so user sees value immediately
+        try {
+          const { data: sampleCustomer } = await supabase
+            .from("customers")
+            .insert({
+              name: "Sample Customer",
+              email: "sample@example.com",
+              phone: "+44 7700 900000",
+              team_id: profile.team_id,
+              notes: "This is a sample customer — feel free to edit or delete.",
+            })
+            .select("id")
+            .single();
+
+          if (sampleCustomer) {
+            const { data: sampleQuote } = await supabase
+              .from("quotes")
+              .insert({
+                customer_id: sampleCustomer.id,
+                team_id: profile.team_id,
+                status: "draft",
+                subtotal: 450,
+                total: 450,
+                notes: "Sample quote — edit this to see how quoting works.",
+              })
+              .select("id")
+              .single();
+
+            await supabase
+              .from("jobs")
+              .insert({
+                title: "Sample Job — Kitchen Repair",
+                customer_id: sampleCustomer.id,
+                team_id: profile.team_id,
+                status: "pending",
+                description: "This is a sample job to show you around. Edit or delete it anytime.",
+                ...(sampleQuote ? { quote_id: sampleQuote.id } : {}),
+              });
+          }
+        } catch (seedErr) {
+          // Non-critical — don't block onboarding if seeding fails
+          console.warn("Sample data seeding failed:", seedErr);
+        }
       }
 
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize });
