@@ -166,6 +166,13 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
 
     setSubmitting(true);
     try {
+      const workflowMode = computeWorkflowMode({
+        sendsQuotes: data.sendsQuotes ?? false,
+        tracksJobs: data.tracksJobs ?? false,
+        teamSize: data.businessSize,
+        priority: data.priority,
+      });
+
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -176,6 +183,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
           business_size: data.businessSize,
           currency: data.currency,
           country: data.country,
+          workflow_mode: workflowMode,
           onboarding_completed: true,
         })
         .eq("id", user.id);
@@ -257,7 +265,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
         }
       }
 
-      track("onboarding_completed", { trade: data.tradeType, size: data.businessSize });
+      track("onboarding_completed", { trade: data.tradeType, size: data.businessSize, workflowMode });
       toast.success("Welcome to Quotr! You're all set.");
       onComplete();
     } catch (error: any) {
