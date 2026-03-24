@@ -131,7 +131,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Pricing — Simple Per-Seat Plans"
-        description="Transparent pricing for trade businesses. Team, Voice, and Enterprise seats starting at €9/mo. 30-day free trial, no credit card required."
+        description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 30-day free trial, no credit card required."
         path="/pricing"
       />
       {/* Nav */}
