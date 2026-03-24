@@ -279,14 +279,24 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: ExpenseFormDi
             />
             {receiptUrl ? (
               <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/50">
-                <FileImage className="h-5 w-5 text-primary" />
-                <span className="flex-1 text-sm truncate">Receipt uploaded</span>
+                {isScanningReceipt ? (
+                  <>
+                    <ScanLine className="h-5 w-5 text-primary animate-pulse" />
+                    <span className="flex-1 text-sm">Scanning receipt with AI…</span>
+                  </>
+                ) : (
+                  <>
+                    <FileImage className="h-5 w-5 text-primary" />
+                    <span className="flex-1 text-sm truncate">Receipt uploaded</span>
+                  </>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => setReceiptUrl(null)}
+                  disabled={isScanningReceipt}
                 >
                   <X className="h-4 w-4" />
                 </Button>
