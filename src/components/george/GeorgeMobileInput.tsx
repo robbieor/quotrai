@@ -131,10 +131,6 @@ export function GeorgeMobileInput({
         if (response.data.action_plan) {
           onStructuredResponse?.(response.data, newConversationId);
         }
-        
-        // Invalidate data caches so new records appear on other pages
-        const { useQueryClient } = await import("@tanstack/react-query");
-        // Note: can't use hook here, but parent handles invalidation via onStructuredResponse
       } catch (error) {
         console.error("Chat error:", error);
         toast.error("Failed to send message");

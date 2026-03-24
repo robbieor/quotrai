@@ -87,6 +87,9 @@ export interface AIActionPlan {
   // Safety
   confirmation_gate?: ConfirmationGate;
 
+  // Deferred execution (when confirmation is needed, tool calls are stored here)
+  pending_tool_calls?: Array<{ function_name: string; parameters: Record<string, unknown> }>;
+
   // Memory
   memory_context?: MemoryContext;
 
