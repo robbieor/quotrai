@@ -21,33 +21,22 @@ export const Scene7Closing: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Photo scale (Ken Burns)
   const photoScale = interpolate(frame, [0, 210], [1.05, 1], { extrapolateRight: "clamp" });
-
-  // Dark overlay
   const overlayOpacity = interpolate(frame, [0, 30], [0.2, 0.65], { extrapolateRight: "clamp" });
 
-  // Headline
   const h1Opacity = interpolate(frame, [15, 40], [0, 1], { extrapolateRight: "clamp" });
   const h1Y = interpolate(frame, [15, 40], [30, 0], { extrapolateRight: "clamp" });
-
-  // Subtitle
   const subOpacity = interpolate(frame, [40, 60], [0, 1], { extrapolateRight: "clamp" });
   const subY = interpolate(frame, [40, 60], [20, 0], { extrapolateRight: "clamp" });
 
-  // Logo appears
   const logoScale = frame >= 70 ? spring({ frame: frame - 70, fps, config: { damping: 15 } }) : 0;
-
-  // "Try Quotr" text
   const ctaOpacity = interpolate(frame, [100, 120], [0, 1], { extrapolateRight: "clamp" });
 
-  // Subtle glow pulse
   const glowPulse = interpolate(frame, [0, 210], [0, Math.PI * 4]);
   const glowOpacity = 0.15 + 0.05 * Math.sin(glowPulse);
 
   return (
     <AbsoluteFill>
-      {/* Background photo */}
       <AbsoluteFill style={{ transform: `scale(${photoScale})` }}>
         <Img
           src={staticFile("images/relaxed-tradie.jpg")}
@@ -55,10 +44,8 @@ export const Scene7Closing: React.FC = () => {
         />
       </AbsoluteFill>
 
-      {/* Overlay */}
       <AbsoluteFill style={{ backgroundColor: `rgba(15, 23, 42, ${overlayOpacity})` }} />
 
-      {/* Teal glow */}
       <div
         style={{
           position: "absolute",
@@ -72,7 +59,6 @@ export const Scene7Closing: React.FC = () => {
         }}
       />
 
-      {/* Content */}
       <AbsoluteFill
         style={{
           justifyContent: "center",
@@ -110,7 +96,7 @@ export const Scene7Closing: React.FC = () => {
             </h2>
           </div>
 
-          {/* Logo */}
+          {/* Actual Quotr logo */}
           <div
             style={{
               marginTop: 48,
@@ -120,26 +106,20 @@ export const Scene7Closing: React.FC = () => {
               gap: 16,
             }}
           >
-            <div
+            <Img
+              src={staticFile("images/quotr-logo.png")}
               style={{
                 width: 64,
                 height: 64,
                 borderRadius: 16,
-                background: `linear-gradient(135deg, ${TEAL}, #00CC8E)`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: `0 0 40px rgba(0,255,178,0.3)`,
+                filter: `drop-shadow(0 0 30px rgba(0,255,178,0.3))`,
               }}
-            >
-              <span style={{ fontSize: 32, fontWeight: 800, color: NAVY }}>Q</span>
-            </div>
+            />
             <span style={{ fontSize: 40, fontWeight: 800, color: "white", letterSpacing: "-0.03em" }}>
               Quotr
             </span>
           </div>
 
-          {/* CTA text */}
           <div style={{ opacity: ctaOpacity, marginTop: 24 }}>
             <span
               style={{
