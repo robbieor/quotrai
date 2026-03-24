@@ -14,6 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Upload, 
   Trash2, 
@@ -28,8 +34,6 @@ import {
   AlignRight,
   Eye,
   Send,
-  Loader2,
-  CheckCircle2,
 } from "lucide-react";
 import { useCompanyBranding, CompanyBrandingInput } from "@/hooks/useCompanyBranding";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +42,8 @@ import { generateInvoicePdf } from "@/lib/pdf/invoicePdf";
 import { generateQuotePdf } from "@/lib/pdf/quotePdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AgentWorkingPanel, PREVIEW_EMAIL_STEPS } from "@/components/shared/AgentWorkingPanel";
+import { useAgentWorkflow } from "@/hooks/useAgentWorkflow";
 
 const ACCENT_COLORS = [
   { name: "Quotr Green", value: "#00FFB2" },
