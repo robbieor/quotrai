@@ -23,7 +23,8 @@ export function QuotePipelineCard({ data }: QuotePipelineCardProps) {
   const steps: FunnelStep[] = [
     { label: "Created", count: data.created, value: data.createdValue, color: "bg-muted-foreground" },
     { label: "Sent", count: data.sent, value: data.sentValue, color: "bg-blue-500" },
-    { label: "Accepted", count: data.won, value: data.wonValue, color: "bg-primary" },
+    { label: "Approved", count: data.approved, value: data.approvedValue, color: "bg-amber-500" },
+    { label: "Won", count: data.won, value: data.wonValue, color: "bg-primary" },
     { label: "Lost", count: data.lost, value: data.lostValue, color: "bg-destructive" },
   ];
 

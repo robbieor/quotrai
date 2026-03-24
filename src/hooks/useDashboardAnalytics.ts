@@ -84,10 +84,12 @@ export interface InvoiceAtRisk {
 export interface QuoteFunnelData {
   created: number;
   sent: number;
+  approved: number;
   won: number;
   lost: number;
   createdValue: number;
   sentValue: number;
+  approvedValue: number;
   wonValue: number;
   lostValue: number;
   avgDaysToWin: number;
@@ -123,7 +125,7 @@ export function useDashboardAnalytics() {
       const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
 
       let jobsQuery = supabase.from("jobs").select("id, title, status, scheduled_date, created_at, updated_at, estimated_value, customer_id, customer:customers(name)");
-      let invoicesQuery = supabase.from("invoices").select("id, invoice_number, status, total, balance_due, issue_date, due_date, customer_id, customer:customers(name)");
+      let invoicesQuery = supabase.from("invoices").select("id, invoice_number, status, total, balance_due, issue_date, due_date, customer_id, quote_id, customer:customers(name)");
       let quotesQuery = supabase.from("quotes").select("id, quote_number, status, total, created_at, updated_at, customer_id, customer:customers(name)");
       let paymentsQuery = supabase.from("payments").select("id, amount, payment_date, created_at, invoice_id, invoice:invoices(invoice_number, customer_id, issue_date, customer:customers(name))");
 
@@ -526,13 +528,21 @@ export function useDashboardAnalytics() {
         overdue: data.overdue,
       }));
 
-      // === QUOTE FUNNEL ===
-      const wonQuotes = quotes.filter((q) => q.status === "accepted");
+      // === QUOTE FUNNEL (5-stage: Created → Sent → Approved → Won → Lost) ===
+      // "Approved" = accepted but no invoice created yet
+      // "Won" = accepted AND has a linked invoice
+      const acceptedQuotes = quotes.filter((q) => q.status === "accepted");
+      const acceptedIds = new Set(acceptedQuotes.map((q) => q.id));
+      const invoicedQuoteIds = new Set(
+        invoices.filter((i) => i.quote_id && acceptedIds.has(i.quote_id)).map((i) => i.quote_id)
+      );
+      const approvedQuotes = acceptedQuotes.filter((q) => !invoicedQuoteIds.has(q.id));
+      const wonQuotes = acceptedQuotes.filter((q) => invoicedQuoteIds.has(q.id));
       const lostQuotes = quotes.filter((q) => q.status === "declined");
       const sentQuotes = quotes.filter((q) => ["sent", "accepted", "declined"].includes(q.status));
 
       // Average days to win: created_at → updated_at (when status changed to accepted)
-      const daysToWin = wonQuotes.map((q) => {
+      const daysToWin = acceptedQuotes.map((q) => {
         const accepted = new Date(q.updated_at || q.created_at);
         const created = new Date(q.created_at);
         return Math.max(0, differenceInDays(accepted, created));
@@ -544,10 +554,12 @@ export function useDashboardAnalytics() {
       const quoteFunnel: QuoteFunnelData = {
         created: quotes.length,
         sent: sentQuotes.length,
+        approved: approvedQuotes.length,
         won: wonQuotes.length,
         lost: lostQuotes.length,
         createdValue: quotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
         sentValue: sentQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
+        approvedValue: approvedQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
         wonValue: wonQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
         lostValue: lostQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0),
         avgDaysToWin,
