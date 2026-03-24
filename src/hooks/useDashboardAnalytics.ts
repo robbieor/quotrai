@@ -171,34 +171,94 @@ export function useDashboardAnalytics() {
         }
       }
 
-      // === SEGMENT FILTERING ===
+      // === SEGMENT FILTERING (production-grade logic) ===
       const now = new Date();
       if (segment === "high_risk") {
-        invoices = invoices.filter((i) => i.status === "overdue" || (["pending"].includes(i.status) && differenceInDays(now, new Date(i.due_date)) > 0));
-        jobs = jobs.filter((j) => {
-          if (!["pending", "scheduled", "in_progress"].includes(j.status)) return false;
-          return differenceInDays(now, new Date(j.updated_at || j.created_at)) > 7;
+        // High Risk = overdue 30+ days OR balance_due > 1000 OR stuck jobs 7+ days
+        // Build set of high-risk customer IDs
+        const highRiskCustomerIds = new Set<string>();
+
+        // Invoices: overdue 30+ OR high balance
+        invoices.forEach((i) => {
+          const balanceDue = Number(i.balance_due) || (Number(i.total) || 0);
+          const daysOverdue = differenceInDays(now, new Date(i.due_date));
+          if (balanceDue > 0 && (daysOverdue > 30 || balanceDue > 1000)) {
+            highRiskCustomerIds.add(i.customer_id);
+          }
         });
+
+        // Jobs: stuck 7+ days
+        jobs.forEach((j) => {
+          if (["pending", "scheduled", "in_progress"].includes(j.status)) {
+            if (differenceInDays(now, new Date(j.updated_at || j.created_at)) > 7) {
+              highRiskCustomerIds.add(j.customer_id);
+            }
+          }
+        });
+
+        // Filter ALL datasets to high-risk customers
+        jobs = jobs.filter((j) => highRiskCustomerIds.has(j.customer_id));
+        invoices = invoices.filter((i) => highRiskCustomerIds.has(i.customer_id));
+        quotes = quotes.filter((q) => highRiskCustomerIds.has(q.customer_id));
+        payments = payments.filter((p) => {
+          const inv = p.invoice as any;
+          return inv && highRiskCustomerIds.has(inv.customer_id);
+        });
+
       } else if (segment === "top_customers") {
-        // Get top customer IDs by invoice total
-        const customerTotals: Record<string, number> = {};
-        invoices.forEach((i) => { customerTotals[i.customer_id] = (customerTotals[i.customer_id] || 0) + (Number(i.total) || 0); });
-        const topIds = Object.entries(customerTotals).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([id]) => id);
-        const topSet = new Set(topIds);
+        // Top Customers = by collected cash (payments), not invoiced
+        // Sum payments per customer
+        const cashByCustomer: Record<string, number> = {};
+        payments.forEach((p) => {
+          const inv = p.invoice as any;
+          if (inv?.customer_id) {
+            cashByCustomer[inv.customer_id] = (cashByCustomer[inv.customer_id] || 0) + (Number(p.amount) || 0);
+          }
+        });
+
+        // Take top 10 or top 20% (whichever is more)
+        const sorted = Object.entries(cashByCustomer).sort((a, b) => b[1] - a[1]);
+        const cutoff = Math.max(10, Math.ceil(sorted.length * 0.2));
+        const topSet = new Set(sorted.slice(0, cutoff).map(([id]) => id));
+
         jobs = jobs.filter((j) => topSet.has(j.customer_id));
         invoices = invoices.filter((i) => topSet.has(i.customer_id));
         quotes = quotes.filter((q) => topSet.has(q.customer_id));
-      } else if (segment === "jobs_at_risk") {
-        jobs = jobs.filter((j) => {
-          if (!["pending", "scheduled", "in_progress"].includes(j.status)) return false;
-          return differenceInDays(now, new Date(j.updated_at || j.created_at)) > 7;
+        payments = payments.filter((p) => {
+          const inv = p.invoice as any;
+          return inv && topSet.has(inv.customer_id);
         });
+
+      } else if (segment === "jobs_at_risk") {
+        // Jobs at Risk = stuck 7+ days, OR nearing deadline (within 3 days), OR stale 14+ days
+        const atRiskJobIds = new Set<string>();
+        const atRiskCustomerIds = new Set<string>();
+
+        jobs.forEach((j) => {
+          if (!["pending", "scheduled", "in_progress"].includes(j.status)) return;
+          const daysSinceUpdate = differenceInDays(now, new Date(j.updated_at || j.created_at));
+          const deadlineImminent = j.scheduled_date && differenceInDays(new Date(j.scheduled_date), now) <= 3 && differenceInDays(new Date(j.scheduled_date), now) >= 0;
+
+          if (daysSinceUpdate > 7 || deadlineImminent) {
+            atRiskJobIds.add(j.id);
+            atRiskCustomerIds.add(j.customer_id);
+          }
+        });
+
+        jobs = jobs.filter((j) => atRiskJobIds.has(j.id));
+        // Also filter invoices/quotes to these customers for context
+        invoices = invoices.filter((i) => atRiskCustomerIds.has(i.customer_id));
+        quotes = quotes.filter((q) => atRiskCustomerIds.has(q.customer_id));
+
       } else if (segment === "recent") {
-        const twoDaysAgo = subDays(now, 2);
-        jobs = jobs.filter((j) => new Date(j.created_at) >= twoDaysAgo);
-        invoices = invoices.filter((i) => new Date(i.issue_date) >= twoDaysAgo);
-        quotes = quotes.filter((q) => new Date(q.created_at) >= twoDaysAgo);
+        // Recent Activity = last 7 days of meaningful changes
+        const sevenDaysAgo = subDays(now, 7);
+        jobs = jobs.filter((j) => new Date(j.created_at) >= sevenDaysAgo || new Date(j.updated_at || j.created_at) >= sevenDaysAgo);
+        invoices = invoices.filter((i) => new Date(i.issue_date) >= sevenDaysAgo);
+        quotes = quotes.filter((q) => new Date(q.created_at) >= sevenDaysAgo);
+        payments = payments.filter((p) => new Date(p.payment_date || p.created_at) >= sevenDaysAgo);
       }
+
 
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
