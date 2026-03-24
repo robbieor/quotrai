@@ -825,6 +825,54 @@ export type Database = {
           },
         ]
       }
+      customer_payment_scores: {
+        Row: {
+          avg_days_late: number
+          avg_days_to_pay: number
+          customer_id: string
+          id: string
+          last_computed_at: string
+          late_payments_count: number
+          team_id: string
+          total_invoices_paid: number
+        }
+        Insert: {
+          avg_days_late?: number
+          avg_days_to_pay?: number
+          customer_id: string
+          id?: string
+          last_computed_at?: string
+          late_payments_count?: number
+          team_id: string
+          total_invoices_paid?: number
+        }
+        Update: {
+          avg_days_late?: number
+          avg_days_to_pay?: number
+          customer_id?: string
+          id?: string
+          last_computed_at?: string
+          late_payments_count?: number
+          team_id?: string
+          total_invoices_paid?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_payment_scores_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_payment_scores_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -4744,6 +4792,10 @@ export type Database = {
       }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       expire_v2_trials: { Args: never; Returns: undefined }
+      fn_compute_payment_scores: {
+        Args: { p_team_id: string }
+        Returns: undefined
+      }
       generate_certificate_number: {
         Args: {
           p_team_id: string
