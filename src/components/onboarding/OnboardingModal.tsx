@@ -17,11 +17,18 @@ import {
   ArrowLeft,
   CheckCircle2,
   Sparkles,
+  FileText,
+  Receipt,
+  Briefcase,
+  Clock,
+  Target,
+  Zap,
 } from "lucide-react";
 import quotrLogo from "@/assets/quotr-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";
+import { computeWorkflowMode } from "@/hooks/useWorkflowMode";
 
 const tradeTypes = [
   "Electrician",
