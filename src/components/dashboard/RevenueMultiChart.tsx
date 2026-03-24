@@ -16,6 +16,11 @@ interface RevenueMultiChartProps {
 }
 
 export function RevenueMultiChart({ data, isLoading }: RevenueMultiChartProps) {
+  const { formatCurrency, currencySymbol } = useCurrency();
+
+  const formatAxis = (v: number) =>
+    v >= 1000 ? `${currencySymbol}${(v / 1000).toFixed(0)}k` : `${currencySymbol}${v}`;
+
   if (isLoading) {
     return (
       <Card className="border-border">
@@ -43,13 +48,13 @@ export function RevenueMultiChart({ data, isLoading }: RevenueMultiChartProps) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={50}
-                tickFormatter={(v) => v >= 1000 ? `€${(v / 1000).toFixed(0)}k` : `€${v}`} />
+                tickFormatter={formatAxis} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))",
                   borderRadius: "6px", fontSize: "11px",
                 }}
-                formatter={(value: number, name: string) => [`€${value.toLocaleString()}`, name]}
+                formatter={(value: number, name: string) => [formatCurrency(value), name]}
               />
               <Legend wrapperStyle={{ fontSize: "10px" }} />
               <Area type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.1} strokeWidth={2} />
