@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, Mail, X, UserMinus, Crown, Loader2, AlertTriangle, Mic } from "lucide-react";
+import { Users, Mail, X, UserMinus, Crown, Loader2, AlertTriangle } from "lucide-react";
 import {
   useTeam,
   useTeamMembers,
@@ -29,18 +28,14 @@ import {
   useCancelInvitation,
   useRemoveTeamMember,
 } from "@/hooks/useTeam";
-import { useSeatUsage, useSubscription } from "@/hooks/useSubscription";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
-import { useAddSeat } from "@/hooks/useSubscription";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
 import { toast } from "sonner";
 
 export function TeamManagement() {
   const [email, setEmail] = useState("");
-  const [showAddSeatDialog, setShowAddSeatDialog] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
-  const addSeatMutation = useAddSeat();
   
   const { user } = useAuth();
   const { data: team, isLoading: teamLoading } = useTeam();
