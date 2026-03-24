@@ -216,7 +216,8 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               .insert({
                 customer_id: sampleCustomer.id,
                 team_id: profile.team_id,
-                status: "draft",
+                quote_number: "Q-SAMPLE-001",
+                status: "draft" as const,
                 subtotal: 450,
                 total: 450,
                 notes: "Sample quote — edit this to see how quoting works.",
