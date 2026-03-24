@@ -119,42 +119,54 @@ function DashboardContent() {
         </div>
 
         {/* 1. Control Header — operational summary */}
-        <ControlHeader data={data?.controlHeader} isLoading={isLoading} />
+        <AnimatedSection delay={0}>
+          <ControlHeader data={data?.controlHeader} isLoading={isLoading} />
+        </AnimatedSection>
 
         {/* 2. KPI Strip — 5 key metrics */}
-        <KPIStrip data={data?.kpi} isLoading={isLoading} onDrillDown={handleKPIDrillDown} />
+        <AnimatedSection delay={40}>
+          <KPIStrip data={data?.kpi} isLoading={isLoading} onDrillDown={handleKPIDrillDown} />
+        </AnimatedSection>
 
         {/* 3. Action Panel — priority alerts */}
-        <ActionPanel alerts={data?.actionAlerts} />
+        <AnimatedSection delay={80}>
+          <ActionPanel alerts={data?.actionAlerts} />
+        </AnimatedSection>
 
         {/* 4. Analytics Zone — Revenue + Quote Pipeline */}
-        <div className="grid gap-3 lg:grid-cols-2">
-          <RevenueMultiChart data={data?.revenueChartData} isLoading={isLoading} />
-          <QuotePipelineCard data={data?.quoteFunnel} />
-        </div>
+        <AnimatedSection delay={120}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <RevenueMultiChart data={data?.revenueChartData} isLoading={isLoading} />
+            <QuotePipelineCard data={data?.quoteFunnel} />
+          </div>
+        </AnimatedSection>
 
         {/* 5. Operational Tables — Jobs at Risk + Invoice Risk */}
-        <div className="grid gap-3 lg:grid-cols-2">
-          <JobsAtRiskTable data={data?.jobsAtRisk} />
-          <InvoiceRiskTable data={data?.invoicesAtRisk} />
-        </div>
+        <AnimatedSection delay={160}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <JobsAtRiskTable data={data?.jobsAtRisk} />
+            <InvoiceRiskTable data={data?.invoicesAtRisk} />
+          </div>
+        </AnimatedSection>
 
         {/* 6. Management Insights — Invoice Aging + Top Customers */}
-        <div className="grid gap-3 lg:grid-cols-2">
-          <InvoiceAgingChart
-            agingBuckets={data?.agingBuckets}
-            onBucketClick={(bucket) => {
-              const invoices = data?.agingInvoices?.[bucket] || [];
-              openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, [
-                { key: "invoiceNumber", label: "Invoice #" },
-                { key: "client", label: "Client" },
-                { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
-                { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
-              ], invoices, "/invoices");
-            }}
-          />
-          <TopCustomersTable data={data?.topCustomers} />
-        </div>
+        <AnimatedSection delay={200}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <InvoiceAgingChart
+              agingBuckets={data?.agingBuckets}
+              onBucketClick={(bucket) => {
+                const invoices = data?.agingInvoices?.[bucket] || [];
+                openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, [
+                  { key: "invoiceNumber", label: "Invoice #" },
+                  { key: "client", label: "Client" },
+                  { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
+                  { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
+                ], invoices, "/invoices");
+              }}
+            />
+            <TopCustomersTable data={data?.topCustomers} />
+          </div>
+        </AnimatedSection>
       </div>
 
       {/* Drill-Through Drawer */}
