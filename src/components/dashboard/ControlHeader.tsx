@@ -36,7 +36,7 @@ export function ControlHeader({ data, isLoading }: ControlHeaderProps) {
   return (
     <div className="rounded-lg border border-border bg-card">
       {/* Stats strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border border-b border-border">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border border-b border-border overflow-x-auto">
         <div className="p-3 text-center">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p>
           <p className={`text-lg font-bold tabular-nums ${data.overdueCount > 0 ? "text-destructive" : "text-foreground"}`}>

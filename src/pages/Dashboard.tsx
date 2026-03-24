@@ -96,12 +96,12 @@ function DashboardContent() {
         <OnboardingChecklist />
 
         {/* Header bar with filters + quick actions */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0 overflow-x-auto scrollbar-none">
+            <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
             <DashboardFilterBar />
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {quickActions.map((action) => (
               <Button
                 key={action.label}

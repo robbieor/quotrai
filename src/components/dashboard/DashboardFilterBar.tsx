@@ -108,7 +108,7 @@ export function DashboardFilterBar() {
     || "All Staff";
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto scrollbar-none">
       {/* Time Preset */}
       <Popover>
         <PopoverTrigger asChild>
@@ -153,10 +153,10 @@ export function DashboardFilterBar() {
         </PopoverContent>
       </Popover>
 
-      {/* Staff */}
+      {/* Staff — hidden on small screens, available in advanced panel */}
       <Popover>
         <PopoverTrigger asChild>
-          <div><CompactButton icon={Users} label={staffLabel} active={staffId !== "all"} /></div>
+          <div className="hidden sm:block"><CompactButton icon={Users} label={staffLabel} active={staffId !== "all"} /></div>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-52 p-1">
           {STAFF_PRESETS.map((s) => (
@@ -204,6 +204,16 @@ export function DashboardFilterBar() {
             <SheetTitle className="text-sm">Advanced Filters</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-4 mt-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Staff</label>
+              <Select value={staffId} onValueChange={(v) => setStaffId(v)}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Staff" /></SelectTrigger>
+                <SelectContent>
+                  {STAFF_PRESETS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                  {staff?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Customer</label>
               <Select value={customerId || "__all__"} onValueChange={(v) => setCustomerId(v === "__all__" ? null : v)}>
