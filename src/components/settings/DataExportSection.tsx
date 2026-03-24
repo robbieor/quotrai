@@ -45,7 +45,7 @@ export function DataExportSection() {
 
       switch (entity) {
         case "customers": {
-          const rows = await fetchAllRows<Record<string, unknown>>("customers", "*", "created_at");
+          const rows = await fetchAllRows("customers", "*", "created_at");
           exportToExcel(rows, [
             { header: "Client #", accessor: (r) => r.client_number as number },
             { header: "Name", accessor: (r) => r.name as string },
@@ -64,7 +64,7 @@ export function DataExportSection() {
         }
 
         case "invoices": {
-          const rows = await fetchAllRows<Record<string, unknown>>("invoices", "*, customer:customers(name, email)", "created_at");
+          const rows = await fetchAllRows("invoices", "*, customer:customers(name, email)", "created_at");
           exportToExcel(rows, [
             { header: "Invoice #", accessor: (r) => r.invoice_number as string },
             { header: "Customer", accessor: (r) => (r.customer as Record<string, unknown>)?.name as string },
@@ -83,7 +83,7 @@ export function DataExportSection() {
         }
 
         case "quotes": {
-          const rows = await fetchAllRows<Record<string, unknown>>("quotes", "*, customer:customers(name, email)", "created_at");
+          const rows = await fetchAllRows("quotes", "*, customer:customers(name, email)", "created_at");
           exportToExcel(rows, [
             { header: "Quote #", accessor: (r) => r.quote_number as string },
             { header: "Customer", accessor: (r) => (r.customer as Record<string, unknown>)?.name as string },
@@ -101,7 +101,7 @@ export function DataExportSection() {
         }
 
         case "jobs": {
-          const rows = await fetchAllRows<Record<string, unknown>>("jobs", "*, customers(name)", "created_at");
+          const rows = await fetchAllRows("jobs", "*, customers(name)", "created_at");
           exportToExcel(rows, [
             { header: "Title", accessor: (r) => r.title as string },
             { header: "Customer", accessor: (r) => (r.customers as Record<string, unknown>)?.name as string },
