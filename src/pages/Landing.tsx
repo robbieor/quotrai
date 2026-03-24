@@ -260,9 +260,9 @@ export default function Landing() {
                 Login
               </Button>
             </Link>
-            <Link to="/request-access" className="hidden sm:inline-flex">
+            <Link to="/signup" className="hidden sm:inline-flex">
               <Button size="sm" className="font-medium btn-hover-lift text-sm px-3 sm:px-4 gap-1.5">
-                Get Founding Member Access
+                Start Free Trial
               </Button>
             </Link>
             <button
@@ -296,9 +296,9 @@ export default function Landing() {
               <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" className="w-full justify-start font-medium">Login</Button>
               </Link>
-              <Link to="/request-access" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full font-medium gap-2">
-                  Get Founding Member Access
+                  Start Free Trial
                 </Button>
               </Link>
             </div>
@@ -334,9 +334,9 @@ export default function Landing() {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-6">
-                <Link to="/request-access" className="w-full sm:w-auto">
+                <Link to="/signup" className="w-full sm:w-auto">
                   <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
-                    Get Founding Member Access
+                    Start Free Trial
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -823,9 +823,9 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/request-access" className="w-full">
+              <Link to="/signup" className="w-full">
                 <Button variant="outline" className="w-full" size="lg">
-                  Get Founding Member Access
+                  Start Free Trial
                 </Button>
               </Link>
             </div>
@@ -864,9 +864,9 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/request-access" className="w-full">
+              <Link to="/signup" className="w-full">
                 <Button className="w-full group/btn" size="lg">
-                  Get Founding Member Access
+                  Start Free Trial
                   <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -903,7 +903,7 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/request-access" className="w-full">
+              <Link to="/signup" className="w-full">
                 <Button variant="outline" className="w-full" size="lg">
                   Contact Sales
                 </Button>
@@ -946,14 +946,14 @@ export default function Landing() {
               </span>
             </h2>
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-xl mx-auto">
-              Join the Founding Member Program — 30% off for the first 200 trade businesses.
-            </p>
-            <Link to="/request-access">
-              <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2 sm:gap-3">
-                Get Founding Member Access
-                <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Button>
-            </Link>
+               Join the Founding Member Program — 30% off for the first 200 field service businesses.
+             </p>
+             <Link to="/signup">
+               <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2 sm:gap-3">
+                 Start Free Trial
+                 <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
+               </Button>
+             </Link>
             <p className="mt-6 sm:mt-8 text-xs sm:text-base text-muted-foreground">
               30-day free trial • No credit card • Cancel anytime
             </p>
@@ -983,8 +983,8 @@ export default function Landing() {
               <Link to="/login" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Log in
               </Link>
-              <Link to="/request-access" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Get Access
+              <Link to="/signup" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Start Free Trial
               </Link>
             </div>
           </div>
