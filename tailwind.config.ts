@@ -78,9 +78,9 @@ export default {
         },
         header: "hsl(var(--header-bg))",
         teal: {
-          DEFAULT: "hsl(159 100% 45%)",
-          light: "hsl(159 100% 50%)",
-          dark: "hsl(159 100% 35%)",
+          DEFAULT: "hsl(162 72% 42%)",
+          light: "hsl(162 72% 52%)",
+          dark: "hsl(162 72% 32%)",
         },
       },
       borderRadius: {
@@ -91,11 +91,12 @@ export default {
         "2xl": "1.25rem",
       },
       boxShadow: {
-        'subtle': '0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1)',
-        'medium': '0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1)',
-        'lift': '0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1)',
-        'glow-teal': '0 0 20px hsl(159 100% 50% / 0.3)',
-        'glow-teal-lg': '0 8px 32px hsl(159 100% 50% / 0.4)',
+        'subtle': '0 1px 2px 0 hsl(220 30% 15% / 0.04)',
+        'medium': '0 4px 12px -2px hsl(220 30% 15% / 0.06)',
+        'lift': '0 16px 48px -8px hsl(220 30% 15% / 0.08)',
+        'glow-teal': '0 0 24px hsl(162 72% 42% / 0.2)',
+        'glow-teal-lg': '0 12px 48px hsl(162 72% 42% / 0.25)',
+        'premium': '0 1px 2px hsl(220 30% 15% / 0.03), 0 4px 16px hsl(220 30% 15% / 0.04)',
       },
       spacing: {
         '18': '4.5rem',
