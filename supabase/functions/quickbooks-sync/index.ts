@@ -91,7 +91,7 @@ async function syncInvoiceToQB(accessToken: string, realmId: string, invoice: an
     Line: lineItems,
     DueDate: invoice.due_date,
     TxnDate: invoice.issue_date,
-    DocNumber: invoice.invoice_number,
+    DocNumber: invoice.display_number,
   };
 
   const res = await fetch(`https://quickbooks.api.intuit.com/v3/company/${realmId}/invoice?minorversion=65`, {
@@ -150,7 +150,7 @@ serve(async (req) => {
       for (const inv of (invoices || [])) {
         try {
           await syncInvoiceToQB(accessToken, realmId, inv, inv.invoice_items || [], inv.customers?.name || 'Unknown');
-          results.synced.push({ type: 'invoice', id: inv.id, number: inv.invoice_number });
+          results.synced.push({ type: 'invoice', id: inv.id, number: inv.display_number });
         } catch (e: any) {
           results.errors.push({ type: 'invoice', id: inv.id, error: e.message });
         }

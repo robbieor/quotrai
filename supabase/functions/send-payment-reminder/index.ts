@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     const { data: overdueInvoices } = await supabase
       .from('invoices')
-      .select('id, invoice_number, total, due_date, team_id, portal_token, communication_suppressed, customer:customers(name, email)')
+      .select('id, display_number, total, due_date, team_id, portal_token, communication_suppressed, customer:customers(name, email)')
       .in('status', ['pending', 'overdue'])
       .lt('due_date', today);
 
@@ -47,14 +47,14 @@ Deno.serve(async (req) => {
 
       // SAFETY: Check team-level opt-in for invoice reminders
       if (!teamComms || !teamComms.invoice_reminder_enabled) {
-        console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: team invoice_reminder_enabled is false or missing`);
+        console.log(`[SAFETY] Skipping reminder for ${inv.display_number}: team invoice_reminder_enabled is false or missing`);
         results.skipped_disabled++;
         continue;
       }
 
       // SAFETY: Check require_confirmation_all_comms gate
       if (teamComms.require_confirmation_all_comms) {
-        console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: require_confirmation_all_comms is ON`);
+        console.log(`[SAFETY] Skipping reminder for ${inv.display_number}: require_confirmation_all_comms is ON`);
         await supabase.from("comms_audit_log").insert({
           channel: "email", record_type: "invoice", record_id: inv.id,
           recipient: (inv.customer as any)?.email || null,
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       }
 
       if (inv.communication_suppressed) {
-        console.log(`[SAFETY] Skipping reminder for ${inv.invoice_number}: communication_suppressed`);
+        console.log(`[SAFETY] Skipping reminder for ${inv.display_number}: communication_suppressed`);
         results.skipped++;
         continue;
       }
@@ -111,12 +111,12 @@ Deno.serve(async (req) => {
         : null;
 
       const subject = reminderType === 'final'
-        ? `Final reminder: Invoice ${inv.invoice_number} is ${daysOverdue} days overdue`
-        : `Payment reminder: Invoice ${inv.invoice_number} is overdue`;
+        ? `Final reminder: Invoice ${inv.display_number} is ${daysOverdue} days overdue`
+        : `Payment reminder: Invoice ${inv.display_number} is overdue`;
 
       const urgencyText = reminderType === 'final'
-        ? `This is a final reminder. Invoice ${inv.invoice_number} is now <strong>${daysOverdue} days overdue</strong>. Please arrange payment immediately to avoid any further action.`
-        : `This is a friendly reminder that invoice ${inv.invoice_number} is <strong>${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} past due</strong>. Please arrange payment at your earliest convenience.`;
+        ? `This is a final reminder. Invoice ${inv.display_number} is now <strong>${daysOverdue} days overdue</strong>. Please arrange payment immediately to avoid any further action.`
+        : `This is a friendly reminder that invoice ${inv.display_number} is <strong>${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} past due</strong>. Please arrange payment at your earliest convenience.`;
 
       try {
         const messageId = crypto.randomUUID();
@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
                   <span style="font-size: 36px; font-weight: 700; color: #ef4444;">€${Number(inv.total).toFixed(2)}</span>
                 </div>
                 <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <p style="margin: 5px 0;"><strong>Invoice:</strong> ${inv.invoice_number}</p>
+                  <p style="margin: 5px 0;"><strong>Invoice:</strong> ${inv.display_number}</p>
                   <p style="margin: 5px 0;"><strong>Due Date:</strong> ${inv.due_date}</p>
                   <p style="margin: 5px 0; color: #ef4444;"><strong>Days Overdue:</strong> ${daysOverdue}</p>
                 </div>
@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
             from: `${fromName} via Quotr <noreply@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject, html,
-            text: `Payment reminder for invoice ${inv.invoice_number} - €${Number(inv.total).toFixed(2)} overdue by ${daysOverdue} days`,
+            text: `Payment reminder for invoice ${inv.display_number} - €${Number(inv.total).toFixed(2)} overdue by ${daysOverdue} days`,
             purpose: "transactional",
             label: `payment-reminder:${reminderType}`,
             queued_at: new Date().toISOString(),
@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
 
         results.sent++;
       } catch (emailErr) {
-        console.error(`Failed to send reminder for ${inv.invoice_number}:`, emailErr);
+        console.error(`Failed to send reminder for ${inv.display_number}:`, emailErr);
         results.skipped++;
       }
     }

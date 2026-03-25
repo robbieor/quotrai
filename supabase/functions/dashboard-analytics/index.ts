@@ -68,9 +68,9 @@ Deno.serve(async (req) => {
 
     // ── FETCH DATA ──────────────────────────────────────────────────
     let jobsQ = supabase.from("jobs").select("id, title, status, scheduled_date, created_at, updated_at, estimated_value, customer_id, customer:customers(name)");
-    let invoicesQ = supabase.from("invoices").select("id, invoice_number, status, total, balance_due, issue_date, due_date, customer_id, quote_id, customer:customers(name)");
-    let quotesQ = supabase.from("quotes").select("id, quote_number, status, total, created_at, updated_at, customer_id, customer:customers(name)");
-    let paymentsQ = supabase.from("payments").select("id, amount, payment_date, created_at, invoice_id, invoice:invoices(invoice_number, customer_id, issue_date, customer:customers(name))");
+    let invoicesQ = supabase.from("invoices").select("id, display_number, status, total, balance_due, issue_date, due_date, customer_id, quote_id, customer:customers(name)");
+    let quotesQ = supabase.from("quotes").select("id, display_number, status, total, created_at, updated_at, customer_id, customer:customers(name)");
+    let paymentsQ = supabase.from("payments").select("id, amount, payment_date, created_at, invoice_id, invoice:invoices(display_number, customer_id, issue_date, customer:customers(name))");
 
     if (fromDate) {
       jobsQ = jobsQ.gte("created_at", fromDate);
@@ -384,7 +384,7 @@ Deno.serve(async (req) => {
       const dov = diffDays(now, new Date(inv.due_date));
       const bucket = dov <= 0 ? "current" : dov <= 30 ? "1-30" : dov <= 60 ? "31-60" : "60+";
       agingBuckets[bucket] += Number(inv.total) || 0;
-      agingInvoices[bucket].push({ id: inv.id, invoiceNumber: inv.invoice_number, client: inv.customer?.name || "Unknown", amount: Number(inv.total) || 0, daysOverdue: Math.max(0, dov) });
+      agingInvoices[bucket].push({ id: inv.id, invoiceNumber: inv.display_number, client: inv.customer?.name || "Unknown", amount: Number(inv.total) || 0, daysOverdue: Math.max(0, dov) });
     });
 
     // ── TOP CUSTOMERS ───────────────────────────────────────────────
@@ -438,8 +438,8 @@ Deno.serve(async (req) => {
 
     // ── DRILL DATA ──────────────────────────────────────────────────
     const activeJobsList = activeJobs.map((j: any) => ({ id: j.id, title: j.title, client: j.customer?.name || "Unknown", status: j.status, date: j.scheduled_date, value: j.estimated_value }));
-    const outstandingList = outstandingInvoices.map((inv: any) => ({ id: inv.id, invoiceNumber: inv.invoice_number, client: inv.customer?.name || "Unknown", amount: Number(inv.total) || 0, daysOverdue: Math.max(0, diffDays(now, new Date(inv.due_date))), dueDate: inv.due_date }));
-    const pendingQuotesList = pendingQuotes.map((q: any) => ({ id: q.id, quoteNumber: q.quote_number, client: q.customer?.name || "Unknown", amount: Number(q.total) || 0, date: q.created_at }));
+    const outstandingList = outstandingInvoices.map((inv: any) => ({ id: inv.id, invoiceNumber: inv.display_number, client: inv.customer?.name || "Unknown", amount: Number(inv.total) || 0, daysOverdue: Math.max(0, diffDays(now, new Date(inv.due_date))), dueDate: inv.due_date }));
+    const pendingQuotesList = pendingQuotes.map((q: any) => ({ id: q.id, quoteNumber: q.display_number, client: q.customer?.name || "Unknown", amount: Number(q.total) || 0, date: q.created_at }));
 
     const today = fmt(now, "yyyy-MM-dd");
     const nextWeekStr = fmt(addDays(now, 7), "yyyy-MM-dd");
@@ -448,7 +448,7 @@ Deno.serve(async (req) => {
       .map((j: any) => ({ id: j.id, client: j.customer?.name || "Unknown", job: j.title, date: j.scheduled_date, value: j.estimated_value }));
 
     const overdueList = allOverdue.sort((a: any, b: any) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()).slice(0, 10)
-      .map((inv: any) => ({ id: inv.id, client: inv.customer?.name || "Unknown", invoiceNumber: inv.invoice_number, amount: Number(inv.total) || 0, daysOverdue: diffDays(now, new Date(inv.due_date)) }));
+      .map((inv: any) => ({ id: inv.id, client: inv.customer?.name || "Unknown", invoiceNumber: inv.display_number, amount: Number(inv.total) || 0, daysOverdue: diffDays(now, new Date(inv.due_date)) }));
 
     const metrics = { activeJobs: activeJobs.length, activeJobsTrend: jobsThisWeek - jobsLastWeek, revenueMTD: revenueInRange, revenueGoal, outstandingAmount, outstandingCount: outstandingInvoices.length, pendingQuotesAmount, pendingQuotesCount: pendingQuotes.length };
 

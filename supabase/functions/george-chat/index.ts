@@ -168,7 +168,7 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
-          invoice_number: { type: "string" },
+          display_number: { type: "string" },
           invoice_id: { type: "string" }
         },
         required: []
@@ -377,7 +377,7 @@ function extractEntities(toolCalls: any[]): any[] {
       estimated_value: "Value",
       notes: "Notes",
       tax_rate: "Tax Rate",
-      invoice_number: "Invoice",
+      display_number: "Invoice",
       date: "Date",
       query: "Search",
       job_description: "Job Type",
@@ -539,18 +539,18 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
 
   // Add result data
   if (params.amount) previewData["Amount"] = `€${Number(params.amount).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
-  if (result?.quote_number) previewData["Quote #"] = result.quote_number;
-  if (result?.invoice_number) previewData["Invoice #"] = result.invoice_number;
+  if (result?.display_number) previewData["Quote #"] = result.display_number;
+  if (result?.display_number) previewData["Invoice #"] = result.display_number;
   if (params.estimated_value) previewData["Est. Value"] = `€${Number(params.estimated_value).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
 
   return {
     type: intent.outputType,
     title: result?.message || `${intent.label} completed`,
-    summary: result?.quote_number || result?.invoice_number || result?.job_id 
+    summary: result?.display_number || result?.display_number || result?.job_id 
       ? `Draft record created successfully` 
       : undefined,
     record_id: result?.quote_id || result?.invoice_id || result?.job_id || result?.expense_id,
-    record_number: result?.quote_number || result?.invoice_number,
+    record_number: result?.display_number || result?.display_number,
     preview_data: Object.keys(previewData).length > 0 ? previewData : undefined,
     quick_actions: quickActions,
   };
@@ -572,10 +572,10 @@ function buildMemory(toolCalls: any[], toolResults: any[], existingMemory?: any)
     };
   }
   if (result?.quote_id) {
-    memory.current_quote = { id: result.quote_id, number: result.quote_number || "" };
+    memory.current_quote = { id: result.quote_id, number: result.display_number || "" };
   }
   if (result?.invoice_id) {
-    memory.current_invoice = { id: result.invoice_id, number: result.invoice_number || "" };
+    memory.current_invoice = { id: result.invoice_id, number: result.display_number || "" };
   }
   if (result?.job_id && params.job_title) {
     memory.current_job = { id: result.job_id, title: params.job_title };

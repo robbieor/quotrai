@@ -100,7 +100,7 @@ async function syncInvoiceToXero(accessToken: string, tenantId: string, invoice:
       Date: invoice.issue_date,
       DueDate: invoice.due_date,
       LineItems: lineItems,
-      Reference: invoice.invoice_number,
+      Reference: invoice.display_number,
       Status: invoice.status === 'sent' ? 'AUTHORISED' : 'DRAFT',
       LineAmountTypes: invoice.tax_rate > 0 ? 'Exclusive' : 'NoTax',
     }],
@@ -195,7 +195,7 @@ serve(async (req) => {
       for (const inv of (invoices || [])) {
         try {
           await syncInvoiceToXero(accessToken, tenantId, inv, inv.invoice_items || [], inv.customers?.name || 'Unknown');
-          results.synced.push({ type: 'invoice', id: inv.id, number: inv.invoice_number });
+          results.synced.push({ type: 'invoice', id: inv.id, number: inv.display_number });
         } catch (e: any) {
           results.errors.push({ type: 'invoice', id: inv.id, error: e.message });
         }
@@ -205,13 +205,13 @@ serve(async (req) => {
     if (sync_type === 'payment' && entity_id) {
       const { data: payment } = await supabase
         .from('payments')
-        .select('*, invoices(invoice_number)')
+        .select('*, invoices(display_number)')
         .eq('id', entity_id)
         .single();
 
       if (payment) {
         try {
-          await syncPaymentToXero(accessToken, tenantId, payment, payment.invoices?.invoice_number || '');
+          await syncPaymentToXero(accessToken, tenantId, payment, payment.invoices?.display_number || '');
           results.synced.push({ type: 'payment', id: payment.id });
         } catch (e: any) {
           results.errors.push({ type: 'payment', id: payment.id, error: e.message });
