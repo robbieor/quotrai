@@ -9,7 +9,7 @@ import { Calculator, TrendingUp, Clock, Users, Sparkles, Mail, Loader2, CheckCir
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Conservative defaults validated against industry benchmarks (Jobber, Tradify)
+// Conservative defaults validated against industry benchmarks (Jobber, Tradify, ServiceM8)
 const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
 const FOREMAN_SEAT_PRICE = 29; // €29/month per seat
