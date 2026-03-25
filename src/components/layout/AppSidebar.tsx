@@ -99,7 +99,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4 bg-muted-foreground">
         <div className="flex items-center gap-3">
           <img src={quotrLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-          <span className="text-xl font-bold tracking-tight text-foreground">Foreman</span>
+          <span className="text-xl font-bold tracking-tight text-white">Foreman</span>
         </div>
       </SidebarHeader>
 
