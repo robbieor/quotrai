@@ -10,6 +10,8 @@ import {
   detectPostcodeType,
   validatePostcode,
   looksLikePostcode,
+  getGeocodingConfidence,
+  isPOBoxAddress,
   type AddressSuggestion,
   type GeocodedAddress,
   type PostcodeType,
@@ -89,14 +91,29 @@ export function AddressAutocomplete({
     onChange(formattedAddress);
     setHasSelectedAddress(true);
     if (onAddressSelect) {
+      const addr = suggestion.address;
+      const line1 = addr.house_number && addr.road
+        ? `${addr.house_number} ${addr.road}`
+        : addr.road || addr.suburb || '';
+      const line2 = addr.suburb && addr.road ? addr.suburb : '';
+      const postcodeType = detectPostcodeType(addr.postcode || '');
+      const confidence = getGeocodingConfidence(suggestion, postcodeType);
+      const poBox = isPOBoxAddress(formattedAddress);
+
       onAddressSelect({
         formattedAddress,
         latitude: parseFloat(suggestion.lat),
         longitude: parseFloat(suggestion.lon),
-        postcode: suggestion.address.postcode,
-        city: suggestion.address.city || suggestion.address.town || suggestion.address.village,
-        country: suggestion.address.country,
-        countryCode: suggestion.address.country_code,
+        postcode: addr.postcode,
+        city: addr.city || addr.town || addr.village,
+        county: addr.county,
+        country: addr.country,
+        countryCode: addr.country_code,
+        line1,
+        line2: line2 || undefined,
+        region: addr.state || addr.county,
+        confidence,
+        isPOBox: poBox,
       });
     }
     setIsOpen(false);
