@@ -134,7 +134,7 @@ export default function Pricing() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing-page min-h-screen bg-background">
       <SEOHead
         title="Pricing — Simple Per-Seat Plans"
         description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 30-day free trial, no credit card required."
