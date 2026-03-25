@@ -19,8 +19,12 @@ export type Database = {
           completed_steps: string[] | null
           created_at: string | null
           current_step_index: number | null
+          error_message: string | null
           failed_step: Json | null
           id: string
+          input_payload: Json | null
+          mode: string
+          result_payload: Json | null
           status: string
           steps: Json
           success_message: string | null
@@ -33,8 +37,12 @@ export type Database = {
           completed_steps?: string[] | null
           created_at?: string | null
           current_step_index?: number | null
+          error_message?: string | null
           failed_step?: Json | null
           id?: string
+          input_payload?: Json | null
+          mode?: string
+          result_payload?: Json | null
           status?: string
           steps?: Json
           success_message?: string | null
@@ -47,8 +55,12 @@ export type Database = {
           completed_steps?: string[] | null
           created_at?: string | null
           current_step_index?: number | null
+          error_message?: string | null
           failed_step?: Json | null
           id?: string
+          input_payload?: Json | null
+          mode?: string
+          result_payload?: Json | null
           status?: string
           steps?: Json
           success_message?: string | null
@@ -3749,6 +3761,50 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      task_steps: {
+        Row: {
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          label: string
+          sort_order: number
+          started_at: string | null
+          status: string
+          step_key: string
+          task_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          label: string
+          sort_order?: number
+          started_at?: string | null
+          status?: string
+          step_key: string
+          task_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          label?: string
+          sort_order?: number
+          started_at?: string | null
+          status?: string
+          step_key?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_steps_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "agent_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_invitations: {
         Row: {
