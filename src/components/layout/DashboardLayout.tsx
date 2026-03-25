@@ -30,7 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <AppSidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <TrialBanner />
-            <header className="h-12 md:h-14 border-b border-border text-card items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-muted-foreground sticky top-0 z-20">
+            <header className="h-12 md:h-14 border-b border-border text-card items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-header sticky top-0 z-20">
               <SidebarTrigger className="mr-2 md:mr-4" />
               <div className="flex-1" />
               <NotificationCenter />
