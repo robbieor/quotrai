@@ -23,6 +23,9 @@ import {
   Timer,
   Briefcase,
   MapPinOff,
+  Signal,
+  SignalLow,
+  SignalZero,
 } from "lucide-react";
 import {
   useActiveTimeEntry,
@@ -33,6 +36,36 @@ import {
   useJobSites,
 } from "@/hooks/useTimeTracking";
 import { useJobs } from "@/hooks/useJobs";
+import { useAutoClockPrompt } from "@/hooks/useAutoClockPrompt";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+// GPS accuracy traffic light
+function GpsAccuracyIndicator({ accuracy }: { accuracy: number }) {
+  if (accuracy <= 30) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <Signal className="h-4 w-4 text-green-500" />
+        <span className="text-green-600 dark:text-green-400 text-sm font-medium">GPS Locked</span>
+      </div>
+    );
+  }
+  if (accuracy <= 100) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <SignalLow className="h-4 w-4 text-amber-500" />
+        <span className="text-amber-600 dark:text-amber-400 text-sm font-medium">Approximate (±{Math.round(accuracy)}m)</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1.5">
+      <SignalZero className="h-4 w-4 text-destructive" />
+      <span className="text-destructive text-sm font-medium">Weak Signal</span>
+      <span className="text-xs text-muted-foreground">— move outdoors</span>
+    </div>
+  );
+}
 
 export function ClockInOutCard() {
   const [selectedJobId, setSelectedJobId] = useState<string>("");
@@ -46,6 +79,8 @@ export function ClockInOutCard() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [breakElapsed, setBreakElapsed] = useState(0);
 
   const { data: activeEntry, isLoading: loadingActive } = useActiveTimeEntry();
   const { data: jobs } = useJobs();
@@ -54,6 +89,39 @@ export function ClockInOutCard() {
   const clockIn = useClockIn();
   const clockOut = useClockOut();
   const { getCurrentPosition } = useGeolocation();
+  const { pendingPrompt, dismissPrompt } = useAutoClockPrompt();
+
+  // Check if currently on break from DB
+  useEffect(() => {
+    if (activeEntry) {
+      const entry = activeEntry as any;
+      if (entry.break_start && !entry.break_end) {
+        setIsOnBreak(true);
+      } else {
+        setIsOnBreak(false);
+      }
+    } else {
+      setIsOnBreak(false);
+    }
+  }, [activeEntry]);
+
+  // Break timer
+  useEffect(() => {
+    if (!isOnBreak || !activeEntry) {
+      setBreakElapsed(0);
+      return;
+    }
+    const entry = activeEntry as any;
+    const breakStart = entry.break_start ? new Date(entry.break_start) : null;
+    if (!breakStart) return;
+
+    const updateBreak = () => {
+      setBreakElapsed(differenceInSeconds(new Date(), breakStart));
+    };
+    updateBreak();
+    const interval = setInterval(updateBreak, 1000);
+    return () => clearInterval(interval);
+  }, [isOnBreak, activeEntry]);
 
   // Today's scheduled/in-progress jobs
   const todaysJobs = useMemo(() => {
@@ -224,6 +292,46 @@ export function ClockInOutCard() {
     );
   };
 
+  // Break handlers
+  const handleStartBreak = async () => {
+    if (!activeEntry) return;
+    try {
+      await supabase
+        .from("time_entries")
+        .update({ break_start: new Date().toISOString() } as any)
+        .eq("id", activeEntry.id);
+      setIsOnBreak(true);
+      toast.success("Break started");
+    } catch {
+      toast.error("Failed to start break");
+    }
+  };
+
+  const handleEndBreak = async () => {
+    if (!activeEntry) return;
+    const entry = activeEntry as any;
+    const breakStart = entry.break_start ? new Date(entry.break_start) : null;
+    if (!breakStart) return;
+
+    const breakDuration = differenceInSeconds(new Date(), breakStart);
+    const existingBreak = (entry.break_duration_seconds as number) || 0;
+
+    try {
+      await supabase
+        .from("time_entries")
+        .update({
+          break_end: new Date().toISOString(),
+          break_start: null,
+          break_duration_seconds: existingBreak + breakDuration,
+        } as any)
+        .eq("id", activeEntry.id);
+      setIsOnBreak(false);
+      toast.success(`Break ended (${formatHoursMinutes(breakDuration)})`);
+    } catch {
+      toast.error("Failed to end break");
+    }
+  };
+
   if (loadingActive) {
     return (
       <Card>
@@ -254,7 +362,7 @@ export function ClockInOutCard() {
             </div>
           </div>
 
-          {/* Location Status */}
+          {/* GPS Accuracy — Traffic Light */}
           <div className="flex items-center justify-center gap-2 text-sm">
             {isGettingLocation ? (
               <>
@@ -270,14 +378,35 @@ export function ClockInOutCard() {
                 </Button>
               </>
             ) : currentLocation ? (
-              <>
-                <Navigation className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">
-                  ±{Math.round(currentLocation.accuracy)}m accuracy
-                </span>
-              </>
+              <GpsAccuracyIndicator accuracy={currentLocation.accuracy} />
             ) : null}
           </div>
+
+          {/* Auto-Clock Prompt */}
+          {pendingPrompt && (
+            <div className="p-3 rounded-lg border-2 border-primary bg-primary/5 space-y-2">
+              <p className="font-medium text-sm">
+                {pendingPrompt.type === 'clock_in'
+                  ? `📍 Arrived at ${pendingPrompt.jobTitle}`
+                  : `🚗 Leaving ${pendingPrompt.jobTitle}`}
+              </p>
+              <p className="text-xs text-muted-foreground">{pendingPrompt.address}</p>
+              <div className="flex gap-2">
+                {pendingPrompt.type === 'clock_in' ? (
+                  <Button size="sm" onClick={() => { handleClockIn(pendingPrompt.jobId); dismissPrompt(); }}>
+                    <Play className="h-3 w-3 mr-1" /> Clock In
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="destructive" onClick={() => { setShowClockOutDialog(true); dismissPrompt(); }}>
+                    <Square className="h-3 w-3 mr-1" /> Clock Out
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" onClick={dismissPrompt}>
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Daily Summary Strip */}
           <div className="grid grid-cols-2 gap-3">
@@ -302,13 +431,18 @@ export function ClockInOutCard() {
           {activeEntry ? (
             /* ===== CLOCKED IN STATE ===== */
             <div className="space-y-4">
-              <div className="text-center p-6 rounded-lg bg-primary/10">
-                <div className="text-4xl font-mono font-bold text-primary">
-                  {formatElapsed(elapsedTime)}
+              <div className={`text-center p-6 rounded-lg ${isOnBreak ? 'bg-amber-500/10' : 'bg-primary/10'}`}>
+                <div className={`text-4xl font-mono font-bold ${isOnBreak ? 'text-amber-600 dark:text-amber-400' : 'text-primary'}`}>
+                  {isOnBreak ? formatElapsed(breakElapsed) : formatElapsed(elapsedTime)}
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Clocked in since{" "}
-                  {format(new Date(activeEntry.clock_in_at), "h:mm a")}
+                  {isOnBreak ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <Coffee className="h-3.5 w-3.5" /> On break
+                    </span>
+                  ) : (
+                    <>Clocked in since {format(new Date(activeEntry.clock_in_at), "h:mm a")}</>
+                  )}
                 </p>
               </div>
 
@@ -338,6 +472,16 @@ export function ClockInOutCard() {
                 )}
               </div>
 
+              {/* Break Button */}
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={isOnBreak ? handleEndBreak : handleStartBreak}
+              >
+                <Coffee className="h-4 w-4 mr-2" />
+                {isOnBreak ? "Resume Work" : "Take Break"}
+              </Button>
+
               <Button
                 className="w-full"
                 size="lg"
@@ -359,37 +503,37 @@ export function ClockInOutCard() {
                   {todaysJobs.map((job) => {
                     const gpsStatus = jobSiteMap.get(job.id);
                     return (
-                    <div
-                      key={job.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{job.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {job.customers?.name}
-                          {job.scheduled_date &&
-                            ` • ${format(new Date(job.scheduled_date), "h:mm a")}`}
-                        </p>
-                        {!gpsStatus && (
-                          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
-                            <MapPinOff className="h-3 w-3" />
-                            No GPS location set
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleClockIn(job.id)}
-                        disabled={clockIn.isPending}
+                      <div
+                        key={job.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                       >
-                        {clockIn.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4 mr-1" />
-                        )}
-                        Start
-                      </Button>
-                    </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{job.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {job.customers?.name}
+                            {job.scheduled_date &&
+                              ` • ${format(new Date(job.scheduled_date), "h:mm a")}`}
+                          </p>
+                          {!gpsStatus && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                              <MapPinOff className="h-3 w-3" />
+                              No GPS location set
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleClockIn(job.id)}
+                          disabled={clockIn.isPending}
+                        >
+                          {clockIn.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Play className="h-4 w-4 mr-1" />
+                          )}
+                          Start
+                        </Button>
+                      </div>
                     );
                   })}
                 </div>
@@ -404,35 +548,35 @@ export function ClockInOutCard() {
                   {availableJobs.slice(0, 5).map((job) => {
                     const gpsStatus = jobSiteMap.get(job.id);
                     return (
-                    <div
-                      key={job.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{job.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {job.customers?.name}
-                        </p>
-                        {!gpsStatus && (
-                          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
-                            <MapPinOff className="h-3 w-3" />
-                            No GPS location set
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleClockIn(job.id)}
-                        disabled={clockIn.isPending}
+                      <div
+                        key={job.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
                       >
-                        {clockIn.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4 mr-1" />
-                        )}
-                        Start
-                      </Button>
-                    </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{job.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {job.customers?.name}
+                          </p>
+                          {!gpsStatus && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                              <MapPinOff className="h-3 w-3" />
+                              No GPS location set
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleClockIn(job.id)}
+                          disabled={clockIn.isPending}
+                        >
+                          {clockIn.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Play className="h-4 w-4 mr-1" />
+                          )}
+                          Start
+                        </Button>
+                      </div>
                     );
                   })}
                 </div>
@@ -464,6 +608,11 @@ export function ClockInOutCard() {
                 <p className="text-sm text-muted-foreground">
                   Total time: {formatElapsed(elapsedTime)}
                 </p>
+                {(activeEntry as any)?.break_duration_seconds > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Breaks: {formatHoursMinutes((activeEntry as any).break_duration_seconds)}
+                  </p>
+                )}
               </div>
             </div>
 
