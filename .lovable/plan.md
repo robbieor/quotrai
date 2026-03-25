@@ -1,122 +1,143 @@
 
 
-# Agent Working Visibility System
+# Unified Foreman AI Execution Visibility System
 
-## What We're Building
+## What Exists Today
 
-A reusable `<AgentWorkingPanel>` component that shows animated step-by-step progress for any AI/automated task. First integration: the "Send Preview to Myself" flow in Branding Settings. Designed to be reused for quote creation, invoice generation, and all Foreman AI actions.
+- `useAgentWorkflow` hook — local state machine (IDLE/RUNNING/SUCCESS/ERROR), step tracking, min-display timing
+- `AgentWorkingPanel` — renders step timeline with spinners/checks/errors, used only in BrandingSettings preview dialog
+- `FloatingTomButton` — quick actions navigate to /george then fire events
+- `ActiveCallBar` — fixed top bar during voice calls
+- `VoiceAgentContext` — global voice agent state, webhook calls, cache invalidation
 
-## Component Design
+**Gap**: No global execution visibility. When AI creates a quote from the floating button or voice, the user sees nothing until they navigate to /george. No background task persistence, no cross-page progress indicator, no mobile bottom sheet.
+
+## Architecture
 
 ```text
-┌──────────────────────────────────────┐
-│  ⚡ Foreman AI is working…           │
-│                                      │
-│  ✓ Preparing document structure      │
-│  ✓ Applying branding settings        │
-│  ● Rendering logo and layout…        │  ← spinner on active step
-│  ○ Generating line items             │  ← dimmed pending steps
-│  ○ Calculating totals                │
-│  ○ Building PDF                      │
-│  ○ Sending preview email             │
-│                                      │
-│  ─── on success ───                  │
-│  ✅ Preview sent to rob@example.com  │
-│  [Send Another]  [Download PDF]      │
-│                                      │
-│  ─── on failure ───                  │
-│  ✓ Preparing document structure      │
-│  ✗ Building PDF — Error message      │  ← red, with error text
-│  [Retry]                             │
-└──────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│           AgentTaskContext (global)              │
+│  ┌───────────────────────────────────────────┐  │
+│  │ State Machine                             │  │
+│  │ IDLE → STARTED → RUNNING → SUCCESS/ERROR  │  │
+│  │                                           │  │
+│  │ activeTask: { id, type, steps[], state }  │  │
+│  │ taskHistory: completed tasks (session)    │  │
+│  │ persisted: writes to DB for cross-device  │  │
+│  └───────────────────────────────────────────┘  │
+│                                                 │
+│  ┌──────────────┐    ┌───────────────────────┐  │
+│  │ Desktop:     │    │ Mobile:               │  │
+│  │ Side Panel   │    │ Bottom Sheet          │  │
+│  │ collapsible  │    │ draggable/minimisable │  │
+│  └──────────────┘    └───────────────────────┘  │
+└─────────────────────────────────────────────────┘
 ```
 
 ## Changes
 
-### 1. New component — `src/components/shared/AgentWorkingPanel.tsx`
+### 1. Global task context — new `src/contexts/AgentTaskContext.tsx`
 
-A self-contained, reusable panel that accepts:
-- `steps: { id, label }[]` — the step definitions
-- `currentStepIndex: number` — which step is active (-1 = not started)
-- `completedSteps: Set<string>` — which steps are done
-- `failedStep?: { id, error }` — if a step failed
-- `isComplete: boolean` — all done
-- `successMessage?: string` — e.g. "Preview sent to rob@email.com"
-- `successActions?: { label, onClick, variant }[]` — CTAs after success
-- `onRetry?: () => void` — retry handler on failure
-- `title?: string` — defaults to "Foreman AI is working…"
+A React context wrapping the workflow state machine, made global so any page can trigger tasks and any UI can observe them:
 
-Renders:
-- Vertical timeline with connector lines (reuses the visual style from `ActionTimeline.tsx`)
-- Steps animate in sequentially with staggered `fade-in` (150ms delay per step)
-- Active step has a spinning `Loader2` icon
-- Completed steps have green `Check` icon
-- Failed step has red `AlertCircle` with error message
-- Success state shows a green banner with optional CTA buttons
-- Whole panel appears as a card with subtle border, can be used inline or in a dialog
+- `startTask(type, steps[])` — creates task, sets STARTED → RUNNING
+- `completeStep(stepId)` — advances with min-display timing
+- `failStep(stepId, error)` — marks failure, stops
+- `completeTask(successMessage, actions[])` — marks SUCCESS
+- `cancelTask()` — marks CANCELLED
+- `retryTask()` — resets and restarts
+- `activeTask` — current running task (null if idle)
+- `taskHistory` — recent completed tasks (session-scoped array)
+- `isMinimised` / `toggleMinimise()` — UI collapse state
 
-### 2. New hook — `src/hooks/useAgentWorkflow.ts`
+Wraps the existing `useAgentWorkflow` logic but lifts it to context level. The existing hook remains for local-only use (like BrandingSettings dialog).
 
-Manages the step-by-step state machine:
+### 2. Database persistence for cross-device — new migration
 
-```typescript
-const { startWorkflow, completeStep, failStep, reset, state } = useAgentWorkflow(steps);
+Create `agent_tasks` table:
+```sql
+create table public.agent_tasks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  team_id uuid,
+  task_type text not null,
+  steps jsonb not null default '[]',
+  status text not null default 'running',
+  current_step_index int default 0,
+  completed_steps text[] default '{}',
+  failed_step jsonb,
+  success_message text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.agent_tasks enable row level security;
+create policy "Users see own tasks" on public.agent_tasks
+  for select to authenticated using (user_id = auth.uid());
+create policy "Users manage own tasks" on public.agent_tasks
+  for all to authenticated using (user_id = auth.uid());
 ```
 
-- `startWorkflow()` — begins at step 0, advances `currentStepIndex`
-- `completeStep(id)` — marks step done, advances to next
-- `failStep(id, error)` — marks step failed, stops
-- `reset()` — clears all state
-- `state` — `{ currentStepIndex, completedSteps, failedStep, isComplete, isRunning }`
+The context writes task state to this table on start/complete/fail. On login, it checks for any `status = 'running'` tasks and shows them.
 
-Each step transition has a configurable minimum display time (400ms) so the user sees the animation even if the actual operation is instant.
-
-### 3. Integrate into BrandingSettings — `src/components/settings/BrandingSettings.tsx`
-
-Replace the simple `previewSending` spinner button with the `AgentWorkingPanel`:
-
-- When user clicks "Send Preview to Myself", show the panel (as a Dialog overlay)
-- Steps: Preparing structure → Applying branding → Rendering layout → Generating line items → Calculating totals → Building PDF → Sending email
-- Each step completes as the actual code progresses through the `handleSendPreview` function
-- On success: show "Preview sent to {email}" with "Send Another" and "Close" buttons
-- On failure: show the failed step with error and "Retry" button
-- The existing toast notifications remain as secondary feedback
-
-### 4. Predefined step templates — in `AgentWorkingPanel.tsx`
-
-Export preset step arrays for common workflows:
-
-```typescript
-export const PREVIEW_EMAIL_STEPS = [
-  { id: "structure", label: "Preparing document structure" },
-  { id: "branding", label: "Applying branding settings" },
-  { id: "layout", label: "Rendering logo and layout" },
-  { id: "line_items", label: "Generating line items" },
-  { id: "totals", label: "Calculating totals" },
-  { id: "pdf", label: "Building PDF" },
-  { id: "email", label: "Sending preview email" },
-];
-
-export const QUOTE_CREATION_STEPS = [...];
-export const INVOICE_CREATION_STEPS = [...];
+Enable realtime so another device sees updates:
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.agent_tasks;
 ```
+
+### 3. Desktop side panel — new `src/components/shared/AgentTaskPanel.tsx`
+
+- Fixed right-side panel (width ~320px), slides in when `activeTask` exists
+- Uses existing `AgentWorkingPanel` internally for the step timeline
+- Header: "Foreman AI is working…" with minimise button (chevron)
+- Minimised state: slim 48px bar at bottom-right showing task type + spinner
+- On SUCCESS: shows green banner with CTAs, auto-minimises after 8s
+- On ERROR: shows error with Retry button, stays open
+- Renders inside `DashboardLayout`, positioned after `<main>`
+- Does NOT render on /george (that page has its own LiveActionFeed)
+
+### 4. Mobile bottom sheet — same component, different layout
+
+- On mobile (`useIsMobile`), render as a bottom sheet instead of side panel
+- Starts at ~40% height, draggable to full or minimised
+- Minimised: floating pill bar above the FloatingTomButton showing "Creating quote… ●"
+- Uses the same `AgentTaskPanel` component with `isMobile` prop controlling layout
+- Persists across navigation (lives in DashboardLayout, not in page components)
+
+### 5. Wire into existing AI flows
+
+**FloatingTomButton quick actions**: When a quick action triggers george-chat and gets back an action_plan, call `startTask()` on the global context. As the deferred execution proceeds (confirmation → webhook), advance steps.
+
+**George page**: When `handleStructuredResponse` receives an action_plan, also call `startTask()` so the panel shows on other pages if user navigates away.
+
+**BrandingSettings**: Keep using the local dialog-based `AgentWorkingPanel` (it's page-specific). No change needed.
+
+**Voice webhook (VoiceAgentContext)**: After `callWebhook` for mutation functions, start a task on the global context with appropriate steps.
+
+### 6. Safety guardrails
+
+The existing safety architecture already prevents automated customer contact:
+- `communication_suppressed: true` on all AI-created records
+- `send-email` enforces manual-only sends
+- Preview emails only go to the logged-in user
+
+The task panel adds a visual safety indicator: when running in preview/demo mode, show a yellow "Preview Mode — no live records affected" badge in the panel header.
+
+### 7. Integration into DashboardLayout — `src/components/layout/DashboardLayout.tsx`
+
+Add `<AgentTaskPanel />` as a sibling to `<main>`, inside the flex container. It reads from `AgentTaskContext` and renders conditionally.
+
+Wrap the app with `<AgentTaskProvider>` in `App.tsx` or `main.tsx`.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/shared/AgentWorkingPanel.tsx` | New reusable component |
-| `src/hooks/useAgentWorkflow.ts` | New state machine hook |
-| `src/components/settings/BrandingSettings.tsx` | Replace spinner with AgentWorkingPanel in a Dialog |
-
-## How It Integrates With Foreman AI
-
-The existing `ActionTimeline` in the George chat is chat-specific — it renders inside `LiveActionFeed` and uses `AIActionPlan` types. The new `AgentWorkingPanel` is standalone and page-agnostic. In future, the George `ActionTimeline` can be refactored to use `AgentWorkingPanel` internally, unifying the visual language across the entire app.
-
-## Error Handling
-
-- If PDF generation fails → step "Building PDF" shows red with the error
-- If email send fails → step "Sending preview email" shows red
-- Retry button calls `handleSendPreview` again from scratch with a fresh panel
-- All errors also trigger a toast for users who dismiss the panel
+| `src/contexts/AgentTaskContext.tsx` | New global context with state machine, DB persistence, realtime subscription |
+| `src/components/shared/AgentTaskPanel.tsx` | New side panel (desktop) / bottom sheet (mobile) component |
+| `src/components/layout/DashboardLayout.tsx` | Add `AgentTaskPanel` + wrap with provider |
+| `src/App.tsx` or `src/main.tsx` | Wrap with `AgentTaskProvider` |
+| `src/components/layout/FloatingTomButton.tsx` | Call `startTask()` when quick actions trigger AI |
+| `src/pages/George.tsx` | Call `startTask()` in `handleStructuredResponse` |
+| `src/contexts/VoiceAgentContext.tsx` | Call `startTask()` after mutation webhooks |
+| New migration | Create `agent_tasks` table with RLS + realtime |
 
