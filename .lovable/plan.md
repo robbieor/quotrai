@@ -1,71 +1,96 @@
 
 
-# Fix: Slow Foreman AI Quick Action Response Times
+# Fix Broken Map + Beat Jobber on GPS Time Tracking
 
-## Root Cause
+## The Map Problem
 
-The `george-chat` edge function runs **6-8 sequential database queries** before making the first AI call, then makes **two full AI roundtrips** (tool selection + follow-up). For quick actions like "Today's jobs" where the intent is already known, this is wasteful.
+The StaffLocationMap uses `react-leaflet` with lazy loading via `Suspense`. The screenshot shows a blank card where the map should be — the Leaflet container is rendering but tiles are broken. Two probable causes:
 
-Current flow for "Today's jobs" button (`action: "get_todays_jobs"`):
-1. Button click → `callWebhook("get_todays_jobs")` → VoiceAgentContext → george-webhook
-2. This path is actually direct and should be reasonably fast
+1. **Leaflet CSS conflict with Tailwind**: Tailwind's preflight resets `img { max-width: 100% }` which breaks Leaflet tile rendering (tiles get squished). No override exists in `index.css`.
+2. **Container size zero on mount**: `MapContainer` sets its size once on mount. Inside a lazy `Suspense` boundary, the container may have zero height when Leaflet initializes.
 
-Current flow for "Create quote" / "Log expense" (`action: null`):
-1. Button click → sends text "Help me create a new quote" to `george-chat`
-2. george-chat runs: auth check → profile query → team membership query → preferences query → conversation create → message insert → history fetch → **AI call #1** (with 20 tools) → webhook execution → **AI call #2** (follow-up)
-3. Total: ~8 DB queries + 2 AI roundtrips = 8-15 seconds
+### Fix
+- Add Leaflet CSS overrides to `index.css` to prevent Tailwind preflight from breaking tiles
+- Add `invalidateSize()` call after mount to force Leaflet to recalculate
+- Remove the `<div>` wrapper around `Circle` + `Marker` pairs (React-Leaflet requires direct Leaflet layer children, not DOM wrappers)
 
-## Fix Strategy
+## Jobber Competitive Analysis
 
-### 1. Parallelize DB queries in george-chat — `supabase/functions/george-chat/index.ts`
+Jobber's GPS time tracking (their "Location Timers" feature) offers:
 
-Run independent queries concurrently using `Promise.all`:
-- Profile + team membership check → single parallel block
-- Preferences + conversation creation + history fetch → second parallel block
+| Feature | Jobber | Quotr Today | Gap |
+|---------|--------|-------------|-----|
+| Auto clock-in on geofence entry | Yes (200m trigger) | No — manual only | **Major gap** |
+| Auto clock-out on geofence exit | Yes (with 3min delay) | No | **Major gap** |
+| Reminder notification instead of auto | Yes (user preference) | No | Gap |
+| GPS waypoints on actions | Yes | Only on clock in/out | Minor gap |
+| Live staff map | No (admin only) | Yes (Leaflet, broken) | **Quotr ahead** (when fixed) |
+| Offline clock events | Basic | Yes (IndexedDB queue) | **Quotr ahead** |
+| Geofence radius customisation | Fixed 200m | Adjustable 25-500m | **Quotr ahead** |
+| Auto travel detection | No | Yes (travel_logs) | **Quotr ahead** |
+| Mileage tracking integration | Separate feature | Integrated | **Quotr ahead** |
+| Break tracking | No | No | Parity |
 
-This cuts ~3-4 sequential round trips into 2.
+## Plan to Fix + Outpace Jobber
 
-### 2. Make all quick action buttons call webhook directly — `GeorgeWelcome.tsx`
+### 1. Fix the map (immediate) — `src/index.css` + `StaffLocationMap.tsx`
 
-Currently "Create quote" and "Log expense" have `action: null`, forcing them through the full AI pipeline just to understand "Help me create a new quote". Instead, give them direct actions that bypass AI entirely:
+**index.css**: Add Leaflet overrides to prevent Tailwind from breaking tiles:
+```css
+.leaflet-container img { max-width: none !important; }
+.leaflet-container { z-index: 0; }
+```
 
-- "Create quote" → `action: null` stays as-is (needs AI to guide the user) BUT change the message to be shorter
-- "Log expense" → same
+**StaffLocationMap.tsx**:
+- Remove the `<div key={site.id}>` wrapper around `Circle`/`Marker` pairs — use React fragments `<>` instead. `react-leaflet` expects Leaflet layer components as direct children, not HTML wrappers.
+- Add a `MapReady` component that calls `map.invalidateSize()` on mount to handle the lazy-load sizing issue.
 
-Actually, the better fix: for quick actions that ARE data lookups (Today's jobs, Overdue invoices), the `callWebhook` path is already fast. For "Create quote" and "Log expense", the user needs a conversational response — but we can short-circuit the AI by detecting known quick action messages.
+### 2. Auto clock-in/out via geofence notifications (Jobber's killer feature) — new `src/hooks/useAutoClockPrompt.ts` + update `ClockInOutCard.tsx`
 
-### 3. Add quick-action short-circuit in george-chat — `supabase/functions/george-chat/index.ts`
+This is Jobber's #1 differentiator. Implement a **smart prompt** system (not silent auto-clock, which users distrust):
 
-Before the AI call, check if the message matches a known quick action pattern. If so, skip the AI entirely and return a canned structured response:
+- Use the browser Geolocation API `watchPosition` when the user has active scheduled jobs
+- When the user enters a job's geofence radius → show a **push notification + in-app prompt**: "You've arrived at [Job Site]. Clock in?"
+- When the user leaves geofence while clocked in → show prompt: "You've left [Job Site]. Clock out?"
+- Store user preference: "Auto clock-in" / "Prompt me" / "Manual only" — this matches Jobber's flexibility but adds a third option
+- 3-minute exit delay (matching Jobber) to avoid false triggers from GPS drift
 
-- "Help me create a new quote" → return action_plan with intent "create_quote" and a prompt asking for customer/items
-- "I need to log an expense" → return action_plan with intent "log_expense" and a prompt asking for details
+### 3. Break tracking (beats Jobber — they don't have it) — migration + `ClockInOutCard.tsx`
 
-This eliminates both AI calls for button-initiated actions.
+- Add a "Take Break" / "Resume" button when clocked in
+- Track break_start / break_end on time entries
+- Deduct break time from billable hours automatically
+- Show break duration in the timer display
 
-### 4. Show immediate "thinking" state in UI — `GeorgeWelcome.tsx` + `George.tsx`
+### 4. Smart location accuracy indicator — `ClockInOutCard.tsx`
 
-Add an instant "Foreman AI is thinking..." display item when a button is pressed, so the user sees immediate feedback even before the backend responds.
+Current: shows raw "±125m accuracy" which means nothing to tradespeople.
 
-### 5. Stream the response for text chat — `george-chat/index.ts` + `GeorgeAgentInput.tsx`
+New: traffic-light system:
+- Green "GPS Locked" (< 30m accuracy)
+- Amber "Approximate" (30-100m)
+- Red "Weak Signal" (> 100m) with "Move outdoors" hint
 
-For free-text messages that do need AI, switch to streaming so tokens appear as they arrive instead of waiting for the full response. This is a larger change but dramatically improves perceived speed.
+### 5. Photo proof on clock-in (beats Jobber) — `ClockInOutCard.tsx`
 
-**For this iteration, focus on items 1, 3, and 4** — they give the biggest speed improvement with the least risk.
+Optional photo capture on clock-in for compliance-heavy trades (construction, facilities). Stored to file storage, linked to time entry.
 
-## Files to modify
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/george-chat/index.ts` | Parallelize DB queries; add quick-action short-circuit for known button messages |
-| `src/components/george/GeorgeWelcome.tsx` | No change needed — button config is fine |
-| `src/pages/George.tsx` | Add instant "thinking" display item on button press |
-| `src/components/george/GeorgeAgentInput.tsx` | Show immediate processing state in display items |
+| `src/index.css` | Add Leaflet CSS overrides |
+| `src/components/time-tracking/StaffLocationMap.tsx` | Fix Fragment wrappers, add invalidateSize on mount |
+| `src/hooks/useAutoClockPrompt.ts` | New — geofence-triggered clock prompts |
+| `src/components/time-tracking/ClockInOutCard.tsx` | Add break tracking, smart accuracy indicator, auto-clock prompt UI, optional photo capture |
+| `src/components/time-tracking/GeofenceSettings.tsx` | Add auto-clock preference toggle (Auto / Prompt / Manual) |
+| New migration | Add `break_start`, `break_end`, `break_duration_seconds`, `clock_in_photo_url` to `time_entries` |
 
-## Expected Result
+## Priority Order
 
-- Quick action buttons with known `action` values (Today's jobs, Overdue invoices): already fast via webhook (~1-2s)
-- Quick action buttons without `action` (Create quote, Log expense): short-circuited to ~500ms (no AI call)
-- Free-text messages: ~2-3s faster from parallelized DB queries
-- All actions: instant visual feedback ("Foreman AI is thinking...")
+1. **Fix the map** — users literally can't see it right now
+2. **Auto-clock geofence prompts** — closes the biggest Jobber gap
+3. **Break tracking** — beats Jobber (they don't have it)
+4. **Smart accuracy indicator** — quick UX win
+5. **Photo proof** — premium differentiator for compliance trades
 
