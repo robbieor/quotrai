@@ -12,7 +12,7 @@ const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/2fb
 
 export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }: SEOHeadProps) {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title.includes("Foreman") ? title : `${title} | Quotr`;
+  const fullTitle = title.includes("Foreman") ? title : `${title} | Foreman`;
 
   return (
     <Helmet>

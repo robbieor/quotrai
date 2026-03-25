@@ -29,14 +29,14 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Agreement to Terms</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              By accessing or using Quotr ("the Service"), operated by Foreman, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
+              By accessing or using Foreman ("the Service"), operated by Foreman, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">2. Description of Service</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Quotr is a business management platform designed for trade professionals. The Service includes job management, quoting, invoicing, expense tracking, time tracking, team management, and AI-powered assistance ("Foreman AI"). Features may vary by subscription tier.
+              Foreman is a business management platform designed for trade professionals. The Service includes job management, quoting, invoicing, expense tracking, time tracking, team management, and AI-powered assistance ("Foreman AI"). Features may vary by subscription tier.
             </p>
           </section>
 

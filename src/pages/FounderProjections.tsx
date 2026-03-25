@@ -210,7 +210,7 @@ export default function FounderProjections() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6">
             <p className="text-lg font-semibold text-foreground mb-2">
-              Quotr is the all-in-one operating system for trade businesses.
+              Foreman is the all-in-one operating system for trade businesses.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We combine job management, quoting, invoicing, GPS time tracking, and AI-powered automation 
@@ -514,7 +514,7 @@ export default function FounderProjections() {
                     <div className="flex items-center gap-2">
                       <ArrowUpRight className="h-4 w-4 text-primary" />
                       <div>
-                        <p className="font-bold text-primary">Quotr (You)</p>
+                        <p className="font-bold text-primary">Foreman (You)</p>
                         <p className="text-xs text-muted-foreground">UK/IE → Global · AI-first · All gaps filled</p>
                       </div>
                     </div>
@@ -558,7 +558,7 @@ export default function FounderProjections() {
                 </div>
 
                 <div className="p-4 rounded-xl border border-border bg-muted/30">
-                  <p className="text-sm font-semibold text-foreground mb-2">Why They'll Switch to Quotr:</p>
+                  <p className="text-sm font-semibold text-foreground mb-2">Why They'll Switch to Foreman:</p>
                   <ul className="text-sm text-muted-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />

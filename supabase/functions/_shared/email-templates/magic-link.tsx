@@ -21,7 +21,7 @@ interface MagicLinkEmailProps {
 export const MagicLinkEmail = ({ siteName, confirmationUrl }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your login link for Quotr</Preview>
+    <Preview>Your login link for Foreman</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={logo}>Foreman</Text>

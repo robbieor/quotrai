@@ -39,7 +39,7 @@ export function OnboardingCommsStep({ prefs, onChange }: OnboardingCommsStepProp
       <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
         <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
         <p className="text-xs text-muted-foreground">
-          Quotr never sends emails automatically. You always preview and confirm before anything goes out.
+          Foreman never sends emails automatically. You always preview and confirm before anything goes out.
         </p>
       </div>
 

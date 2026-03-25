@@ -301,7 +301,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             <p className="text-sm text-muted-foreground">
               {step === 1 && "Let's get your account set up in under 2 minutes"}
               {step === 2 && "We'll tailor your experience to your business"}
-              {step === 3 && "We'll set up Quotr to match your workflow"}
+              {step === 3 && "We'll set up Foreman to match your workflow"}
               {step === 4 && "Just a couple more preferences, then you're ready"}
               {step === 5 && "Choose which emails you'd like to send to clients"}
             </p>
@@ -369,7 +369,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
                   <Wrench className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>Your Trade & Team</CardTitle>
-                <CardDescription>Help us tailor Quotr to your business</CardDescription>
+                <CardDescription>Help us tailor Foreman to your business</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-4 px-0">
                 <div className="space-y-2">
@@ -415,7 +415,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
                   <Target className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>How Do You Work?</CardTitle>
-                <CardDescription>We'll tailor Quotr to match your day-to-day</CardDescription>
+                <CardDescription>We'll tailor Foreman to match your day-to-day</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-4 px-0">
                 {/* Q1: Send quotes? */}

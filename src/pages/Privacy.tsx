@@ -29,7 +29,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Who We Are</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Quotr is operated by Foreman, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:hello@foreman.ie" className="text-primary hover:underline">hello@foreman.ie</a>.
+              Foreman is operated by Foreman, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:hello@foreman.ie" className="text-primary hover:underline">hello@foreman.ie</a>.
             </p>
           </section>
 

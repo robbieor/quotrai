@@ -26,7 +26,7 @@ export function TradePainPoints({ config }: Props) {
           ))}
         </div>
         <p className="text-center text-muted-foreground mt-8 text-lg">
-          Quotr fixes all of this — and more.
+          Foreman fixes all of this — and more.
         </p>
       </div>
     </section>

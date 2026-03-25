@@ -80,7 +80,7 @@ export function CommunicationsSettings() {
         <div>
           <p className="text-sm font-medium text-foreground">Manual-send architecture</p>
           <p className="text-sm text-muted-foreground">
-            Quotr never sends emails to your clients automatically. Enabling a category below allows you to manually send those emails with a preview and confirmation step.
+            Foreman never sends emails to your clients automatically. Enabling a category below allows you to manually send those emails with a preview and confirmation step.
           </p>
         </div>
       </div>

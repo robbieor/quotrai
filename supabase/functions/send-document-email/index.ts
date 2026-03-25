@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to,
-        from: `${fromName} via Quotr <noreply@${FROM_DOMAIN}>`,
+        from: `${fromName} via Foreman <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: `${documentLabel} ${documentNumber} from ${fromName}`,
         html,

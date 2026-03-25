@@ -1,10 +1,10 @@
-# Privacy Policy for Quotr
+# Privacy Policy for Foreman
 
 **Last Updated: January 2026**
 
 ## Introduction
 
-Quotr ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
+Foreman ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
 
 ## Information We Collect
 
@@ -23,7 +23,7 @@ Quotr ("we", "our", or "us") is committed to protecting your privacy. This Priva
 ## How We Use Your Information
 
 We use your information to:
-- Provide and maintain the Quotr service
+- Provide and maintain the Foreman service
 - Process your invoices, expenses, and business records
 - Extract data from receipt images using AI technology
 - Send you important service updates
@@ -68,7 +68,7 @@ To exercise these rights, contact us at [your email].
 
 ## Children's Privacy
 
-Quotr is not intended for use by anyone under the age of 18. We do not knowingly collect information from children.
+Foreman is not intended for use by anyone under the age of 18. We do not knowingly collect information from children.
 
 ## International Data Transfers
 

@@ -8,9 +8,9 @@ Create invoices, scan receipts, track expenses & time. Perfect for tradespeople.
 
 ## Full Description (4000 characters max)
 
-**Quotr is the all-in-one business app for contractors, tradespeople, and freelancers.**
+**Foreman is the all-in-one business app for contractors, tradespeople, and freelancers.**
 
-Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Quotr gives you everything you need to run your business from your phone.
+Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Foreman gives you everything you need to run your business from your phone.
 
 **INVOICE IN SECONDS**
 Create professional invoices on-site and send them instantly via WhatsApp, SMS, or email. Your clients get a polished PDF with your logo and branding. Support for Irish VAT rates (23%, 13.5%, 9%, 0%) built in.
@@ -40,7 +40,7 @@ Growing your business? Invite team members with role-based access. Owners, admin
 Upload your logo. Choose your brand colours. Pick from three professional invoice templates. Add custom terms and payment details.
 
 **WORKS OFFLINE**
-Network issues on a rural job site? No problem. Quotr works offline and syncs when you're back online.
+Network issues on a rural job site? No problem. Foreman works offline and syncs when you're back online.
 
 **DESIGNED FOR IRELAND**
 Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for tradespeople.
@@ -57,7 +57,7 @@ Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for t
 - Cleaners
 - Any self-employed professional
 
-Download Quotr today and take control of your business finances.
+Download Foreman today and take control of your business finances.
 
 ---
 
@@ -94,4 +94,4 @@ Everyone
 8. Branding customisation
 
 ## App Icon
-Use the existing Quotr app icon (teal gradient with invoice/receipt symbol)
+Use the existing Foreman app icon (teal gradient with invoice/receipt symbol)

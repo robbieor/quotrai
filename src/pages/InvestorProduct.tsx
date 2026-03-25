@@ -120,7 +120,7 @@ export default function InvestorProduct() {
           </Badge>
           <h2 className="text-gradient-teal">Everything a Tradesperson Needs</h2>
           <p className="text-muted-foreground">
-            From first customer call to final payment — Quotr handles the entire workflow with AI automation at every step
+            From first customer call to final payment — Foreman handles the entire workflow with AI automation at every step
           </p>
         </div>
 

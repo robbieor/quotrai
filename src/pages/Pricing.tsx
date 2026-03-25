@@ -55,7 +55,7 @@ export default function Pricing() {
           <img src={quotrLogo} alt="Foreman" className="h-16 w-16 rounded-2xl mx-auto" />
           <h1 className="text-2xl font-bold">Manage Your Subscription</h1>
           <p className="text-muted-foreground">
-            Subscriptions are managed through the Quotr website. Tap below to view plans and billing.
+            Subscriptions are managed through the Foreman website. Tap below to view plans and billing.
           </p>
           <Button
             size="lg"

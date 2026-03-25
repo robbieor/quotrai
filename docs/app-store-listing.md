@@ -14,9 +14,9 @@ invoice,quotes,tradesperson,contractor,expenses,time tracking,GPS,receipts,plumb
 
 ## Description (4000 characters max)
 
-Quotr is the all-in-one business app for contractors, tradespeople, and freelancers.
+Foreman is the all-in-one business app for contractors, tradespeople, and freelancers.
 
-Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Quotr gives you everything you need to run your business from your phone.
+Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Foreman gives you everything you need to run your business from your phone.
 
 **INVOICE IN SECONDS**
 Create professional invoices on-site and send them instantly via WhatsApp, SMS, or email. Your clients get a polished PDF with your logo and branding. Support for Irish VAT rates (23%, 13.5%, 9%, 0%) built in.
@@ -46,7 +46,7 @@ Growing your business? Invite team members with role-based access. Owners, admin
 Upload your logo. Choose your brand colours. Pick from three professional invoice templates. Add custom terms and payment details.
 
 **WORKS OFFLINE**
-Network issues on a rural job site? No problem. Quotr works offline and syncs when you're back online.
+Network issues on a rural job site? No problem. Foreman works offline and syncs when you're back online.
 
 **DESIGNED FOR IRELAND**
 Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for tradespeople.
@@ -63,7 +63,7 @@ Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for t
 - Cleaners
 - Any self-employed professional
 
-Download Quotr today and take control of your business finances.
+Download Foreman today and take control of your business finances.
 
 ---
 
@@ -111,7 +111,7 @@ Same set, landscape or portrait.
 This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://foreman.ie/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 30-day free trial for new users.
 
 ## Info.plist Permission Strings
-- `NSMicrophoneUsageDescription`: "Quotr uses the microphone for Foreman AI voice commands"
-- `NSLocationWhenInUseUsageDescription`: "Quotr uses your location to verify job site attendance"
-- `NSLocationAlwaysAndWhenInUseUsageDescription`: "Quotr tracks your location in the background for GPS time tracking"
-- `NSCameraUsageDescription`: "Quotr uses the camera for site visit verification photos"
+- `NSMicrophoneUsageDescription`: "Foreman uses the microphone for Foreman AI voice commands"
+- `NSLocationWhenInUseUsageDescription`: "Foreman uses your location to verify job site attendance"
+- `NSLocationAlwaysAndWhenInUseUsageDescription`: "Foreman tracks your location in the background for GPS time tracking"
+- `NSCameraUsageDescription`: "Foreman uses the camera for site visit verification photos"

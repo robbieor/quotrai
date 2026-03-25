@@ -89,7 +89,7 @@ export default function InvestorPitch() {
           </Badge>
           <h2 className="text-gradient-teal">The Operating System for Trade Businesses</h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Quotr replaces pen & paper, spreadsheets, and 5+ disconnected tools with a single AI-powered 
+            Foreman replaces pen & paper, spreadsheets, and 5+ disconnected tools with a single AI-powered 
             platform — enabling plumbers, electricians, builders and 20+ trades to quote, invoice, schedule, 
             and get paid faster. An €18B TAM with 65% still undigitised. The last great vertical SaaS opportunity.
           </p>

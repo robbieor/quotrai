@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
         to: email,
         from: `${inviterName || "Foreman"} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
-        subject: `You've been invited to join ${teamName} on Quotr`,
+        subject: `You've been invited to join ${teamName} on Foreman`,
         html,
         text: `${inviterName || "A team member"} has invited you to join ${teamName} on Foreman. Accept here: ${inviteUrl}`,
         purpose: "transactional",

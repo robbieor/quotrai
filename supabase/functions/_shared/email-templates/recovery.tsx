@@ -21,7 +21,7 @@ interface RecoveryEmailProps {
 export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Reset your password for Quotr</Preview>
+    <Preview>Reset your password for Foreman</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={logo}>Foreman</Text>
