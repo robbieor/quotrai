@@ -28,7 +28,7 @@ interface SendEmailDialogProps {
 }
 
 function isInvoice(doc: Invoice | Quote): doc is Invoice {
-  return "invoice_number" in doc;
+  return "issue_date" in doc;
 }
 
 export function SendEmailDialog({
