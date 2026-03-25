@@ -72,6 +72,11 @@ function ClockTabContent() {
     }
   };
 
+  useState(() => {
+    void fetchLocation();
+    return null;
+  });
+
   const selectedSite = (() => {
     const activeJobId = activeEntry?.job_id;
     const effectiveJobId = activeJobId || selectedJobId;
