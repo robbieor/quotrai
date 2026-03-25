@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, Component, type ReactNode } from "react";
+import { useState, useEffect, lazy, Suspense, Component, type ReactNode } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Users, List, Bell } from "lucide-react";
@@ -72,10 +72,9 @@ function ClockTabContent() {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     void fetchLocation();
-    return null;
-  });
+  }, []);
 
   const selectedSite = (() => {
     const activeJobId = activeEntry?.job_id;
