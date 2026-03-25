@@ -1,11 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, FileText, Briefcase, Sparkles, Receipt } from "lucide-react";
-import { useCurrency } from "@/hooks/useCurrency";
+import { FileText, Briefcase, Sparkles, Receipt } from "lucide-react";
 import type { ControlHeaderData } from "@/hooks/useDashboardAnalytics";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useProfile } from "@/hooks/useProfile";
 import tomAvatar from "@/assets/tom-avatar.png";
 
 interface ControlHeaderProps {
@@ -14,174 +11,42 @@ interface ControlHeaderProps {
   showAI?: boolean;
 }
 
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderProps) {
   const navigate = useNavigate();
-  const { formatCurrency } = useCurrency();
-  const isMobile = useIsMobile();
-  const { profile } = useProfile();
 
   if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-4">
-        <div className="flex gap-4">
-          <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        </div>
-      </div>
-    );
+    return <Skeleton className="h-8 w-64" />;
   }
 
-  if (!data) return null;
+  if (!data || !showAI) return null;
 
-  const hasIssues = data.overdueCount > 0 || data.quotesNeedFollowUp > 0 || data.stuckJobs > 0;
-  const issueCount = (data.overdueCount > 0 ? 1 : 0) + (data.quotesNeedFollowUp > 0 ? 1 : 0) + (data.stuckJobs > 0 ? 1 : 0);
-  const firstName = profile?.full_name?.split(" ")[0] || "";
-
-  /* ── MOBILE: greeting + single CTA ── */
-  if (isMobile) {
-    // Pick the single highest-priority CTA
-    const primaryCTA = data.overdueCount > 0
-      ? { label: `Chase ${formatCurrency(data.totalOverdue)} overdue`, variant: "destructive" as const, href: "/invoices?status=overdue" }
-      : data.quotesNeedFollowUp > 0
-        ? { label: `Follow up ${data.quotesNeedFollowUp} quote${data.quotesNeedFollowUp !== 1 ? "s" : ""}`, variant: "default" as const, href: "/quotes?status=sent" }
-        : data.stuckJobs > 0
-          ? { label: `Review ${data.stuckJobs} stuck job${data.stuckJobs !== 1 ? "s" : ""}`, variant: "outline" as const, href: "/jobs?status=in_progress" }
-          : null;
-
-    return (
-      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-        <div>
-          <p className="text-base font-semibold text-foreground">
-            {getGreeting()}{firstName ? `, ${firstName}` : ""}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {hasIssues
-              ? `${issueCount} item${issueCount !== 1 ? "s" : ""} need${issueCount === 1 ? "s" : ""} your attention`
-              : "All clear — no outstanding issues"}
-          </p>
-        </div>
-
-        {primaryCTA && (
-          <Button
-            size="sm"
-            variant={primaryCTA.variant}
-            className="w-full h-9 text-sm font-medium"
-            onClick={() => navigate(primaryCTA.href)}
-          >
-            {primaryCTA.label}
+  return (
+    <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="h-6 w-6 rounded-md overflow-hidden border border-primary/20 shrink-0">
+        <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+      </div>
+      <p className="text-xs text-muted-foreground truncate">
+        <span className="font-medium text-foreground">Foreman:</span> {data.aiRecommendation}
+      </p>
+      <div className="flex items-center gap-1 shrink-0 ml-auto">
+        {data.overdueCount > 0 && (
+          <Button size="sm" variant="destructive" className="h-6 text-[11px] gap-1 px-2" onClick={() => navigate("/invoices?status=overdue")}>
+            <Receipt className="h-3 w-3" /> Chase
           </Button>
         )}
-
-        {/* Secondary text links for remaining issues */}
-        {hasIssues && (
-          <div className="flex items-center gap-3 text-xs">
-            {data.overdueCount > 0 && !primaryCTA?.href.includes("overdue") && (
-              <button onClick={() => navigate("/invoices?status=overdue")} className="text-destructive font-medium hover:underline">
-                {data.overdueCount} overdue
-              </button>
-            )}
-            {data.quotesNeedFollowUp > 0 && !primaryCTA?.href.includes("quotes") && (
-              <button onClick={() => navigate("/quotes?status=sent")} className="text-muted-foreground font-medium hover:underline">
-                {data.quotesNeedFollowUp} stale quotes
-              </button>
-            )}
-            {data.stuckJobs > 0 && !primaryCTA?.href.includes("jobs") && (
-              <button onClick={() => navigate("/jobs?status=in_progress")} className="text-muted-foreground font-medium hover:underline">
-                {data.stuckJobs} stuck jobs
-              </button>
-            )}
-          </div>
+        {data.quotesNeedFollowUp > 0 && (
+          <Button size="sm" variant="outline" className="h-6 text-[11px] gap-1 px-2" onClick={() => navigate("/quotes?status=sent")}>
+            <FileText className="h-3 w-3" /> Quotes
+          </Button>
         )}
-      </div>
-    );
-  }
-
-  /* ── DESKTOP: original full layout ── */
-  return (
-    <div className="rounded-lg border border-border bg-card">
-      {/* Stats strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border border-b border-border overflow-x-auto">
-        <div className="p-3 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p>
-          <p className={`text-lg font-bold tabular-nums ${data.overdueCount > 0 ? "text-destructive" : "text-foreground"}`}>
-            {formatCurrency(data.totalOverdue)}
-          </p>
-          <p className="text-[10px] text-muted-foreground">{data.overdueCount} invoice{data.overdueCount !== 1 ? "s" : ""}</p>
-        </div>
-        <div className="p-3 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Stale Quotes</p>
-          <p className={`text-lg font-bold tabular-nums ${data.quotesNeedFollowUp > 0 ? "text-amber-500" : "text-foreground"}`}>
-            {data.quotesNeedFollowUp}
-          </p>
-          <p className="text-[10px] text-muted-foreground">{formatCurrency(data.quotesFollowUpValue)} at risk</p>
-        </div>
-        <div className="p-3 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Stuck Jobs</p>
-          <p className={`text-lg font-bold tabular-nums ${data.stuckJobs > 0 ? "text-amber-500" : "text-foreground"}`}>
-            {data.stuckJobs}
-          </p>
-          <p className="text-[10px] text-muted-foreground">7+ days no progress</p>
-        </div>
-        <div className="p-3 text-center hidden sm:block">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</p>
-          <p className={`text-lg font-bold ${hasIssues ? "text-amber-500" : "text-primary"}`}>
-            {hasIssues ? "Needs Action" : "On Track"}
-          </p>
-          <p className="text-[10px] text-muted-foreground">{hasIssues ? "Issues found" : "All clear"}</p>
-        </div>
-      </div>
-
-      {/* AI Recommendation + Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3">
-        {showAI && (
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="h-7 w-7 rounded-lg overflow-hidden border border-primary/20 shrink-0">
-              <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-            </div>
-            <p className="text-sm text-muted-foreground truncate">
-              <span className="font-medium text-foreground">Foreman AI:</span> {data.aiRecommendation}
-            </p>
-          </div>
+        {data.stuckJobs > 0 && (
+          <Button size="sm" variant="outline" className="h-6 text-[11px] gap-1 px-2" onClick={() => navigate("/jobs?status=in_progress")}>
+            <Briefcase className="h-3 w-3" /> Jobs
+          </Button>
         )}
-        {!showAI && (
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-muted-foreground">
-              {hasIssues ? "Action required — review items below." : "All clear — no outstanding issues."}
-            </p>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-          {data.overdueCount > 0 && (
-            <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => navigate("/invoices?status=overdue")}>
-              <Receipt className="h-3 w-3" /> Chase
-            </Button>
-          )}
-          {data.quotesNeedFollowUp > 0 && (
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate("/quotes?status=sent")}>
-              <FileText className="h-3 w-3" /> Quotes
-            </Button>
-          )}
-          {data.stuckJobs > 0 && (
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate("/jobs?status=in_progress")}>
-              <Briefcase className="h-3 w-3" /> Jobs
-            </Button>
-          )}
-          {showAI && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/george")}>
-              <Sparkles className="h-3 w-3" /> Ask AI
-            </Button>
-          )}
-        </div>
+        <Button size="sm" variant="ghost" className="h-6 text-[11px] gap-1 px-2 text-primary" onClick={() => navigate("/george")}>
+          <Sparkles className="h-3 w-3" /> Ask AI
+        </Button>
       </div>
     </div>
   );

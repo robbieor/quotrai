@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, AlertCircle, TrendingUp, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, AlertCircle, TrendingUp, CheckCircle2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { ActionAlert } from "@/hooks/useDashboardAnalytics";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ActionPanelProps {
   alerts: ActionAlert[] | undefined;
@@ -44,40 +43,64 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
   const { segment } = useDashboardFilters();
   const { formatCurrency } = useCurrency();
   const { canAccessGeorge } = useSeatAccess();
-  const isMobile = useIsMobile();
-  const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  // Lite users only see critical/warning alerts, not AI-driven opportunities
   const visibleAlerts = alerts?.filter(
     (a) => canAccessGeorge || a.severity !== "opportunity"
   );
 
   if (!visibleAlerts || visibleAlerts.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-4 py-2.5">
-        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+      <div className="flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-4 py-2">
+        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
         <p className="text-xs text-foreground">
           {segment !== "all"
-            ? `No alerts for this focus — try switching to "All Data" for the full picture.`
-            : "All clear — no critical issues, warnings, or opportunities right now."}
+            ? `No alerts for this focus — try "All Data" for the full picture.`
+            : "All clear — no issues or opportunities right now."}
         </p>
       </div>
     );
   }
 
-  // Sort: critical first, then warning, then opportunity
   const sorted = [...visibleAlerts].sort((a, b) => {
     const order = { critical: 0, warning: 1, opportunity: 2 };
     return order[a.severity] - order[b.severity];
   });
 
-  const MOBILE_LIMIT = 3;
-  const displayAlerts = isMobile && !showAll ? sorted.slice(0, MOBILE_LIMIT) : sorted;
-  const hasMore = isMobile && !showAll && sorted.length > MOBILE_LIMIT;
+  const criticalCount = sorted.filter(a => a.severity === "critical").length;
+  const warningCount = sorted.filter(a => a.severity === "warning").length;
 
+  // Collapsed: single summary row
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 w-full text-left hover:bg-muted/30 transition-colors"
+      >
+        {criticalCount > 0 ? (
+          <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
+        ) : (
+          <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+        )}
+        <span className="text-xs text-foreground flex-1">
+          {sorted.length} item{sorted.length !== 1 ? "s" : ""} need{sorted.length === 1 ? "s" : ""} attention
+          {criticalCount > 0 && <span className="text-destructive font-medium ml-1">({criticalCount} critical)</span>}
+        </span>
+        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      </button>
+    );
+  }
+
+  // Expanded: full alert list
   return (
     <div className="space-y-1.5">
-      {displayAlerts.map((alert) => {
+      <button
+        onClick={() => setExpanded(false)}
+        className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
+      >
+        ▾ {sorted.length} alert{sorted.length !== 1 ? "s" : ""}
+      </button>
+      {sorted.map((alert) => {
         const config = severityConfig[alert.severity];
         const Icon = config.icon;
         return (
@@ -98,14 +121,6 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
           </div>
         );
       })}
-      {hasMore && (
-        <button
-          onClick={() => setShowAll(true)}
-          className="text-xs text-primary font-medium hover:underline w-full text-center py-1"
-        >
-          View all {sorted.length} alerts
-        </button>
-      )}
     </div>
   );
 }
