@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, MapPin, AlertTriangle, Navigation } from "lucide-react";
+import { CalendarIcon, MapPin, AlertTriangle, Navigation, CheckCircle2, Eye } from "lucide-react";
+import { MapPreview } from "@/components/ui/map-preview";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
