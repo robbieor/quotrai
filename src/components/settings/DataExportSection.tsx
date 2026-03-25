@@ -66,7 +66,7 @@ export function DataExportSection() {
         case "invoices": {
           const rows = await fetchAllRows("invoices", "*, customer:customers(name, email)", "created_at");
           exportToExcel(rows, [
-            { header: "Invoice #", accessor: (r) => r.invoice_number as string },
+            { header: "Invoice #", accessor: (r) => r.display_number as string },
             { header: "Customer", accessor: (r) => (r.customer as Record<string, unknown>)?.name as string },
             { header: "Customer Email", accessor: (r) => (r.customer as Record<string, unknown>)?.email as string },
             { header: "Status", accessor: (r) => r.status as string },
@@ -85,7 +85,7 @@ export function DataExportSection() {
         case "quotes": {
           const rows = await fetchAllRows("quotes", "*, customer:customers(name, email)", "created_at");
           exportToExcel(rows, [
-            { header: "Quote #", accessor: (r) => r.quote_number as string },
+            { header: "Quote #", accessor: (r) => r.display_number as string },
             { header: "Customer", accessor: (r) => (r.customer as Record<string, unknown>)?.name as string },
             { header: "Customer Email", accessor: (r) => (r.customer as Record<string, unknown>)?.email as string },
             { header: "Status", accessor: (r) => r.status as string },

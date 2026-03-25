@@ -110,7 +110,7 @@ export default function QuotePortal() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">{quote.team.name}</h1>
-              <p className="text-muted-foreground">Quote {quote.quote_number}</p>
+              <p className="text-muted-foreground">Quote {quote.display_number}</p>
             </div>
           </div>
           <Badge className={statusColors[quote.status] || "bg-muted"}>

@@ -55,11 +55,11 @@ const hasItemMode = (type: ImportType) => type === "invoices" || type === "quote
 
 const HEADER_ONLY_FIELDS: Record<string, { required: string[]; optional: string[] }> = {
   invoices: {
-    required: ["customer_email", "invoice_number", "issue_date", "total"],
+    required: ["customer_email", "display_number", "issue_date", "total"],
     optional: ["due_date", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
   },
   quotes: {
-    required: ["customer_email", "quote_number", "total"],
+    required: ["customer_email", "display_number", "total"],
     optional: ["valid_until", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
   },
 };
@@ -94,22 +94,22 @@ const IMPORT_CONFIGS: Record<ImportType, ImportConfig> = {
     label: "Invoices",
     icon: FileText,
     description: "Import historical invoices (with or without line items)",
-    requiredColumns: ["customer_email", "invoice_number", "issue_date", "total"],
+    requiredColumns: ["customer_email", "display_number", "issue_date", "total"],
     optionalColumns: ["due_date", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
     sampleData: [
-      { customer_email: "info@acme.ie", invoice_number: "INV-001", issue_date: "2024-01-15", due_date: "2024-01-29", total: "1500.00", status: "paid", notes: "Emergency repair", tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49" },
-      { customer_email: "contact@buildright.ie", invoice_number: "INV-002", issue_date: "2024-02-01", due_date: "2024-02-15", total: "2300.00", status: "sent", notes: "", tax_rate: "23", subtotal: "1869.92", tax_amount: "430.08" }
+      { customer_email: "info@acme.ie", display_number: "INV-001", issue_date: "2024-01-15", due_date: "2024-01-29", total: "1500.00", status: "paid", notes: "Emergency repair", tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49" },
+      { customer_email: "contact@buildright.ie", display_number: "INV-002", issue_date: "2024-02-01", due_date: "2024-02-15", total: "2300.00", status: "sent", notes: "", tax_rate: "23", subtotal: "1869.92", tax_amount: "430.08" }
     ]
   },
   quotes: {
     label: "Quotes",
     icon: ClipboardList,
     description: "Import estimates and quotes (with or without line items)",
-    requiredColumns: ["customer_email", "quote_number", "total"],
+    requiredColumns: ["customer_email", "display_number", "total"],
     optionalColumns: ["valid_until", "status", "notes", "tax_rate", "subtotal", "tax_amount"],
     sampleData: [
-      { customer_email: "info@acme.ie", quote_number: "Q-001", total: "3500.00", valid_until: "2024-03-01", status: "sent", notes: "Kitchen renovation", tax_rate: "23", subtotal: "2845.53", tax_amount: "654.47" },
-      { customer_email: "contact@buildright.ie", quote_number: "Q-002", total: "1200.00", valid_until: "2024-03-15", status: "accepted", notes: "Plumbing work", tax_rate: "23", subtotal: "975.61", tax_amount: "224.39" }
+      { customer_email: "info@acme.ie", display_number: "Q-001", total: "3500.00", valid_until: "2024-03-01", status: "sent", notes: "Kitchen renovation", tax_rate: "23", subtotal: "2845.53", tax_amount: "654.47" },
+      { customer_email: "contact@buildright.ie", display_number: "Q-002", total: "1200.00", valid_until: "2024-03-15", status: "accepted", notes: "Plumbing work", tax_rate: "23", subtotal: "975.61", tax_amount: "224.39" }
     ]
   },
   jobs: {
@@ -143,11 +143,11 @@ function generateCSVTemplate(type: ImportType, mode: ImportMode = "header_only")
   const header = allColumns.join(",");
 
   if (mode === "header_with_items" && hasItemMode(type)) {
-    const idField = type === "invoices" ? "invoice_number" : "quote_number";
+    const idField = type === "invoices" ? "display_number" : "display_number";
     const rows = [
       allColumns.map(col => {
         const vals: Record<string, string> = {
-          customer_email: "info@acme.ie", invoice_number: "INV-001", quote_number: "Q-001",
+          customer_email: "info@acme.ie", display_number: "INV-001", display_number: "Q-001",
           issue_date: "2024-01-15", total: "1500.00", due_date: "2024-01-29", status: "paid",
           valid_until: "2024-03-01", description: "Labour - 3 hours", quantity: "3", unit_price: "65.00",
           tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49", notes: "",
@@ -156,7 +156,7 @@ function generateCSVTemplate(type: ImportType, mode: ImportMode = "header_only")
       }).join(","),
       allColumns.map(col => {
         const vals: Record<string, string> = {
-          customer_email: "info@acme.ie", invoice_number: "INV-001", quote_number: "Q-001",
+          customer_email: "info@acme.ie", display_number: "INV-001", display_number: "Q-001",
           issue_date: "2024-01-15", total: "1500.00", due_date: "2024-01-29", status: "paid",
           valid_until: "2024-03-01", description: "Replacement parts", quantity: "1", unit_price: "250.00",
           tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49", notes: "",

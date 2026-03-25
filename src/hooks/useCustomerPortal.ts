@@ -9,7 +9,7 @@ export interface CustomerPortalData {
   } | null;
   quotes: Array<{
     id: string;
-    quote_number: string;
+    display_number: string;
     status: string;
     total: number;
     valid_until: string | null;
@@ -17,7 +17,7 @@ export interface CustomerPortalData {
   }>;
   invoices: Array<{
     id: string;
-    invoice_number: string;
+    display_number: string;
     status: string;
     total: number;
     due_date: string;
@@ -29,7 +29,7 @@ export interface CustomerPortalData {
     amount: number;
     payment_date: string;
     payment_method: string | null;
-    invoice_number: string;
+    display_number: string;
   }>;
 }
 
@@ -51,12 +51,12 @@ export function useCustomerPortalData() {
       const [quotesRes, invoicesRes] = await Promise.all([
         supabase
           .from("quotes")
-          .select("id, quote_number, status, total, valid_until, created_at")
+          .select("id, display_number, status, total, valid_until, created_at")
           .eq("customer_id", customerId)
           .order("created_at", { ascending: false }),
         supabase
           .from("invoices")
-          .select("id, invoice_number, status, total, due_date, created_at, portal_token")
+          .select("id, display_number, status, total, due_date, created_at, portal_token")
           .eq("customer_id", customerId)
           .order("created_at", { ascending: false }),
       ]);
@@ -78,13 +78,13 @@ export function useCustomerPortalData() {
         if (paymentsError) throw paymentsError;
 
         // Map payments with invoice numbers
-        const invoiceMap = new Map(invoicesRes.data?.map((i) => [i.id, i.invoice_number]));
+        const invoiceMap = new Map(invoicesRes.data?.map((i) => [i.id, i.display_number]));
         payments = (paymentsData || []).map((p) => ({
           id: p.id,
           amount: Number(p.amount),
           payment_date: p.payment_date,
           payment_method: p.payment_method,
-          invoice_number: invoiceMap.get(p.invoice_id) || "",
+          display_number: invoiceMap.get(p.invoice_id) || "",
         }));
       }
 

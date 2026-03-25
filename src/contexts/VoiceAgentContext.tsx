@@ -285,10 +285,10 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       get_pending_quotes: async () => {
         return await callGeorgeWebhook("get_pending_quotes", {}, contextRef.current);
       },
-      update_quote_status: async (params: { quote_id?: string; quote_number?: string; new_status: string }) => {
+      update_quote_status: async (params: { quote_id?: string; display_number?: string; new_status: string }) => {
         return await callGeorgeWebhook("update_quote_status", params, contextRef.current);
       },
-      delete_quote: async (params: { quote_id?: string; quote_number?: string }) => {
+      delete_quote: async (params: { quote_id?: string; display_number?: string }) => {
         return await callGeorgeWebhook("delete_quote", params, contextRef.current);
       },
 
@@ -314,13 +314,13 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       get_overdue_invoices: async () => {
         return await callGeorgeWebhook("get_overdue_invoices", {}, contextRef.current);
       },
-      update_invoice_status: async (params: { invoice_id?: string; invoice_number?: string; new_status: string }) => {
+      update_invoice_status: async (params: { invoice_id?: string; display_number?: string; new_status: string }) => {
         return await callGeorgeWebhook("update_invoice_status", params, contextRef.current);
       },
-      send_invoice_reminder: async (params: { invoice_number?: string; invoice_id?: string }) => {
+      send_invoice_reminder: async (params: { display_number?: string; invoice_id?: string }) => {
         return await callGeorgeWebhook("send_invoice_reminder", params, contextRef.current);
       },
-      delete_invoice: async (params: { invoice_id?: string; invoice_number?: string }) => {
+      delete_invoice: async (params: { invoice_id?: string; display_number?: string }) => {
         return await callGeorgeWebhook("delete_invoice", params, contextRef.current);
       },
 
@@ -392,7 +392,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       // ============================================
       // Additional Skills (wired from backend)
       // ============================================
-      create_invoice_from_quote: async (params: { quote_id?: string; quote_number?: string; due_days?: number }) => {
+      create_invoice_from_quote: async (params: { quote_id?: string; display_number?: string; due_days?: number }) => {
         return await callGeorgeWebhook("create_invoice_from_quote", params, contextRef.current);
       },
       get_jobs_for_date: async (params: { date: string }) => {
@@ -410,10 +410,10 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       get_outstanding_balance: async (params: { customer_name?: string }) => {
         return await callGeorgeWebhook("get_outstanding_balance", params, contextRef.current);
       },
-      record_payment: async (params: { invoice_number?: string; invoice_id?: string; amount: number; payment_method?: string; notes?: string }) => {
+      record_payment: async (params: { display_number?: string; invoice_id?: string; amount: number; payment_method?: string; notes?: string }) => {
         return await callGeorgeWebhook("record_payment", params, contextRef.current);
       },
-      get_payment_history: async (params: { invoice_number?: string; invoice_id?: string; customer_name?: string; limit?: number }) => {
+      get_payment_history: async (params: { display_number?: string; invoice_id?: string; customer_name?: string; limit?: number }) => {
         return await callGeorgeWebhook("get_payment_history", params, contextRef.current);
       },
       get_template_details: async (params: { template_name?: string; template_id?: string }) => {

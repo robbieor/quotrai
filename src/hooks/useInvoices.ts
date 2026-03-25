@@ -7,7 +7,7 @@ import { getCurrencyFromCountry } from "@/utils/currencyUtils";
 export type Invoice = Tables<"invoices"> & {
   customer: { name: string; country_code?: string | null } | null;
   invoice_items: Tables<"invoice_items">[];
-  quote: { quote_number: string } | null;
+  quote: { display_number: string } | null;
 };
 
 export type InvoiceItem = Tables<"invoice_items">;
@@ -23,7 +23,7 @@ export function useInvoices() {
           *,
           customer:customers(name, country_code),
           invoice_items(*),
-          quote:quotes(quote_number)
+          quote:quotes(display_number)
         `, { count: "exact" })
         .order("created_at", { ascending: false })
         .limit(5000);
@@ -48,7 +48,7 @@ export function useInvoice(id: string | null) {
           *,
           customer:customers(name, country_code),
           invoice_items(*),
-          quote:quotes(quote_number)
+          quote:quotes(display_number)
         `)
         .eq("id", id)
         .maybeSingle();
@@ -68,7 +68,7 @@ export function useCreateInvoice(onXeroSync?: (id: string) => void) {
       invoice,
       items,
     }: {
-      invoice: Omit<TablesInsert<"invoices">, "team_id" | "invoice_number">;
+      invoice: Omit<TablesInsert<"invoices">, "team_id" | "display_number">;
       items: InvoiceItemInsert[];
     }) => {
       // Get team_id
@@ -103,7 +103,7 @@ export function useCreateInvoice(onXeroSync?: (id: string) => void) {
         .insert({
           ...invoice,
           team_id: teamId,
-          invoice_number: invoiceNumber,
+          display_number: invoiceNumber,
           subtotal,
           tax_amount: taxAmount,
           total,
@@ -176,7 +176,7 @@ export function useCreateInvoiceFromQuote() {
           team_id: teamId,
           customer_id: quote.customer_id,
           quote_id: quoteId,
-          invoice_number: invoiceNumber,
+          display_number: invoiceNumber,
           status: "draft",
           subtotal: quote.subtotal,
           tax_rate: quote.tax_rate,

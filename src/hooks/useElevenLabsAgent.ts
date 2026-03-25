@@ -134,7 +134,7 @@ export function useElevenLabsAgent() {
       get_overdue_invoices: async () => {
         return await callGeorgeWebhook("get_overdue_invoices", {}, contextRef.current, queryClientRef.current || undefined);
       },
-      send_invoice_reminder: async (params: { invoice_number?: string; invoice_id?: string }) => {
+      send_invoice_reminder: async (params: { display_number?: string; invoice_id?: string }) => {
         return await callGeorgeWebhook("send_invoice_reminder", params, contextRef.current, queryClientRef.current || undefined);
       },
       get_client_info: async (params: { client_name: string }) => {
@@ -155,7 +155,7 @@ export function useElevenLabsAgent() {
       suggest_template: async (params: { job_description: string }) => {
         return await callGeorgeWebhook("suggest_template", params, contextRef.current, queryClientRef.current || undefined);
       },
-      create_invoice_from_quote: async (params: { quote_id?: string; quote_number?: string; due_days?: number }) => {
+      create_invoice_from_quote: async (params: { quote_id?: string; display_number?: string; due_days?: number }) => {
         return await callGeorgeWebhook("create_invoice_from_quote", params, contextRef.current, queryClientRef.current || undefined);
       },
       get_jobs_for_date: async (params: { date: string }) => {
@@ -173,10 +173,10 @@ export function useElevenLabsAgent() {
       get_outstanding_balance: async (params: { customer_name?: string }) => {
         return await callGeorgeWebhook("get_outstanding_balance", params, contextRef.current, queryClientRef.current || undefined);
       },
-      record_payment: async (params: { invoice_number?: string; invoice_id?: string; amount: number; payment_method?: string; notes?: string }) => {
+      record_payment: async (params: { display_number?: string; invoice_id?: string; amount: number; payment_method?: string; notes?: string }) => {
         return await callGeorgeWebhook("record_payment", params, contextRef.current, queryClientRef.current || undefined);
       },
-      get_payment_history: async (params: { invoice_number?: string; invoice_id?: string; customer_name?: string; limit?: number }) => {
+      get_payment_history: async (params: { display_number?: string; invoice_id?: string; customer_name?: string; limit?: number }) => {
         return await callGeorgeWebhook("get_payment_history", params, contextRef.current, queryClientRef.current || undefined);
       },
       get_template_details: async (params: { template_name?: string; template_id?: string }) => {
@@ -218,10 +218,10 @@ export function useElevenLabsAgent() {
       get_pending_quotes: async () => {
         return await callGeorgeWebhook("get_pending_quotes", {}, contextRef.current, queryClientRef.current || undefined);
       },
-      update_quote_status: async (params: { quote_id?: string; quote_number?: string; new_status: string }) => {
+      update_quote_status: async (params: { quote_id?: string; display_number?: string; new_status: string }) => {
         return await callGeorgeWebhook("update_quote_status", params, contextRef.current, queryClientRef.current || undefined);
       },
-      delete_quote: async (params: { quote_id?: string; quote_number?: string }) => {
+      delete_quote: async (params: { quote_id?: string; display_number?: string }) => {
         return await callGeorgeWebhook("delete_quote", params, contextRef.current, queryClientRef.current || undefined);
       },
       create_invoice: async (params: { client_name: string; items: Array<{ description: string; quantity: number; unit_price: number }>; notes?: string; due_days?: number; tax_rate?: number }) => {
@@ -233,10 +233,10 @@ export function useElevenLabsAgent() {
       get_outstanding_invoices: async () => {
         return await callGeorgeWebhook("get_outstanding_invoices", {}, contextRef.current, queryClientRef.current || undefined);
       },
-      update_invoice_status: async (params: { invoice_id?: string; invoice_number?: string; new_status: string }) => {
+      update_invoice_status: async (params: { invoice_id?: string; display_number?: string; new_status: string }) => {
         return await callGeorgeWebhook("update_invoice_status", params, contextRef.current, queryClientRef.current || undefined);
       },
-      delete_invoice: async (params: { invoice_id?: string; invoice_number?: string }) => {
+      delete_invoice: async (params: { invoice_id?: string; display_number?: string }) => {
         return await callGeorgeWebhook("delete_invoice", params, contextRef.current, queryClientRef.current || undefined);
       },
       list_expenses: async (params: { category?: string; vendor?: string; job_id?: string; date_from?: string; date_to?: string; limit?: number }) => {
@@ -272,13 +272,13 @@ export function useElevenLabsAgent() {
         return await callGeorgeWebhook("update_job_status", params, contextRef.current, queryClientRef.current || undefined);
       },
       // --- Multi-service tools ---
-      add_template_to_quote: async (params: { quote_id?: string; quote_number?: string; template_name?: string; template_id?: string; quantity_overrides?: Record<string, number> }) => {
+      add_template_to_quote: async (params: { quote_id?: string; display_number?: string; template_name?: string; template_id?: string; quantity_overrides?: Record<string, number> }) => {
         return await callGeorgeWebhook("add_template_to_quote", params, contextRef.current, queryClientRef.current || undefined);
       },
-      add_template_to_invoice: async (params: { invoice_id?: string; invoice_number?: string; template_name?: string; template_id?: string; quantity_overrides?: Record<string, number> }) => {
+      add_template_to_invoice: async (params: { invoice_id?: string; display_number?: string; template_name?: string; template_id?: string; quantity_overrides?: Record<string, number> }) => {
         return await callGeorgeWebhook("add_template_to_invoice", params, contextRef.current, queryClientRef.current || undefined);
       },
-      merge_quotes: async (params: { quote_ids?: string[]; quote_numbers?: string[]; customer_name?: string }) => {
+      merge_quotes: async (params: { quote_ids?: string[]; display_numbers?: string[]; customer_name?: string }) => {
         return await callGeorgeWebhook("merge_quotes", params, contextRef.current, queryClientRef.current || undefined);
       },
       // --- AI / advisory tools ---
