@@ -1,27 +1,23 @@
 
 
-## Fix Template Picker for Mobile
+## Fix: Quote creation fails — display_number has no default
 
 ### Problem
-The "Use Template" dialog dumps all 28 trade categories as buttons, filling the entire mobile screen before any templates are visible. Completely unusable on phones.
+The `display_number` column (renamed from `quote_number`) is NOT NULL but has no DEFAULT value. The code in `useCreateQuote` correctly omits it expecting the DB to auto-generate it, but the migration only set defaults for `ref`, not `display_number`.
 
-### Changes
+### Solution
+**Database migration** — Add a default for `display_number` on both `quotes` and `invoices` tables that mirrors the `ref` default:
 
-**1. Hide category filter when user has a trade set (TemplatePicker.tsx)**
-- If `userTradeCategory` exists, auto-lock to that category and **don't render the category buttons at all**
-- Show a small text label like "Showing: Electrician templates" with a "Show all" link to optionally expand
-- Only show the full category grid if user explicitly clicks "Show all" or has no trade set
+```sql
+ALTER TABLE public.quotes 
+  ALTER COLUMN display_number SET DEFAULT 'QR-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.quotes_ref_seq')::text, 5, '0');
 
-**2. Mobile-optimized dialog (TemplatePicker.tsx)**
-- On mobile, render as a full-screen sheet (`DrawerContent` / full-height dialog) instead of a centered dialog
-- Reduce template card padding from `p-4` to `p-3` on mobile
-- Remove the separate "Use" button on each card — tapping the whole card already triggers selection
-- Compact the metadata row (duration, rate) into a single line
+ALTER TABLE public.invoices 
+  ALTER COLUMN display_number SET DEFAULT 'IR-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.invoices_ref_seq')::text, 5, '0');
+```
 
-**3. If "Show all" is expanded, use a compact dropdown**
-- Replace the flex-wrap button grid with a `<Select>` dropdown for category switching
-- Keeps category access available without eating screen space
+This means new quotes/invoices will auto-populate `display_number` with the same format as `ref`. Users can still override it manually.
 
-### Files to edit
-- `src/components/quotes/TemplatePicker.tsx` — all changes in this one file
+### Files
+- 1 new database migration (SQL only, no code changes needed)
 
