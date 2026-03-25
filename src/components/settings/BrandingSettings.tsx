@@ -42,8 +42,8 @@ import { generateInvoicePdf } from "@/lib/pdf/invoicePdf";
 import { generateQuotePdf } from "@/lib/pdf/quotePdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AgentWorkingPanel, PREVIEW_EMAIL_STEPS } from "@/components/shared/AgentWorkingPanel";
-import { useAgentWorkflow } from "@/hooks/useAgentWorkflow";
+import { PREVIEW_EMAIL_STEPS } from "@/components/shared/AgentWorkingPanel";
+import { useAgentTask } from "@/contexts/AgentTaskContext";
 
 const ACCENT_COLORS = [
   { name: "Quotr Green", value: "#00FFB2" },
