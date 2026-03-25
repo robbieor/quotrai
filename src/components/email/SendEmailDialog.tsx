@@ -45,7 +45,7 @@ export function SendEmailDialog({
   if (!document) return null;
 
   const customerName = document.customer?.name || "Customer";
-  const documentNumber = isInvoice(document) ? document.invoice_number : document.quote_number;
+  const documentNumber = isInvoice(document) ? document.display_number : document.display_number;
   const total = Number(document.total) || 0;
 
   const handleSend = async () => {

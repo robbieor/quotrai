@@ -86,7 +86,7 @@ export function QuotesTable({
     exportToExcel(
       dataToExport,
       [
-        { header: "Quote #", accessor: "quote_number" },
+        { header: "Quote #", accessor: "display_number" },
         { header: "Customer", accessor: (q) => q.customer?.name || "" },
         { header: "Status", accessor: (q) => statusLabels[q.status] },
         { header: "Items", accessor: (q) => q.quote_items.length },
@@ -130,8 +130,8 @@ export function QuotesTable({
                   />
                 </th>
                 <SortableHeader
-                  sortDirection={getSortDirection("quote_number")}
-                  onSort={() => handleSort("quote_number")}
+                  sortDirection={getSortDirection("display_number")}
+                  onSort={() => handleSort("display_number")}
                   className="w-28"
                 >
                   Quote #
@@ -203,7 +203,7 @@ export function QuotesTable({
                       <div className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 shrink-0">
                         <FileText className="h-3.5 w-3.5 text-primary" />
                       </div>
-                      <span className="font-medium text-sm">{quote.quote_number}</span>
+                      <span className="font-medium text-sm">{quote.display_number}</span>
                     </div>
                   </td>
                   <td className="px-3 py-2 border-r border-border/20">
