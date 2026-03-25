@@ -2999,6 +2999,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auto_clock_mode: string
           avatar_url: string | null
           bio: string | null
           business_size: string | null
@@ -3033,6 +3034,7 @@ export type Database = {
           workflow_mode: string | null
         }
         Insert: {
+          auto_clock_mode?: string
           avatar_url?: string | null
           bio?: string | null
           business_size?: string | null
@@ -3067,6 +3069,7 @@ export type Database = {
           workflow_mode?: string | null
         }
         Update: {
+          auto_clock_mode?: string
           avatar_url?: string | null
           bio?: string | null
           business_size?: string | null
