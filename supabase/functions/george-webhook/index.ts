@@ -390,14 +390,12 @@ serve(async (req) => {
         }
 
         // Generate quote number
-        const { data: recentQuotes } = await supabase
-          .from("quotes")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentQuotes }, { count: quoteCount }] = await Promise.all([
+          supabase.from("quotes").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("quotes").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-");
+        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-", quoteCount ?? 0);
 
         // Calculate totals - use provided tax_rate or default based on user's country
         const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
@@ -1095,14 +1093,12 @@ serve(async (req) => {
         }
 
         // Generate quote number
-        const { data: recentQuotes } = await supabase
-          .from("quotes")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentQuotes }, { count: quoteCount }] = await Promise.all([
+          supabase.from("quotes").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("quotes").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-");
+        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-", quoteCount ?? 0);
 
         // Build quote items with optional quantity overrides
         const quoteItems = templateItems.map((item: any, index: number) => {
@@ -1359,14 +1355,12 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: recentInvoices } = await supabase
-          .from("invoices")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentInvoices }, { count: invoiceCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-", invoiceCount ?? 0);
 
         // Build invoice items with optional quantity overrides
         const invoiceItems = templateItems.map((item: any) => {
@@ -1558,14 +1552,12 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: recentInvoices } = await supabase
-          .from("invoices")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentInvoices }, { count: invoiceCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-", invoiceCount ?? 0);
 
         // Due date (default 14 days)
         const daysUntilDue = due_days || 14;
@@ -3522,14 +3514,12 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: recentInvoices } = await supabase
-          .from("invoices")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentInvoices }, { count: invoiceCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-", invoiceCount ?? 0);
 
         // Calculate totals
         const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
