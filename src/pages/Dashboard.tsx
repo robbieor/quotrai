@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, FileText, Receipt, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useAuth } from "@/hooks/useAuth";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
@@ -48,6 +49,7 @@ function DashboardContent() {
   const { formatCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const { canAccessAdvancedReporting, canAccessGeorge } = useSeatAccess();
+  const isMobile = useIsMobile();
 
   // Drill-through state
   const [drillOpen, setDrillOpen] = useState(false);
@@ -106,21 +108,23 @@ function DashboardContent() {
             <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
             <DashboardFilterBar />
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {quickActions.map((action) => (
-              <Button
-                key={action.label}
-                size="sm"
-                variant="outline"
-                onClick={() => navigate(action.route)}
-                className="gap-1 text-xs h-7"
-              >
-                <action.icon className="h-3 w-3" />
-                <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
-                <Plus className="h-2.5 w-2.5" />
-              </Button>
-            ))}
-          </div>
+          {!isMobile && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              {quickActions.map((action) => (
+                <Button
+                  key={action.label}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(action.route)}
+                  className="gap-1 text-xs h-7"
+                >
+                  <action.icon className="h-3 w-3" />
+                  <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
+                  <Plus className="h-2.5 w-2.5" />
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 1. Control Header — operational summary */}
