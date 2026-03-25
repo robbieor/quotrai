@@ -7,6 +7,32 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function extractTrailingSequence(value: string | null | undefined, prefixes: string[]): number | null {
+  if (!value) return null;
+
+  const upperValue = value.toUpperCase();
+  const normalizedPrefixes = prefixes.map((prefix) => prefix.toUpperCase());
+
+  if (!normalizedPrefixes.some((prefix) => upperValue.startsWith(prefix))) {
+    return null;
+  }
+
+  const match = value.match(/(\d+)(?!.*\d)/);
+  if (!match) return null;
+
+  const parsed = Number.parseInt(match[1], 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getNextDisplayNumber(values: Array<{ display_number?: string | null }> | null | undefined, prefix: string, fallback = 1): string {
+  const nextNumber = (values ?? []).reduce((max, item) => {
+    const candidate = extractTrailingSequence(item.display_number, [prefix]);
+    return candidate !== null && candidate > max ? candidate : max;
+  }, 0) + 1;
+
+  return `${prefix}${Math.max(nextNumber, fallback).toString().padStart(4, "0")}`;
+}
+
 interface WebhookRequest {
   function_name: string;
   parameters: Record<string, unknown>;
@@ -352,19 +378,14 @@ serve(async (req) => {
         }
 
         // Generate quote number
-        const { data: lastQuote } = await supabase
+        const { data: recentQuotes } = await supabase
           .from("quotes")
           .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .limit(50);
 
-        let quoteNumber = "Q-0001";
-        if (lastQuote?.display_number) {
-          const num = parseInt(lastQuote.display_number.replace("Q-", "")) + 1;
-          quoteNumber = `Q-${num.toString().padStart(4, "0")}`;
-        }
+        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-");
 
         // Calculate totals - use provided tax_rate or default based on user's country
         const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
@@ -1062,19 +1083,14 @@ serve(async (req) => {
         }
 
         // Generate quote number
-        const { data: lastQuote } = await supabase
+        const { data: recentQuotes } = await supabase
           .from("quotes")
           .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .limit(50);
 
-        let quoteNumber = "Q-0001";
-        if (lastQuote?.display_number) {
-          const num = parseInt(lastQuote.display_number.replace("Q-", "")) + 1;
-          quoteNumber = `Q-${num.toString().padStart(4, "0")}`;
-        }
+        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-");
 
         // Build quote items with optional quantity overrides
         const quoteItems = templateItems.map((item: any, index: number) => {
@@ -1331,19 +1347,14 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: lastInvoice } = await supabase
+        const { data: recentInvoices } = await supabase
           .from("invoices")
           .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .limit(50);
 
-        let invoiceNumber = "INV-0001";
-        if (lastInvoice?.display_number) {
-          const num = parseInt(lastInvoice.display_number.replace("INV-", "")) + 1;
-          invoiceNumber = `INV-${num.toString().padStart(4, "0")}`;
-        }
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
 
         // Build invoice items with optional quantity overrides
         const invoiceItems = templateItems.map((item: any) => {
@@ -1535,19 +1546,14 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: lastInvoice } = await supabase
+        const { data: recentInvoices } = await supabase
           .from("invoices")
           .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .limit(50);
 
-        let invoiceNumber = "INV-0001";
-        if (lastInvoice?.display_number) {
-          const num = parseInt(lastInvoice.display_number.replace("INV-", "")) + 1;
-          invoiceNumber = `INV-${num.toString().padStart(4, "0")}`;
-        }
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
 
         // Due date (default 14 days)
         const daysUntilDue = due_days || 14;
@@ -3504,19 +3510,14 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: lastInvoice } = await supabase
+        const { data: recentInvoices } = await supabase
           .from("invoices")
           .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .limit(50);
 
-        let invoiceNumber = "INV-0001";
-        if (lastInvoice?.display_number) {
-          const num = parseInt(lastInvoice.display_number.replace("INV-", "")) + 1;
-          invoiceNumber = `INV-${num.toString().padStart(4, "0")}`;
-        }
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
 
         // Calculate totals
         const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
