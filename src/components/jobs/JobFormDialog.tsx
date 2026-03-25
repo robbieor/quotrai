@@ -106,6 +106,7 @@ export function JobFormDialog({
   const [geocodeSource, setGeocodeSource] = useState("customer_inherited");
   const [useCustomAddress, setUseCustomAddress] = useState(false);
   const [poBoxWarning, setPoBoxWarning] = useState(false);
+  const [geocodeFailed, setGeocodeFailed] = useState(false);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
