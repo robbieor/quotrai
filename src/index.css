@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
@@ -358,13 +359,20 @@
     padding-top: env(safe-area-inset-top, 0);
   }
 
-  /* Leaflet overrides — prevent Tailwind preflight from breaking map tiles */
-  .leaflet-container img {
-    max-width: none !important;
-    max-height: none !important;
-  }
-  .leaflet-container {
-    z-index: 0;
-    font-family: inherit;
-  }
+}
+
+/* Leaflet overrides — MUST be outside @layer for full specificity over Tailwind preflight */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+.leaflet-container {
+  z-index: 0;
+  font-family: inherit;
+}
+.leaflet-tile-pane {
+  z-index: 1;
+}
+.leaflet-control-container {
+  z-index: 2;
 }
