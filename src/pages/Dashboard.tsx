@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ControlHeader } from "@/components/dashboard/ControlHeader";
 import { KPIStrip } from "@/components/dashboard/KPIStrip";
 import { ActionPanel } from "@/components/dashboard/ActionPanel";
 import { RevenueMultiChart } from "@/components/dashboard/RevenueMultiChart";
@@ -12,9 +11,7 @@ import { TopCustomersTable } from "@/components/dashboard/TopCustomersTable";
 import { CustomerProfitabilityScatter } from "@/components/dashboard/CustomerProfitabilityScatter";
 import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
 import { DrillThroughDrawer, DrillColumn } from "@/components/dashboard/DrillThroughDrawer";
-import { Briefcase, FileText, Receipt, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,12 +28,6 @@ import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
-
-const quickActions = [
-  { label: "New Quote", icon: FileText, route: "/quotes" },
-  { label: "New Invoice", icon: Receipt, route: "/invoices" },
-  { label: "New Job", icon: Briefcase, route: "/jobs" },
-];
 
 function DashboardContent() {
   const { data, isLoading } = useDashboardAnalytics();
@@ -99,33 +90,10 @@ function DashboardContent() {
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
-        {/* Header: title + filters + AI bar + quick actions */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
-            <DashboardFilterBar />
-            {!isMobile && (
-              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                {quickActions.map((action) => (
-                  <Button
-                    key={action.label}
-                    size="sm"
-                    variant="outline"
-                    onClick={() => navigate(action.route)}
-                    className="gap-1 text-xs h-7"
-                  >
-                    <action.icon className="h-3 w-3" />
-                    <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
-                    <Plus className="h-2.5 w-2.5" />
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* AI recommendation bar — inline, slim */}
-          {!isMobile && canAccessGeorge && (
-            <ControlHeader data={data?.controlHeader} isLoading={isLoading} showAI={true} />
-          )}
+        {/* Header: title + filters */}
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
+          <DashboardFilterBar />
         </div>
 
         {/* KPI Strip — 3 primary cards */}
