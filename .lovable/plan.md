@@ -1,98 +1,71 @@
 
 
-# Backend Task Execution Layer — Assessment & Plan
+# Fix: Slow Foreman AI Quick Action Response Times
 
-## What Already Exists
+## Root Cause
 
-The system already has all the pieces requested:
+The `george-chat` edge function runs **6-8 sequential database queries** before making the first AI call, then makes **two full AI roundtrips** (tool selection + follow-up). For quick actions like "Today's jobs" where the intent is already known, this is wasteful.
 
-1. **Database table** (`agent_tasks`) — persisted with realtime enabled, RLS policies in place
-2. **Global state machine** (`AgentTaskContext`) — IDLE→RUNNING→SUCCESS/ERROR, DB persistence, cross-device resume via realtime subscription
-3. **Desktop side panel + mobile bottom sheet** (`AgentTaskPanel`) — collapsible, minimisable, auto-hides on /george
-4. **Reusable step renderer** (`AgentWorkingPanel`) — animated timeline with success/error/retry states
-5. **Local workflow hook** (`useAgentWorkflow`) — used for page-specific flows like BrandingSettings
-6. **Predefined step templates** — PREVIEW_EMAIL_STEPS, QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS
+Current flow for "Today's jobs" button (`action: "get_todays_jobs"`):
+1. Button click → `callWebhook("get_todays_jobs")` → VoiceAgentContext → george-webhook
+2. This path is actually direct and should be reasonably fast
 
-## What's Missing
+Current flow for "Create quote" / "Log expense" (`action: null`):
+1. Button click → sends text "Help me create a new quote" to `george-chat`
+2. george-chat runs: auth check → profile query → team membership query → preferences query → conversation create → message insert → history fetch → **AI call #1** (with 20 tools) → webhook execution → **AI call #2** (follow-up)
+3. Total: ~8 DB queries + 2 AI roundtrips = 8-15 seconds
 
-The current system drives step progression from the **frontend** — `completeStep()` is called manually in component code (e.g., BrandingSettings calls it between fetch stages). This works but means:
+## Fix Strategy
 
-- Steps are cosmetic timing, not real backend checkpoints
-- If the browser closes mid-task, the DB shows "running" forever with no way to resume
-- Edge functions don't write step progress — only the frontend does
+### 1. Parallelize DB queries in george-chat — `supabase/functions/george-chat/index.ts`
 
-The user is asking for **backend-driven step updates** where edge functions write progress and the frontend subscribes via realtime.
+Run independent queries concurrently using `Promise.all`:
+- Profile + team membership check → single parallel block
+- Preferences + conversation creation + history fetch → second parallel block
 
-## Plan
+This cuts ~3-4 sequential round trips into 2.
 
-### 1. Add `task_steps` table — new migration
+### 2. Make all quick action buttons call webhook directly — `GeorgeWelcome.tsx`
 
-Normalise steps out of the JSONB blob into their own table so edge functions can UPDATE individual rows and realtime delivers granular changes:
+Currently "Create quote" and "Log expense" have `action: null`, forcing them through the full AI pipeline just to understand "Help me create a new quote". Instead, give them direct actions that bypass AI entirely:
 
-```sql
-create table public.task_steps (
-  id uuid primary key default gen_random_uuid(),
-  task_id uuid references public.agent_tasks(id) on delete cascade not null,
-  step_key text not null,
-  label text not null,
-  status text not null default 'pending',  -- pending, running, complete, error
-  error_message text,
-  sort_order int not null default 0,
-  started_at timestamptz,
-  completed_at timestamptz
-);
--- RLS: inherit access from parent task
--- Realtime enabled
-```
+- "Create quote" → `action: null` stays as-is (needs AI to guide the user) BUT change the message to be shorter
+- "Log expense" → same
 
-Also add `mode` (preview/live), `input_payload` (jsonb), `result_payload` (jsonb), and `error_message` columns to `agent_tasks`.
+Actually, the better fix: for quick actions that ARE data lookups (Today's jobs, Overdue invoices), the `callWebhook` path is already fast. For "Create quote" and "Log expense", the user needs a conversational response — but we can short-circuit the AI by detecting known quick action messages.
 
-### 2. Create `run-task` edge function — new `supabase/functions/run-task/index.ts`
+### 3. Add quick-action short-circuit in george-chat — `supabase/functions/george-chat/index.ts`
 
-A generic task executor that:
-- Accepts `{ task_type, input_payload, mode, steps[] }`
-- Creates the `agent_tasks` row + `task_steps` rows
-- Calls the appropriate handler (e.g., `send-preview-email`) step by step
-- Updates each `task_steps` row as it progresses (status, started_at, completed_at)
-- Updates parent `agent_tasks.status` on completion/failure
-- Returns the task ID immediately so the frontend can subscribe
+Before the AI call, check if the message matches a known quick action pattern. If so, skip the AI entirely and return a canned structured response:
 
-This is the single backend entry point. Individual handlers (preview email, quote creation) become internal functions called by `run-task`.
+- "Help me create a new quote" → return action_plan with intent "create_quote" and a prompt asking for customer/items
+- "I need to log an expense" → return action_plan with intent "log_expense" and a prompt asking for details
 
-### 3. Update `AgentTaskContext` to subscribe to `task_steps` — `src/contexts/AgentTaskContext.tsx`
+This eliminates both AI calls for button-initiated actions.
 
-Instead of the frontend calling `completeStep()` manually:
-- `startTask()` calls `run-task` edge function, gets back a task ID
-- Subscribe to realtime on `task_steps` filtered by `task_id`
-- Each UPDATE from the backend automatically advances the UI timeline
-- Keep `completeStep()` for local-only workflows (BrandingSettings dialog) as fallback
+### 4. Show immediate "thinking" state in UI — `GeorgeWelcome.tsx` + `George.tsx`
 
-### 4. Wire first real flow: preview email via backend task
+Add an instant "Foreman AI is thinking..." display item when a button is pressed, so the user sees immediate feedback even before the backend responds.
 
-Update BrandingSettings "Send Preview to Myself" to:
-- Call `startTask("send_preview", ...)` which invokes `run-task`
-- The edge function creates steps, runs them server-side, updates DB
-- Frontend shows progress via realtime subscription — no manual step calls
+### 5. Stream the response for text chat — `george-chat/index.ts` + `GeorgeAgentInput.tsx`
 
-### 5. Add cleanup: auto-expire stale tasks
+For free-text messages that do need AI, switch to streaming so tokens appear as they arrive instead of waiting for the full response. This is a larger change but dramatically improves perceived speed.
 
-Add an `updated_at` trigger and mark tasks older than 10 minutes as `error` with message "Task timed out" — prevents zombie "running" tasks.
+**For this iteration, focus on items 1, 3, and 4** — they give the biggest speed improvement with the least risk.
 
-## Files
+## Files to modify
 
 | File | Change |
 |------|--------|
-| New migration | Create `task_steps` table + add columns to `agent_tasks` |
-| `supabase/functions/run-task/index.ts` | New generic task executor edge function |
-| `src/contexts/AgentTaskContext.tsx` | Subscribe to `task_steps` realtime instead of manual step calls |
-| `src/components/settings/BrandingSettings.tsx` | Use backend-driven task instead of local step calls |
-| `supabase/config.toml` | Add `run-task` function config |
+| `supabase/functions/george-chat/index.ts` | Parallelize DB queries; add quick-action short-circuit for known button messages |
+| `src/components/george/GeorgeWelcome.tsx` | No change needed — button config is fine |
+| `src/pages/George.tsx` | Add instant "thinking" display item on button press |
+| `src/components/george/GeorgeAgentInput.tsx` | Show immediate processing state in display items |
 
-## What This Achieves
+## Expected Result
 
-- Steps are real backend checkpoints, not cosmetic timers
-- Browser can close and reopen — task resumes from where it left off
-- Same realtime subscription powers desktop panel, mobile sheet, and cross-device sync
-- One `run-task` endpoint handles all task types — quote creation, invoice, preview, follow-ups
-- Local-only workflows (BrandingSettings dialog) still work via the existing hook as fallback
+- Quick action buttons with known `action` values (Today's jobs, Overdue invoices): already fast via webhook (~1-2s)
+- Quick action buttons without `action` (Create quote, Log expense): short-circuited to ~500ms (no AI call)
+- Free-text messages: ~2-3s faster from parallelized DB queries
+- All actions: instant visual feedback ("Foreman AI is thinking...")
 
