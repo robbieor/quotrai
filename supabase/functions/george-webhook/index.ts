@@ -354,15 +354,15 @@ serve(async (req) => {
         // Generate quote number
         const { data: lastQuote } = await supabase
           .from("quotes")
-          .select("quote_number")
+          .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
         let quoteNumber = "Q-0001";
-        if (lastQuote?.quote_number) {
-          const num = parseInt(lastQuote.quote_number.replace("Q-", "")) + 1;
+        if (lastQuote?.display_number) {
+          const num = parseInt(lastQuote.display_number.replace("Q-", "")) + 1;
           quoteNumber = `Q-${num.toString().padStart(4, "0")}`;
         }
 
@@ -409,7 +409,7 @@ serve(async (req) => {
           .insert({
             team_id: company_id,
             customer_id: customerId,
-            quote_number: quoteNumber,
+            display_number: quoteNumber,
             subtotal,
             tax_rate: taxRateValue,
             tax_amount: taxAmount,
@@ -419,7 +419,7 @@ serve(async (req) => {
             status: "draft",
             job_id: linkedJobId
           })
-          .select("id, quote_number, total")
+          .select("id, display_number, total")
           .single();
 
         if (quoteError) throw quoteError;
@@ -454,7 +454,7 @@ serve(async (req) => {
         
         const { data: invoices, error } = await supabase
           .from("invoices")
-          .select("id, invoice_number, total, due_date, status, customer:customers(name, email)")
+          .select("id, display_number, total, due_date, status, customer:customers(name, email)")
           .eq("team_id", company_id)
           .or(`status.eq.overdue,and(status.eq.pending,due_date.lt.${today})`)
           .order("due_date", { ascending: true });
@@ -472,7 +472,7 @@ serve(async (req) => {
           const invoiceList = invoices.slice(0, 5).map((inv: any) => {
             const clientName = inv.customer?.name || "Unknown";
             const daysOverdue = Math.floor((new Date().getTime() - new Date(inv.due_date).getTime()) / (1000 * 60 * 60 * 24));
-            return `Invoice ${inv.invoice_number} for ${clientName}, ${currencySymbol}${parseFloat(inv.total).toFixed(2)}, ${daysOverdue} days overdue`;
+            return `Invoice ${inv.display_number} for ${clientName}, ${currencySymbol}${parseFloat(inv.total).toFixed(2)}, ${daysOverdue} days overdue`;
           }).join(". ");
           
           const moreNote = invoices.length > 5 ? ` and ${invoices.length - 5} more` : "";
@@ -495,13 +495,13 @@ serve(async (req) => {
         // Find the invoice
         let invoiceQuery = supabase
           .from("invoices")
-          .select("id, invoice_number, total, due_date, status, communication_suppressed, customer:customers(name, email)")
+          .select("id, display_number, total, due_date, status, communication_suppressed, customer:customers(name, email)")
           .eq("team_id", company_id);
 
         if (invoice_id) {
           invoiceQuery = invoiceQuery.eq("id", invoice_id);
         } else if (invoice_number) {
-          invoiceQuery = invoiceQuery.eq("invoice_number", invoice_number);
+          invoiceQuery = invoiceQuery.eq("display_number", invoice_number);
         } else {
           response = {
             success: false,
@@ -529,7 +529,7 @@ serve(async (req) => {
         if (!customerEmail) {
           response = {
             success: false,
-            message: `I can't send a reminder for invoice ${invoice.invoice_number} because ${customerName} doesn't have an email address on file.`
+            message: `I can't send a reminder for invoice ${invoice.display_number} because ${customerName} doesn't have an email address on file.`
           };
           break;
         }
@@ -540,7 +540,7 @@ serve(async (req) => {
           console.log("[SAFETY] george-webhook send_invoice_reminder blocked: OUTBOUND_COMMUNICATION_ENABLED is false");
           response = {
             success: false,
-            message: `Outbound emails are currently disabled. The reminder for invoice ${invoice.invoice_number} was not sent. You can re-enable email sending in your settings.`
+            message: `Outbound emails are currently disabled. The reminder for invoice ${invoice.display_number} was not sent. You can re-enable email sending in your settings.`
           };
           break;
         }
@@ -549,7 +549,7 @@ serve(async (req) => {
         if ((invoice as any).communication_suppressed) {
           response = {
             success: false,
-            message: `Invoice ${invoice.invoice_number} was imported and has communication suppressed. Please remove the suppression flag before sending reminders.`
+            message: `Invoice ${invoice.display_number} was imported and has communication suppressed. Please remove the suppression flag before sending reminders.`
           };
           break;
         }
@@ -581,7 +581,7 @@ serve(async (req) => {
 
         response = {
           success: true,
-          message: `I've marked invoice ${invoice.invoice_number} (${currencySymbol}${parseFloat(invoice.total).toFixed(2)}) as overdue. To send a payment reminder to ${customerName} at ${customerEmail}, please use the invoice screen in the app — this ensures you can preview the email before it's sent.`,
+          message: `I've marked invoice ${invoice.display_number} (${currencySymbol}${parseFloat(invoice.total).toFixed(2)}) as overdue. To send a payment reminder to ${customerName} at ${customerEmail}, please use the invoice screen in the app — this ensures you can preview the email before it's sent.`,
           data: { invoice_id: invoice.id, requires_manual_send: true }
         };
         break;
@@ -677,7 +677,7 @@ serve(async (req) => {
         // Get outstanding invoices
         const { data: invoices } = await supabase
           .from("invoices")
-          .select("id, invoice_number, total, status")
+          .select("id, display_number, total, status")
           .eq("customer_id", client.id)
           .in("status", ["pending", "overdue"])
           .limit(5);
@@ -1064,15 +1064,15 @@ serve(async (req) => {
         // Generate quote number
         const { data: lastQuote } = await supabase
           .from("quotes")
-          .select("quote_number")
+          .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
         let quoteNumber = "Q-0001";
-        if (lastQuote?.quote_number) {
-          const num = parseInt(lastQuote.quote_number.replace("Q-", "")) + 1;
+        if (lastQuote?.display_number) {
+          const num = parseInt(lastQuote.display_number.replace("Q-", "")) + 1;
           quoteNumber = `Q-${num.toString().padStart(4, "0")}`;
         }
 
@@ -1157,7 +1157,7 @@ serve(async (req) => {
           .insert({
             team_id: company_id,
             customer_id: customerId,
-            quote_number: quoteNumber,
+            display_number: quoteNumber,
             subtotal,
             tax_rate: taxRate,
             tax_amount: taxAmount,
@@ -1167,7 +1167,7 @@ serve(async (req) => {
             status: "draft",
             job_id: linkedJobId
           })
-          .select("id, quote_number, total")
+          .select("id, display_number, total")
           .single();
         if (quoteError) throw quoteError;
 
@@ -1333,15 +1333,15 @@ serve(async (req) => {
         // Generate invoice number
         const { data: lastInvoice } = await supabase
           .from("invoices")
-          .select("invoice_number")
+          .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
         let invoiceNumber = "INV-0001";
-        if (lastInvoice?.invoice_number) {
-          const num = parseInt(lastInvoice.invoice_number.replace("INV-", "")) + 1;
+        if (lastInvoice?.display_number) {
+          const num = parseInt(lastInvoice.display_number.replace("INV-", "")) + 1;
           invoiceNumber = `INV-${num.toString().padStart(4, "0")}`;
         }
 
@@ -1428,7 +1428,7 @@ serve(async (req) => {
           .insert({
             team_id: company_id,
             customer_id: customerId,
-            invoice_number: invoiceNumber,
+            display_number: invoiceNumber,
             subtotal,
             tax_rate: taxRate,
             tax_amount: taxAmount,
@@ -1438,7 +1438,7 @@ serve(async (req) => {
             due_date: dueDate,
             status: "draft"
           })
-          .select("id, invoice_number, total")
+          .select("id, display_number, total")
           .single();
 
         if (invoiceError) throw invoiceError;
@@ -1486,7 +1486,7 @@ serve(async (req) => {
         // Find the quote
         let quoteQuery = supabase
           .from("quotes")
-          .select("id, quote_number, customer_id, subtotal, tax_rate, tax_amount, total, notes, job_id, status, customers(name)")
+          .select("id, display_number, customer_id, subtotal, tax_rate, tax_amount, total, notes, job_id, status, customers(name)")
           .eq("team_id", company_id);
 
         if (quote_id) {
@@ -1537,15 +1537,15 @@ serve(async (req) => {
         // Generate invoice number
         const { data: lastInvoice } = await supabase
           .from("invoices")
-          .select("invoice_number")
+          .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
         let invoiceNumber = "INV-0001";
-        if (lastInvoice?.invoice_number) {
-          const num = parseInt(lastInvoice.invoice_number.replace("INV-", "")) + 1;
+        if (lastInvoice?.display_number) {
+          const num = parseInt(lastInvoice.display_number.replace("INV-", "")) + 1;
           invoiceNumber = `INV-${num.toString().padStart(4, "0")}`;
         }
 
@@ -1561,7 +1561,7 @@ serve(async (req) => {
             team_id: company_id,
             customer_id: quote.customer_id,
             quote_id: quote.id,
-            invoice_number: invoiceNumber,
+            display_number: invoiceNumber,
             subtotal: quote.subtotal,
             tax_rate: quote.tax_rate,
             tax_amount: quote.tax_amount,
@@ -1571,7 +1571,7 @@ serve(async (req) => {
             due_date: dueDate,
             status: "draft"
           })
-          .select("id, invoice_number, total")
+          .select("id, display_number, total")
           .single();
 
         if (invoiceError) throw invoiceError;
@@ -1949,7 +1949,7 @@ serve(async (req) => {
         // Fetch overdue invoices
         const { data: overdueInvoices, error: overdueError } = await supabase
           .from("invoices")
-          .select("id, invoice_number, total, due_date, customer:customers(name)")
+          .select("id, display_number, total, due_date, customer:customers(name)")
           .eq("team_id", company_id)
           .in("status", ["pending", "overdue"])
           .lt("due_date", today);
@@ -1959,7 +1959,7 @@ serve(async (req) => {
         // Fetch payments received today
         const { data: todayPayments, error: paymentsError } = await supabase
           .from("payments")
-          .select("id, amount, invoice:invoices(invoice_number, customer:customers(name))")
+          .select("id, amount, invoice:invoices(display_number, customer:customers(name))")
           .eq("team_id", company_id)
           .eq("payment_date", today);
 
@@ -1968,7 +1968,7 @@ serve(async (req) => {
         // Fetch pending quotes (awaiting response)
         const { data: pendingQuotes, error: quotesError } = await supabase
           .from("quotes")
-          .select("id, quote_number, total, customer:customers(name)")
+          .select("id, display_number, total, customer:customers(name)")
           .eq("team_id", company_id)
           .eq("status", "sent")
           .order("created_at", { ascending: false })
@@ -2057,7 +2057,7 @@ serve(async (req) => {
         // Fetch invoices due this week
         const { data: dueInvoices, error: dueInvoicesError } = await supabase
           .from("invoices")
-          .select("id, invoice_number, total, due_date, status, customer:customers(name)")
+          .select("id, display_number, total, due_date, status, customer:customers(name)")
           .eq("team_id", company_id)
           .in("status", ["pending"])
           .gte("due_date", todayStr)
@@ -2068,7 +2068,7 @@ serve(async (req) => {
         // Fetch quotes expiring this week
         const { data: expiringQuotes, error: expiringQuotesError } = await supabase
           .from("quotes")
-          .select("id, quote_number, total, valid_until, customer:customers(name)")
+          .select("id, display_number, total, valid_until, customer:customers(name)")
           .eq("team_id", company_id)
           .eq("status", "sent")
           .gte("valid_until", todayStr)
@@ -2079,7 +2079,7 @@ serve(async (req) => {
         // Fetch overdue invoices (always relevant for planning)
         const { data: overdueInvoices, error: overdueError } = await supabase
           .from("invoices")
-          .select("id, invoice_number, total")
+          .select("id, display_number, total")
           .eq("team_id", company_id)
           .in("status", ["pending", "overdue"])
           .lt("due_date", todayStr);
@@ -2274,7 +2274,7 @@ serve(async (req) => {
         // Get all unpaid invoices (sent or overdue status)
         let query = supabase
           .from("invoices")
-          .select("id, invoice_number, total, status, due_date, customer_id, customers(name)")
+          .select("id, display_number, total, status, due_date, customer_id, customers(name)")
           .eq("team_id", company_id)
           .in("status", ["pending", "overdue"]);
 
@@ -2304,7 +2304,7 @@ serve(async (req) => {
           
           byCustomer[custId].total += parseFloat(inv.total) || 0;
           byCustomer[custId].invoices.push({
-            invoice_number: inv.invoice_number,
+            invoice_number: inv.display_number,
             total: inv.total,
             status: inv.status,
             due_date: inv.due_date
@@ -2393,7 +2393,7 @@ serve(async (req) => {
         // Find the invoice
         let invoiceQuery = supabase
           .from("invoices")
-          .select("id, invoice_number, total, status, customers(name)")
+          .select("id, display_number, total, status, customers(name)")
           .eq("team_id", company_id);
 
         if (invoice_id) {
@@ -2429,7 +2429,7 @@ serve(async (req) => {
         if (amount > remainingBalance + 0.01) { // Small tolerance for rounding
           response = {
             success: false,
-            message: `The payment of ${currencySymbol}${amount.toFixed(2)} exceeds the remaining balance of ${currencySymbol}${remainingBalance.toFixed(2)} on invoice ${invoice.invoice_number}.`
+            message: `The payment of ${currencySymbol}${amount.toFixed(2)} exceeds the remaining balance of ${currencySymbol}${remainingBalance.toFixed(2)} on invoice ${invoice.display_number}.`
           };
           break;
         }
@@ -2469,10 +2469,10 @@ serve(async (req) => {
 
         response = {
           success: true,
-          message: `Done! I've recorded a ${currencySymbol}${amount.toFixed(2)} payment${methodNote} on invoice ${invoice.invoice_number} for ${customerName}.${balanceNote}`,
+          message: `Done! I've recorded a ${currencySymbol}${amount.toFixed(2)} payment${methodNote} on invoice ${invoice.display_number} for ${customerName}.${balanceNote}`,
           data: { 
             payment, 
-            invoice_number: invoice.invoice_number,
+            invoice_number: invoice.display_number,
             total_paid: newTotalPaid,
             remaining_balance: newRemainingBalance,
             fully_paid: newRemainingBalance <= 0.01
@@ -2496,7 +2496,7 @@ serve(async (req) => {
           // Get payments for a specific invoice
           let invoiceQuery = supabase
             .from("invoices")
-            .select("id, invoice_number, total, customers(name)")
+            .select("id, display_number, total, customers(name)")
             .eq("team_id", company_id);
 
           if (invoice_id) {
@@ -2527,7 +2527,7 @@ serve(async (req) => {
           if (paymentsError) throw paymentsError;
 
           payments = invoicePayments || [];
-          contextInfo = `invoice ${invoice.invoice_number} for ${invoice.customers?.name || "Unknown"}`;
+          contextInfo = `invoice ${invoice.display_number} for ${invoice.customers?.name || "Unknown"}`;
 
         } else if (customer_name) {
           // Get payments for a customer across all invoices
@@ -3272,7 +3272,7 @@ serve(async (req) => {
 
         let query = supabase
           .from("quotes")
-          .select("id, quote_number, status, total, valid_until, customer:customers(name)")
+          .select("id, display_number, status, total, valid_until, customer:customers(name)")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false });
 
@@ -3347,13 +3347,13 @@ serve(async (req) => {
         // Find the quote
         let quoteQuery = supabase
           .from("quotes")
-          .select("id, quote_number, status, customer:customers(name)")
+          .select("id, display_number, status, customer:customers(name)")
           .eq("team_id", company_id);
 
         if (quote_id) {
           quoteQuery = quoteQuery.eq("id", quote_id);
         } else if (quote_number) {
-          quoteQuery = quoteQuery.eq("quote_number", quote_number);
+          quoteQuery = quoteQuery.eq("display_number", quote_number);
         } else {
           response = {
             success: false,
@@ -3403,13 +3403,13 @@ serve(async (req) => {
         // Find the quote
         let quoteQuery = supabase
           .from("quotes")
-          .select("id, quote_number, customer:customers(name)")
+          .select("id, display_number, customer:customers(name)")
           .eq("team_id", company_id);
 
         if (quote_id) {
           quoteQuery = quoteQuery.eq("id", quote_id);
         } else if (quote_number) {
-          quoteQuery = quoteQuery.eq("quote_number", quote_number);
+          quoteQuery = quoteQuery.eq("display_number", quote_number);
         } else {
           response = {
             success: false,
@@ -3506,15 +3506,15 @@ serve(async (req) => {
         // Generate invoice number
         const { data: lastInvoice } = await supabase
           .from("invoices")
-          .select("invoice_number")
+          .select("display_number")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
 
         let invoiceNumber = "INV-0001";
-        if (lastInvoice?.invoice_number) {
-          const num = parseInt(lastInvoice.invoice_number.replace("INV-", "")) + 1;
+        if (lastInvoice?.display_number) {
+          const num = parseInt(lastInvoice.display_number.replace("INV-", "")) + 1;
           invoiceNumber = `INV-${num.toString().padStart(4, "0")}`;
         }
 
@@ -3535,7 +3535,7 @@ serve(async (req) => {
           .insert({
             team_id: company_id,
             customer_id: customerId,
-            invoice_number: invoiceNumber,
+            display_number: invoiceNumber,
             subtotal,
             tax_rate: taxRateValue,
             tax_amount: taxAmount,
@@ -3545,7 +3545,7 @@ serve(async (req) => {
             due_date: dueDate,
             status: "draft"
           })
-          .select("id, invoice_number, total")
+          .select("id, display_number, total")
           .single();
 
         if (invoiceError) throw invoiceError;
@@ -3584,7 +3584,7 @@ serve(async (req) => {
 
         let query = supabase
           .from("invoices")
-          .select("id, invoice_number, status, total, due_date, issue_date, customer:customers(name)")
+          .select("id, display_number, status, total, due_date, issue_date, customer:customers(name)")
           .eq("team_id", company_id)
           .order("created_at", { ascending: false });
 
@@ -3659,13 +3659,13 @@ serve(async (req) => {
         // Find the invoice
         let invoiceQuery = supabase
           .from("invoices")
-          .select("id, invoice_number, status, customer:customers(name)")
+          .select("id, display_number, status, customer:customers(name)")
           .eq("team_id", company_id);
 
         if (invoice_id) {
           invoiceQuery = invoiceQuery.eq("id", invoice_id);
         } else if (invoice_number) {
-          invoiceQuery = invoiceQuery.eq("invoice_number", invoice_number);
+          invoiceQuery = invoiceQuery.eq("display_number", invoice_number);
         } else {
           response = {
             success: false,
@@ -3700,7 +3700,7 @@ serve(async (req) => {
         
         response = {
           success: true,
-          message: `Done! I've updated invoice ${invoice.invoice_number} for ${clientName} from ${oldStatus} to ${normalizedStatus}.`,
+          message: `Done! I've updated invoice ${invoice.display_number} for ${clientName} from ${oldStatus} to ${normalizedStatus}.`,
           data: { invoice_id: invoice.id, old_status: oldStatus, new_status: normalizedStatus }
         };
         break;
@@ -3715,13 +3715,13 @@ serve(async (req) => {
         // Find the invoice
         let invoiceQuery = supabase
           .from("invoices")
-          .select("id, invoice_number, customer:customers(name)")
+          .select("id, display_number, customer:customers(name)")
           .eq("team_id", company_id);
 
         if (invoice_id) {
           invoiceQuery = invoiceQuery.eq("id", invoice_id);
         } else if (invoice_number) {
-          invoiceQuery = invoiceQuery.eq("invoice_number", invoice_number);
+          invoiceQuery = invoiceQuery.eq("display_number", invoice_number);
         } else {
           response = {
             success: false,
@@ -3767,7 +3767,7 @@ serve(async (req) => {
         
         response = {
           success: true,
-          message: `Done! I've deleted invoice ${invoice.invoice_number} for ${clientName}.`,
+          message: `Done! I've deleted invoice ${invoice.display_number} for ${clientName}.`,
           data: { deleted_id: invoice.id }
         };
         break;
@@ -3998,7 +3998,7 @@ serve(async (req) => {
       case "get_pending_quotes": {
         const { data: quotes, error } = await supabase
           .from("quotes")
-          .select("id, quote_number, total, valid_until, customer:customers(name)")
+          .select("id, display_number, total, valid_until, customer:customers(name)")
           .eq("team_id", company_id)
           .eq("status", "sent")
           .order("created_at", { ascending: false })
@@ -4020,7 +4020,7 @@ serve(async (req) => {
       case "get_outstanding_invoices": {
         const { data: invoices, error } = await supabase
           .from("invoices")
-          .select("id, invoice_number, total, due_date, status, customer:customers(name)")
+          .select("id, display_number, total, due_date, status, customer:customers(name)")
           .eq("team_id", company_id)
           .in("status", ["pending", "overdue"])
           .order("due_date", { ascending: true })
