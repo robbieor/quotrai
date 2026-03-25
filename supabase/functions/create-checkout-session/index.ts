@@ -151,7 +151,7 @@ serve(async (req) => {
       success_url: `${origin}/settings?tab=billing&success=true`,
       cancel_url: `${origin}/settings?tab=billing&cancelled=true`,
       subscription_data: {
-        trial_period_days: isUpgrade ? 0 : 14,
+        trial_period_days: isUpgrade ? 0 : 30,
         metadata: { org_id: orgMember.org_id },
       },
       billing_address_collection: "required",
