@@ -5805,7 +5805,13 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
-      quote_status: "draft" | "sent" | "accepted" | "declined" | "expired"
+      quote_status:
+        | "draft"
+        | "sent"
+        | "accepted"
+        | "declined"
+        | "expired"
+        | "converted"
       seat_type: "lite" | "connect" | "grow"
       team_role: "ceo" | "owner" | "member" | "manager"
       template_unit:
@@ -6027,7 +6033,14 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      quote_status: ["draft", "sent", "accepted", "declined", "expired"],
+      quote_status: [
+        "draft",
+        "sent",
+        "accepted",
+        "declined",
+        "expired",
+        "converted",
+      ],
       seat_type: ["lite", "connect", "grow"],
       team_role: ["ceo", "owner", "member", "manager"],
       template_unit: [
