@@ -87,10 +87,12 @@ export default function Jobs() {
     scheduled_date?: string | null;
     scheduled_time?: string | null;
     estimated_value?: number | null;
+    location?: import("@/components/jobs/JobFormDialog").JobLocationData;
   }) => {
+    const { location, ...jobValues } = values;
     if (selectedJob) {
       updateJob.mutate(
-        { id: selectedJob.id, ...values },
+        { id: selectedJob.id, ...jobValues },
         {
           onSuccess: () => {
             setFormDialogOpen(false);
@@ -99,9 +101,12 @@ export default function Jobs() {
         }
       );
     } else {
-      // Use the new hook that auto-creates job sites
       createJobWithSite.mutate(
-        { job: values, autoCreateSite: true },
+        {
+          job: jobValues,
+          autoCreateSite: !!location,
+          siteLocation: location,
+        },
         {
           onSuccess: () => {
             setFormDialogOpen(false);
