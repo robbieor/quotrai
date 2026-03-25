@@ -74,6 +74,20 @@ export function ClockInOutCard() {
     );
   }, [jobs]);
 
+  // Map job_id → job_site for GPS status
+  const jobSiteMap = useMemo(() => {
+    const map = new Map<string, { hasLocation: boolean; validForGps: boolean }>();
+    if (jobSites) {
+      for (const site of jobSites) {
+        map.set(site.job_id, {
+          hasLocation: !!(site.latitude && site.longitude),
+          validForGps: (site as any).location_valid_for_gps !== false,
+        });
+      }
+    }
+    return map;
+  }, [jobSites]);
+
   // Daily summary
   const dailySummary = useMemo(() => {
     if (!allEntries) return { totalSeconds: 0, entryCount: 0 };
