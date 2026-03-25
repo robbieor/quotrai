@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { usePortalQuote, useAcceptQuoteFromPortal, useDeclineQuoteFromPortal } from "@/hooks/usePortal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,8 +38,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function QuotePortal() {
+  const { token: routeToken } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const token = routeToken || searchParams.get("token");
   const { data: quote, isLoading, error } = usePortalQuote(token);
   const acceptQuote = useAcceptQuoteFromPortal();
   const declineQuote = useDeclineQuoteFromPortal();

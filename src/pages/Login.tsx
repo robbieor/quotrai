@@ -34,7 +34,14 @@ export default function Login() {
       setSubmitting(false);
     } else {
       toast.success("Welcome back!");
-      navigate("/dashboard");
+      // Check for pending team invite
+      const pendingToken = sessionStorage.getItem("pending_invite_token");
+      if (pendingToken) {
+        sessionStorage.removeItem("pending_invite_token");
+        navigate(`/accept-invite?token=${pendingToken}`);
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 

@@ -23,7 +23,7 @@ export default function CustomerLogin() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/customer`,
+          emailRedirectTo: `${window.location.origin}/customer/dashboard`,
         },
       });
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { format, isPast, isToday } from "date-fns";
 import { usePortalInvoice } from "@/hooks/usePortal";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -27,8 +27,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function InvoicePortal() {
+  const { token: routeToken } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const token = routeToken || searchParams.get("token");
   const paymentStatus = searchParams.get("payment");
   const { data: invoice, isLoading, error } = usePortalInvoice(token);
   const [payLoading, setPayLoading] = useState(false);
