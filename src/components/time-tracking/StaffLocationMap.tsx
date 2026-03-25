@@ -7,7 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useStaffLocations, useJobSites } from "@/hooks/useTimeTracking";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+// leaflet.css is imported globally in index.css
 
 // Fix default marker icons for Leaflet + bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
