@@ -2304,7 +2304,7 @@ serve(async (req) => {
           
           byCustomer[custId].total += parseFloat(inv.total) || 0;
           byCustomer[custId].invoices.push({
-            invoice_number: inv.display_number,
+            display_number: inv.display_number,
             total: inv.total,
             status: inv.status,
             due_date: inv.due_date
@@ -2399,7 +2399,7 @@ serve(async (req) => {
         if (invoice_id) {
           invoiceQuery = invoiceQuery.eq("id", invoice_id);
         } else if (invoice_number) {
-          invoiceQuery = invoiceQuery.ilike("invoice_number", `%${invoice_number}%`);
+          invoiceQuery = invoiceQuery.ilike("display_number", `%${invoice_number}%`);
         }
 
         const { data: invoices, error: findError } = await invoiceQuery.limit(1);
@@ -2502,7 +2502,7 @@ serve(async (req) => {
           if (invoice_id) {
             invoiceQuery = invoiceQuery.eq("id", invoice_id);
           } else if (invoice_number) {
-            invoiceQuery = invoiceQuery.ilike("invoice_number", `%${invoice_number}%`);
+            invoiceQuery = invoiceQuery.ilike("display_number", `%${invoice_number}%`);
           }
 
           const { data: invoices, error: invoiceError } = await invoiceQuery.limit(1);
@@ -2553,7 +2553,7 @@ serve(async (req) => {
           // Get all invoices for this customer
           const { data: customerInvoices } = await supabase
             .from("invoices")
-            .select("id, invoice_number")
+            .select("id, display_number")
             .eq("customer_id", customer.id);
 
           if (customerInvoices && customerInvoices.length > 0) {
@@ -2569,10 +2569,10 @@ serve(async (req) => {
             if (paymentsError) throw paymentsError;
 
             // Add invoice number to each payment
-            const invoiceMap = Object.fromEntries(customerInvoices.map((i: any) => [i.id, i.invoice_number]));
+            const invoiceMap = Object.fromEntries(customerInvoices.map((i: any) => [i.id, i.display_number]));
             payments = (customerPayments || []).map((p: any) => ({
               ...p,
-              invoice_number: invoiceMap[p.invoice_id]
+              display_number: invoiceMap[p.invoice_id]
             }));
           }
 
@@ -2582,7 +2582,7 @@ serve(async (req) => {
           // Get all recent payments
           const { data: allPayments, error: paymentsError } = await supabase
             .from("payments")
-            .select("id, amount, payment_date, payment_method, notes, invoice_id, invoices(invoice_number, customers(name))")
+            .select("id, amount, payment_date, payment_method, notes, invoice_id, invoices(display_number, customers(name))")
             .eq("team_id", company_id)
             .order("payment_date", { ascending: false })
             .limit(limitParam || 20);
@@ -2591,7 +2591,7 @@ serve(async (req) => {
 
           payments = (allPayments || []).map((p: any) => ({
             ...p,
-            invoice_number: p.invoices?.invoice_number,
+            display_number: p.invoices?.display_number,
             customer_name: p.invoices?.customers?.name
           }));
 
@@ -2611,7 +2611,7 @@ serve(async (req) => {
 
         const paymentList = payments.slice(0, 5).map((p: any) => {
           const method = p.payment_method ? ` (${p.payment_method})` : "";
-          const invNote = p.invoice_number ? ` on ${p.invoice_number}` : "";
+          const invNote = p.display_number ? ` on ${p.display_number}` : "";
           const custNote = p.customer_name ? ` from ${p.customer_name}` : "";
           return `${currencySymbol}${parseFloat(p.amount).toFixed(2)}${method}${invNote}${custNote} on ${p.payment_date}`;
         }).join(". ");
@@ -3606,7 +3606,7 @@ serve(async (req) => {
 
         if (search && filteredInvoices.length > 0) {
           filteredInvoices = filteredInvoices.filter((i: any) => 
-            i.invoice_number?.toLowerCase().includes(search.toLowerCase())
+            i.display_number?.toLowerCase().includes(search.toLowerCase())
           );
         }
 
@@ -3624,7 +3624,7 @@ serve(async (req) => {
         } else {
           const invoiceList = filteredInvoices.slice(0, 5).map((i: any) => {
             const clientName = i.customer?.name || "Unknown";
-            return `${i.invoice_number} for ${clientName} (${currencySymbol}${parseFloat(i.total).toFixed(2)}, ${i.status})`;
+            return `${i.display_number} for ${clientName} (${currencySymbol}${parseFloat(i.total).toFixed(2)}, ${i.status})`;
           }).join("; ");
           
           const moreNote = filteredInvoices.length > 5 ? ` and ${filteredInvoices.length - 5} more` : "";
@@ -4032,7 +4032,7 @@ serve(async (req) => {
           response = { success: true, message: "You have no outstanding invoices. All caught up!", data: [] };
         } else {
           const total = invoices.reduce((s: number, i: any) => s + (parseFloat(i.total) || 0), 0);
-          const list = invoices.slice(0, 5).map((i: any) => `${i.invoice_number} for ${(i.customer as any)?.name || "Unknown"} (${currencySymbol}${parseFloat(i.total).toFixed(2)}, due ${i.due_date})`).join("; ");
+          const list = invoices.slice(0, 5).map((i: any) => `${i.display_number} for ${(i.customer as any)?.name || "Unknown"} (${currencySymbol}${parseFloat(i.total).toFixed(2)}, due ${i.due_date})`).join("; ");
           const more = invoices.length > 5 ? ` and ${invoices.length - 5} more` : "";
           response = { success: true, message: `You have ${invoices.length} outstanding invoice${invoices.length > 1 ? "s" : ""} totaling ${currencySymbol}${total.toFixed(2)}: ${list}${more}.`, data: invoices };
         }
