@@ -21,22 +21,20 @@ export function OnboardingChecklist() {
     track("checklist_dismissed", { completedCount, totalCount });
   }, [completedCount, totalCount]);
 
-  // Track 100% completion
   useEffect(() => {
     if (allComplete) {
       track("checklist_100_percent");
     }
   }, [allComplete]);
 
-  // Hide if dismissed or all complete
   if (dismissed || allComplete) return null;
 
   return (
-    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+    <Card className="relative overflow-hidden border-primary/15 bg-gradient-to-br from-primary/[0.03] to-transparent">
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-foreground"
+        className="absolute top-3 right-3 h-7 w-7 text-muted-foreground hover:text-foreground"
         onClick={handleDismiss}
       >
         <X className="h-4 w-4" />
@@ -45,31 +43,31 @@ export function OnboardingChecklist() {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-primary" />
-          Getting Started
-          <span className="text-sm font-normal text-muted-foreground ml-auto mr-6">
-            {completedCount}/{totalCount} complete
+          Set up your operations
+          <span className="text-sm font-normal text-muted-foreground ml-auto mr-8">
+            {completedCount}/{totalCount}
           </span>
         </CardTitle>
-        <Progress value={progress} className="h-2" />
+        <Progress value={progress} className="h-1.5 mt-1" />
       </CardHeader>
 
       <CardContent className="pt-0">
-        <div className="grid gap-2">
+        <div className="grid gap-1.5">
           {checklist.map((item) => (
             <button
               key={item.id}
               onClick={() => !item.completed && navigate(item.route)}
               className={cn(
-                "flex items-center gap-3 rounded-lg p-3 text-left transition-colors",
+                "flex items-center gap-3 rounded-xl p-3 text-left transition-all duration-200",
                 item.completed
-                  ? "bg-muted/30 opacity-60"
-                  : "hover:bg-muted/50 cursor-pointer"
+                  ? "opacity-50"
+                  : "hover:bg-muted/40 cursor-pointer"
               )}
             >
               {item.completed ? (
-                <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
               ) : (
-                <Circle className="h-5 w-5 text-muted-foreground shrink-0" />
+                <Circle className="h-4 w-4 text-muted-foreground/50 shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <p className={cn("text-sm font-medium", item.completed && "line-through text-muted-foreground")}>
@@ -78,7 +76,7 @@ export function OnboardingChecklist() {
                 <p className="text-xs text-muted-foreground">{item.description}</p>
               </div>
               {!item.completed && (
-                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
               )}
             </button>
           ))}
