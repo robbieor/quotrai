@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN auto_clock_mode text NOT NULL DEFAULT 'prompt';
