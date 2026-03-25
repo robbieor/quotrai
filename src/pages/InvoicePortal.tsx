@@ -120,7 +120,7 @@ export default function InvoicePortal() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">{invoice.team.name}</h1>
-              <p className="text-muted-foreground">Invoice {invoice.invoice_number}</p>
+              <p className="text-muted-foreground">Invoice {invoice.display_number}</p>
             </div>
           </div>
           <Badge className={statusColors[displayStatus] || "bg-muted"}>

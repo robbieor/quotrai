@@ -68,7 +68,7 @@ export function useCreateQuote() {
       quote,
       items,
     }: {
-      quote: Omit<TablesInsert<"quotes">, "team_id" | "quote_number">;
+      quote: Omit<TablesInsert<"quotes">, "team_id" | "display_number">;
       items: QuoteItemInsert[];
     }) => {
       // Get team_id
@@ -103,7 +103,7 @@ export function useCreateQuote() {
         .insert({
           ...quote,
           team_id: teamId,
-          quote_number: quoteNumber,
+          display_number: quoteNumber,
           subtotal,
           tax_amount: taxAmount,
           total,
@@ -267,7 +267,7 @@ export function useUpdateQuoteStatus() {
 
             // Simple insert with type assertion for new column
             const jobPayload: Record<string, unknown> = {
-              title: `Job from Quote ${quote.quote_number}`,
+              title: `Job from Quote ${quote.display_number}`,
               customer_id: quote.customer_id,
               team_id: quote.team_id,
               status: "scheduled",

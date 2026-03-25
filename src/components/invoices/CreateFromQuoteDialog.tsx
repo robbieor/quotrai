@@ -68,7 +68,7 @@ export function CreateFromQuoteDialog({ open, onOpenChange }: CreateFromQuoteDia
                   acceptedQuotes.map((quote) => (
                     <SelectItem key={quote.id} value={quote.id}>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{quote.quote_number}</span>
+                        <span className="font-medium">{quote.display_number}</span>
                         <span className="text-muted-foreground">•</span>
                         <span>{quote.customer?.name}</span>
                         <span className="text-muted-foreground">•</span>

@@ -15,7 +15,7 @@ export async function generateQuotePdf(
   const config = getBrandingConfig(branding);
 
   // Add branded header
-  let startY = await addBrandingHeader(doc, config, "QUOTE", quote.quote_number);
+  let startY = await addBrandingHeader(doc, config, "QUOTE", quote.display_number);
 
   // Quote details section
   doc.setFontSize(10);
@@ -138,5 +138,5 @@ export async function downloadQuotePdf(
   currencySymbol?: string
 ) {
   const doc = await generateQuotePdf(quote, branding, currencySymbol);
-  doc.save(`${quote.quote_number}.pdf`);
+  doc.save(`${quote.display_number}.pdf`);
 }

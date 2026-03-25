@@ -186,7 +186,7 @@ export function useOverdueInvoices() {
         .from("invoices")
         .select(`
           id,
-          invoice_number,
+          display_number,
           total,
           due_date,
           customer:customers(name)
@@ -201,7 +201,7 @@ export function useOverdueInvoices() {
       return (data || []).map((inv) => ({
         id: inv.id,
         client: (inv.customer as { name: string } | null)?.name || "Unknown",
-        invoiceNumber: inv.invoice_number,
+        invoiceNumber: inv.display_number,
         amount: Number(inv.total) || 0,
         daysOverdue: differenceInDays(today, new Date(inv.due_date)),
       })) as OverdueInvoice[];
@@ -302,21 +302,21 @@ export function useRecentActivity() {
           .limit(5),
         supabase
           .from("invoices")
-          .select("id, invoice_number, created_at, status, customer:customers(name)")
+          .select("id, display_number, created_at, status, customer:customers(name)")
           .in("status", ["pending", "overdue"])
           .gte("created_at", sevenDaysAgo)
           .order("created_at", { ascending: false })
           .limit(5),
         supabase
           .from("quotes")
-          .select("id, quote_number, created_at, status, customer:customers(name)")
+          .select("id, display_number, created_at, status, customer:customers(name)")
           .eq("status", "sent")
           .gte("created_at", sevenDaysAgo)
           .order("created_at", { ascending: false })
           .limit(5),
         supabase
           .from("payments")
-          .select("id, amount, created_at, invoice:invoices(invoice_number, customer:customers(name))")
+          .select("id, amount, created_at, invoice:invoices(display_number, customer:customers(name))")
           .gte("created_at", sevenDaysAgo)
           .order("created_at", { ascending: false })
           .limit(5),
@@ -339,7 +339,7 @@ export function useRecentActivity() {
         activities.push({
           id: `invoice-${inv.id}`,
           type: "invoice_sent",
-          description: `Invoice ${inv.invoice_number} sent to ${(inv.customer as { name: string } | null)?.name || "Unknown"}`,
+          description: `Invoice ${inv.display_number} sent to ${(inv.customer as { name: string } | null)?.name || "Unknown"}`,
           timestamp: inv.created_at,
         });
       });
@@ -349,18 +349,18 @@ export function useRecentActivity() {
         activities.push({
           id: `quote-${quote.id}`,
           type: "quote_sent",
-          description: `Quote ${quote.quote_number} sent to ${(quote.customer as { name: string } | null)?.name || "Unknown"}`,
+          description: `Quote ${quote.display_number} sent to ${(quote.customer as { name: string } | null)?.name || "Unknown"}`,
           timestamp: quote.created_at,
         });
       });
 
       // Add payments
       (paymentsResult.data || []).forEach((payment) => {
-        const invoice = payment.invoice as { invoice_number: string; customer: { name: string } | null } | null;
+        const invoice = payment.invoice as { display_number: string; customer: { name: string } | null } | null;
         activities.push({
           id: `payment-${payment.id}`,
           type: "payment_received",
-          description: `Payment of ${Number(payment.amount).toLocaleString()} received for ${invoice?.invoice_number || "invoice"}`,
+          description: `Payment of ${Number(payment.amount).toLocaleString()} received for ${invoice?.display_number || "invoice"}`,
           timestamp: payment.created_at,
         });
       });

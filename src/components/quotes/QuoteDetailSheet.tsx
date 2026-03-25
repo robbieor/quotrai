@@ -54,7 +54,7 @@ export function QuoteDetailSheet({
               <FileText className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <SheetTitle className="text-lg">{quote.quote_number}</SheetTitle>
+              <SheetTitle className="text-lg">{quote.display_number}</SheetTitle>
               <p className="text-sm text-muted-foreground">{quote.customer?.name || "No customer"}</p>
             </div>
           </div>

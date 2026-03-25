@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 export interface PortalQuote {
   id: string;
-  quote_number: string;
+  display_number: string;
   status: string;
   valid_until: string | null;
   subtotal: number;
@@ -33,7 +33,7 @@ export interface PortalQuote {
 
 export interface PortalInvoice {
   id: string;
-  invoice_number: string;
+  display_number: string;
   status: string;
   issue_date: string;
   due_date: string;
@@ -106,7 +106,7 @@ export function useAcceptQuoteFromPortal() {
 
       if (error) throw error;
       
-      const result = data as { success: boolean; error?: string; quote_id?: string; invoice_number?: string };
+      const result = data as { success: boolean; error?: string; quote_id?: string; display_number?: string };
       if (!result.success) {
         throw new Error(result.error || "Failed to accept quote");
       }
@@ -117,7 +117,7 @@ export function useAcceptQuoteFromPortal() {
           body: {
             quoteId: result.quote_id,
             action: "accepted",
-            invoiceNumber: result.invoice_number,
+            invoiceNumber: result.display_number,
           },
         }).catch((err) => console.error("Failed to send notification:", err));
       }
@@ -126,7 +126,7 @@ export function useAcceptQuoteFromPortal() {
     },
     onSuccess: (data, token) => {
       queryClient.invalidateQueries({ queryKey: ["portal-quote", token] });
-      toast.success(`Quote accepted! Invoice ${data.invoice_number} has been created.`);
+      toast.success(`Quote accepted! Invoice ${data.display_number} has been created.`);
     },
     onError: (error) => {
       toast.error(error.message);

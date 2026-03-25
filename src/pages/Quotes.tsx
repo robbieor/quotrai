@@ -68,7 +68,7 @@ export default function Quotes() {
     const query = searchQuery.toLowerCase();
     return quotes.filter((quote) => {
       const matchesSearch =
-        quote.quote_number.toLowerCase().includes(query) ||
+        quote.display_number.toLowerCase().includes(query) ||
         quote.customer?.name.toLowerCase().includes(query) ||
         quote.notes?.toLowerCase().includes(query);
       const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
@@ -173,7 +173,7 @@ export default function Quotes() {
                         <FileText className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{quote.quote_number}</p>
+                        <p className="font-semibold text-sm truncate">{quote.display_number}</p>
                         <p className="text-xs text-muted-foreground truncate">{quote.customer?.name || "No customer"}</p>
                       </div>
                     </div>
