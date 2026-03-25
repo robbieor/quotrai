@@ -1,41 +1,30 @@
 
 
-## Replace All Remaining "Quotr" References with "Foreman"
+## Capture Real App Screenshots for iOS & Leonardo.ai Video
 
-There are ~35 source files still referencing "quotr". Most are the import alias `quotrLogo` (not user-visible) but several are user-facing. Here's the full sweep:
+### What we'll do
+Capture actual screenshots of every key screen in your app at iPhone 6.7" (1290×2796) and 6.1" (1179×2556) resolutions, then generate both raw and iPhone-framed versions.
 
-### User-Visible Fixes
+### Screens to capture (8 total)
+1. **Dashboard** — stats, revenue chart, recent activity
+2. **Invoices** — invoice list with status badges
+3. **Quotes** — quote pipeline/list view
+4. **Time Tracking** — clock in/out card, time entries
+5. **Customers** — customer list/table
+6. **Expenses** — expense list with receipt scanning
+7. **Jobs / Calendar** — job schedule view
+8. **George AI** — chat interface
 
-1. **`index.html`** — Change `@quotr` Twitter handle to `@foremanapp` (or remove); OG image URLs still reference "quotr" in the filename (external URL, can't rename but can note)
+### Approach
+1. Navigate the browser to each screen at mobile viewport sizes (430×932 for 6.7", 393×852 for 6.1")
+2. Take a screenshot of each screen
+3. Save raw screenshots to `/mnt/documents/screenshots/raw/`
+4. Run the product-shot script to create iPhone-framed versions saved to `/mnt/documents/screenshots/framed/`
+5. Total output: ~32 images (8 screens × 2 sizes × 2 styles)
 
-2. **`src/components/landing/DashboardShowcase.tsx`** — URL bar shows `app.quotr.ai/...` → change to `app.foreman.ie/...`
+### Important note
+The browser shares your preview session. You'll need to be **logged in** in the preview before I capture — otherwise I'll only get the login/landing page. If you're already logged in, I can proceed immediately.
 
-3. **`src/pages/SelectPlan.tsx`** — `mailto:hello@quotr.ai` → `mailto:hello@foreman.ie`
-
-4. **`supabase/functions/auth-email-hook/index.ts`** — `SITE_NAME = "quotrai"` → `"foreman"`
-
-5. **`src/config/brand.ts`** — OG_IMAGE URL contains "quotr" in filename (external hosted, cosmetic only)
-
-### Internal Code Renames (not user-visible but consistent)
-
-6. **Rename import alias** `quotrLogo` → `foremanLogo` across all 23 files that import it:
-   - Landing, Login, Signup, Pricing, SelectPlan, ForgotPassword, ResetPassword, CustomerLogin, CustomerDashboard, RequestAccess, Privacy, Terms, Industries, TradeLanding, InvestorMarket, InvestorProduct, InvestorTeam, FounderProjections, AppStoreAssets, OnboardingModal, HeroSection, AppSidebar, DashboardLayout
-
-7. **Rename localStorage/sessionStorage keys** (6 references across 4 files):
-   - `quotr_ref_code` → `foreman_ref_code` (Signup.tsx)
-   - `quotr_auto_clock_mode` → `foreman_auto_clock_mode` (useAutoClockPrompt.ts)
-   - `quotr_landing_currency` → `foreman_landing_currency` (useLandingCurrency.ts)
-   - `__quotr_sw_purged__` → `__foreman_sw_purged__` (main.tsx)
-   - `__quotr_chunk_retry__` → `__foreman_chunk_retry__` (App.tsx)
-
-8. **Rename internal constants** (ROICalculator.tsx):
-   - `QUOTR_SEAT_PRICE` → `FOREMAN_SEAT_PRICE`
-   - `QUOTR_VOICE_PRICE` → `FOREMAN_VOICE_PRICE`
-   - `quotrMonthlyCost` → `foremanMonthlyCost`
-
-9. **Analytics event name** (analytics.ts):
-   - `quotr_analytics` → `foreman_analytics`
-
-### Files Changed
-~30 files total. All changes are straightforward find-and-replace within each file.
+### Output
+All files saved to `/mnt/documents/screenshots/` — accessible from your **Files** view.
 
