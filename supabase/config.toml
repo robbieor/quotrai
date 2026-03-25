@@ -128,3 +128,6 @@ verify_jwt = false
 
 [functions.scan-receipt]
 verify_jwt = false
+
+[functions.run-task]
+verify_jwt = false
