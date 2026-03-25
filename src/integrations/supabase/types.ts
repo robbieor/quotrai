@@ -1751,7 +1751,7 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
-          display_number: string
+          display_number?: string
           due_date?: string
           id?: string
           issue_date?: string
@@ -3235,7 +3235,7 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
-          display_number: string
+          display_number?: string
           id?: string
           job_id?: string | null
           last_viewed_at?: string | null
