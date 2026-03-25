@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { VoiceAgentProvider } from "@/contexts/VoiceAgentContext";
+import { AgentTaskProvider } from "@/contexts/AgentTaskContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { SeatGuard } from "@/components/auth/SeatGuard";
 
@@ -97,6 +98,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <VoiceAgentProvider>
+          <AgentTaskProvider>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 {/* Public pages */}
@@ -150,6 +152,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+          </AgentTaskProvider>
           </VoiceAgentProvider>
         </BrowserRouter>
       </TooltipProvider>

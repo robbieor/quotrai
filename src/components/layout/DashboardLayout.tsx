@@ -5,6 +5,7 @@ import { NotificationCenter } from "./NotificationCenter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TrialBanner } from "@/components/billing/TrialBanner";
 import { FloatingTomButton } from "./FloatingTomButton";
+import { AgentTaskPanel } from "@/components/shared/AgentTaskPanel";
 import { DemoOverlay } from "@/components/demo/DemoOverlay";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { useDemoMode } from "@/hooks/useDemoMode";
@@ -42,6 +43,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </main>
           </div>
           <FloatingTomButton />
+          <AgentTaskPanel />
           <DemoOverlay
             currentStep={demo.currentStep}
             currentStepIndex={demo.currentStepIndex}
