@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 export interface PortalQuote {
   id: string;
-  quote_number: string;
+  display_number: string;
   status: string;
   valid_until: string | null;
   subtotal: number;
@@ -33,7 +33,7 @@ export interface PortalQuote {
 
 export interface PortalInvoice {
   id: string;
-  invoice_number: string;
+  display_number: string;
   status: string;
   issue_date: string;
   due_date: string;
