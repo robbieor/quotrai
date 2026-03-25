@@ -49,8 +49,8 @@
 
     --radius: 0.875rem;                      /* 14px — generous but not bubbly */
 
-    /* ── Sidebar ── */
-    --sidebar-background: 0 0% 100%;
+    /* ── Sidebar — matches background for seamless feel ── */
+    --sidebar-background: 40 20% 97%;
     --sidebar-foreground: 220 30% 15%;
     --sidebar-primary: 162 72% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
