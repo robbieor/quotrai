@@ -143,11 +143,11 @@ function generateCSVTemplate(type: ImportType, mode: ImportMode = "header_only")
   const header = allColumns.join(",");
 
   if (mode === "header_with_items" && hasItemMode(type)) {
-    const idField = type === "invoices" ? "display_number" : "display_number";
+    const sampleDisplayNumber = type === "invoices" ? "INV-001" : "Q-001";
     const rows = [
       allColumns.map(col => {
         const vals: Record<string, string> = {
-          customer_email: "info@acme.ie", display_number: "INV-001", display_number: "Q-001",
+          customer_email: "info@acme.ie", display_number: sampleDisplayNumber,
           issue_date: "2024-01-15", total: "1500.00", due_date: "2024-01-29", status: "paid",
           valid_until: "2024-03-01", description: "Labour - 3 hours", quantity: "3", unit_price: "65.00",
           tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49", notes: "",
@@ -156,7 +156,7 @@ function generateCSVTemplate(type: ImportType, mode: ImportMode = "header_only")
       }).join(","),
       allColumns.map(col => {
         const vals: Record<string, string> = {
-          customer_email: "info@acme.ie", display_number: "INV-001", display_number: "Q-001",
+          customer_email: "info@acme.ie", display_number: sampleDisplayNumber,
           issue_date: "2024-01-15", total: "1500.00", due_date: "2024-01-29", status: "paid",
           valid_until: "2024-03-01", description: "Replacement parts", quantity: "1", unit_price: "250.00",
           tax_rate: "23", subtotal: "1219.51", tax_amount: "280.49", notes: "",
