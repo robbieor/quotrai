@@ -36,7 +36,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   converted: { label: "Converted", className: "bg-purple-100 text-purple-800" },
 };
 
-type StatusFilter = "all" | Quote["status"];
+type StatusFilter = "all" | string;
 
 export default function Quotes() {
   const [searchParams, setSearchParams] = useSearchParams();
