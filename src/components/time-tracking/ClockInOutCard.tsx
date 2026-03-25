@@ -49,6 +49,7 @@ export function ClockInOutCard() {
 
   const { data: activeEntry, isLoading: loadingActive } = useActiveTimeEntry();
   const { data: jobs } = useJobs();
+  const { data: jobSites } = useJobSites();
   const { data: allEntries } = useTimeEntries();
   const clockIn = useClockIn();
   const clockOut = useClockOut();
