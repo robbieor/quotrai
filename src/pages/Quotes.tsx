@@ -78,13 +78,14 @@ export default function Quotes() {
   }, [quotes, searchQuery, statusFilter]);
 
   const statusCounts = useMemo(() => {
-    if (!quotes) return { all: 0, draft: 0, sent: 0, accepted: 0, declined: 0 };
+    if (!quotes) return { all: 0, draft: 0, sent: 0, accepted: 0, declined: 0, converted: 0 };
     return {
       all: quotes.length,
       draft: quotes.filter((q) => q.status === "draft").length,
       sent: quotes.filter((q) => q.status === "sent").length,
       accepted: quotes.filter((q) => q.status === "accepted").length,
       declined: quotes.filter((q) => q.status === "declined").length,
+      converted: quotes.filter((q) => q.status === "converted").length,
     };
   }, [quotes]);
 
@@ -125,7 +126,7 @@ export default function Quotes() {
 
         {/* Status filter tabs */}
         <div className="flex gap-2 flex-wrap">
-          {(["all", "draft", "sent", "accepted", "declined"] as StatusFilter[]).map((status) => (
+          {(["all", "draft", "sent", "accepted", "declined", "converted"] as StatusFilter[]).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
