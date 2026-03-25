@@ -100,7 +100,7 @@ export function useCreateInvoice(onXeroSync?: (id: string) => void) {
           tax_amount: taxAmount,
           total,
           currency,
-        } as any)
+        })
         .select()
         .single();
 
@@ -162,13 +162,13 @@ export function useCreateInvoiceFromQuote() {
           team_id: teamId,
           customer_id: quote.customer_id,
           quote_id: quoteId,
-          status: "draft",
+          status: "draft" as const,
           subtotal: quote.subtotal,
           tax_rate: quote.tax_rate,
           tax_amount: quote.tax_amount,
           total: quote.total,
           notes: quote.notes,
-        } as any)
+        })
         .select()
         .single();
 
@@ -194,7 +194,7 @@ export function useCreateInvoiceFromQuote() {
       // Mark quote as converted
       await supabase
         .from("quotes")
-        .update({ status: "converted" as any })
+        .update({ status: "converted" })
         .eq("id", quoteId);
 
       return newInvoice;

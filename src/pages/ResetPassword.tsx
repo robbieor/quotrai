@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lock, CheckCircle2 } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");

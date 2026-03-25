@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { SEOHead } from "@/components/shared/SEOHead";
 import { TRADES } from "@/components/landing/trade/TradeConfig";
 import { ArrowRight } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const Industries = () => {
   const tradeList = Object.values(TRADES);

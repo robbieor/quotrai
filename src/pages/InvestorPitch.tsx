@@ -7,7 +7,7 @@ import {
   Clock, Receipt, Smartphone, BarChart3
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const PROBLEM_STATS = [
   { stat: "65%", label: "of trade businesses still use pen & paper for admin", icon: AlertTriangle },
