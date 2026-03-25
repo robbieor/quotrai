@@ -2002,12 +2002,15 @@ export type Database = {
           country_iso2: string | null
           created_at: string | null
           customer_id: string
+          geocode_source: string | null
           geofence_radius: number | null
           id: string
           job_id: string
           latitude: number
           line1: string | null
           line2: string | null
+          location_confidence: string
+          location_valid_for_gps: boolean
           longitude: number
           postal_code: string | null
           region: string | null
@@ -2021,12 +2024,15 @@ export type Database = {
           country_iso2?: string | null
           created_at?: string | null
           customer_id: string
+          geocode_source?: string | null
           geofence_radius?: number | null
           id?: string
           job_id: string
           latitude: number
           line1?: string | null
           line2?: string | null
+          location_confidence?: string
+          location_valid_for_gps?: boolean
           longitude: number
           postal_code?: string | null
           region?: string | null
@@ -2040,12 +2046,15 @@ export type Database = {
           country_iso2?: string | null
           created_at?: string | null
           customer_id?: string
+          geocode_source?: string | null
           geofence_radius?: number | null
           id?: string
           job_id?: string
           latitude?: number
           line1?: string | null
           line2?: string | null
+          location_confidence?: string
+          location_valid_for_gps?: boolean
           longitude?: number
           postal_code?: string | null
           region?: string | null
