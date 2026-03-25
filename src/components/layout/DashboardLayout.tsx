@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <UserMenu />
             </header>
             <main className="flex-1 overflow-auto">
-              <div className="mx-auto w-full max-w-7xl px-3 md:px-6 py-3 md:py-6">
+              <div className="mx-auto w-full max-w-7xl px-3 md:px-6 py-3 md:py-6 pb-24 md:pb-6">
                 {children}
               </div>
             </main>
