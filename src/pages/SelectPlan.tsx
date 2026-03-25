@@ -123,7 +123,7 @@ export default function SelectPlan() {
                 ))}
               </ul>
               <Button variant="outline" className="w-full gap-2" asChild>
-                <a href="mailto:hello@quotr.ai">
+                <a href="mailto:hello@foreman.ie">
                   <MessageSquare className="h-4 w-4" /> Contact Us
                 </a>
               </Button>

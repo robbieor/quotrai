@@ -43,7 +43,7 @@ export default function Signup() {
 
     // Store referral code in localStorage so onboarding can pick it up
     if (refCode) {
-      localStorage.setItem("quotr_ref_code", refCode);
+      localStorage.setItem("foreman_ref_code", refCode);
     }
 
     const { error } = await signUp(email, password, fullName);

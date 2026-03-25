@@ -12,8 +12,8 @@ import { toast } from "sonner";
 // Conservative defaults validated against industry benchmarks (Jobber, Tradify)
 const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
-const QUOTR_SEAT_PRICE = 29; // €29/month per seat
-const QUOTR_VOICE_PRICE = 20; // €20/month per voice seat
+const FOREMAN_SEAT_PRICE = 29; // €29/month per seat
+const FOREMAN_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
 const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
 

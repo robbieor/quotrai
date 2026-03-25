@@ -75,9 +75,9 @@ const App = () => {
         typeof reasonMessage === "string" &&
         reasonMessage.includes("Failed to fetch dynamically imported module")
       ) {
-        const hasReloaded = sessionStorage.getItem("__quotr_chunk_retry__");
+        const hasReloaded = sessionStorage.getItem("__foreman_chunk_retry__");
         if (!hasReloaded) {
-          sessionStorage.setItem("__quotr_chunk_retry__", "1");
+          sessionStorage.setItem("__foreman_chunk_retry__", "1");
           window.location.reload();
           return;
         }
