@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useJobSites, useActiveTimeEntry, calculateDistance } from '@/hooks/useTimeTracking';
 import { useGeolocation } from '@/hooks/useTimeTracking';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export type AutoClockMode = 'auto' | 'prompt' | 'manual';
@@ -18,6 +20,7 @@ const EXIT_DELAY_MS = 3 * 60 * 1000; // 3 minutes before triggering exit
 export function useAutoClockPrompt() {
   const { data: jobSites } = useJobSites();
   const { data: activeEntry } = useActiveTimeEntry();
+  const { user } = useAuth();
   const [mode, setMode] = useState<AutoClockMode>(() => {
     return (localStorage.getItem('quotr_auto_clock_mode') as AutoClockMode) || 'prompt';
   });
@@ -27,11 +30,31 @@ export function useAutoClockPrompt() {
   const insideGeofencesRef = useRef<Set<string>>(new Set());
   const exitTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  // Persist mode preference
+  // Load mode from profile on mount
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('profiles')
+      .select('auto_clock_mode')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.auto_clock_mode) {
+          const dbMode = data.auto_clock_mode as AutoClockMode;
+          setMode(dbMode);
+          localStorage.setItem('quotr_auto_clock_mode', dbMode);
+        }
+      });
+  }, [user?.id]);
+
+  // Persist mode preference to DB + localStorage
   const updateMode = useCallback((newMode: AutoClockMode) => {
     setMode(newMode);
     localStorage.setItem('quotr_auto_clock_mode', newMode);
-  }, []);
+    if (user?.id) {
+      supabase.from('profiles').update({ auto_clock_mode: newMode } as any).eq('id', user.id).then(() => {});
+    }
+  }, [user?.id]);
 
   const dismissPrompt = useCallback(() => {
     setPendingPrompt(null);
