@@ -47,7 +47,7 @@ export const TRADES: Record<string, TradeConfig> = {
     icon: Droplets,
     heroHeadline: "Your AI Office Manager. Built for Plumbers.",
     heroSub:
-      "Stop spending evenings doing admin. Quotr handles quotes, invoices, scheduling, GPS tracking & payment chasing — so you can focus on the work that pays.",
+      "Stop spending evenings doing admin. Foreman handles quotes, invoices, scheduling, GPS tracking & payment chasing — so you can focus on the work that pays.",
     painPoints: [
       { emoji: "💸", pain: "Chasing invoice payments for weeks", cost: "Average 42-day payment cycle" },
       { emoji: "📝", pain: "Quoting jobs on the back of a napkin", cost: "Losing 20–30% of quotes to slow turnaround" },
@@ -55,14 +55,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "🌙", pain: "Doing admin every evening instead of resting", cost: "8+ hours/week lost to paperwork" },
     ],
     quoteExample: "Quote Mrs. O'Brien — boiler service & flush",
-    seoTitle: "Quotr for Plumbers — AI-Powered Quoting, Invoicing & Job Management",
+    seoTitle: "Foreman for Plumbers — AI-Powered Quoting, Invoicing & Job Management",
     seoDescription:
-      "Quotr is the AI office manager for plumbing businesses. Voice-powered quoting, automated invoicing, GPS time tracking, and payment chasing. Free 30-day trial.",
+      "Foreman is the AI office manager for plumbing businesses. Voice-powered quoting, automated invoicing, GPS time tracking, and payment chasing. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Just talk to Foreman AI — say 'Quote the Murphy boiler service' and it's done. No training needed." },
       { objection: "My lads won't use it", response: "GPS clock-in is one tap. Voice quoting works on-site, even in gloves. Zero typing required." },
       { objection: "It's another monthly cost", response: "We take 2.5% only when you get paid. No payment, no fee. Your cost is aligned with your cash flow." },
-      { objection: "I've tried software before", response: "Those were digital forms — you still did the admin. Quotr's AI does it for you." },
+      { objection: "I've tried software before", response: "Those were digital forms — you still did the admin. Foreman's AI does it for you." },
     ],
     segments: [
       { label: "Solo plumber", hook: "Quote from the van, get paid the same day." },
@@ -92,14 +92,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "🧾", pain: "Forgetting to invoice completed rewiring jobs", cost: "Thousands left on the table" },
     ],
     quoteExample: "Quote the McCarthy house for a full rewire — 3 bed semi",
-    seoTitle: "Quotr for Electricians — AI Quoting, Certs & Job Management",
+    seoTitle: "Foreman for Electricians — AI Quoting, Certs & Job Management",
     seoDescription:
-      "Quotr is the AI office manager for electrical businesses. Voice-powered quoting, automated invoicing, GPS tracking, and trade templates. Free 30-day trial.",
+      "Foreman is the AI office manager for electrical businesses. Voice-powered quoting, automated invoicing, GPS tracking, and trade templates. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote the McCarthy rewire, 3-bed semi' — Foreman AI builds it using your templates. Zero learning curve." },
       { objection: "My apprentices won't use it", response: "One-tap GPS clock-in. They're already on their phones — this is simpler than WhatsApp." },
       { objection: "It's another monthly cost", response: "2.5% only when you collect payment. We earn when you earn." },
-      { objection: "I've tried software before", response: "Those tools made you fill in forms. Quotr's AI fills them for you." },
+      { objection: "I've tried software before", response: "Those tools made you fill in forms. Foreman's AI fills them for you." },
     ],
     segments: [
       { label: "Solo spark", hook: "Professional quotes in 60 seconds, straight from site." },
@@ -129,14 +129,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "📊", pain: "No clear view of recurring service contract revenue", cost: "Can't plan or forecast growth" },
     ],
     quoteExample: "Quote the Brennan office — AC unit replacement",
-    seoTitle: "Quotr for HVAC — AI Scheduling, Quoting & Job Management",
+    seoTitle: "Foreman for HVAC — AI Scheduling, Quoting & Job Management",
     seoDescription:
-      "HVAC businesses use Quotr to schedule service calls, create AI-powered quotes, invoice customers, and track crew time. Free 30-day trial.",
+      "HVAC businesses use Foreman to schedule service calls, create AI-powered quotes, invoice customers, and track crew time. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Tell Foreman AI what you need — it creates the quote. Voice or text, your choice." },
       { objection: "My techs won't use it", response: "GPS clock-in is automatic when they arrive on-site. Nothing to remember." },
       { objection: "It's another monthly cost", response: "2.5% on payments collected. We literally only cost you money when you're making money." },
-      { objection: "I've tried software before", response: "Other tools are digital clipboards. Quotr is an AI employee that costs less than a day's labour per month." },
+      { objection: "I've tried software before", response: "Other tools are digital clipboards. Foreman is an AI employee that costs less than a day's labour per month." },
     ],
     segments: [
       { label: "Solo technician", hook: "Quote and invoice from the van, hands-free." },
@@ -166,14 +166,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "📱", pain: "Clients asking for updates you can't easily give", cost: "Lost trust and repeat business" },
     ],
     quoteExample: "Quote the Dalton extension — groundworks and blockwork phase",
-    seoTitle: "Quotr for Builders — AI Job Management, Quotes & Team Tracking",
+    seoTitle: "Foreman for Builders — AI Job Management, Quotes & Team Tracking",
     seoDescription:
-      "Quotr is the AI office manager for builders and general contractors. Voice quoting, GPS crew tracking, job costing, and automated invoicing. Free 30-day trial.",
+      "Foreman is the AI office manager for builders and general contractors. Voice quoting, GPS crew tracking, job costing, and automated invoicing. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice-first: say 'Quote the Dalton extension, groundworks phase' and Foreman AI handles it." },
       { objection: "My subbies won't use it", response: "One-tap clock-in with GPS. Simpler than signing a site sheet." },
       { objection: "It's another monthly cost", response: "2.5% on collected payments. No payment, no fee — we're aligned with your cash flow." },
-      { objection: "I've tried software before", response: "Those were admin tools. Quotr is an AI that runs your office for less than a labourer's day rate." },
+      { objection: "I've tried software before", response: "Those were admin tools. Foreman is an AI that runs your office for less than a labourer's day rate." },
     ],
     segments: [
       { label: "Solo builder", hook: "Professional quotes that win jobs, sent from the van." },
@@ -203,14 +203,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "📋", pain: "No system to track which team is at which property", cost: "No accountability, no proof of service" },
     ],
     quoteExample: "Quote Mrs. Sullivan — weekly 3-bed house clean",
-    seoTitle: "Quotr for Cleaning Businesses — AI Scheduling, Quoting & Invoicing",
+    seoTitle: "Foreman for Cleaning Businesses — AI Scheduling, Quoting & Invoicing",
     seoDescription:
-      "Cleaning businesses use Quotr to schedule jobs, create instant quotes, invoice clients, and track team locations. Free 30-day trial.",
+      "Cleaning businesses use Foreman to schedule jobs, create instant quotes, invoice clients, and track team locations. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote a weekly clean for the Sullivan house' — done. Voice-first, zero training." },
       { objection: "My cleaners won't use it", response: "One-tap GPS clock-in when they arrive. Simpler than a timesheet." },
       { objection: "It's another monthly cost", response: "2.5% only when you get paid. No upfront fees, no risk." },
-      { objection: "I've tried software before", response: "Those were booking tools. Quotr quotes, invoices, chases payments, and tracks your team — all in one." },
+      { objection: "I've tried software before", response: "Those were booking tools. Foreman quotes, invoices, chases payments, and tracks your team — all in one." },
     ],
     segments: [
       { label: "Solo cleaner", hook: "Look professional. Get paid on time. Every time." },
@@ -240,9 +240,9 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "📱", pain: "Clients texting for updates constantly", cost: "Distracted from the actual work" },
     ],
     quoteExample: "Quote the Henderson garden — patio laying and new turf",
-    seoTitle: "Quotr for Landscapers — AI Quoting, Scheduling & Job Management",
+    seoTitle: "Foreman for Landscapers — AI Quoting, Scheduling & Job Management",
     seoDescription:
-      "Landscaping businesses use Quotr to create instant quotes, schedule crews, track materials, and invoice clients. Free 30-day trial.",
+      "Landscaping businesses use Foreman to create instant quotes, schedule crews, track materials, and invoice clients. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quoting from the garden — say what you need, Foreman AI builds the quote." },
       { objection: "My lads won't use it", response: "GPS clock-in on arrival. One tap, done. Works in work gloves." },
@@ -277,14 +277,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "📍", pain: "No proof of attendance for commercial contracts", cost: "Disputes and lost renewals" },
     ],
     quoteExample: "Quote the O'Reilly restaurant — rodent treatment programme",
-    seoTitle: "Quotr for Pest Control — AI Scheduling, Quoting & Route Management",
+    seoTitle: "Foreman for Pest Control — AI Scheduling, Quoting & Route Management",
     seoDescription:
-      "Pest control businesses use Quotr to schedule treatments, create instant quotes, manage recurring contracts, and track technician routes. Free 30-day trial.",
+      "Pest control businesses use Foreman to schedule treatments, create instant quotes, manage recurring contracts, and track technician routes. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote a rodent treatment for O'Reilly's' — Foreman AI handles the rest." },
       { objection: "My techs won't use it", response: "GPS clock-in on arrival. Automatic proof of service for every visit." },
       { objection: "It's another monthly cost", response: "2.5% on payments collected. Zero risk — we only cost you money when you're earning." },
-      { objection: "I've tried software before", response: "Generic field service tools don't handle recurring contracts well. Quotr does." },
+      { objection: "I've tried software before", response: "Generic field service tools don't handle recurring contracts well. Foreman does." },
     ],
     segments: [
       { label: "Solo operator", hook: "Professional quotes and invoices from the van." },
@@ -314,14 +314,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💰", pain: "Seasonal cash flow swings", cost: "Hard to plan hiring and growth" },
     ],
     quoteExample: "Quote the Walsh pool — pump replacement and acid wash",
-    seoTitle: "Quotr for Pool & Spa — AI Route Management, Quoting & Invoicing",
+    seoTitle: "Foreman for Pool & Spa — AI Route Management, Quoting & Invoicing",
     seoDescription:
-      "Pool and spa businesses use Quotr to manage maintenance routes, create instant quotes, track chemical logs, and invoice clients. Free 30-day trial.",
+      "Pool and spa businesses use Foreman to manage maintenance routes, create instant quotes, track chemical logs, and invoice clients. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice-first: say 'Quote the Walsh pool pump replacement' and it's built in seconds." },
       { objection: "My techs won't use it", response: "GPS clock-in at each pool. One tap per visit — faster than a clipboard." },
       { objection: "It's another monthly cost", response: "2.5% on collected payments only. In the off-season, you pay nothing." },
-      { objection: "I've tried software before", response: "Pool software focuses on logs. Quotr handles the whole business — quotes, jobs, invoices, payments." },
+      { objection: "I've tried software before", response: "Pool software focuses on logs. Foreman handles the whole business — quotes, jobs, invoices, payments." },
     ],
     segments: [
       { label: "Solo tech", hook: "Professional service, zero office overhead." },
@@ -351,14 +351,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "🧾", pain: "Invoicing days after the job is done", cost: "Clients forget and payment drags" },
     ],
     quoteExample: "Quote the Brennan driveway — block paving clean and seal",
-    seoTitle: "Quotr for Pressure Washing — AI Quoting, Scheduling & Invoicing",
+    seoTitle: "Foreman for Pressure Washing — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Pressure washing businesses use Quotr to create instant on-site quotes, schedule jobs, track crew locations, and invoice clients. Free 30-day trial.",
+      "Pressure washing businesses use Foreman to create instant on-site quotes, schedule jobs, track crew locations, and invoice clients. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quoting on-site — say the job, get the quote. Done in 30 seconds." },
       { objection: "It's another monthly cost", response: "2.5% on payments. No work, no cost. Simple." },
-      { objection: "I work alone", response: "Perfect — Quotr is your office manager without the salary." },
-      { objection: "I've tried software before", response: "Those were scheduling tools. Quotr handles the full job lifecycle — quote to payment." },
+      { objection: "I work alone", response: "Perfect — Foreman is your office manager without the salary." },
+      { objection: "I've tried software before", response: "Those were scheduling tools. Foreman handles the full job lifecycle — quote to payment." },
     ],
     segments: [
       { label: "Solo operator", hook: "Quote on-site, invoice before you leave." },
@@ -388,14 +388,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💸", pain: "Insurance jobs with slow payment cycles", cost: "Cash flow gaps for months" },
     ],
     quoteExample: "Quote the Kelly bungalow — full re-felt and new ridge tiles",
-    seoTitle: "Quotr for Roofers — AI Quoting, Job Costing & Crew Management",
+    seoTitle: "Foreman for Roofers — AI Quoting, Job Costing & Crew Management",
     seoDescription:
-      "Roofing contractors use Quotr to create instant quotes, manage crew schedules, track job costs, and automate invoicing. Free 30-day trial.",
+      "Roofing contractors use Foreman to create instant quotes, manage crew schedules, track job costs, and automate invoicing. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quote from the roof — 'Quote Kelly bungalow, re-felt and ridge tiles.' Done." },
       { objection: "My lads won't use it", response: "GPS clock-in, one tap. Works with gloves on." },
       { objection: "It's another monthly cost", response: "2.5% on collected payments. No work, no cost." },
-      { objection: "I've tried software before", response: "Those were digital clipboards. Quotr's AI does the admin for you." },
+      { objection: "I've tried software before", response: "Those were digital clipboards. Foreman's AI does the admin for you." },
     ],
     segments: [
       { label: "Solo roofer", hook: "Professional quotes from the ladder, paid before you leave." },
@@ -425,14 +425,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "🧾", pain: "Chasing final payments after snagging", cost: "Weeks of unpaid work" },
     ],
     quoteExample: "Quote the Davis house — 3 bedrooms, hallway and landing",
-    seoTitle: "Quotr for Painters — AI Quoting, Scheduling & Job Management",
+    seoTitle: "Foreman for Painters — AI Quoting, Scheduling & Job Management",
     seoDescription:
-      "Painters and decorators use Quotr to create professional quotes, schedule jobs, track materials, and automate invoicing. Free 30-day trial.",
+      "Painters and decorators use Foreman to create professional quotes, schedule jobs, track materials, and automate invoicing. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote the Davis house, 3 beds and hallway' — Foreman AI does the rest." },
-      { objection: "I work alone", response: "Even better — Quotr is your office manager without the overhead." },
+      { objection: "I work alone", response: "Even better — Foreman is your office manager without the overhead." },
       { objection: "It's another monthly cost", response: "2.5% on payments collected. No jobs, no cost." },
-      { objection: "I've tried software before", response: "Those tools made painting admin digital. Quotr eliminates it." },
+      { objection: "I've tried software before", response: "Those tools made painting admin digital. Foreman eliminates it." },
     ],
     segments: [
       { label: "Solo painter", hook: "Professional quotes that win you the job." },
@@ -462,14 +462,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💸", pain: "Deposit taken but final invoice delayed", cost: "Cash flow gaps between jobs" },
     ],
     quoteExample: "Quote the Murphy garden — 30m close-board fence with gate",
-    seoTitle: "Quotr for Fencing Contractors — AI Quoting & Job Management",
+    seoTitle: "Foreman for Fencing Contractors — AI Quoting & Job Management",
     seoDescription:
-      "Fencing contractors use Quotr to quote by the metre, manage schedules, track materials costs, and automate invoicing. Free 30-day trial.",
+      "Fencing contractors use Foreman to quote by the metre, manage schedules, track materials costs, and automate invoicing. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quote on-site: 'Quote 30 metres close-board with gate.' Sorted." },
       { objection: "It's another monthly cost", response: "2.5% on what you collect. No jobs, zero cost." },
-      { objection: "I work alone", response: "That's who Quotr is built for — solo operators who need an office in their pocket." },
-      { objection: "I've tried software before", response: "Quotr isn't forms. It's an AI that handles your admin." },
+      { objection: "I work alone", response: "That's who Foreman is built for — solo operators who need an office in their pocket." },
+      { objection: "I've tried software before", response: "Foreman isn't forms. It's an AI that handles your admin." },
     ],
     segments: [
       { label: "Solo fencer", hook: "Quote on-site, invoice on completion." },
@@ -499,13 +499,13 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💳", pain: "Clients wanting to pay 'later'", cost: "Chasing payments for weeks" },
     ],
     quoteExample: "Quote the Ryan house — washing machine drum bearing replacement",
-    seoTitle: "Quotr for Appliance Repair — AI Quoting, Scheduling & Invoicing",
+    seoTitle: "Foreman for Appliance Repair — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Appliance repair businesses use Quotr to create instant diagnostic quotes, schedule call-outs, track parts, and invoice on-site. Free 30-day trial.",
+      "Appliance repair businesses use Foreman to create instant diagnostic quotes, schedule call-outs, track parts, and invoice on-site. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote bearing replacement for Ryan washing machine.' Foreman AI handles it." },
       { objection: "It's another monthly cost", response: "2.5% on payments. No call-outs, no cost." },
-      { objection: "I work alone", response: "Quotr replaces the office you can't afford." },
+      { objection: "I work alone", response: "Foreman replaces the office you can't afford." },
       { objection: "I've tried software before", response: "This one talks back. Literally." },
     ],
     segments: [
@@ -536,9 +536,9 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "🧾", pain: "No professional quotes for commercial contracts", cost: "Losing bigger jobs to competitors" },
     ],
     quoteExample: "Quote the Byrne house — emergency lock change, front and back doors",
-    seoTitle: "Quotr for Locksmiths — AI Quoting, Emergency Scheduling & Invoicing",
+    seoTitle: "Foreman for Locksmiths — AI Quoting, Emergency Scheduling & Invoicing",
     seoDescription:
-      "Locksmiths use Quotr to quote on arrival, schedule emergency call-outs, track jobs, and invoice on-site. Free 30-day trial.",
+      "Locksmiths use Foreman to quote on arrival, schedule emergency call-outs, track jobs, and invoice on-site. Free 30-day trial.",
     objections: [
       { objection: "Most of my work is cash", response: "That's fine — log every job for tax records and business visibility. Know your real numbers." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote lock change, front and back doors.' Done before the kettle boils." },
@@ -573,14 +573,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "📱", pain: "Managing everything through texts and calls", cost: "No record of what was agreed" },
     ],
     quoteExample: "Quote the Murray house — shelf installation, tap repair, and door hanging",
-    seoTitle: "Quotr for Handymen — AI Quoting, Scheduling & Invoicing",
+    seoTitle: "Foreman for Handymen — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Handymen use Quotr to create multi-task quotes, schedule jobs, track expenses, and invoice clients automatically. Free 30-day trial.",
+      "Handymen use Foreman to create multi-task quotes, schedule jobs, track expenses, and invoice clients automatically. Free 30-day trial.",
     objections: [
-      { objection: "My jobs are all different", response: "That's Quotr's strength — voice-quote any type of work. No templates needed." },
+      { objection: "My jobs are all different", response: "That's Foreman's strength — voice-quote any type of work. No templates needed." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote shelves, tap, and door for Murray.' Foreman AI builds a multi-line quote." },
       { objection: "It's another monthly cost", response: "2.5% on payments collected. Small jobs, small fees." },
-      { objection: "I'm not a tech person", response: "If you can talk, you can use Quotr. That's the whole point." },
+      { objection: "I'm not a tech person", response: "If you can talk, you can use Foreman. That's the whole point." },
     ],
     segments: [
       { label: "Solo handyman", hook: "Quote anything, invoice everything." },
@@ -610,9 +610,9 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💰", pain: "Insurance companies paying 60-90 days late", cost: "Severe cash flow pressure" },
     ],
     quoteExample: "Quote the Collins property — water damage restoration, ground floor",
-    seoTitle: "Quotr for Restoration — AI Documentation, Quoting & Project Management",
+    seoTitle: "Foreman for Restoration — AI Documentation, Quoting & Project Management",
     seoDescription:
-      "Restoration and remediation businesses use Quotr to document damage, create detailed quotes, manage crews, and invoice insurers. Free 30-day trial.",
+      "Restoration and remediation businesses use Foreman to document damage, create detailed quotes, manage crews, and invoice insurers. Free 30-day trial.",
     objections: [
       { objection: "I need detailed scope documents", response: "Foreman AI builds itemised quotes with labour/materials split — ready for the loss adjuster." },
       { objection: "My crews are on multiple sites", response: "GPS tracking shows who's where, in real time." },
@@ -647,14 +647,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💰", pain: "Staged payments not tracked properly", cost: "Missing deposit or milestone payments" },
     ],
     quoteExample: "Quote the O'Brien house — 16 panel system with battery storage",
-    seoTitle: "Quotr for Solar Installers — AI Quoting, Project Tracking & Invoicing",
+    seoTitle: "Foreman for Solar Installers — AI Quoting, Project Tracking & Invoicing",
     seoDescription:
-      "Solar installation companies use Quotr to create detailed proposals, manage project stages, track crews, and handle staged invoicing. Free 30-day trial.",
+      "Solar installation companies use Foreman to create detailed proposals, manage project stages, track crews, and handle staged invoicing. Free 30-day trial.",
     objections: [
       { objection: "Our quotes are very detailed", response: "Foreman AI builds multi-line itemised quotes — panels, inverter, battery, labour, scaffolding — all broken out." },
       { objection: "We need project stage tracking", response: "Create milestones: survey, install, commission, sign-off. Track and invoice each stage." },
       { objection: "It's another monthly cost", response: "2.5% on collected payments. On a £10K install, that's less than your scaffolding hire." },
-      { objection: "I've tried software before", response: "Generic tools don't handle staged payments or multi-trade scheduling. Quotr does." },
+      { objection: "I've tried software before", response: "Generic tools don't handle staged payments or multi-trade scheduling. Foreman does." },
     ],
     segments: [
       { label: "Solo installer", hook: "Professional proposals that win residential jobs." },
@@ -684,14 +684,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "🧴", pain: "No tracking of product usage per detail", cost: "Can't price jobs accurately" },
     ],
     quoteExample: "Quote the Collins BMW — full exterior detail and ceramic coating",
-    seoTitle: "Quotr for Auto Detailing — AI Booking, Quoting & Client Management",
+    seoTitle: "Foreman for Auto Detailing — AI Booking, Quoting & Client Management",
     seoDescription:
-      "Auto detailing businesses use Quotr to manage bookings, create instant quotes, track product usage, and invoice clients on-site. Free 30-day trial.",
+      "Auto detailing businesses use Foreman to manage bookings, create instant quotes, track product usage, and invoice clients on-site. Free 30-day trial.",
     objections: [
-      { objection: "I use Instagram for bookings", response: "Keep your socials for marketing — use Quotr for the business side: quotes, invoices, scheduling." },
+      { objection: "I use Instagram for bookings", response: "Keep your socials for marketing — use Foreman for the business side: quotes, invoices, scheduling." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote full detail and ceramic for Collins BMW.' Done in seconds." },
       { objection: "It's another monthly cost", response: "2.5% on card payments. Cash and transfer jobs cost you nothing extra." },
-      { objection: "I'm mobile — I don't have an office", response: "That's exactly the point. Quotr IS your office." },
+      { objection: "I'm mobile — I don't have an office", response: "That's exactly the point. Foreman IS your office." },
     ],
     segments: [
       { label: "Solo detailer", hook: "Professional quotes and invoices from anywhere." },
@@ -721,14 +721,14 @@ export const TRADES: Record<string, TradeConfig> = {
       { emoji: "💸", pain: "Deposits taken but final invoices delayed", cost: "Cash tied up between jobs" },
     ],
     quoteExample: "Quote the Walsh house — double electric roller door with remote",
-    seoTitle: "Quotr for Garage Door Services — AI Quoting, Scheduling & Invoicing",
+    seoTitle: "Foreman for Garage Door Services — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Garage door service companies use Quotr to create instant quotes, schedule installations, track parts, and automate invoicing. Free 30-day trial.",
+      "Garage door service companies use Foreman to create instant quotes, schedule installations, track parts, and automate invoicing. Free 30-day trial.",
     objections: [
       { objection: "Every door is different", response: "Foreman AI builds bespoke quotes — just describe the door and the job." },
       { objection: "I don't have time to learn new software", response: "Voice quoting from the driveway. Say it, send it." },
       { objection: "It's another monthly cost", response: "2.5% on payments. No installs, no cost." },
-      { objection: "I've tried software before", response: "Generic tools don't understand bespoke product quoting. Quotr adapts to any job." },
+      { objection: "I've tried software before", response: "Generic tools don't understand bespoke product quoting. Foreman adapts to any job." },
     ],
     segments: [
       { label: "Solo installer", hook: "Quote on-site, invoice before you leave." },
