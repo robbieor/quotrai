@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +41,17 @@ interface StaffMember {
   last_updated: string | null;
   battery_level: number | null;
   is_moving: boolean;
+}
+
+// Force Leaflet to recalculate size after lazy-load mount
+function MapReady() {
+  const map = useMap();
+  useEffect(() => {
+    // Small delay to let the container fully render inside Suspense
+    const timer = setTimeout(() => map.invalidateSize(), 100);
+    return () => clearTimeout(timer);
+  }, [map]);
+  return null;
 }
 
 // Auto-fit map bounds to markers
@@ -118,11 +129,12 @@ export function StaffLocationMap() {
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             />
 
+            <MapReady />
             {allPositions.length > 0 && <FitBounds positions={allPositions} />}
 
             {/* Job site markers with geofence circles */}
             {jobSites?.map((site) => (
-              <div key={site.id}>
+              <React.Fragment key={site.id}>
                 <Circle
                   center={[site.latitude, site.longitude]}
                   radius={site.geofence_radius || 200}
@@ -148,7 +160,7 @@ export function StaffLocationMap() {
                     </div>
                   </Popup>
                 </Marker>
-              </div>
+              </React.Fragment>
             ))}
 
             {/* Staff location markers */}

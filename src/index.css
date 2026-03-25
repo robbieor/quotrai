@@ -357,4 +357,14 @@
   .safe-area-pt {
     padding-top: env(safe-area-inset-top, 0);
   }
+
+  /* Leaflet overrides — prevent Tailwind preflight from breaking map tiles */
+  .leaflet-container img {
+    max-width: none !important;
+    max-height: none !important;
+  }
+  .leaflet-container {
+    z-index: 0;
+    font-family: inherit;
+  }
 }
