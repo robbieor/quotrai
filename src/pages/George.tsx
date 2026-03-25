@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useAgentTask } from "@/contexts/AgentTaskContext";
+import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { GeorgeChatArea } from "@/components/george/GeorgeChatArea";
 import { GeorgeAgentInput } from "@/components/george/GeorgeAgentInput";
@@ -139,10 +141,21 @@ export default function George() {
     }
   }, [addMessage, activeConversationId, queryClient]);
 
+  const { startTask: globalStartTask, completeTask: globalCompleteTask } = useAgentTask();
+
   /** Enhanced handler that processes structured action plans */
   const handleStructuredResponse = useCallback((responseData: any, conversationId?: string) => {
     if (responseData.action_plan) {
       addActionPlan(responseData.action_plan);
+
+      // Start global task for cross-page visibility
+      const plan = responseData.action_plan;
+      const intent = plan.intent || "";
+      if (intent.includes("quote")) {
+        globalStartTask("create_quote", "Creating quote…", QUOTE_CREATION_STEPS);
+      } else if (intent.includes("invoice")) {
+        globalStartTask("create_invoice", "Creating invoice…", INVOICE_CREATION_STEPS);
+      }
     }
     // Invalidate data caches so new records appear on other pages
     queryClient.invalidateQueries({ queryKey: ["quotes"] });
@@ -150,7 +163,7 @@ export default function George() {
     queryClient.invalidateQueries({ queryKey: ["jobs"] });
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
     queryClient.invalidateQueries({ queryKey: ["customers"] });
-  }, [addActionPlan, queryClient]);
+  }, [addActionPlan, queryClient, globalStartTask]);
 
   const handleQuickAction = useCallback(async (action: string, message: string) => {
     addMessage("user", message);
@@ -247,6 +260,8 @@ export default function George() {
 
     if (action === "confirm") {
       addMessage("assistant", "✅ Done! Your record has been created.");
+      // Complete global task
+      globalCompleteTask("Record created successfully");
       // Determine where to navigate based on the tool calls
       const firstTool = plan?.type === "action_plan" ? plan.data.pending_tool_calls?.[0]?.function_name : null;
       const routeMap: Record<string, string> = {
