@@ -356,7 +356,9 @@ export function ClockInOutCard() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Today's Schedule
                   </h3>
-                  {todaysJobs.map((job) => (
+                  {todaysJobs.map((job) => {
+                    const gpsStatus = jobSiteMap.get(job.id);
+                    return (
                     <div
                       key={job.id}
                       className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
@@ -368,6 +370,12 @@ export function ClockInOutCard() {
                           {job.scheduled_date &&
                             ` • ${format(new Date(job.scheduled_date), "h:mm a")}`}
                         </p>
+                        {!gpsStatus && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                            <MapPinOff className="h-3 w-3" />
+                            No GPS location set
+                          </p>
+                        )}
                       </div>
                       <Button
                         size="sm"
@@ -382,7 +390,8 @@ export function ClockInOutCard() {
                         Start
                       </Button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
