@@ -214,8 +214,8 @@ export default function Quotes() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between">
-                    <Badge className={cn("text-xs", statusConfig[quote.status].className)}>
-                      {statusConfig[quote.status].label}
+                    <Badge className={cn("text-xs", (statusConfig[quote.status] || statusConfig.draft).className)}>
+                      {(statusConfig[quote.status] || { label: quote.status }).label}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(quote.created_at), "MMM d, yyyy")}
