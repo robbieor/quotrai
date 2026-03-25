@@ -99,33 +99,10 @@ function DashboardContent() {
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
-        {/* Header: title + filters + AI bar + quick actions */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
-            <DashboardFilterBar />
-            {!isMobile && (
-              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                {quickActions.map((action) => (
-                  <Button
-                    key={action.label}
-                    size="sm"
-                    variant="outline"
-                    onClick={() => navigate(action.route)}
-                    className="gap-1 text-xs h-7"
-                  >
-                    <action.icon className="h-3 w-3" />
-                    <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
-                    <Plus className="h-2.5 w-2.5" />
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* AI recommendation bar — inline, slim */}
-          {!isMobile && canAccessGeorge && (
-            <ControlHeader data={data?.controlHeader} isLoading={isLoading} showAI={true} />
-          )}
+        {/* Header: title + filters */}
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
+          <DashboardFilterBar />
         </div>
 
         {/* KPI Strip — 3 primary cards */}
