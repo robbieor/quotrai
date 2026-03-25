@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, MapPin, AlertTriangle, Navigation } from "lucide-react";
+import { CalendarIcon, MapPin, AlertTriangle, Navigation, CheckCircle2, Eye } from "lucide-react";
+import { MapPreview } from "@/components/ui/map-preview";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -268,15 +269,25 @@ export function JobFormDialog({
               <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <MapPin className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">Job Site Location</span>
                   </div>
-                  {siteCoords && (
-                    <Badge
-                      variant={locationValidForGps ? "default" : "destructive"}
-                      className="text-xs"
-                    >
-                      {locationValidForGps ? "GPS Ready" : "No GPS"}
+                  {siteCoords && locationValidForGps && (
+                    <Badge variant="default" className="text-xs gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      GPS Ready
+                    </Badge>
+                  )}
+                  {siteCoords && !locationValidForGps && (
+                    <Badge variant="destructive" className="text-xs gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      No GPS
+                    </Badge>
+                  )}
+                  {!siteCoords && selectedCustomerId && (
+                    <Badge variant="outline" className="text-xs gap-1 text-muted-foreground">
+                      <Eye className="h-3 w-3" />
+                      No location
                     </Badge>
                   )}
                 </div>
@@ -290,7 +301,7 @@ export function JobFormDialog({
                 )}
 
                 {!selectedCustomer?.latitude && !useCustomAddress && (
-                  <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-400">
+                  <div className="flex items-start gap-2 text-sm text-destructive">
                     <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                     <span>
                       Customer has no geocoded address. GPS tracking won't work.
@@ -307,7 +318,6 @@ export function JobFormDialog({
                     onCheckedChange={(checked) => {
                       setUseCustomAddress(checked);
                       if (!checked && selectedCustomer) {
-                        // Reset to customer address
                         const addr = selectedCustomer.address || "";
                         setSiteAddress(addr);
                         if (selectedCustomer.latitude && selectedCustomer.longitude) {
@@ -336,14 +346,12 @@ export function JobFormDialog({
                       value={siteAddress}
                       onChange={(val) => {
                         setSiteAddress(val);
-                        // Clear coords when user edits — they need to select a suggestion
                         setSiteCoords(null);
                         setGeocodeFailed(false);
                         if (isPOBoxAddress(val)) {
                           setPoBoxWarning(true);
                           setLocationValidForGps(false);
                         }
-                        // If user typed a long address but hasn't selected, warn after a delay
                         if (val.length > 10) {
                           setGeocodeFailed(true);
                         }
@@ -357,8 +365,8 @@ export function JobFormDialog({
                       countryCode="ie,gb,us"
                     />
                     {geocodeFailed && !siteCoords && siteAddress.length > 15 && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3 shrink-0" />
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 shrink-0 text-destructive" />
                         Select an address from the dropdown to enable GPS tracking
                       </p>
                     )}
@@ -374,6 +382,17 @@ export function JobFormDialog({
                       Please enter the physical job site address.
                     </span>
                   </div>
+                )}
+
+                {/* Map preview */}
+                {siteCoords && (
+                  <MapPreview
+                    latitude={siteCoords.lat}
+                    longitude={siteCoords.lng}
+                    height="140px"
+                    geofenceRadius={locationValidForGps ? geofenceRadius : undefined}
+                    className="mt-1"
+                  />
                 )}
 
                 {/* Geofence radius */}
