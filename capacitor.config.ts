@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.9b11f743854248068d3ea81555111caa',
+  appId: 'ie.foreman.app',
   appName: 'Foreman',
   webDir: 'dist',
   // server: {
