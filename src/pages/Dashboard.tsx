@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { ControlHeader } from "@/components/dashboard/ControlHeader";
 import { KPIStrip } from "@/components/dashboard/KPIStrip";
 import { ActionPanel } from "@/components/dashboard/ActionPanel";
 import { RevenueMultiChart } from "@/components/dashboard/RevenueMultiChart";
@@ -11,8 +12,10 @@ import { TopCustomersTable } from "@/components/dashboard/TopCustomersTable";
 import { CustomerProfitabilityScatter } from "@/components/dashboard/CustomerProfitabilityScatter";
 import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
 import { DrillThroughDrawer, DrillColumn } from "@/components/dashboard/DrillThroughDrawer";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Briefcase, FileText, Receipt, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useAuth } from "@/hooks/useAuth";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
@@ -28,6 +31,13 @@ import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
+import { useEffect } from "react";
+
+const quickActions = [
+  { label: "New Quote", icon: FileText, route: "/quotes" },
+  { label: "New Invoice", icon: Receipt, route: "/invoices" },
+  { label: "New Job", icon: Briefcase, route: "/jobs" },
+];
 
 function DashboardContent() {
   const { data, isLoading } = useDashboardAnalytics();
@@ -38,8 +48,8 @@ function DashboardContent() {
   const { formatCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const { canAccessAdvancedReporting, canAccessGeorge } = useSeatAccess();
-  const isMobile = useIsMobile();
 
+  // Drill-through state
   const [drillOpen, setDrillOpen] = useState(false);
   const [drillTitle, setDrillTitle] = useState("");
   const [drillColumns, setDrillColumns] = useState<DrillColumn[]>([]);
@@ -90,48 +100,70 @@ function DashboardContent() {
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
-        {/* Header: title + filters */}
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
-          <DashboardFilterBar />
+        {/* Header bar with filters + quick actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0 overflow-x-auto scrollbar-none">
+            <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
+            <DashboardFilterBar />
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {quickActions.map((action) => (
+              <Button
+                key={action.label}
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(action.route)}
+                className="gap-1 text-xs h-7"
+              >
+                <action.icon className="h-3 w-3" />
+                <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
+                <Plus className="h-2.5 w-2.5" />
+              </Button>
+            ))}
+          </div>
         </div>
 
-        {/* KPI Strip — 3 primary cards */}
+        {/* 1. Control Header — operational summary */}
         <AnimatedSection delay={0}>
+          <ControlHeader data={data?.controlHeader} isLoading={isLoading} showAI={canAccessGeorge} />
+        </AnimatedSection>
+
+        {/* 2. KPI Strip — 5 key metrics */}
+        <AnimatedSection delay={40}>
           <KPIStrip data={data?.kpi} isLoading={isLoading} onDrillDown={handleKPIDrillDown} />
         </AnimatedSection>
 
-        {/* Action Panel — collapsed summary */}
-        <AnimatedSection delay={40}>
+        {/* 3. Action Panel — priority alerts */}
+        <AnimatedSection delay={80}>
           <ActionPanel alerts={data?.actionAlerts} />
         </AnimatedSection>
 
-        {/* Analytics: Revenue + Quote Pipeline */}
-        <AnimatedSection delay={80}>
+        {/* 4. Analytics Zone — Revenue + Quote Pipeline */}
+        <AnimatedSection delay={120}>
           <div className="grid gap-3 lg:grid-cols-2">
             <RevenueMultiChart data={data?.revenueChartData} isLoading={isLoading} />
             <QuotePipelineCard data={data?.quoteFunnel} />
           </div>
         </AnimatedSection>
 
-        {/* Revenue by Job Type */}
-        <AnimatedSection delay={100}>
+        {/* 4b. Revenue by Job Type */}
+        <AnimatedSection delay={140}>
           <div className="grid gap-3 lg:grid-cols-2">
             <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
-            <div />
+            <div /> {/* Placeholder for balance */}
           </div>
         </AnimatedSection>
 
-        {/* Operational Tables */}
-        <AnimatedSection delay={120}>
+        {/* 5. Operational Tables — Jobs at Risk + Invoice Risk */}
+        <AnimatedSection delay={160}>
           <div className="grid gap-3 lg:grid-cols-2">
             <JobsAtRiskTable data={data?.jobsAtRisk} />
             <InvoiceRiskTable data={data?.invoicesAtRisk} />
           </div>
         </AnimatedSection>
 
-        {/* Management Insights — gated */}
-        <AnimatedSection delay={160}>
+        {/* 6. Management Insights — gated to Grow */}
+        <AnimatedSection delay={200}>
           <div className="grid gap-3 lg:grid-cols-2">
             <PlanGate requiredSeat="grow" featureLabel="Customer Profitability">
               <CustomerProfitabilityScatter data={data?.customerProfitability} isLoading={isLoading} />
@@ -153,11 +185,12 @@ function DashboardContent() {
           </div>
         </AnimatedSection>
 
-        <AnimatedSection delay={200}>
+        <AnimatedSection delay={240}>
           <TopCustomersTable data={data?.topCustomers} />
         </AnimatedSection>
       </div>
 
+      {/* Drill-Through Drawer */}
       <DrillThroughDrawer
         open={drillOpen}
         onOpenChange={setDrillOpen}
@@ -167,6 +200,7 @@ function DashboardContent() {
         linkPrefix={drillLink}
       />
 
+      {/* Onboarding Modal */}
       {showOnboarding && (
         <OnboardingModal open={true} onComplete={handleOnboardingComplete} />
       )}

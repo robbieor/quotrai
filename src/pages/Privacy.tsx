@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 
 export default function Privacy() {
   return (
@@ -9,8 +9,8 @@ export default function Privacy() {
       <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
-            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
-            <span className="text-lg sm:text-xl font-bold tracking-tight">Foreman</span>
+            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+            <span className="text-lg sm:text-xl font-bold tracking-tight">Quotr</span>
           </Link>
           <Link to="/">
             <Button variant="ghost" size="sm" className="gap-2">
@@ -29,7 +29,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Who We Are</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Foreman is operated by Foreman, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:hello@foreman.ie" className="text-primary hover:underline">hello@foreman.ie</a>.
+              Quotr is operated by Quotr Ltd, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:hello@quotr.info" className="text-primary hover:underline">hello@quotr.info</a>.
             </p>
           </section>
 
@@ -113,7 +113,7 @@ export default function Privacy() {
               <li><strong className="text-foreground">Withdraw consent:</strong> Where processing is based on consent.</li>
             </ul>
             <p className="text-sm leading-relaxed text-muted-foreground mt-3">
-              To exercise these rights, email <a href="mailto:hello@foreman.ie" className="text-primary hover:underline">hello@foreman.ie</a>. We will respond within 30 days.
+              To exercise these rights, email <a href="mailto:hello@quotr.info" className="text-primary hover:underline">hello@quotr.info</a>. We will respond within 30 days.
             </p>
           </section>
 
@@ -155,7 +155,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">15. Contact</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              For any privacy-related questions or requests, contact us at <a href="mailto:hello@foreman.ie" className="text-primary hover:underline">hello@foreman.ie</a>.
+              For any privacy-related questions or requests, contact us at <a href="mailto:hello@quotr.info" className="text-primary hover:underline">hello@quotr.info</a>.
             </p>
           </section>
         </div>
@@ -163,7 +163,7 @@ export default function Privacy() {
 
       <footer className="py-8 px-4 sm:px-6 border-t border-border">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Foreman. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Quotr. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
           </div>

@@ -18,11 +18,11 @@ export function PwaInstallBanner() {
             <Download className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm text-foreground">Install Foreman</p>
+            <p className="font-semibold text-sm text-foreground">Install Quotr</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {isIos
                 ? "Tap Share then \"Add to Home Screen\" for the full app experience."
-                : "Add Foreman to your home screen for quick access — works offline too."}
+                : "Add Quotr to your home screen for quick access — works offline too."}
             </p>
             {!isIos && (
               <Button size="sm" className="mt-2.5 gap-1.5" onClick={install}>

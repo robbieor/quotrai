@@ -138,7 +138,7 @@ export default function Expenses() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs md:text-sm text-muted-foreground">Total</p>
-                  <p className="text-sm md:text-2xl font-bold whitespace-nowrap">{formatCurrency(stats.total)}</p>
+                  <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(stats.total)}</p>
                 </div>
               </div>
             </CardContent>
@@ -151,7 +151,7 @@ export default function Expenses() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs md:text-sm text-muted-foreground">This Month</p>
-                  <p className="text-sm md:text-2xl font-bold whitespace-nowrap">{formatCurrency(stats.thisMonth)}</p>
+                  <p className="text-lg md:text-2xl font-bold truncate">{formatCurrency(stats.thisMonth)}</p>
                 </div>
               </div>
             </CardContent>

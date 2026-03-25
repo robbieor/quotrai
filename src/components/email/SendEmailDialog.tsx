@@ -28,7 +28,7 @@ interface SendEmailDialogProps {
 }
 
 function isInvoice(doc: Invoice | Quote): doc is Invoice {
-  return "issue_date" in doc;
+  return "invoice_number" in doc;
 }
 
 export function SendEmailDialog({
@@ -38,14 +38,14 @@ export function SendEmailDialog({
   documentType,
 }: SendEmailDialogProps) {
   const [email, setEmail] = useState("");
-  const [fromName, setFromName] = useState("Foreman");
+  const [fromName, setFromName] = useState("Quotr");
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
   if (!document) return null;
 
   const customerName = document.customer?.name || "Customer";
-  const documentNumber = isInvoice(document) ? document.display_number : document.display_number;
+  const documentNumber = isInvoice(document) ? document.invoice_number : document.quote_number;
   const total = Number(document.total) || 0;
 
   const handleSend = async () => {

@@ -47,7 +47,7 @@ export function SeatGuard({ requiredSeat, children }: SeatGuardProps) {
             <p className="text-muted-foreground text-sm">
               This feature requires a <strong>{SEAT_LABELS[requiredSeat]}</strong> seat or higher.
               {isNative
-                ? " Manage your subscription at foreman.ie."
+                ? " Manage your subscription at quotr.work."
                 : " Ask your team owner to upgrade your seat to access this page."}
             </p>
             {isNative ? (
@@ -55,7 +55,7 @@ export function SeatGuard({ requiredSeat, children }: SeatGuardProps) {
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
-                onClick={() => openExternalUrl("https://foreman.ie/settings?tab=team-billing")}
+                onClick={() => openExternalUrl("https://quotr.work/settings?tab=team-billing")}
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Open in Browser

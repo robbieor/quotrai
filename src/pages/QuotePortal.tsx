@@ -110,7 +110,7 @@ export default function QuotePortal() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">{quote.team.name}</h1>
-              <p className="text-muted-foreground">Quote {quote.display_number}</p>
+              <p className="text-muted-foreground">Quote {quote.quote_number}</p>
             </div>
           </div>
           <Badge className={statusColors[quote.status] || "bg-muted"}>
@@ -314,7 +314,7 @@ export default function QuotePortal() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Powered by Foreman
+          Powered by Quotr
         </p>
       </div>
     </div>

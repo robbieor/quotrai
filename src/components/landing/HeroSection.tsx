@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mic, CheckCircle2, Play } from "lucide-react";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 
 interface HeroSectionProps {
@@ -30,7 +30,7 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
 
             <p className="text-base sm:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
               Run quotes, jobs, invoices, and payments — using voice or text.
-              Foreman handles the admin so you get paid faster and stay in control.
+              Quotr handles the admin so you get paid faster and stay in control.
             </p>
 
             <p className="text-sm sm:text-base font-semibold text-foreground mb-6 sm:mb-8">

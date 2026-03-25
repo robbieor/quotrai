@@ -28,15 +28,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const statusConfig: Record<string, { label: string; className: string }> = {
+const statusConfig = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
   sent: { label: "Sent", className: "bg-blue-100 text-blue-800" },
   accepted: { label: "Accepted", className: "bg-green-100 text-green-800" },
   declined: { label: "Declined", className: "bg-red-100 text-red-800" },
-  converted: { label: "Converted", className: "bg-purple-100 text-purple-800" },
 };
 
-type StatusFilter = "all" | string;
+type StatusFilter = "all" | Quote["status"];
 
 export default function Quotes() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -69,7 +68,7 @@ export default function Quotes() {
     const query = searchQuery.toLowerCase();
     return quotes.filter((quote) => {
       const matchesSearch =
-        quote.display_number.toLowerCase().includes(query) ||
+        quote.quote_number.toLowerCase().includes(query) ||
         quote.customer?.name.toLowerCase().includes(query) ||
         quote.notes?.toLowerCase().includes(query);
       const matchesStatus = statusFilter === "all" || quote.status === statusFilter;
@@ -78,14 +77,13 @@ export default function Quotes() {
   }, [quotes, searchQuery, statusFilter]);
 
   const statusCounts = useMemo(() => {
-    if (!quotes) return { all: 0, draft: 0, sent: 0, accepted: 0, declined: 0, converted: 0 };
+    if (!quotes) return { all: 0, draft: 0, sent: 0, accepted: 0, declined: 0 };
     return {
       all: quotes.length,
       draft: quotes.filter((q) => q.status === "draft").length,
       sent: quotes.filter((q) => q.status === "sent").length,
       accepted: quotes.filter((q) => q.status === "accepted").length,
       declined: quotes.filter((q) => q.status === "declined").length,
-      converted: quotes.filter((q) => q.status === "converted").length,
     };
   }, [quotes]);
 
@@ -126,7 +124,7 @@ export default function Quotes() {
 
         {/* Status filter tabs */}
         <div className="flex gap-2 flex-wrap">
-          {(["all", "draft", "sent", "accepted", "declined", "converted"] as StatusFilter[]).map((status) => (
+          {(["all", "draft", "sent", "accepted", "declined"] as StatusFilter[]).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -175,7 +173,7 @@ export default function Quotes() {
                         <FileText className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{quote.display_number}</p>
+                        <p className="font-semibold text-sm truncate">{quote.quote_number}</p>
                         <p className="text-xs text-muted-foreground truncate">{quote.customer?.name || "No customer"}</p>
                       </div>
                     </div>
@@ -214,8 +212,8 @@ export default function Quotes() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between">
-                    <Badge className={cn("text-xs", (statusConfig[quote.status] || statusConfig.draft).className)}>
-                      {(statusConfig[quote.status] || { label: quote.status }).label}
+                    <Badge className={cn("text-xs", statusConfig[quote.status].className)}>
+                      {statusConfig[quote.status].label}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(quote.created_at), "MMM d, yyyy")}

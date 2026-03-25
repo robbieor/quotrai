@@ -62,7 +62,7 @@ export const Scene5ConvertJob: React.FC = () => {
       {/* Chat area */}
       <div style={{ maxWidth: 700, width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: userOpacity }}>
-          <Img src={staticFile("images/foreman-logo.png")} style={{ width: 28, height: 28, borderRadius: 7 }} />
+          <Img src={staticFile("images/quotr-logo.png")} style={{ width: 28, height: 28, borderRadius: 7 }} />
           <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · Foreman AI</span>
         </div>
 

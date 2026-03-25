@@ -102,14 +102,14 @@ export function FirstQuoteWizard({ tradeType, onBack }: FirstQuoteWizardProps) {
       // Generate quote number
       const { data: existingQuotes } = await supabase
         .from("quotes")
-        .select("display_number")
+        .select("quote_number")
         .eq("team_id", teamId)
         .order("created_at", { ascending: false })
         .limit(1);
 
       let nextNumber = 1001;
       if (existingQuotes && existingQuotes.length > 0) {
-        const lastNum = parseInt(existingQuotes[0].display_number.replace(/\D/g, ""), 10);
+        const lastNum = parseInt(existingQuotes[0].quote_number.replace(/\D/g, ""), 10);
         if (!isNaN(lastNum)) nextNumber = lastNum + 1;
       }
 
@@ -121,7 +121,7 @@ export function FirstQuoteWizard({ tradeType, onBack }: FirstQuoteWizardProps) {
       const { data: newQuote, error: quoteError } = await supabase
         .from("quotes")
         .insert({
-          display_number: `Q-${nextNumber}`,
+          quote_number: `Q-${nextNumber}`,
           customer_id: newCustomer.id,
           team_id: teamId,
           subtotal,

@@ -121,7 +121,7 @@ serve(async (req) => {
       }
 
       // Create onboarding link
-      const origin = req.headers.get("origin") || "https://foreman.ie";
+      const origin = req.headers.get("origin") || "https://quotrai.lovable.app";
       const accountLink = await stripe.accountLinks.create({
         account: accountId,
         refresh_url: `${origin}/settings?tab=billing&connect=refresh`,

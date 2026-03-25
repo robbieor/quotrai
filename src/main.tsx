@@ -3,7 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-console.log("[Foreman] Starting app...");
+console.log("[Quotr] Starting app...");
 
 // Purge any legacy service workers and caches unconditionally.
 // If stale SW assets are found, reload once so the user never sees an old UI.
@@ -25,8 +25,8 @@ console.log("[Foreman] Starting app...");
       await Promise.all(keys.map((k) => caches.delete(k)));
     } catch { /* ignore */ }
   }
-  if (hadSW && !sessionStorage.getItem("__foreman_sw_purged__")) {
-    sessionStorage.setItem("__foreman_sw_purged__", "1");
+  if (hadSW && !sessionStorage.getItem("__quotr_sw_purged__")) {
+    sessionStorage.setItem("__quotr_sw_purged__", "1");
     window.location.reload();
   }
 })();
@@ -39,5 +39,5 @@ if (rootEl) {
     </HelmetProvider>
   );
 } else {
-  console.error("[Foreman] Root element not found");
+  console.error("[Quotr] Root element not found");
 }

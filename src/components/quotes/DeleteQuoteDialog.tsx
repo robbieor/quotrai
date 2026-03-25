@@ -31,7 +31,7 @@ export function DeleteQuoteDialog({ open, onOpenChange, quote }: DeleteQuoteDial
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Quote</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete quote "{quote?.display_number}"? This action cannot be undone and will also delete all line items.
+            Are you sure you want to delete quote "{quote?.quote_number}"? This action cannot be undone and will also delete all line items.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

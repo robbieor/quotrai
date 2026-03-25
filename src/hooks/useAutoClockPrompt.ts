@@ -22,7 +22,7 @@ export function useAutoClockPrompt() {
   const { data: activeEntry } = useActiveTimeEntry();
   const { user } = useAuth();
   const [mode, setMode] = useState<AutoClockMode>(() => {
-    return (localStorage.getItem('foreman_auto_clock_mode') as AutoClockMode) || 'prompt';
+    return (localStorage.getItem('quotr_auto_clock_mode') as AutoClockMode) || 'prompt';
   });
   const [pendingPrompt, setPendingPrompt] = useState<GeofencePrompt | null>(null);
   const [isWatching, setIsWatching] = useState(false);
@@ -42,7 +42,7 @@ export function useAutoClockPrompt() {
         if (data?.auto_clock_mode) {
           const dbMode = data.auto_clock_mode as AutoClockMode;
           setMode(dbMode);
-          localStorage.setItem('foreman_auto_clock_mode', dbMode);
+          localStorage.setItem('quotr_auto_clock_mode', dbMode);
         }
       });
   }, [user?.id]);
@@ -50,7 +50,7 @@ export function useAutoClockPrompt() {
   // Persist mode preference to DB + localStorage
   const updateMode = useCallback((newMode: AutoClockMode) => {
     setMode(newMode);
-    localStorage.setItem('foreman_auto_clock_mode', newMode);
+    localStorage.setItem('quotr_auto_clock_mode', newMode);
     if (user?.id) {
       supabase.from('profiles').update({ auto_clock_mode: newMode } as any).eq('id', user.id).then(() => {});
     }

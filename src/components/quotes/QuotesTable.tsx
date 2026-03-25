@@ -30,20 +30,18 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { toast } from "sonner";
 
-const statusColors: Record<string, string> = {
+const statusColors = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-100 text-blue-800",
   accepted: "bg-green-100 text-green-800",
   declined: "bg-red-100 text-red-800",
-  converted: "bg-purple-100 text-purple-800",
 };
 
-const statusLabels: Record<string, string> = {
+const statusLabels = {
   draft: "Draft",
   sent: "Sent",
   accepted: "Accepted",
   declined: "Declined",
-  converted: "Converted",
 };
 
 interface QuotesTableProps {
@@ -88,7 +86,7 @@ export function QuotesTable({
     exportToExcel(
       dataToExport,
       [
-        { header: "Quote #", accessor: "display_number" },
+        { header: "Quote #", accessor: "quote_number" },
         { header: "Customer", accessor: (q) => q.customer?.name || "" },
         { header: "Status", accessor: (q) => statusLabels[q.status] },
         { header: "Items", accessor: (q) => q.quote_items.length },
@@ -132,8 +130,8 @@ export function QuotesTable({
                   />
                 </th>
                 <SortableHeader
-                  sortDirection={getSortDirection("display_number")}
-                  onSort={() => handleSort("display_number")}
+                  sortDirection={getSortDirection("quote_number")}
+                  onSort={() => handleSort("quote_number")}
                   className="w-28"
                 >
                   Quote #
@@ -205,7 +203,7 @@ export function QuotesTable({
                       <div className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 shrink-0">
                         <FileText className="h-3.5 w-3.5 text-primary" />
                       </div>
-                      <span className="font-medium text-sm">{quote.display_number}</span>
+                      <span className="font-medium text-sm">{quote.quote_number}</span>
                     </div>
                   </td>
                   <td className="px-3 py-2 border-r border-border/20">

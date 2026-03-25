@@ -23,14 +23,14 @@ interface InviteEmailProps {
 export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to join Foreman</Preview>
+    <Preview>You've been invited to join Quotr</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={logo}>Foreman</Text>
+        <Text style={logo}>Quotr</Text>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
           You've been invited to join{' '}
-          <Link href={siteUrl} style={link}><strong>Foreman</strong></Link>
+          <Link href={siteUrl} style={link}><strong>Quotr</strong></Link>
           . Click the button below to accept the invitation and create your account.
         </Text>
         <Button style={button} href={confirmationUrl}>Accept Invitation</Button>

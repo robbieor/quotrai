@@ -75,9 +75,9 @@ const App = () => {
         typeof reasonMessage === "string" &&
         reasonMessage.includes("Failed to fetch dynamically imported module")
       ) {
-        const hasReloaded = sessionStorage.getItem("__foreman_chunk_retry__");
+        const hasReloaded = sessionStorage.getItem("__quotr_chunk_retry__");
         if (!hasReloaded) {
-          sessionStorage.setItem("__foreman_chunk_retry__", "1");
+          sessionStorage.setItem("__quotr_chunk_retry__", "1");
           window.location.reload();
           return;
         }
@@ -128,15 +128,15 @@ const App = () => {
 
                 {/* Protected dashboard pages — all seats */}
                 <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
-                <Route path="/jobs" element={<RoleGuard><Jobs /></RoleGuard>} />
-                <Route path="/calendar" element={<RoleGuard><JobCalendar /></RoleGuard>} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/calendar" element={<JobCalendar />} />
                 <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
                 <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
                 <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
                 <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
-                <Route path="/notifications" element={<RoleGuard><Notifications /></RoleGuard>} />
-                <Route path="/time-tracking" element={<RoleGuard><TimeTracking /></RoleGuard>} />
-                <Route path="/settings" element={<RoleGuard><Settings /></RoleGuard>} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/time-tracking" element={<TimeTracking />} />
+                <Route path="/settings" element={<Settings />} />
 
                 {/* Connect+ seat required */}
                 <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />

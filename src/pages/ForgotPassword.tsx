@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -68,7 +68,7 @@ export default function ForgotPassword() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
+            <img src={quotrLogo} alt="Quotr" className="h-14 w-14 rounded-xl" />
           </div>
           <CardTitle className="text-2xl">Forgot your password?</CardTitle>
           <CardDescription>

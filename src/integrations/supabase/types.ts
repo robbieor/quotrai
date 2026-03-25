@@ -134,13 +134,6 @@ export type Database = {
             foreignKeyName: "ai_action_audit_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_action_audit_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -337,13 +330,6 @@ export type Database = {
             foreignKeyName: "certificates_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "certificates_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -378,13 +364,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "churn_events_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "churn_events_team_id_fkey"
             columns: ["team_id"]
@@ -544,13 +523,6 @@ export type Database = {
             foreignKeyName: "comms_queue_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comms_queue_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -618,13 +590,6 @@ export type Database = {
           visit_reminder_hours?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "comms_settings_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "comms_settings_team_id_fkey"
             columns: ["team_id"]
@@ -775,13 +740,6 @@ export type Database = {
             foreignKeyName: "cost_tracking_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cost_tracking_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -919,13 +877,6 @@ export type Database = {
             foreignKeyName: "customer_addresses_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_addresses_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -968,13 +919,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customer_payment_scores_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -1067,13 +1011,6 @@ export type Database = {
             foreignKeyName: "customers_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "customers_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1111,13 +1048,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "dashboard_layouts_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "dashboard_layouts_team_id_fkey"
             columns: ["team_id"]
@@ -1386,13 +1316,6 @@ export type Database = {
             foreignKeyName: "expenses_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expenses_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1443,13 +1366,6 @@ export type Database = {
             foreignKeyName: "foreman_ai_preferences_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "foreman_ai_preferences_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1481,13 +1397,6 @@ export type Database = {
           team_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "generated_marketing_assets_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "generated_marketing_assets_team_id_fkey"
             columns: ["team_id"]
@@ -1543,13 +1452,6 @@ export type Database = {
             foreignKeyName: "geofence_events_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "geofence_events_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1589,13 +1491,6 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "george_projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "george_conversations_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -1669,13 +1564,6 @@ export type Database = {
             foreignKeyName: "george_projects_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "george_projects_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1730,13 +1618,6 @@ export type Database = {
             foreignKeyName: "george_usage_log_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "george_usage_log_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -1777,13 +1658,6 @@ export type Database = {
           team_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "george_usage_snapshots_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "george_usage_snapshots_team_id_fkey"
             columns: ["team_id"]
@@ -1851,15 +1725,14 @@ export type Database = {
           delivery_status: string
           discount_type: string
           discount_value: number
-          display_number: string
           due_date: string
           id: string
+          invoice_number: string
           issue_date: string
           job_id: string | null
           notes: string | null
           portal_token: string | null
           quote_id: string | null
-          ref: string
           status: Database["public"]["Enums"]["invoice_status"]
           subtotal: number | null
           tax_amount: number | null
@@ -1877,15 +1750,14 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
-          display_number?: string
           due_date?: string
           id?: string
+          invoice_number: string
           issue_date?: string
           job_id?: string | null
           notes?: string | null
           portal_token?: string | null
           quote_id?: string | null
-          ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number | null
           tax_amount?: number | null
@@ -1903,15 +1775,14 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
-          display_number?: string
           due_date?: string
           id?: string
+          invoice_number?: string
           issue_date?: string
           job_id?: string | null
           notes?: string | null
           portal_token?: string | null
           quote_id?: string | null
-          ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number | null
           tax_amount?: number | null
@@ -1961,13 +1832,6 @@ export type Database = {
             columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "quotes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -2041,13 +1905,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_segment_jobs_at_risk"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_materials_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "job_materials_team_id_fkey"
@@ -2127,13 +1984,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_segment_jobs_at_risk"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_reminders_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "job_reminders_team_id_fkey"
@@ -2251,13 +2101,6 @@ export type Database = {
             foreignKeyName: "job_sites_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_sites_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -2324,13 +2167,6 @@ export type Database = {
             foreignKeyName: "job_status_changes_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_status_changes_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -2392,13 +2228,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_segment_jobs_at_risk"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "job_status_history_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "job_status_history_team_id_fkey"
@@ -2484,13 +2313,6 @@ export type Database = {
             columns: ["recurring_job_id"]
             isOneToOne: false
             referencedRelation: "recurring_jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jobs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -2634,13 +2456,6 @@ export type Database = {
             foreignKeyName: "leads_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -2687,13 +2502,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "location_pings_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "location_pings_team_id_fkey"
             columns: ["team_id"]
@@ -2750,13 +2558,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "materials_catalog_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "materials_catalog_team_id_fkey"
             columns: ["team_id"]
@@ -2842,13 +2643,6 @@ export type Database = {
             foreignKeyName: "mileage_logs_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mileage_logs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -2884,13 +2678,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "mileage_rates_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "mileage_rates_team_id_fkey"
             columns: ["team_id"]
@@ -2935,13 +2722,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "notifications_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "notifications_team_id_fkey"
             columns: ["team_id"]
@@ -3092,13 +2872,6 @@ export type Database = {
             foreignKeyName: "payment_reminders_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payment_reminders_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -3151,13 +2924,6 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "v_invoice_balances"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -3342,13 +3108,6 @@ export type Database = {
             foreignKeyName: "profiles_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -3389,13 +3148,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "quickbooks_connections_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quickbooks_connections_team_id_fkey"
             columns: ["team_id"]
@@ -3455,13 +3207,12 @@ export type Database = {
           delivery_status: string
           discount_type: string
           discount_value: number
-          display_number: string
           id: string
           job_id: string | null
           last_viewed_at: string | null
           notes: string | null
           portal_token: string | null
-          ref: string
+          quote_number: string
           reminders_enabled: boolean | null
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number | null
@@ -3480,13 +3231,12 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
-          display_number?: string
           id?: string
           job_id?: string | null
           last_viewed_at?: string | null
           notes?: string | null
           portal_token?: string | null
-          ref?: string
+          quote_number: string
           reminders_enabled?: boolean | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number | null
@@ -3505,13 +3255,12 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
-          display_number?: string
           id?: string
           job_id?: string | null
           last_viewed_at?: string | null
           notes?: string | null
           portal_token?: string | null
-          ref?: string
+          quote_number?: string
           reminders_enabled?: boolean | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number | null
@@ -3557,13 +3306,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_segment_jobs_at_risk"
             referencedColumns: ["job_id"]
-          },
-          {
-            foreignKeyName: "quotes_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "quotes_team_id_fkey"
@@ -3664,13 +3406,6 @@ export type Database = {
             foreignKeyName: "recurring_invoices_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -3740,13 +3475,6 @@ export type Database = {
             foreignKeyName: "recurring_jobs_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "recurring_jobs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -3794,21 +3522,7 @@ export type Database = {
             foreignKeyName: "referrals_referred_team_id_fkey"
             columns: ["referred_team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referrals_referred_team_id_fkey"
-            columns: ["referred_team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "referrals_referrer_team_id_fkey"
-            columns: ["referrer_team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -3912,13 +3626,6 @@ export type Database = {
             foreignKeyName: "subscription_history_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscription_history_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -3968,13 +3675,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "subscriptions_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "subscriptions_team_id_fkey"
             columns: ["team_id"]
@@ -4160,13 +3860,6 @@ export type Database = {
             foreignKeyName: "team_invitations_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_invitations_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -4195,13 +3888,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "team_memberships_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "team_memberships_team_id_fkey"
             columns: ["team_id"]
@@ -4372,13 +4058,6 @@ export type Database = {
             foreignKeyName: "templates_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "templates_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -4416,13 +4095,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "time_anomalies_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "time_anomalies_team_id_fkey"
             columns: ["team_id"]
@@ -4582,13 +4254,6 @@ export type Database = {
             foreignKeyName: "time_entries_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "time_entries_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -4635,13 +4300,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "travel_logs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "travel_logs_team_id_fkey"
             columns: ["team_id"]
@@ -4739,13 +4397,6 @@ export type Database = {
             foreignKeyName: "xero_connections_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "xero_connections_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -4795,117 +4446,6 @@ export type Database = {
         }
         Relationships: []
       }
-      team_member_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          email: string | null
-          full_name: string | null
-          id: string | null
-          team_id: string | null
-          trade_type: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string | null
-          team_id?: string | null
-          trade_type?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string | null
-          team_id?: string | null
-          trade_type?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_public: {
-        Row: {
-          created_at: string | null
-          george_usage_reset_date: string | null
-          george_voice_minutes_limit: number | null
-          george_voice_minutes_used: number | null
-          george_voice_price_per_seat: number | null
-          george_voice_rollover_minutes: number | null
-          george_voice_seats: number | null
-          id: string | null
-          is_demo: boolean | null
-          is_trial: boolean | null
-          name: string | null
-          platform_fee_percent: number | null
-          stripe_connect_account_id: string | null
-          stripe_connect_onboarding_complete: boolean | null
-          subscription_plan: string | null
-          subscription_tier: string | null
-          trial_ends_at: string | null
-          voice_overage_enabled: boolean | null
-          voice_overage_rate: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          george_usage_reset_date?: string | null
-          george_voice_minutes_limit?: number | null
-          george_voice_minutes_used?: number | null
-          george_voice_price_per_seat?: never
-          george_voice_rollover_minutes?: number | null
-          george_voice_seats?: number | null
-          id?: string | null
-          is_demo?: boolean | null
-          is_trial?: boolean | null
-          name?: string | null
-          platform_fee_percent?: never
-          stripe_connect_account_id?: never
-          stripe_connect_onboarding_complete?: never
-          subscription_plan?: string | null
-          subscription_tier?: string | null
-          trial_ends_at?: string | null
-          voice_overage_enabled?: never
-          voice_overage_rate?: never
-        }
-        Update: {
-          created_at?: string | null
-          george_usage_reset_date?: string | null
-          george_voice_minutes_limit?: number | null
-          george_voice_minutes_used?: number | null
-          george_voice_price_per_seat?: never
-          george_voice_rollover_minutes?: number | null
-          george_voice_seats?: number | null
-          id?: string | null
-          is_demo?: boolean | null
-          is_trial?: boolean | null
-          name?: string | null
-          platform_fee_percent?: never
-          stripe_connect_account_id?: never
-          stripe_connect_onboarding_complete?: never
-          subscription_plan?: string | null
-          subscription_tier?: string | null
-          trial_ends_at?: string | null
-          voice_overage_enabled?: never
-          voice_overage_rate?: never
-        }
-        Relationships: []
-      }
       v_invoice_balances: {
         Row: {
           balance_due: number | null
@@ -4927,13 +4467,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -4966,13 +4499,6 @@ export type Database = {
             columns: ["id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -5013,13 +4539,6 @@ export type Database = {
             foreignKeyName: "jobs_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jobs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -5044,13 +4563,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jobs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -5086,13 +4598,6 @@ export type Database = {
             foreignKeyName: "invoices_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -5113,13 +4618,6 @@ export type Database = {
           won_value: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "quotes_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quotes_team_id_fkey"
             columns: ["team_id"]
@@ -5160,13 +4658,6 @@ export type Database = {
             foreignKeyName: "jobs_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jobs_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
           },
@@ -5196,13 +4687,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
@@ -6315,13 +5799,7 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
-      quote_status:
-        | "draft"
-        | "sent"
-        | "accepted"
-        | "declined"
-        | "expired"
-        | "converted"
+      quote_status: "draft" | "sent" | "accepted" | "declined" | "expired"
       seat_type: "lite" | "connect" | "grow"
       team_role: "ceo" | "owner" | "member" | "manager"
       template_unit:
@@ -6543,14 +6021,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      quote_status: [
-        "draft",
-        "sent",
-        "accepted",
-        "declined",
-        "expired",
-        "converted",
-      ],
+      quote_status: ["draft", "sent", "accepted", "declined", "expired"],
       seat_type: ["lite", "connect", "grow"],
       team_role: ["ceo", "owner", "member", "manager"],
       template_unit: [

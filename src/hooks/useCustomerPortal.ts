@@ -9,7 +9,7 @@ export interface CustomerPortalData {
   } | null;
   quotes: Array<{
     id: string;
-    display_number: string;
+    quote_number: string;
     status: string;
     total: number;
     valid_until: string | null;
@@ -17,7 +17,7 @@ export interface CustomerPortalData {
   }>;
   invoices: Array<{
     id: string;
-    display_number: string;
+    invoice_number: string;
     status: string;
     total: number;
     due_date: string;
@@ -29,7 +29,7 @@ export interface CustomerPortalData {
     amount: number;
     payment_date: string;
     payment_method: string | null;
-    invoice_number: string; // kept as invoice_number for payment display
+    invoice_number: string;
   }>;
 }
 
@@ -51,12 +51,12 @@ export function useCustomerPortalData() {
       const [quotesRes, invoicesRes] = await Promise.all([
         supabase
           .from("quotes")
-          .select("id, display_number, status, total, valid_until, created_at")
+          .select("id, quote_number, status, total, valid_until, created_at")
           .eq("customer_id", customerId)
           .order("created_at", { ascending: false }),
         supabase
           .from("invoices")
-          .select("id, display_number, status, total, due_date, created_at, portal_token")
+          .select("id, invoice_number, status, total, due_date, created_at, portal_token")
           .eq("customer_id", customerId)
           .order("created_at", { ascending: false }),
       ]);
@@ -78,7 +78,7 @@ export function useCustomerPortalData() {
         if (paymentsError) throw paymentsError;
 
         // Map payments with invoice numbers
-        const invoiceMap = new Map(invoicesRes.data?.map((i: any) => [i.id, i.display_number]));
+        const invoiceMap = new Map(invoicesRes.data?.map((i) => [i.id, i.invoice_number]));
         payments = (paymentsData || []).map((p) => ({
           id: p.id,
           amount: Number(p.amount),
@@ -90,8 +90,8 @@ export function useCustomerPortalData() {
 
       return {
         customer: account.customers as CustomerPortalData["customer"],
-        quotes: (quotesRes.data || []).map((q: any) => ({ ...q, total: Number(q.total) })),
-        invoices: (invoicesRes.data || []).map((i: any) => ({ ...i, total: Number(i.total) })),
+        quotes: (quotesRes.data || []).map((q) => ({ ...q, total: Number(q.total) })),
+        invoices: (invoicesRes.data || []).map((i) => ({ ...i, total: Number(i.total) })),
         payments,
       } as CustomerPortalData;
     },

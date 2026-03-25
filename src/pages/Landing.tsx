@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLandingCurrency } from "@/hooks/useLandingCurrency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowRight, Calculator, Menu, X } from "lucide-react";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { DemoVideoSection } from "@/components/landing/DemoVideoSection";
@@ -60,9 +60,9 @@ export default function Landing() {
   }
 
   return (
-    <div className="landing-page min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
-        title="Foreman — AI-Powered Job Management for Field Service Businesses"
+        title="Quotr — AI-Powered Job Management for Field Service Businesses"
         description="Talk to your business. It talks back. Quotes, invoices, expenses, scheduling — all voice-powered, all in one app. Built for field service pros."
         path="/"
       />
@@ -84,8 +84,8 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
-            <span className="text-lg sm:text-xl font-bold tracking-tight">Foreman</span>
+            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+            <span className="text-lg sm:text-xl font-bold tracking-tight">Quotr</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/pricing">
@@ -193,12 +193,12 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="flex flex-col items-center gap-4 sm:gap-6 text-center sm:text-left sm:flex-row sm:justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <img src={foremanLogo} alt="Foreman" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
-              <span className="text-base sm:text-lg font-bold tracking-tight">Foreman</span>
+              <img src={quotrLogo} alt="Quotr" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
+              <span className="text-base sm:text-lg font-bold tracking-tight">Quotr</span>
               <span className="text-xs sm:text-sm text-muted-foreground">Powered by Foreman AI</span>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground order-last sm:order-none">
-              © {new Date().getFullYear()} Foreman. All rights reserved.
+              © {new Date().getFullYear()} Quotr. All rights reserved.
             </p>
             <div className="flex items-center gap-4 sm:gap-6">
               <Link to="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link>

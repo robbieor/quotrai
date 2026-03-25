@@ -305,7 +305,7 @@ export function useAddressAutocomplete() {
           signal: abortControllerRef.current.signal,
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'Foreman-App/1.0',
+            'User-Agent': 'Quotr-App/1.0',
           },
         }
       );
@@ -353,7 +353,7 @@ export function useAddressAutocomplete() {
         {
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'Foreman-App/1.0',
+            'User-Agent': 'Quotr-App/1.0',
           },
         }
       );
@@ -460,7 +460,7 @@ export function useAddressAutocomplete() {
         {
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'Foreman-App/1.0',
+            'User-Agent': 'Quotr-App/1.0',
           },
         }
       );

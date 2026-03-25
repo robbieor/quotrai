@@ -13,41 +13,20 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
   const isMobile = useIsMobile();
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
-  // Mobile: Centered welcome with quick actions
+  // Mobile: Clean centered welcome with light theme - scrollable
   if (isMobile) {
     return (
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center justify-center min-h-full px-5 py-8 bg-background">
+        <div className="flex flex-col items-center justify-center min-h-full px-6 py-8 bg-background">
           {/* Avatar */}
-          <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center mb-4 border border-border overflow-hidden">
+          <div className="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center mb-6 border border-border overflow-hidden">
             <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
           </div>
 
-          <h2 className="text-lg font-semibold mb-1">Foreman AI</h2>
-
           {/* Welcome text */}
-          <p className="text-center text-muted-foreground text-sm leading-relaxed max-w-xs mb-6">
-            Hey {firstName}, what would you like to do?
+          <p className="text-center text-muted-foreground text-base leading-relaxed max-w-xs">
+            Hey {firstName}, I'm Foreman AI — your assistant for managing jobs, quotes, and invoices.
           </p>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-2.5 w-full max-w-xs">
-            {quickActions.map((qa) => (
-              <button
-                key={qa.label}
-                onClick={() => onQuickAction?.(qa.action, qa.message)}
-                disabled={isProcessing}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-muted active:scale-[0.97] transition-all border border-transparent hover:border-border"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <qa.icon className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-xs font-medium text-center leading-tight">
-                  {qa.label}
-                </span>
-              </button>
-            ))}
-          </div>
         </div>
       </div>
     );

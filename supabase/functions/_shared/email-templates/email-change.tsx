@@ -24,13 +24,13 @@ interface EmailChangeEmailProps {
 export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for Foreman</Preview>
+    <Preview>Confirm your email change for Quotr</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={logo}>Foreman</Text>
+        <Text style={logo}>Quotr</Text>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
-          You requested to change your email address for Foreman from{' '}
+          You requested to change your email address for Quotr from{' '}
           <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}to{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
         </Text>

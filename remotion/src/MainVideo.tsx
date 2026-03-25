@@ -3,7 +3,7 @@ import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { slide } from "@remotion/transitions/slide";
 import { Scene1Problem } from "./scenes/Scene1Problem";
-import { Scene2MeetForeman } from "./scenes/Scene2MeetForeman";
+import { Scene2MeetQuotr } from "./scenes/Scene2MeetQuotr";
 import { Scene3CreateQuote } from "./scenes/Scene3CreateQuote";
 import { Scene4SendQuote } from "./scenes/Scene4SendQuote";
 import { Scene5ConvertJob } from "./scenes/Scene5ConvertJob";
@@ -24,7 +24,7 @@ export const MainVideo: React.FC = () => {
           timing={linearTiming({ durationInFrames: TRANSITION })}
         />
         <TransitionSeries.Sequence durationInFrames={150}>
-          <Scene2MeetForeman />
+          <Scene2MeetQuotr />
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition
           presentation={slide({ direction: "from-right" })}

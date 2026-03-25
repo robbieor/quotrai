@@ -31,7 +31,7 @@ export function DeleteInvoiceDialog({ open, onOpenChange, invoice }: DeleteInvoi
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Invoice</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete invoice "{invoice?.display_number}"? This action cannot be undone and will also delete all line items.
+            Are you sure you want to delete invoice "{invoice?.invoice_number}"? This action cannot be undone and will also delete all line items.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

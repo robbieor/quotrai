@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SENDER_DOMAIN = "notify.foreman.ie";
-const FROM_DOMAIN = "foreman.ie";
+const SENDER_DOMAIN = "notify.quotr.work";
+const FROM_DOMAIN = "quotr.work";
 
 const logStep = (step: string, details?: any) => {
   const d = details ? ` - ${JSON.stringify(details)}` : "";
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
           fromAddress = `${branding.company_name} <noreply@${FROM_DOMAIN}>`;
         }
       }
-      if (!fromAddress) fromAddress = `Foreman <noreply@${FROM_DOMAIN}>`;
+      if (!fromAddress) fromAddress = `Quotr <noreply@${FROM_DOMAIN}>`;
     }
 
     const recipients = Array.isArray(to) ? to : [to];

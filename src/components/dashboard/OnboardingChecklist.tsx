@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { track } from "@/utils/analytics";
 
-const DISMISSED_KEY = "foreman_checklist_dismissed";
+const DISMISSED_KEY = "quotr_checklist_dismissed";
 
 export function OnboardingChecklist() {
   const { checklist, completedCount, totalCount, allComplete, progress } = useOnboardingChecklist();

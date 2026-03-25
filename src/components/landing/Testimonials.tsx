@@ -45,13 +45,13 @@ export function Testimonials() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary mb-4">
             <Bot className="h-4 w-4 fill-primary" />
-            Why Tradespeople Choose Foreman
+            Why Tradespeople Choose Quotr
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Built Different. Built for You.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            We're not another generic business app. Foreman is purpose-built for trade businesses 
+            We're not another generic business app. Quotr is purpose-built for trade businesses 
             who want to spend less time on admin and more time earning.
           </p>
         </div>

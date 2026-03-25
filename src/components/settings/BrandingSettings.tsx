@@ -40,7 +40,7 @@ import { PREVIEW_EMAIL_STEPS } from "@/components/shared/AgentWorkingPanel";
 import { useAgentTask } from "@/contexts/AgentTaskContext";
 
 const ACCENT_COLORS = [
-  { name: "Foreman Green", value: "#00FFB2" },
+  { name: "Quotr Green", value: "#00FFB2" },
   { name: "Blue", value: "#3B82F6" },
   { name: "Purple", value: "#8B5CF6" },
   { name: "Orange", value: "#F97316" },
@@ -159,7 +159,7 @@ export function BrandingSettings() {
       if (previewDocType === "invoice") {
         const mockInvoice = {
           id: "preview",
-          display_number: "INV-2025-0042",
+          invoice_number: "INV-2025-0042",
           issue_date: new Date().toISOString(),
           due_date: new Date(Date.now() + 14 * 86400000).toISOString(),
           status: "sent" as const,
@@ -180,7 +180,7 @@ export function BrandingSettings() {
       } else {
         const mockQuote = {
           id: "preview",
-          display_number: "QTE-2025-0018",
+          quote_number: "QTE-2025-0018",
           created_at: new Date().toISOString(),
           valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
           status: "draft" as const,

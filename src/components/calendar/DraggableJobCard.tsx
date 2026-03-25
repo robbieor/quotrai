@@ -11,7 +11,7 @@ interface DraggableJobCardProps {
   onJobDragEnd?: () => void;
 }
 
-export const DRAG_JOB_ID_MIME = "application/x-foreman-job-id";
+export const DRAG_JOB_ID_MIME = "application/x-quotr-job-id";
 
 const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 border-yellow-300 text-yellow-800",

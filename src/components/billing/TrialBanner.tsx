@@ -6,7 +6,7 @@ import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
-const WEB_BILLING_URL = "https://foreman.ie/settings?tab=team-billing";
+const WEB_BILLING_URL = "https://quotr.work/settings?tab=team-billing";
 
 export function TrialBanner() {
   const navigate = useNavigate();
@@ -41,12 +41,12 @@ export function TrialBanner() {
         <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <span>
             {isNative
-              ? "Subscribe at foreman.ie to unlock full access."
+              ? "Subscribe at quotr.work to unlock full access."
               : "Subscribe to unlock full access to your data and features."}
           </span>
           <Button size="sm" onClick={handleCta} className="gap-1.5">
             {isNative && <ExternalLink className="h-3.5 w-3.5" />}
-            {isNative ? "Open foreman.ie" : "Subscribe Now"}
+            {isNative ? "Open quotr.work" : "Subscribe Now"}
           </Button>
         </AlertDescription>
       </Alert>
@@ -61,11 +61,11 @@ export function TrialBanner() {
         <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <span>
             Your trial ends in {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}.{" "}
-            {isNative ? "Visit foreman.ie to subscribe." : "Subscribe to continue."}
+            {isNative ? "Visit quotr.work to subscribe." : "Subscribe to continue."}
           </span>
           <Button size="sm" variant="outline" onClick={handleCta} className="gap-1.5">
             {isNative && <ExternalLink className="h-3.5 w-3.5" />}
-            {isNative ? "Open foreman.ie" : "Subscribe Now"}
+            {isNative ? "Open quotr.work" : "Subscribe Now"}
           </Button>
         </AlertDescription>
       </Alert>

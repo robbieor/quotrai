@@ -193,7 +193,7 @@ export function DashboardShowcase() {
           <div className="flex-1 mx-4">
             <div className="bg-background rounded-md px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
-              app.foreman.ie/{currentView === "tom" ? "foreman-ai" : currentView}
+              app.quotr.ai/{currentView === "tom" ? "foreman-ai" : currentView}
             </div>
           </div>
         </div>

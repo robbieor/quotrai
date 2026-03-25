@@ -9,11 +9,11 @@ import { Calculator, TrendingUp, Clock, Users, Sparkles, Mail, Loader2, CheckCir
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Conservative defaults validated against industry benchmarks (Jobber, Tradify, ServiceM8)
+// Conservative defaults validated against industry benchmarks (Jobber, Tradify)
 const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
-const FOREMAN_SEAT_PRICE = 29; // €29/month per seat
-const FOREMAN_VOICE_PRICE = 20; // €20/month per voice seat
+const QUOTR_SEAT_PRICE = 29; // €29/month per seat
+const QUOTR_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
 const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
 
@@ -39,13 +39,13 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
   
-  // Foreman cost
-  const foremanMonthlyCost = (teamSize * FOREMAN_SEAT_PRICE) + (showVoice ? voiceUsers * FOREMAN_VOICE_PRICE : 0);
+  // Quotr cost
+  const quotrMonthlyCost = (teamSize * QUOTR_SEAT_PRICE) + (showVoice ? voiceUsers * QUOTR_VOICE_PRICE : 0);
   
   // Net savings
-  const netMonthlySavings = potentialMoneySavedPerMonth - foremanMonthlyCost;
+  const netMonthlySavings = potentialMoneySavedPerMonth - quotrMonthlyCost;
   const annualSavings = netMonthlySavings * 12;
-  const roiMultiple = foremanMonthlyCost > 0 ? potentialMoneySavedPerMonth / foremanMonthlyCost : 0;
+  const roiMultiple = quotrMonthlyCost > 0 ? potentialMoneySavedPerMonth / quotrMonthlyCost : 0;
 
   // Admin headcount equivalent
   const fullTimeAdminHoursPerMonth = 160;
@@ -71,7 +71,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           roiMultiple,
           hoursSavedPerMonth: potentialHoursSavedPerMonth,
           adminHeadcountEquivalent,
-          foremanMonthlyCost,
+          quotrMonthlyCost,
         },
       });
 
@@ -183,7 +183,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Number of team members using Foreman
+                Number of team members using Quotr
               </p>
             </div>
 
@@ -299,13 +299,13 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           <h4 className="font-medium text-sm">Cost Breakdown</h4>
           <div className="grid md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-muted-foreground">Foreman Subscription</p>
+              <p className="text-muted-foreground">Quotr Subscription</p>
               <p className="font-semibold">
-                €{foremanMonthlyCost}/month
+                €{quotrMonthlyCost}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamSize} seats × €{FOREMAN_SEAT_PRICE}
-                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${FOREMAN_VOICE_PRICE}`}
+                {teamSize} seats × €{QUOTR_SEAT_PRICE}
+                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${QUOTR_VOICE_PRICE}`}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50">

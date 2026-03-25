@@ -65,7 +65,7 @@ export function InvoiceDetailSheet({
               <Receipt className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <SheetTitle className="text-lg">{invoice.display_number}</SheetTitle>
+              <SheetTitle className="text-lg">{invoice.invoice_number}</SheetTitle>
               <p className="text-sm text-muted-foreground">{invoice.customer?.name || "No customer"}</p>
             </div>
           </div>

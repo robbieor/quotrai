@@ -1,14 +1,14 @@
-# Terms of Service for Foreman
+# Terms of Service for Quotr
 
 **Last Updated: January 2026**
 
 ## 1. Acceptance of Terms
 
-By downloading, installing, or using Foreman ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the App.
+By downloading, installing, or using Quotr ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the App.
 
 ## 2. Description of Service
 
-Foreman is a mobile application that provides:
+Quotr is a mobile application that provides:
 - Invoice creation and management
 - Expense tracking and receipt scanning
 - Time tracking for billable hours
@@ -48,7 +48,7 @@ You agree NOT to:
 
 ## 7. Financial Disclaimers
 
-**Foreman is NOT a substitute for professional accounting or tax advice.**
+**Quotr is NOT a substitute for professional accounting or tax advice.**
 
 - The App provides tools for record-keeping only
 - VAT calculations are provided as a convenience and should be verified
@@ -65,7 +65,7 @@ You agree NOT to:
 
 - The App, including its design, code, and content, is owned by us
 - You may not copy, modify, or distribute the App
-- "Foreman" and associated logos are our trademarks
+- "Quotr" and associated logos are our trademarks
 
 ## 10. Limitation of Liability
 
@@ -110,7 +110,7 @@ If any provision of these Terms is found unenforceable, the remaining provisions
 
 ## 17. Entire Agreement
 
-These Terms, together with our Privacy Policy, constitute the entire agreement between you and Foreman.
+These Terms, together with our Privacy Policy, constitute the entire agreement between you and Quotr.
 
 ## 18. Contact
 

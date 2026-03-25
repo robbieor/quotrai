@@ -106,7 +106,7 @@ export function InvoicesTable({
     exportToExcel(
       dataToExport,
       [
-        { header: "Invoice #", accessor: "display_number" },
+        { header: "Invoice #", accessor: "invoice_number" },
         { header: "Customer", accessor: (inv) => inv.customer?.name || "" },
         { header: "Status", accessor: (inv) => statusLabels[getDisplayStatus(inv)] },
         { header: "Items", accessor: (inv) => inv.invoice_items.length },
@@ -164,8 +164,8 @@ export function InvoicesTable({
                   />
                 </th>
                 <SortableHeader
-                  sortDirection={getSortDirection("display_number")}
-                  onSort={() => handleSort("display_number")}
+                  sortDirection={getSortDirection("invoice_number")}
+                  onSort={() => handleSort("invoice_number")}
                   className="w-28"
                 >
                   Invoice #
@@ -232,7 +232,7 @@ export function InvoicesTable({
                         <div className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 shrink-0">
                           <Receipt className="h-3.5 w-3.5 text-primary" />
                         </div>
-                        <span className="font-medium text-sm">{invoice.display_number}</span>
+                        <span className="font-medium text-sm">{invoice.invoice_number}</span>
                       </div>
                     </td>
                     <td className="px-3 py-2 border-r border-border/20">

@@ -52,7 +52,7 @@ export function PaymentTrackerSheet({ open, onOpenChange, invoice }: PaymentTrac
             {/* Invoice Summary */}
             <div className="rounded-lg border bg-card p-4">
               <div className="text-sm text-muted-foreground mb-1">
-                Invoice #{invoice.display_number}
+                Invoice #{invoice.invoice_number}
               </div>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-bold">{formatCurrency(invoiceTotal)}</span>

@@ -42,7 +42,7 @@ export async function track(event: FunnelEvent, properties?: TrackOptions) {
   // 1. Fire browser custom event (for GA4 / Meta pixel listeners)
   try {
     window.dispatchEvent(
-      new CustomEvent("foreman_analytics", { detail: { event, ...properties } })
+      new CustomEvent("quotr_analytics", { detail: { event, ...properties } })
     );
   } catch {
     // SSR / non-browser – ignore

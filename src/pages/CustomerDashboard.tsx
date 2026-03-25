@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerPortalData, useIsCustomer } from "@/hooks/useCustomerPortal";
 import { toast } from "sonner";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 
 const quoteStatusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -112,7 +112,7 @@ export default function CustomerDashboard() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
+            <img src={quotrLogo} alt="Quotr" className="h-9 w-9 rounded-lg" />
             <div>
               <span className="text-xl font-bold tracking-tight">Customer Portal</span>
               {portalData?.customer && (
@@ -216,7 +216,7 @@ export default function CustomerDashboard() {
                         className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                       >
                         <div>
-                          <p className="font-medium">{quote.display_number}</p>
+                          <p className="font-medium">{quote.quote_number}</p>
                           <p className="text-sm text-muted-foreground">
                             {format(new Date(quote.created_at), "MMM d, yyyy")}
                             {quote.valid_until && ` • Valid until ${format(new Date(quote.valid_until), "MMM d, yyyy")}`}
@@ -262,7 +262,7 @@ export default function CustomerDashboard() {
                           className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                         >
                           <div>
-                            <p className="font-medium">{invoice.display_number}</p>
+                            <p className="font-medium">{invoice.invoice_number}</p>
                             <p className="text-sm text-muted-foreground">
                               Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
                             </p>
@@ -274,7 +274,7 @@ export default function CustomerDashboard() {
                             <span className="font-semibold">{formatCurrency(invoice.total)}</span>
                             {(displayStatus === "pending" || displayStatus === "overdue") && (
                               <Link
-                                to={`/invoice/${(invoice as any).portal_token || ""}`}
+                                to={`/portal/invoice?token=${(invoice as any).portal_token || ""}`}
                                 className="shrink-0"
                               >
                                 <Button size="sm" variant="default" className="gap-1.5">

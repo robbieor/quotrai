@@ -95,8 +95,8 @@ export function TableRow({
         />
       </td>
 
-      {/* Client number cell — hidden on mobile */}
-      <td className="py-2 px-3 text-xs text-muted-foreground font-mono border-r border-border/20 w-14 tabular-nums hidden md:table-cell">
+      {/* Client number cell */}
+      <td className="py-2 px-3 text-xs text-muted-foreground font-mono border-r border-border/20 w-14 tabular-nums">
         #{(customer as any).client_number || "—"}
       </td>
 

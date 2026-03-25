@@ -128,9 +128,9 @@ export function CustomersTable({
                   />
                 </th>
 
-                {/* Client number header — hidden on mobile */}
+                {/* Client number header */}
                 <th 
-                  className="font-semibold text-xs h-10 py-2 px-3 text-left w-14 bg-muted/60 border-r border-border/30 cursor-pointer hover:bg-muted transition-colors hidden md:table-cell"
+                  className="font-semibold text-xs h-10 py-2 px-3 text-left w-14 bg-muted/60 border-r border-border/30 cursor-pointer hover:bg-muted transition-colors"
                   onClick={() => handleSort("client_number")}
                 >
                   <span className="text-foreground/80">#</span>

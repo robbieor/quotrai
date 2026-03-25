@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSubscriptionTier, PRICING, STARTER_SEAT_DETAILS, PRO_SEAT_DETAILS, ENTERPRISE_SEAT_DETAILS } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 import { track } from "@/utils/analytics";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
@@ -24,21 +24,21 @@ export default function SelectPlan() {
         <Card className="max-w-md w-full text-center">
           <CardHeader>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <img src={foremanLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
-              <span className="text-2xl font-bold">Foreman</span>
+              <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
+              <span className="text-2xl font-bold">Quotr</span>
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
-              Subscription management is available on the web. Visit foreman.ie to choose a plan or manage billing.
+              Subscription management is available on the web. Visit quotr.work to choose a plan or manage billing.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
               className="gap-2"
-              onClick={() => openExternalUrl("https://foreman.ie/settings?tab=team-billing")}
+              onClick={() => openExternalUrl("https://quotr.work/settings?tab=team-billing")}
             >
               <ExternalLink className="h-4 w-4" />
-              Open foreman.ie
+              Open quotr.work
             </Button>
           </CardContent>
         </Card>
@@ -68,8 +68,8 @@ export default function SelectPlan() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src={foremanLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
-            <span className="text-2xl font-bold">Foreman</span>
+            <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
+            <span className="text-2xl font-bold">Quotr</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Simple, transparent pricing
@@ -123,7 +123,7 @@ export default function SelectPlan() {
                 ))}
               </ul>
               <Button variant="outline" className="w-full gap-2" asChild>
-                <a href="mailto:hello@foreman.ie">
+                <a href="mailto:hello@quotr.ai">
                   <MessageSquare className="h-4 w-4" /> Contact Us
                 </a>
               </Button>
@@ -156,7 +156,7 @@ export default function SelectPlan() {
           <div className="grid md:grid-cols-2 gap-4">
             <FaqCard
               q="What's the platform fee?"
-              a={`Foreman charges ${PRICING.PLATFORM_FEE}% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn. Enterprise customers get a reduced ${PRICING.ENTERPRISE_PLATFORM_FEE}% rate.`}
+              a={`Quotr charges ${PRICING.PLATFORM_FEE}% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn. Enterprise customers get a reduced ${PRICING.ENTERPRISE_PLATFORM_FEE}% rate.`}
             />
             <FaqCard
               q="Can I upgrade from Starter to Pro?"

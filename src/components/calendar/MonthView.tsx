@@ -85,16 +85,16 @@ export function MonthView({
               >
                 {format(day, "d")}
               </div>
-              <div className="space-y-0.5 overflow-hidden">
+              <div className="space-y-1 overflow-hidden">
                 {dayJobs.slice(0, 3).map((job) => (
-                  <div
+                  <DraggableJobCard
                     key={job.id}
+                    job={job}
                     onClick={() => onJobClick(job)}
-                    className="text-[10px] leading-tight px-1 py-0.5 rounded bg-primary/10 text-foreground truncate cursor-pointer hover:bg-primary/20 transition-colors"
-                    title={job.title}
-                  >
-                    {job.title.length > 12 ? job.title.slice(0, 12) + "…" : job.title}
-                  </div>
+                    onJobDragStart={onJobDragStart}
+                    onJobDragEnd={onJobDragEnd}
+                    compact
+                  />
                 ))}
                 {dayJobs.length > 3 && (
                   <div className="text-xs text-muted-foreground px-1">+{dayJobs.length - 3} more</div>

@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
 import type { KPIData } from "@/hooks/useDashboardAnalytics";
 import { useDashboardFilters, type TimePreset } from "@/contexts/DashboardFilterContext";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 function getTimeSuffix(preset: TimePreset): string {
   switch (preset) {
@@ -70,14 +68,12 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
 export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const { formatCurrency } = useCurrency();
   const { timePreset } = useDashboardFilters();
-  const isMobile = useIsMobile();
   const suffix = getTimeSuffix(timePreset);
-  const [showAll, setShowAll] = useState(false);
 
   if (isLoading) {
     return (
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
-        {[...Array(3)].map((_, i) => (
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        {[...Array(5)].map((_, i) => (
           <div key={i} className="bg-card border border-border rounded-lg p-3">
             <Skeleton className="h-3 w-16 mb-2" />
             <Skeleton className="h-6 w-20 mb-1" />
@@ -93,76 +89,45 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const changeDir = data.revenueChangePercent > 0 ? "positive" : data.revenueChangePercent < 0 ? "negative" : "neutral";
   const changePct = Math.abs(data.revenueChangePercent).toFixed(0);
 
-  // Primary 3 cards always visible
-  const primaryCards = [
-    <KPICard
-      key="revenue"
-      label={`Revenue ${suffix}`}
-      value={formatCurrency(data.revenueMTD)}
-      subMetric={`vs ${formatCurrency(data.revenueLastMonth)} ${data.comparisonLabel || "prev period"}`}
-      context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% ${data.comparisonLabel || "vs prev period"}`}
-      contextType={changeDir as "positive" | "negative" | "neutral"}
-    />,
-    <KPICard
-      key="ar"
-      label="Outstanding AR"
-      value={formatCurrency(data.outstandingAR)}
-      subMetric={`${data.outstandingARCount} invoice${data.outstandingARCount !== 1 ? "s" : ""}`}
-      context={data.overdue30PlusCount > 0 ? `${data.overdue30PlusCount} overdue 30+` : "No overdue risk"}
-      contextType={data.overdue30PlusCount > 0 ? "negative" : "positive"}
-      onClick={() => onDrillDown?.("outstanding")}
-    />,
-    <KPICard
-      key="jobs"
-      label="Active Jobs"
-      value={String(data.activeJobs)}
-      subMetric={data.stuckJobs > 0 ? `${data.stuckJobs} stuck` : "All progressing"}
-      context={data.stuckJobs > 0 ? `${data.stuckJobs} need attention` : "On track"}
-      contextType={data.stuckJobs > 0 ? "negative" : "positive"}
-      onClick={() => onDrillDown?.("jobs")}
-    />,
-  ];
-
-  // Secondary cards behind "View all"
-  const secondaryCards = [
-    <KPICard
-      key="cash"
-      label={`Cash Collected ${suffix}`}
-      value={formatCurrency(data.cashCollectedMTD)}
-      subMetric={`${data.cashCollectedCount} payment${data.cashCollectedCount !== 1 ? "s" : ""}`}
-      onClick={() => onDrillDown?.("cash")}
-    />,
-    <KPICard
-      key="overdue30"
-      label="30+ Day Overdue"
-      value={formatCurrency(data.overdue30Plus)}
-      subMetric={`${data.overdue30PlusCount} invoice${data.overdue30PlusCount !== 1 ? "s" : ""}`}
-      context={data.overdue30PlusCount > 0 ? "Requires escalation" : "All current"}
-      contextType={data.overdue30PlusCount > 0 ? "negative" : "positive"}
-      onClick={() => onDrillDown?.("overdue30")}
-    />,
-  ];
-
-  const mobilePrimary = isMobile && !showAll ? primaryCards.slice(0, 3) : primaryCards;
-
   return (
-    <div className="space-y-2">
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
-        {mobilePrimary}
-      </div>
-      {showAll && (
-        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
-          {secondaryCards}
-        </div>
-      )}
-      {!showAll && (
-        <button
-          onClick={() => setShowAll(true)}
-          className="text-xs text-primary font-medium hover:underline w-full text-center py-1"
-        >
-          View all metrics
-        </button>
-      )}
+    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+      <KPICard
+        label={`Cash Collected ${suffix}`}
+        value={formatCurrency(data.cashCollectedMTD)}
+        subMetric={`${data.cashCollectedCount} payment${data.cashCollectedCount !== 1 ? "s" : ""}`}
+        onClick={() => onDrillDown?.("cash")}
+      />
+      <KPICard
+        label="Outstanding AR"
+        value={formatCurrency(data.outstandingAR)}
+        subMetric={`${data.outstandingARCount} invoice${data.outstandingARCount !== 1 ? "s" : ""}`}
+        context={data.overdue30PlusCount > 0 ? `${data.overdue30PlusCount} overdue 30+` : "No overdue risk"}
+        contextType={data.overdue30PlusCount > 0 ? "negative" : "positive"}
+        onClick={() => onDrillDown?.("outstanding")}
+      />
+      <KPICard
+        label="30+ Day Overdue"
+        value={formatCurrency(data.overdue30Plus)}
+        subMetric={`${data.overdue30PlusCount} invoice${data.overdue30PlusCount !== 1 ? "s" : ""}`}
+        context={data.overdue30PlusCount > 0 ? "Requires escalation" : "All current"}
+        contextType={data.overdue30PlusCount > 0 ? "negative" : "positive"}
+        onClick={() => onDrillDown?.("overdue30")}
+      />
+      <KPICard
+        label={`Revenue ${suffix}`}
+        value={formatCurrency(data.revenueMTD)}
+        subMetric={`vs ${formatCurrency(data.revenueLastMonth)} ${data.comparisonLabel || "prev period"}`}
+        context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% ${data.comparisonLabel || "vs prev period"}`}
+        contextType={changeDir as "positive" | "negative" | "neutral"}
+      />
+      <KPICard
+        label="Active Jobs"
+        value={String(data.activeJobs)}
+        subMetric={data.stuckJobs > 0 ? `${data.stuckJobs} stuck` : "All progressing"}
+        context={data.stuckJobs > 0 ? `${data.stuckJobs} need attention` : "On track"}
+        contextType={data.stuckJobs > 0 ? "negative" : "positive"}
+        onClick={() => onDrillDown?.("jobs")}
+      />
     </div>
   );
 }

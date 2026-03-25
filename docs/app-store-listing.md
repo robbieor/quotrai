@@ -1,7 +1,7 @@
-# Foreman — Apple App Store Listing
+# Quotr — Apple App Store Listing
 
 ## App Name (30 characters max)
-**Foreman - Invoice & Job Tracker**
+**Quotr - Invoice & Job Tracker**
 
 ## Subtitle (30 characters max)
 Quotes, invoices & time tracking
@@ -14,9 +14,9 @@ invoice,quotes,tradesperson,contractor,expenses,time tracking,GPS,receipts,plumb
 
 ## Description (4000 characters max)
 
-Foreman is the all-in-one business app for contractors, tradespeople, and freelancers.
+Quotr is the all-in-one business app for contractors, tradespeople, and freelancers.
 
-Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Foreman gives you everything you need to run your business from your phone.
+Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Quotr gives you everything you need to run your business from your phone.
 
 **INVOICE IN SECONDS**
 Create professional invoices on-site and send them instantly via WhatsApp, SMS, or email. Your clients get a polished PDF with your logo and branding. Support for Irish VAT rates (23%, 13.5%, 9%, 0%) built in.
@@ -46,7 +46,7 @@ Growing your business? Invite team members with role-based access. Owners, admin
 Upload your logo. Choose your brand colours. Pick from three professional invoice templates. Add custom terms and payment details.
 
 **WORKS OFFLINE**
-Network issues on a rural job site? No problem. Foreman works offline and syncs when you're back online.
+Network issues on a rural job site? No problem. Quotr works offline and syncs when you're back online.
 
 **DESIGNED FOR IRELAND**
 Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for tradespeople.
@@ -63,7 +63,7 @@ Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for t
 - Cleaners
 - Any self-employed professional
 
-Download Foreman today and take control of your business finances.
+Download Quotr today and take control of your business finances.
 
 ---
 
@@ -75,12 +75,12 @@ Download Foreman today and take control of your business finances.
 4+ (No objectionable content)
 
 ## Copyright
-© 2025 Foreman
+© 2025 Quotr Ltd
 
 ## Contact Information
-- **Support URL:** https://foreman.ie/terms
-- **Marketing URL:** https://foreman.ie
-- **Privacy Policy URL:** https://foreman.ie/privacy
+- **Support URL:** https://quotr.work/terms
+- **Marketing URL:** https://quotr.work
+- **Privacy Policy URL:** https://quotr.work/privacy
 
 ## What's New in This Version
 Initial release — create quotes, invoices, track time with GPS, manage clients, and scan receipts with AI.
@@ -108,10 +108,10 @@ Same set, landscape or portrait.
 ---
 
 ## App Review Notes
-This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://foreman.ie/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 30-day free trial for new users.
+This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://quotr.work/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 30-day free trial for new users.
 
 ## Info.plist Permission Strings
-- `NSMicrophoneUsageDescription`: "Foreman uses the microphone for Foreman AI voice commands"
-- `NSLocationWhenInUseUsageDescription`: "Foreman uses your location to verify job site attendance"
-- `NSLocationAlwaysAndWhenInUseUsageDescription`: "Foreman tracks your location in the background for GPS time tracking"
-- `NSCameraUsageDescription`: "Foreman uses the camera for site visit verification photos"
+- `NSMicrophoneUsageDescription`: "Quotr uses the microphone for Foreman AI voice commands"
+- `NSLocationWhenInUseUsageDescription`: "Quotr uses your location to verify job site attendance"
+- `NSLocationAlwaysAndWhenInUseUsageDescription`: "Quotr tracks your location in the background for GPS time tracking"
+- `NSCameraUsageDescription`: "Quotr uses the camera for site visit verification photos"

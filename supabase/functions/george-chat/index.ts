@@ -808,7 +808,7 @@ If there are multiple possible matches and you're unsure, ASK a compact clarifyi
       }
     }
 
-    const systemPrompt = `You are Foreman AI, a professional AI assistant for Foreman — a trade business management platform for electricians, plumbers, and field service professionals in Ireland and the UK.
+    const systemPrompt = `You are Foreman AI, a professional AI assistant for Quotr — a trade business management platform for electricians, plumbers, and field service professionals in Ireland and the UK.
 
 CRITICAL DATE CONTEXT:
 - TODAY: ${today} (${dayOfWeek}), YEAR: ${year}

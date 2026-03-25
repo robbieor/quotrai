@@ -12,7 +12,7 @@ export function ExpenseEmailBanner() {
   const { profile } = useProfile();
 
   const forwardCode = (profile as any)?.expense_forward_code;
-  const expenseEmail = forwardCode ? `expenses+${forwardCode}@foreman.ie` : null;
+  const expenseEmail = forwardCode ? `expenses+${forwardCode}@quotr.info` : null;
 
   const handleCopy = () => {
     if (!expenseEmail) return;

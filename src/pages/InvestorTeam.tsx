@@ -6,7 +6,7 @@ import {
   Code2, Lightbulb, Target, Heart, Rocket
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/foreman-logo.png";
+import quotrLogo from "@/assets/quotr-logo.png";
 
 const FOUNDERS = [
   {
@@ -14,7 +14,7 @@ const FOUNDERS = [
     role: "Founder & CEO",
     background: [
       "Deep understanding of the trades industry from firsthand experience",
-      "Full-stack product builder — designed and built the entire Foreman platform",
+      "Full-stack product builder — designed and built the entire Quotr platform",
       "Combines technical capability with business strategy and market insight",
     ],
     strengths: ["Product Vision", "Full-Stack Development", "Market Knowledge", "AI Integration"],
@@ -30,7 +30,7 @@ const WHY_THIS_TEAM = [
   {
     icon: Lightbulb,
     title: "Market Empathy",
-    desc: "Foreman was born from seeing tradespeople struggle with admin. Every feature solves a real pain point observed in the field — not imagined in a boardroom.",
+    desc: "Quotr was born from seeing tradespeople struggle with admin. Every feature solves a real pain point observed in the field — not imagined in a boardroom.",
   },
   {
     icon: Target,
@@ -72,10 +72,10 @@ export default function InvestorTeam() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/">
-              <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
+              <img src={quotrLogo} alt="Quotr" className="h-9 w-9 rounded-lg" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-foreground">Foreman — Team</h1>
+              <h1 className="text-lg font-bold text-foreground">Quotr — Team</h1>
               <p className="text-xs text-muted-foreground">Founders, Hiring Plan & Culture</p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function InvestorTeam() {
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
         {/* Hero */}
         <div className="text-center max-w-2xl mx-auto space-y-2 py-4">
-          <h2 className="text-gradient-teal">The Team Behind Foreman</h2>
+          <h2 className="text-gradient-teal">The Team Behind Quotr</h2>
           <p className="text-muted-foreground">A lean, technical founding team with deep market empathy and capital efficiency</p>
         </div>
 

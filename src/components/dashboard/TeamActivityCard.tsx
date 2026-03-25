@@ -36,8 +36,8 @@ export function TeamActivityCard() {
 
       const [jobs, invoices, quotes] = await Promise.all([
         supabase.from("jobs").select("id, title, created_at").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(8),
-        supabase.from("invoices").select("id, display_number, created_at").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(8),
-        supabase.from("quotes").select("id, display_number, created_at").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(8),
+        supabase.from("invoices").select("id, invoice_number, created_at").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(8),
+        supabase.from("quotes").select("id, quote_number, created_at").gte("created_at", sevenDaysAgo).order("created_at", { ascending: false }).limit(8),
       ]);
 
       const items: TeamActivity[] = [];
@@ -46,13 +46,13 @@ export function TeamActivityCard() {
         id: `j-${j.id}`, userId: "", userName: "", avatarUrl: null,
         action: "created job", target: j.title, timestamp: j.created_at, type: "job",
       }));
-      (invoices.data || []).forEach((i: any) => items.push({
+      (invoices.data || []).forEach(i => items.push({
         id: `i-${i.id}`, userId: "", userName: "", avatarUrl: null,
-        action: "created invoice", target: i.display_number, timestamp: i.created_at, type: "invoice",
+        action: "created invoice", target: i.invoice_number, timestamp: i.created_at, type: "invoice",
       }));
-      (quotes.data || []).forEach((q: any) => items.push({
+      (quotes.data || []).forEach(q => items.push({
         id: `q-${q.id}`, userId: "", userName: "", avatarUrl: null,
-        action: "created quote", target: q.display_number, timestamp: q.created_at, type: "quote",
+        action: "created quote", target: q.quote_number, timestamp: q.created_at, type: "quote",
       }));
 
       return items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 12);
