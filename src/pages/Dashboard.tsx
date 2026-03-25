@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ControlHeader } from "@/components/dashboard/ControlHeader";
 import { KPIStrip } from "@/components/dashboard/KPIStrip";
 import { ActionPanel } from "@/components/dashboard/ActionPanel";
 import { RevenueMultiChart } from "@/components/dashboard/RevenueMultiChart";
@@ -12,9 +11,7 @@ import { TopCustomersTable } from "@/components/dashboard/TopCustomersTable";
 import { CustomerProfitabilityScatter } from "@/components/dashboard/CustomerProfitabilityScatter";
 import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
 import { DrillThroughDrawer, DrillColumn } from "@/components/dashboard/DrillThroughDrawer";
-import { Briefcase, FileText, Receipt, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,12 +28,6 @@ import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
-
-const quickActions = [
-  { label: "New Quote", icon: FileText, route: "/quotes" },
-  { label: "New Invoice", icon: Receipt, route: "/invoices" },
-  { label: "New Job", icon: Briefcase, route: "/jobs" },
-];
 
 function DashboardContent() {
   const { data, isLoading } = useDashboardAnalytics();
