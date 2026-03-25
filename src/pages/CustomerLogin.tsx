@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 export default function CustomerLogin() {
   const [email, setEmail] = useState("");
@@ -44,7 +44,7 @@ export default function CustomerLogin() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src={quotrLogo} alt="Quotr" className="h-12 w-12 rounded-lg" />
+              <img src={foremanLogo} alt="Foreman" className="h-12 w-12 rounded-lg" />
             </div>
             <CardTitle className="text-2xl">Check your email</CardTitle>
             <CardDescription>
@@ -79,7 +79,7 @@ export default function CustomerLogin() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={quotrLogo} alt="Quotr" className="h-12 w-12 rounded-lg" />
+            <img src={foremanLogo} alt="Foreman" className="h-12 w-12 rounded-lg" />
           </div>
           <CardTitle className="text-2xl">Customer Portal</CardTitle>
           <CardDescription>

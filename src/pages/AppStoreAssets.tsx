@@ -15,7 +15,7 @@ import {
   Image,
   Globe,
 } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const iconSizes = [
   { size: "1024×1024", platform: "iOS App Store", required: true, note: "No alpha channel, no rounded corners" },
@@ -89,7 +89,7 @@ export default function AppStoreAssets() {
             </Button>
           </Link>
           <div className="flex items-center gap-2">
-            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 rounded-lg" />
+            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-bold tracking-tight">App Store Assets</span>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function AppStoreAssets() {
             {[128, 96, 64, 48, 32].map((size) => (
               <div key={size} className="text-center">
                 <img
-                  src={quotrLogo}
+                  src={foremanLogo}
                   alt={`Quotr icon ${size}px`}
                   className="rounded-2xl shadow-md"
                   style={{ width: size, height: size }}

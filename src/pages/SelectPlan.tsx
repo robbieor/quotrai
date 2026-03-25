@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useSubscriptionTier, PRICING, STARTER_SEAT_DETAILS, PRO_SEAT_DETAILS, ENTERPRISE_SEAT_DETAILS } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { track } from "@/utils/analytics";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
@@ -24,8 +24,8 @@ export default function SelectPlan() {
         <Card className="max-w-md w-full text-center">
           <CardHeader>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
-              <span className="text-2xl font-bold">Quotr</span>
+              <img src={foremanLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
+              <span className="text-2xl font-bold">Foreman</span>
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
@@ -68,8 +68,8 @@ export default function SelectPlan() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
-            <span className="text-2xl font-bold">Quotr</span>
+            <img src={foremanLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
+            <span className="text-2xl font-bold">Foreman</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Simple, transparent pricing

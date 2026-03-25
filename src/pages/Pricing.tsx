@@ -13,7 +13,7 @@ import {
   Zap,
   ExternalLink,
 } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { cn } from "@/lib/utils";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
@@ -52,7 +52,7 @@ export default function Pricing() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-sm w-full text-center space-y-6">
-          <img src={quotrLogo} alt="Quotr" className="h-16 w-16 rounded-2xl mx-auto" />
+          <img src={foremanLogo} alt="Foreman" className="h-16 w-16 rounded-2xl mx-auto" />
           <h1 className="text-2xl font-bold">Manage Your Subscription</h1>
           <p className="text-muted-foreground">
             Subscriptions are managed through the Quotr website. Tap below to view plans and billing.
@@ -144,8 +144,8 @@ export default function Pricing() {
       <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight">Quotr</span>
+            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 rounded-lg" />
+            <span className="text-lg font-bold tracking-tight">Foreman</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login">
@@ -324,7 +324,7 @@ export default function Pricing() {
       <footer className="border-t border-border py-8 px-4 sm:px-6">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <img src={quotrLogo} alt="Quotr" className="h-6 w-6 rounded" />
+            <img src={foremanLogo} alt="Foreman" className="h-6 w-6 rounded" />
             <span>© {new Date().getFullYear()} Quotr Ltd</span>
           </div>
           <div className="flex gap-4">

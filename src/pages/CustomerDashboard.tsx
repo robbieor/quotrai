@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerPortalData, useIsCustomer } from "@/hooks/useCustomerPortal";
 import { toast } from "sonner";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const quoteStatusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -112,7 +112,7 @@ export default function CustomerDashboard() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={quotrLogo} alt="Quotr" className="h-9 w-9 rounded-lg" />
+            <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             <div>
               <span className="text-xl font-bold tracking-tight">Customer Portal</span>
               {portalData?.customer && (

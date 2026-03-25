@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bot, CheckCircle2, ArrowLeft, Sparkles, Users, Clock } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { Link } from "react-router-dom";
 import { COUNTRIES } from "@/constants/countries";
 
@@ -191,7 +191,7 @@ export default function RequestAccess() {
             <Card className="w-full max-w-lg mx-auto">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={quotrLogo} alt="Quotr" className="h-14 w-14 rounded-xl" />
+            <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mx-auto mb-2">
             <Bot className="h-4 w-4 text-primary" />

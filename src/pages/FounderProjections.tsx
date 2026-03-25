@@ -13,7 +13,7 @@ import {
   Video, Play, TrendingDown, Flame
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 // Market data
 const UK_TRADE_BUSINESSES = 300_000;
@@ -191,7 +191,7 @@ export default function FounderProjections() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/">
-              <img src={quotrLogo} alt="Quotr" className="h-9 w-9 rounded-lg" />
+              <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             </Link>
             <div>
               <h1 className="font-bold text-foreground">Quotr — Investor Revenue Model</h1>

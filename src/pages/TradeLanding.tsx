@@ -14,7 +14,7 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 import { track } from "@/utils/analytics";
 
@@ -59,8 +59,8 @@ export default function TradeLanding() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight">Quotr</span>
+            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 rounded-lg" />
+            <span className="text-lg font-bold tracking-tight">Foreman</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login">
@@ -200,8 +200,8 @@ export default function TradeLanding() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <img src={quotrLogo} alt="Quotr" className="h-6 w-6 rounded" />
-          <span className="font-semibold">Quotr</span>
+          <img src={foremanLogo} alt="Foreman" className="h-6 w-6 rounded" />
+          <span className="font-semibold">Foreman</span>
         </div>
         <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
           <Link to="/terms" className="hover:text-foreground">Terms</Link>

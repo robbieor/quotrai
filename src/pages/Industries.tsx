@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { SEOHead } from "@/components/shared/SEOHead";
 import { TRADES } from "@/components/landing/trade/TradeConfig";
 import { ArrowRight } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const Industries = () => {
   const tradeList = Object.values(TRADES);
@@ -18,7 +18,7 @@ const Industries = () => {
         <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between h-14 px-4">
             <Link to="/" className="flex items-center gap-2">
-              <img src={quotrLogo} alt="Quotr" className="h-7 w-auto" />
+              <img src={foremanLogo} alt="Foreman" className="h-7 w-auto" />
             </Link>
             <Link
               to="/signup"
