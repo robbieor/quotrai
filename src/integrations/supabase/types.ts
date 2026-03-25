@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_tasks: {
+        Row: {
+          completed_steps: string[] | null
+          created_at: string | null
+          current_step_index: number | null
+          failed_step: Json | null
+          id: string
+          status: string
+          steps: Json
+          success_message: string | null
+          task_type: string
+          team_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_steps?: string[] | null
+          created_at?: string | null
+          current_step_index?: number | null
+          failed_step?: Json | null
+          id?: string
+          status?: string
+          steps?: Json
+          success_message?: string | null
+          task_type: string
+          team_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_steps?: string[] | null
+          created_at?: string | null
+          current_step_index?: number | null
+          failed_step?: Json | null
+          id?: string
+          status?: string
+          steps?: Json
+          success_message?: string | null
+          task_type?: string
+          team_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_action_audit: {
         Row: {
           action_id: string
