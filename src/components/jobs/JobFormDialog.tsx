@@ -106,6 +106,7 @@ export function JobFormDialog({
   const [geocodeSource, setGeocodeSource] = useState("customer_inherited");
   const [useCustomAddress, setUseCustomAddress] = useState(false);
   const [poBoxWarning, setPoBoxWarning] = useState(false);
+  const [geocodeFailed, setGeocodeFailed] = useState(false);
 
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
@@ -176,6 +177,7 @@ export function JobFormDialog({
     setSiteCoords({ lat: geocoded.latitude, lng: geocoded.longitude });
     setLocationConfidence("high");
     setGeocodeSource(useCustomAddress ? "address" : "customer_inherited");
+    setGeocodeFailed(false);
 
     const isPoBox = isPOBoxAddress(geocoded.formattedAddress);
     setPoBoxWarning(isPoBox);
@@ -329,20 +331,38 @@ export function JobFormDialog({
 
                 {/* Custom address input */}
                 {useCustomAddress && (
-                  <AddressAutocomplete
-                    value={siteAddress}
-                    onChange={(val) => {
-                      setSiteAddress(val);
-                      if (isPOBoxAddress(val)) {
-                        setPoBoxWarning(true);
-                        setLocationValidForGps(false);
-                      }
-                    }}
-                    onAddressSelect={handleAddressSelect}
-                    placeholder="Enter job site address or Eircode..."
-                    showCurrentLocation
-                    countryCode="ie,gb,us"
-                  />
+                  <>
+                    <AddressAutocomplete
+                      value={siteAddress}
+                      onChange={(val) => {
+                        setSiteAddress(val);
+                        // Clear coords when user edits — they need to select a suggestion
+                        setSiteCoords(null);
+                        setGeocodeFailed(false);
+                        if (isPOBoxAddress(val)) {
+                          setPoBoxWarning(true);
+                          setLocationValidForGps(false);
+                        }
+                        // If user typed a long address but hasn't selected, warn after a delay
+                        if (val.length > 10) {
+                          setGeocodeFailed(true);
+                        }
+                      }}
+                      onAddressSelect={(geocoded) => {
+                        setGeocodeFailed(false);
+                        handleAddressSelect(geocoded);
+                      }}
+                      placeholder="Enter job site address or Eircode..."
+                      showCurrentLocation
+                      countryCode="ie,gb,us"
+                    />
+                    {geocodeFailed && !siteCoords && siteAddress.length > 15 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 shrink-0" />
+                        Select an address from the dropdown to enable GPS tracking
+                      </p>
+                    )}
+                  </>
                 )}
 
                 {/* PO Box warning */}

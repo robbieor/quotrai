@@ -41,10 +41,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch the time entry with job site
+    // Fetch the time entry
     const { data: entry, error: entryError } = await supabase
       .from("time_entries")
-      .select("*, job_sites(*)")
+      .select("*")
       .eq("id", time_entry_id)
       .single();
 
@@ -55,16 +55,25 @@ serve(async (req) => {
       );
     }
 
-    const jobSite = entry.job_sites;
+    // Fetch job site by job_id (not via FK join — time_entries links to jobs, not job_sites directly)
+    const { data: jobSite } = await supabase
+      .from("job_sites")
+      .select("*")
+      .eq("job_id", entry.job_id)
+      .maybeSingle();
+
     const anomalies: Array<{ type: string; details: Record<string, unknown> }> = [];
     let verified = false;
+
+    // Skip geofence validation if location is marked invalid for GPS
+    const locationValidForGps = jobSite?.location_valid_for_gps !== false;
+    const hasJobSiteCoords = jobSite && jobSite.latitude && jobSite.longitude;
 
     if (event_type === "clock_in") {
       const lat = entry.clock_in_latitude;
       const lng = entry.clock_in_longitude;
-      const accuracy = entry.clock_in_accuracy;
 
-      if (lat && lng && jobSite) {
+      if (lat && lng && hasJobSiteCoords && locationValidForGps) {
         const distance = haversineDistance(lat, lng, jobSite.latitude, jobSite.longitude);
         verified = distance <= (jobSite.geofence_radius || 200);
 
@@ -74,6 +83,16 @@ serve(async (req) => {
             details: { distance_meters: Math.round(distance), threshold: 500 },
           });
         }
+      } else if (!hasJobSiteCoords) {
+        // No job site location — can't verify, but not an anomaly
+        verified = false;
+      } else if (!locationValidForGps) {
+        // PO Box or invalid location — skip geofence, mark as unverifiable
+        verified = false;
+        anomalies.push({
+          type: "location_not_gps_valid",
+          details: { reason: "Job site address is not suitable for GPS verification (e.g. PO Box)" },
+        });
       }
 
       if (entry.clock_in_accuracy && entry.clock_in_accuracy > 200) {
@@ -93,7 +112,7 @@ serve(async (req) => {
       const lat = entry.clock_out_latitude;
       const lng = entry.clock_out_longitude;
 
-      if (lat && lng && jobSite) {
+      if (lat && lng && hasJobSiteCoords && locationValidForGps) {
         const distance = haversineDistance(lat, lng, jobSite.latitude, jobSite.longitude);
         verified = distance <= (jobSite.geofence_radius || 200);
 
@@ -103,6 +122,15 @@ serve(async (req) => {
             details: { distance_meters: Math.round(distance) },
           });
         }
+      } else if (!locationValidForGps) {
+        verified = false;
+      }
+
+      if (entry.clock_out_accuracy && entry.clock_out_accuracy > 200) {
+        anomalies.push({
+          type: "low_accuracy",
+          details: { accuracy_meters: entry.clock_out_accuracy, threshold: 200 },
+        });
       }
 
       await supabase
@@ -127,6 +155,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         verified,
+        location_valid_for_gps: locationValidForGps,
         anomalies_found: anomalies.length,
         anomalies,
       }),
