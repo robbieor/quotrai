@@ -101,7 +101,7 @@ export function useCreateQuote() {
           tax_amount: taxAmount,
           total,
           currency,
-        } as any)
+        })
         .select()
         .single();
 
@@ -256,18 +256,15 @@ export function useUpdateQuoteStatus() {
             const { data: linkedJobs } = await supabase.rpc("get_user_team_id");
             const teamId = linkedJobs as unknown as string;
 
-            // Simple insert with type assertion for new column
-            const jobPayload: Record<string, unknown> = {
+            await supabase.from("jobs").insert({
               title: `Job from Quote ${quote.display_number}`,
               customer_id: quote.customer_id,
               team_id: quote.team_id,
-              status: "scheduled",
+              status: "scheduled" as const,
               estimated_value: quote.total,
               description: quote.notes || undefined,
               quote_id: id,
-            };
-
-            await (supabase.from("jobs").insert(jobPayload as any) as any);
+            });
 
             toast.success("Job auto-created from accepted quote");
             queryClient.invalidateQueries({ queryKey: ["jobs"] });
