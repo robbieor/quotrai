@@ -22,6 +22,7 @@ import {
   Coffee,
   Timer,
   Briefcase,
+  MapPinOff,
 } from "lucide-react";
 import {
   useActiveTimeEntry,
@@ -29,6 +30,7 @@ import {
   useClockOut,
   useGeolocation,
   useTimeEntries,
+  useJobSites,
 } from "@/hooks/useTimeTracking";
 import { useJobs } from "@/hooks/useJobs";
 
@@ -47,6 +49,7 @@ export function ClockInOutCard() {
 
   const { data: activeEntry, isLoading: loadingActive } = useActiveTimeEntry();
   const { data: jobs } = useJobs();
+  const { data: jobSites } = useJobSites();
   const { data: allEntries } = useTimeEntries();
   const clockIn = useClockIn();
   const clockOut = useClockOut();
@@ -70,6 +73,20 @@ export function ClockInOutCard() {
       (job) => job.status === "scheduled" || job.status === "in_progress"
     );
   }, [jobs]);
+
+  // Map job_id → job_site for GPS status
+  const jobSiteMap = useMemo(() => {
+    const map = new Map<string, { hasLocation: boolean; validForGps: boolean }>();
+    if (jobSites) {
+      for (const site of jobSites) {
+        map.set(site.job_id, {
+          hasLocation: !!(site.latitude && site.longitude),
+          validForGps: (site as any).location_valid_for_gps !== false,
+        });
+      }
+    }
+    return map;
+  }, [jobSites]);
 
   // Daily summary
   const dailySummary = useMemo(() => {
@@ -339,7 +356,9 @@ export function ClockInOutCard() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Today's Schedule
                   </h3>
-                  {todaysJobs.map((job) => (
+                  {todaysJobs.map((job) => {
+                    const gpsStatus = jobSiteMap.get(job.id);
+                    return (
                     <div
                       key={job.id}
                       className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
@@ -351,6 +370,12 @@ export function ClockInOutCard() {
                           {job.scheduled_date &&
                             ` • ${format(new Date(job.scheduled_date), "h:mm a")}`}
                         </p>
+                        {!gpsStatus && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                            <MapPinOff className="h-3 w-3" />
+                            No GPS location set
+                          </p>
+                        )}
                       </div>
                       <Button
                         size="sm"
@@ -365,7 +390,8 @@ export function ClockInOutCard() {
                         Start
                       </Button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -375,7 +401,9 @@ export function ClockInOutCard() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Available Jobs
                   </h3>
-                  {availableJobs.slice(0, 5).map((job) => (
+                  {availableJobs.slice(0, 5).map((job) => {
+                    const gpsStatus = jobSiteMap.get(job.id);
+                    return (
                     <div
                       key={job.id}
                       className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
@@ -385,6 +413,12 @@ export function ClockInOutCard() {
                         <p className="text-xs text-muted-foreground truncate">
                           {job.customers?.name}
                         </p>
+                        {!gpsStatus && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                            <MapPinOff className="h-3 w-3" />
+                            No GPS location set
+                          </p>
+                        )}
                       </div>
                       <Button
                         size="sm"
@@ -399,7 +433,8 @@ export function ClockInOutCard() {
                         Start
                       </Button>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 

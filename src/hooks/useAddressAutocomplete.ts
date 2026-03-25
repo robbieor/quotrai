@@ -511,6 +511,39 @@ export function useAddressAutocomplete() {
   };
 }
 
+/**
+ * Detect if an address is a PO Box (not suitable for GPS geofencing)
+ */
+const PO_BOX_PATTERNS = [
+  /\bP\.?\s*O\.?\s*Box\b/i,
+  /\bPost\s*Office\s*Box\b/i,
+  /\bPOB\s*\d/i,
+  /\bP\.?\s*O\.?\s*B\.?\s*\d/i,
+  /\bBosca\s*Poist\b/i, // Irish for PO Box
+];
+
+export function isPOBoxAddress(address: string): boolean {
+  return PO_BOX_PATTERNS.some((pattern) => pattern.test(address));
+}
+
+/**
+ * Determine geocoding confidence from result quality
+ */
+export function getGeocodingConfidence(
+  suggestion: AddressSuggestion | null,
+  postcodeType: PostcodeType
+): 'high' | 'medium' | 'low' | 'none' {
+  if (!suggestion) return 'none';
+  // Eircode resolves to individual property
+  if (postcodeType === 'eircode' && suggestion.address.postcode) return 'high';
+  // Has house number = specific building
+  if (suggestion.address.house_number && suggestion.address.road) return 'high';
+  // Has road = street level
+  if (suggestion.address.road) return 'medium';
+  // Only has area info
+  return 'low';
+}
+
 // Format a suggestion into a clean address string
 export function formatAddressFromSuggestion(suggestion: AddressSuggestion): string {
   const parts: string[] = [];
