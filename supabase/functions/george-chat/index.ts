@@ -618,7 +618,16 @@ serve(async (req) => {
 
     const userId = user.id;
     const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { message, conversation_id, memory_context }: ChatRequest = await req.json();
 
+    if (!message) {
+      return new Response(
+        JSON.stringify({ error: "Message is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── PARALLEL: Profile + Team membership ────────────────────
     const { data: profile } = await serviceSupabase
       .from("profiles")
       .select("team_id, full_name")
@@ -632,46 +641,91 @@ serve(async (req) => {
       );
     }
 
-    const { data: membership } = await serviceSupabase
-      .from("team_memberships")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("team_id", profile.team_id)
-      .single();
+    const teamId = profile.team_id;
+    const userName = profile.full_name || "there";
 
-    if (!membership) {
+    // ─── QUICK-ACTION SHORT-CIRCUIT ─────────────────────────────
+    // For known button-initiated messages, skip the AI entirely
+    const quickActionShortCircuits: Record<string, { intent: string; label: string; response: string }> = {
+      "Help me create a new quote": {
+        intent: "create_quote",
+        label: "Create Quote",
+        response: "Sure! To create a quote, I'll need a few details:\n\n1. **Customer name** — who is this for?\n2. **Job description** — what work are you quoting?\n3. **Line items** — materials, labour, etc. with prices\n\nYou can give me all the details at once, e.g.:\n> *\"Quote for John Murphy, EV charger install, €800 labour, €400 materials\"*",
+      },
+      "I need to log an expense": {
+        intent: "log_expense",
+        label: "Log Expense",
+        response: "No problem! Tell me the details:\n\n1. **Vendor/supplier** — where did you spend?\n2. **Amount** — how much?\n3. **Category** — materials, fuel, tools, labour, permits, or other\n\nFor example:\n> *\"€85 at Screwfix for materials\"*",
+      },
+    };
+
+    const shortCircuit = quickActionShortCircuits[message];
+    if (shortCircuit) {
+      const actionId = crypto.randomUUID();
+      // Still create conversation + save messages in background
+      let activeConversationId = conversation_id;
+      if (!activeConversationId) {
+        const { data: newConv } = await serviceSupabase
+          .from("george_conversations")
+          .insert({ team_id: teamId, user_id: userId, title: message.slice(0, 50) })
+          .select("id")
+          .single();
+        if (newConv) activeConversationId = newConv.id;
+      }
+      if (activeConversationId) {
+        // Fire and forget — don't await
+        serviceSupabase.from("george_messages").insert([
+          { conversation_id: activeConversationId, role: "user", content: message },
+          { conversation_id: activeConversationId, role: "assistant", content: shortCircuit.response },
+        ]);
+      }
+      return new Response(
+        JSON.stringify({
+          message: shortCircuit.response,
+          conversation_id: activeConversationId,
+          action_plan: {
+            action_id: actionId,
+            status: "completed",
+            input_source: "typed",
+            command_text: message,
+            timestamp: new Date().toISOString(),
+            intent: shortCircuit.intent,
+            intent_label: shortCircuit.label,
+            entities: [],
+            steps: [{ id: "ready", label: "Ready for details", status: "complete", completed_at: new Date().toISOString() }],
+            text_response: shortCircuit.response,
+          },
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("george-chat: Processing message:", message);
+
+    // ─── PARALLEL: Membership + Preferences + Conversation ──────
+    const [membershipResult, prefsResult] = await Promise.all([
+      serviceSupabase
+        .from("team_memberships")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .single(),
+      serviceSupabase
+        .from("foreman_ai_preferences")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .maybeSingle(),
+    ]);
+
+    if (!membershipResult.data) {
       return new Response(
         JSON.stringify({ error: "Not a team member" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const teamId = profile.team_id;
-    const userName = profile.full_name || "there";
-    const { message, conversation_id, memory_context }: ChatRequest = await req.json();
-
-    // ─── LOAD USER AI PREFERENCES ─────────────────────────────────
-    let userPrefs: any = null;
-    try {
-      const { data: prefsData } = await serviceSupabase
-        .from("foreman_ai_preferences")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("team_id", teamId)
-        .maybeSingle();
-      userPrefs = prefsData;
-    } catch (e) {
-      console.error("george-chat: Failed to load preferences (non-fatal):", e);
-    }
-
-    if (!message) {
-      return new Response(
-        JSON.stringify({ error: "Message is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log("george-chat: Processing message:", message);
+    const userPrefs = prefsResult.data;
 
     // ─── CONVERSATION MANAGEMENT ──────────────────────────────────
     let activeConversationId = conversation_id;
@@ -688,23 +742,17 @@ serve(async (req) => {
       if (newConv) activeConversationId = newConv.id;
     }
 
-    if (activeConversationId) {
-      await serviceSupabase
-        .from("george_messages")
-        .insert({ conversation_id: activeConversationId, role: "user", content: message });
-    }
+    // ─── PARALLEL: Save user message + fetch history ────────────
+    const [, historyResult] = await Promise.all([
+      activeConversationId
+        ? serviceSupabase.from("george_messages").insert({ conversation_id: activeConversationId, role: "user", content: message })
+        : Promise.resolve(null),
+      activeConversationId
+        ? serviceSupabase.from("george_messages").select("role, content").eq("conversation_id", activeConversationId).order("created_at", { ascending: true }).limit(20)
+        : Promise.resolve({ data: [] }),
+    ]);
 
-    // ─── CONVERSATION HISTORY ─────────────────────────────────────
-    let history: { role: string; content: string }[] = [];
-    if (activeConversationId) {
-      const { data: messages } = await serviceSupabase
-        .from("george_messages")
-        .select("role, content")
-        .eq("conversation_id", activeConversationId)
-        .order("created_at", { ascending: true })
-        .limit(20);
-      history = (messages || []).slice(0, -1);
-    }
+    const history: { role: string; content: string }[] = ((historyResult as any)?.data || []).slice(0, -1);
 
     // ─── DATE CONTEXT ─────────────────────────────────────────────
     const now = new Date();
