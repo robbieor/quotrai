@@ -607,7 +607,7 @@ export function BrandingSettings() {
               variant="outline"
               className="w-full"
               onClick={handleSendPreview}
-              disabled={workflow.state.isRunning}
+              disabled={isSendingPreview}
             >
               <Send className="h-4 w-4 mr-2" />
               Send Preview to Myself
@@ -619,36 +619,7 @@ export function BrandingSettings() {
         </div>
       </div>
 
-      {/* Agent Working Dialog */}
-      <Dialog open={showWorkflowDialog} onOpenChange={(open) => {
-        if (!workflow.state.isRunning) setShowWorkflowDialog(open);
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="sr-only">Preview Generation</DialogTitle>
-          </DialogHeader>
-          <AgentWorkingPanel
-            steps={PREVIEW_EMAIL_STEPS}
-            currentStepIndex={workflow.state.currentStepIndex}
-            completedSteps={workflow.state.completedSteps}
-            failedStep={workflow.state.failedStep}
-            isComplete={workflow.state.isComplete}
-            successMessage={`Preview sent to ${user?.email}`}
-            successActions={[
-              {
-                label: "Send Another",
-                onClick: handleSendPreview,
-                variant: "outline" as const,
-              },
-              {
-                label: "Close",
-                onClick: () => setShowWorkflowDialog(false),
-              },
-            ]}
-            onRetry={handleSendPreview}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Progress is now shown via the global AgentTaskPanel */}
     </div>
   );
 }
