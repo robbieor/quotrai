@@ -112,7 +112,6 @@ export function useCreateQuote() {
         const itemsWithQuoteId = items.map((item) => ({
           ...item,
           quote_id: newQuote.id,
-          total_price: (item.quantity || 1) * (item.unit_price || 0),
         }));
 
         const { error: itemsError } = await supabase
@@ -179,7 +178,6 @@ export function useUpdateQuote() {
         const itemsWithQuoteId = items.map((item) => ({
           ...item,
           quote_id: id,
-          total_price: (item.quantity || 1) * (item.unit_price || 0),
         }));
 
         const { error: itemsError } = await supabase
