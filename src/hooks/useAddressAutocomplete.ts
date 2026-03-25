@@ -25,8 +25,14 @@ export interface GeocodedAddress {
   longitude: number;
   postcode?: string;
   city?: string;
+  county?: string;
   country?: string;
   countryCode?: string;
+  line1?: string;
+  line2?: string;
+  region?: string;
+  confidence?: 'high' | 'medium' | 'low' | 'none';
+  isPOBox?: boolean;
 }
 
 export type PostcodeType = 'eircode' | 'uk' | 'us' | 'unknown';
