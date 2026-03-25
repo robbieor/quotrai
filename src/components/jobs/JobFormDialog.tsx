@@ -177,6 +177,7 @@ export function JobFormDialog({
     setSiteCoords({ lat: geocoded.latitude, lng: geocoded.longitude });
     setLocationConfidence("high");
     setGeocodeSource(useCustomAddress ? "address" : "customer_inherited");
+    setGeocodeFailed(false);
 
     const isPoBox = isPOBoxAddress(geocoded.formattedAddress);
     setPoBoxWarning(isPoBox);
