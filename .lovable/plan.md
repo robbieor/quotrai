@@ -1,30 +1,27 @@
 
 
-## Capture Real App Screenshots for iOS & Leonardo.ai Video
+## Fix Template Picker for Mobile
 
-### What we'll do
-Capture actual screenshots of every key screen in your app at iPhone 6.7" (1290×2796) and 6.1" (1179×2556) resolutions, then generate both raw and iPhone-framed versions.
+### Problem
+The "Use Template" dialog dumps all 28 trade categories as buttons, filling the entire mobile screen before any templates are visible. Completely unusable on phones.
 
-### Screens to capture (8 total)
-1. **Dashboard** — stats, revenue chart, recent activity
-2. **Invoices** — invoice list with status badges
-3. **Quotes** — quote pipeline/list view
-4. **Time Tracking** — clock in/out card, time entries
-5. **Customers** — customer list/table
-6. **Expenses** — expense list with receipt scanning
-7. **Jobs / Calendar** — job schedule view
-8. **George AI** — chat interface
+### Changes
 
-### Approach
-1. Navigate the browser to each screen at mobile viewport sizes (430×932 for 6.7", 393×852 for 6.1")
-2. Take a screenshot of each screen
-3. Save raw screenshots to `/mnt/documents/screenshots/raw/`
-4. Run the product-shot script to create iPhone-framed versions saved to `/mnt/documents/screenshots/framed/`
-5. Total output: ~32 images (8 screens × 2 sizes × 2 styles)
+**1. Hide category filter when user has a trade set (TemplatePicker.tsx)**
+- If `userTradeCategory` exists, auto-lock to that category and **don't render the category buttons at all**
+- Show a small text label like "Showing: Electrician templates" with a "Show all" link to optionally expand
+- Only show the full category grid if user explicitly clicks "Show all" or has no trade set
 
-### Important note
-The browser shares your preview session. You'll need to be **logged in** in the preview before I capture — otherwise I'll only get the login/landing page. If you're already logged in, I can proceed immediately.
+**2. Mobile-optimized dialog (TemplatePicker.tsx)**
+- On mobile, render as a full-screen sheet (`DrawerContent` / full-height dialog) instead of a centered dialog
+- Reduce template card padding from `p-4` to `p-3` on mobile
+- Remove the separate "Use" button on each card — tapping the whole card already triggers selection
+- Compact the metadata row (duration, rate) into a single line
 
-### Output
-All files saved to `/mnt/documents/screenshots/` — accessible from your **Files** view.
+**3. If "Show all" is expanded, use a compact dropdown**
+- Replace the flex-wrap button grid with a `<Select>` dropdown for category switching
+- Keeps category access available without eating screen space
+
+### Files to edit
+- `src/components/quotes/TemplatePicker.tsx` — all changes in this one file
 
