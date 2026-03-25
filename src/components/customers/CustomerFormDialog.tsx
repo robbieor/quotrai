@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -28,13 +28,11 @@ import {
   AlertTriangle,
   XCircle,
   MapPin,
-  ChevronDown,
-  ChevronUp,
-  Pencil,
   MailWarning,
 } from "lucide-react";
 import type { Customer } from "@/hooks/useCustomers";
 import type { GeocodedAddress } from "@/hooks/useAddressAutocomplete";
+import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -63,6 +61,74 @@ interface CustomerFormDialogProps {
   customer?: Customer | null;
   onSubmit: (values: CustomerFormSubmitValues) => void;
   isLoading?: boolean;
+}
+
+// Country-aware labels
+function getAddressLabels(countryIso2: string | null) {
+  const code = (countryIso2 || "").toUpperCase();
+  switch (code) {
+    case "IE":
+      return {
+        line1: "Address Line 1",
+        line2: "Address Line 2",
+        city: "City / Town",
+        region: "County",
+        postcode: "Eircode",
+        postcodePlaceholder: "e.g. D02 AF30",
+        country: "Country",
+      };
+    case "GB":
+      return {
+        line1: "Address Line 1",
+        line2: "Address Line 2",
+        city: "City / Town",
+        region: "County",
+        postcode: "Postcode",
+        postcodePlaceholder: "e.g. SW1A 1AA",
+        country: "Country",
+      };
+    case "US":
+      return {
+        line1: "Street Address",
+        line2: "Apt / Suite",
+        city: "City",
+        region: "State",
+        postcode: "ZIP Code",
+        postcodePlaceholder: "e.g. 10001",
+        country: "Country",
+      };
+    case "CA":
+      return {
+        line1: "Street Address",
+        line2: "Unit / Suite",
+        city: "City",
+        region: "Province",
+        postcode: "Postal Code",
+        postcodePlaceholder: "e.g. K1A 0B1",
+        country: "Country",
+      };
+    case "AU":
+    case "NZ":
+      return {
+        line1: "Street Address",
+        line2: "Unit / Level",
+        city: "City / Suburb",
+        region: "State / Territory",
+        postcode: "Postcode",
+        postcodePlaceholder: "e.g. 2000",
+        country: "Country",
+      };
+    default:
+      return {
+        line1: "Address Line 1",
+        line2: "Address Line 2",
+        city: "City / Town",
+        region: "Region / State",
+        postcode: "Postcode / ZIP",
+        postcodePlaceholder: "",
+        country: "Country",
+      };
+  }
 }
 
 const CONFIDENCE_CONFIG = {
@@ -95,8 +161,8 @@ export function CustomerFormDialog({
   onSubmit,
   isLoading,
 }: CustomerFormDialogProps) {
+  const { branding } = useCompanyBranding();
   const [geocodedAddress, setGeocodedAddress] = useState<GeocodedAddress | null>(null);
-  const [showStructuredFields, setShowStructuredFields] = useState(false);
   const [isManualEdit, setIsManualEdit] = useState(false);
   const [structuredFields, setStructuredFields] = useState({
     line1: "",
@@ -106,6 +172,9 @@ export function CustomerFormDialog({
     postcode: "",
     country: "",
   });
+
+  const companyCountry = (branding as any)?.company_country_iso2 || null;
+  const labels = useMemo(() => getAddressLabels(companyCountry), [companyCountry]);
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -142,29 +211,26 @@ export function CustomerFormDialog({
           country: customer.country || undefined,
           confidence: "high",
         });
-        setStructuredFields({
-          line1: customer.line1 || "",
-          line2: customer.line2 || "",
-          city: customer.city || "",
-          region: customer.region || "",
-          postcode: customer.postal_code || "",
-          country: customer.country || "",
-        });
       } else {
         setGeocodedAddress(null);
-        setStructuredFields({ line1: "", line2: "", city: "", region: "", postcode: "", country: "" });
       }
+      setStructuredFields({
+        line1: customer.line1 || "",
+        line2: customer.line2 || "",
+        city: customer.city || "",
+        region: customer.region || "",
+        postcode: customer.postal_code || "",
+        country: customer.country || "",
+      });
     } else {
       form.reset({ name: "", contact_person: "", email: "", phone: "", address: "", notes: "" });
       setGeocodedAddress(null);
       setStructuredFields({ line1: "", line2: "", city: "", region: "", postcode: "", country: "" });
     }
-    setShowStructuredFields(false);
     setIsManualEdit(false);
   }, [customer, form]);
 
   const handleSubmit = (values: CustomerFormValues) => {
-    // If manual edit, merge structured fields back into geocoded address
     const finalGeocodedAddress = geocodedAddress
       ? {
           ...geocodedAddress,
@@ -173,7 +239,6 @@ export function CustomerFormDialog({
           region: structuredFields.region || geocodedAddress.region,
           postcode: structuredFields.postcode || geocodedAddress.postcode,
           country: structuredFields.country || geocodedAddress.country,
-          // If manually edited without re-geocoding, mark as unverified
           confidence: isManualEdit ? "low" as const : geocodedAddress.confidence,
         }
       : undefined;
@@ -214,7 +279,7 @@ export function CustomerFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {customer ? "Edit Customer" : "Add Customer"}
@@ -279,182 +344,131 @@ export function CustomerFormDialog({
               />
             </div>
 
-            {/* Smart Address Input */}
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <AddressAutocomplete
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      onAddressSelect={handleAddressSelect}
-                      placeholder="Search address, Eircode or postcode…"
-                      showCurrentLocation
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Address Section */}
+            <div className="space-y-3">
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <AddressAutocomplete
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onAddressSelect={handleAddressSelect}
+                        placeholder="Search address, Eircode or postcode…"
+                        showCurrentLocation
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Validation Status + Structured Fields */}
-            {geocodedAddress && (
-              <div className="space-y-3">
-                {/* Status Row */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    {confidenceConfig && ConfidenceIcon && (
-                      <Badge variant="outline" className={`gap-1 text-xs ${confidenceConfig.className}`}>
-                        <ConfidenceIcon className="h-3 w-3" />
-                        {confidenceConfig.label}
-                        {isManualEdit && " (edited)"}
-                      </Badge>
-                    )}
-                    {isPOBox && (
-                      <Badge variant="outline" className="gap-1 text-xs bg-destructive/10 text-destructive border-destructive/20">
-                        <MailWarning className="h-3 w-3" />
-                        PO Box
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs gap-1 text-muted-foreground"
-                      onClick={() => setShowStructuredFields(!showStructuredFields)}
-                    >
-                      {showStructuredFields ? (
-                        <>
-                          <ChevronUp className="h-3 w-3" />
-                          Hide details
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="h-3 w-3" />
-                          Show details
-                        </>
-                      )}
-                    </Button>
+              {/* Validation badge row */}
+              {geocodedAddress && (
+                <div className="flex items-center gap-2">
+                  {confidenceConfig && ConfidenceIcon && (
+                    <Badge variant="outline" className={`gap-1 text-xs ${confidenceConfig.className}`}>
+                      <ConfidenceIcon className="h-3 w-3" />
+                      {confidenceConfig.label}
+                      {isManualEdit && " (edited)"}
+                    </Badge>
+                  )}
+                  {isPOBox && (
+                    <Badge variant="outline" className="gap-1 text-xs bg-destructive/10 text-destructive border-destructive/20">
+                      <MailWarning className="h-3 w-3" />
+                      PO Box
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {/* PO Box Warning */}
+              {isPOBox && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                  <div className="flex gap-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-destructive">PO Box detected</p>
+                      <p className="text-muted-foreground text-xs mt-0.5">
+                        This address cannot be used for GPS tracking.
+                        You'll need to set the job site location separately.
+                      </p>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* PO Box Warning */}
-                {isPOBox && (
-                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                    <div className="flex gap-2">
-                      <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-destructive">PO Box detected</p>
-                        <p className="text-muted-foreground text-xs mt-0.5">
-                          This address cannot be used for GPS tracking or geofencing. 
-                          When creating a job for this customer, you'll need to set the job location separately.
-                        </p>
-                      </div>
-                    </div>
+              {/* Always-visible structured address fields */}
+              <div className="rounded-md border bg-muted/30 p-3 space-y-2.5">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{labels.line1}</label>
+                  <Input
+                    value={structuredFields.line1}
+                    onChange={(e) => handleStructuredFieldChange("line1", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{labels.line2}</label>
+                  <Input
+                    value={structuredFields.line2}
+                    onChange={(e) => handleStructuredFieldChange("line2", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                    placeholder="Apt, Suite, etc."
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">{labels.city}</label>
+                    <Input
+                      value={structuredFields.city}
+                      onChange={(e) => handleStructuredFieldChange("city", e.target.value)}
+                      className="h-9 text-sm mt-1"
+                    />
                   </div>
-                )}
-
-                {/* Expandable Structured Fields */}
-                {showStructuredFields && (
-                  <div className="rounded-md border bg-muted/30 p-3 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Address Details
-                      </p>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs gap-1"
-                        onClick={() => setIsManualEdit(!isManualEdit)}
-                      >
-                        <Pencil className="h-3 w-3" />
-                        {isManualEdit ? "Lock" : "Edit manually"}
-                      </Button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div>
-                        <label className="text-xs text-muted-foreground">Address Line 1</label>
-                        <Input
-                          value={structuredFields.line1}
-                          onChange={(e) => handleStructuredFieldChange("line1", e.target.value)}
-                          disabled={!isManualEdit}
-                          className="h-8 text-sm"
-                          placeholder="123 Main Street"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Address Line 2</label>
-                        <Input
-                          value={structuredFields.line2}
-                          onChange={(e) => handleStructuredFieldChange("line2", e.target.value)}
-                          disabled={!isManualEdit}
-                          className="h-8 text-sm"
-                          placeholder="Apt, Suite, etc."
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs text-muted-foreground">City / Town</label>
-                          <Input
-                            value={structuredFields.city}
-                            onChange={(e) => handleStructuredFieldChange("city", e.target.value)}
-                            disabled={!isManualEdit}
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-muted-foreground">County / Region</label>
-                          <Input
-                            value={structuredFields.region}
-                            onChange={(e) => handleStructuredFieldChange("region", e.target.value)}
-                            disabled={!isManualEdit}
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs text-muted-foreground">Postcode / Eircode</label>
-                          <Input
-                            value={structuredFields.postcode}
-                            onChange={(e) => handleStructuredFieldChange("postcode", e.target.value)}
-                            disabled={!isManualEdit}
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-muted-foreground">Country</label>
-                          <Input
-                            value={structuredFields.country}
-                            onChange={(e) => handleStructuredFieldChange("country", e.target.value)}
-                            disabled={!isManualEdit}
-                            className="h-8 text-sm"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-[10px] text-muted-foreground">
-                      📍 {geocodedAddress.latitude.toFixed(5)}, {geocodedAddress.longitude.toFixed(5)}
-                    </p>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">{labels.region}</label>
+                    <Input
+                      value={structuredFields.region}
+                      onChange={(e) => handleStructuredFieldChange("region", e.target.value)}
+                      className="h-9 text-sm mt-1"
+                    />
                   </div>
-                )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">{labels.postcode}</label>
+                    <Input
+                      value={structuredFields.postcode}
+                      onChange={(e) => handleStructuredFieldChange("postcode", e.target.value)}
+                      className="h-9 text-sm mt-1"
+                      placeholder={labels.postcodePlaceholder}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">{labels.country}</label>
+                    <Input
+                      value={structuredFields.country}
+                      onChange={(e) => handleStructuredFieldChange("country", e.target.value)}
+                      className="h-9 text-sm mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
 
-                {/* Map Preview */}
+              {/* Map Preview */}
+              {geocodedAddress && (
                 <MapPreview
                   latitude={geocodedAddress.latitude}
                   longitude={geocodedAddress.longitude}
-                  height="160px"
+                  height="140px"
                 />
-              </div>
-            )}
+              )}
+            </div>
 
             <FormField
               control={form.control}
@@ -474,7 +488,11 @@ export function CustomerFormDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
