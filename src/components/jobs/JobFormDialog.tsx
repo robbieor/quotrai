@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, MapPin, AlertTriangle, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -36,8 +37,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useCustomers } from "@/hooks/useCustomers";
 import { type Job, JOB_STATUSES, type JobStatus } from "@/hooks/useJobs";
+import {
+  isPOBoxAddress,
+  type GeocodedAddress,
+} from "@/hooks/useAddressAutocomplete";
 
 const jobSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -51,6 +61,16 @@ const jobSchema = z.object({
 
 type JobFormValues = z.infer<typeof jobSchema>;
 
+export interface JobLocationData {
+  address: string;
+  latitude: number;
+  longitude: number;
+  geofence_radius: number;
+  location_confidence: string;
+  location_valid_for_gps: boolean;
+  geocode_source: string;
+}
+
 interface JobFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,6 +83,7 @@ interface JobFormDialogProps {
     scheduled_date?: string | null;
     scheduled_time?: string | null;
     estimated_value?: number | null;
+    location?: JobLocationData;
   }) => void;
   isLoading?: boolean;
 }
@@ -76,6 +97,16 @@ export function JobFormDialog({
 }: JobFormDialogProps) {
   const { data: customers, isLoading: customersLoading } = useCustomers();
 
+  // Location state
+  const [siteAddress, setSiteAddress] = useState("");
+  const [siteCoords, setSiteCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geofenceRadius, setGeofenceRadius] = useState(100);
+  const [locationConfidence, setLocationConfidence] = useState<string>("high");
+  const [locationValidForGps, setLocationValidForGps] = useState(true);
+  const [geocodeSource, setGeocodeSource] = useState("customer_inherited");
+  const [useCustomAddress, setUseCustomAddress] = useState(false);
+  const [poBoxWarning, setPoBoxWarning] = useState(false);
+
   const form = useForm<JobFormValues>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
@@ -88,6 +119,28 @@ export function JobFormDialog({
       estimated_value: null,
     },
   });
+
+  const selectedCustomerId = form.watch("customer_id");
+  const selectedCustomer = customers?.find((c) => c.id === selectedCustomerId);
+
+  // Inherit customer address when customer changes (and not using custom address)
+  useEffect(() => {
+    if (!useCustomAddress && selectedCustomer) {
+      const addr = selectedCustomer.address || "";
+      setSiteAddress(addr);
+      if (selectedCustomer.latitude && selectedCustomer.longitude) {
+        setSiteCoords({ lat: selectedCustomer.latitude, lng: selectedCustomer.longitude });
+        setLocationConfidence("high");
+        setLocationValidForGps(!isPOBoxAddress(addr));
+        setGeocodeSource("customer_inherited");
+      } else {
+        setSiteCoords(null);
+        setLocationConfidence("none");
+        setLocationValidForGps(false);
+      }
+      setPoBoxWarning(isPOBoxAddress(addr));
+    }
+  }, [selectedCustomerId, selectedCustomer, useCustomAddress]);
 
   useEffect(() => {
     if (job) {
@@ -110,10 +163,39 @@ export function JobFormDialog({
         scheduled_time: "",
         estimated_value: null,
       });
+      setSiteAddress("");
+      setSiteCoords(null);
+      setGeofenceRadius(100);
+      setUseCustomAddress(false);
+      setPoBoxWarning(false);
     }
   }, [job, form]);
 
+  const handleAddressSelect = (geocoded: GeocodedAddress) => {
+    setSiteAddress(geocoded.formattedAddress);
+    setSiteCoords({ lat: geocoded.latitude, lng: geocoded.longitude });
+    setLocationConfidence("high");
+    setGeocodeSource(useCustomAddress ? "address" : "customer_inherited");
+
+    const isPoBox = isPOBoxAddress(geocoded.formattedAddress);
+    setPoBoxWarning(isPoBox);
+    setLocationValidForGps(!isPoBox);
+  };
+
   const handleSubmit = (values: JobFormValues) => {
+    const location: JobLocationData | undefined =
+      siteCoords && siteAddress
+        ? {
+            address: siteAddress,
+            latitude: siteCoords.lat,
+            longitude: siteCoords.lng,
+            geofence_radius: geofenceRadius,
+            location_confidence: locationConfidence,
+            location_valid_for_gps: locationValidForGps,
+            geocode_source: geocodeSource,
+          }
+        : undefined;
+
     onSubmit({
       title: values.title,
       description: values.description || undefined,
@@ -124,12 +206,13 @@ export function JobFormDialog({
         : null,
       scheduled_time: values.scheduled_time || null,
       estimated_value: values.estimated_value ?? null,
+      location,
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{job ? "Edit Job" : "Create Job"}</DialogTitle>
         </DialogHeader>
@@ -177,6 +260,124 @@ export function JobFormDialog({
                 </FormItem>
               )}
             />
+
+            {/* Job Site Location Section */}
+            {selectedCustomerId && (
+              <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Job Site Location</span>
+                  </div>
+                  {siteCoords && (
+                    <Badge
+                      variant={locationValidForGps ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {locationValidForGps ? "GPS Ready" : "No GPS"}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Customer address display */}
+                {selectedCustomer?.address && !useCustomAddress && (
+                  <div className="text-sm text-muted-foreground flex items-start gap-2">
+                    <Navigation className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{selectedCustomer.address}</span>
+                  </div>
+                )}
+
+                {!selectedCustomer?.latitude && !useCustomAddress && (
+                  <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>
+                      Customer has no geocoded address. GPS tracking won't work.
+                      Use a different address below.
+                    </span>
+                  </div>
+                )}
+
+                {/* Override toggle */}
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="custom-address"
+                    checked={useCustomAddress}
+                    onCheckedChange={(checked) => {
+                      setUseCustomAddress(checked);
+                      if (!checked && selectedCustomer) {
+                        // Reset to customer address
+                        const addr = selectedCustomer.address || "";
+                        setSiteAddress(addr);
+                        if (selectedCustomer.latitude && selectedCustomer.longitude) {
+                          setSiteCoords({
+                            lat: selectedCustomer.latitude,
+                            lng: selectedCustomer.longitude,
+                          });
+                          setLocationValidForGps(!isPOBoxAddress(addr));
+                        } else {
+                          setSiteCoords(null);
+                          setLocationValidForGps(false);
+                        }
+                        setGeocodeSource("customer_inherited");
+                      }
+                    }}
+                  />
+                  <Label htmlFor="custom-address" className="text-sm">
+                    Use a different job site address
+                  </Label>
+                </div>
+
+                {/* Custom address input */}
+                {useCustomAddress && (
+                  <AddressAutocomplete
+                    value={siteAddress}
+                    onChange={(val) => {
+                      setSiteAddress(val);
+                      if (isPOBoxAddress(val)) {
+                        setPoBoxWarning(true);
+                        setLocationValidForGps(false);
+                      }
+                    }}
+                    onAddressSelect={handleAddressSelect}
+                    placeholder="Enter job site address or Eircode..."
+                    showCurrentLocation
+                    countryCode="ie,gb,us"
+                  />
+                )}
+
+                {/* PO Box warning */}
+                {poBoxWarning && (
+                  <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 p-2 rounded">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>
+                      PO Box addresses cannot be used for GPS tracking.
+                      Please enter the physical job site address.
+                    </span>
+                  </div>
+                )}
+
+                {/* Geofence radius */}
+                {siteCoords && locationValidForGps && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Geofence Radius</Label>
+                      <span className="text-xs text-muted-foreground">{geofenceRadius}m</span>
+                    </div>
+                    <Slider
+                      value={[geofenceRadius]}
+                      onValueChange={([val]) => setGeofenceRadius(val)}
+                      min={25}
+                      max={500}
+                      step={25}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Clock-in/out will be verified within this distance
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <FormField
               control={form.control}
@@ -226,7 +427,7 @@ export function JobFormDialog({
                 name="estimated_value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Estimated Value ($)</FormLabel>
+                    <FormLabel>Estimated Value (€)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
