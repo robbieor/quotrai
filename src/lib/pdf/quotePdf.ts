@@ -138,5 +138,5 @@ export async function downloadQuotePdf(
   currencySymbol?: string
 ) {
   const doc = await generateQuotePdf(quote, branding, currencySymbol);
-  doc.save(`${quote.quote_number}.pdf`);
+  doc.save(`${quote.display_number}.pdf`);
 }

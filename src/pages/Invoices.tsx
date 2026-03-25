@@ -86,7 +86,7 @@ export default function Invoices() {
     const query = searchQuery.toLowerCase();
     return invoices.filter((invoice) => {
       const matchesSearch =
-        invoice.invoice_number.toLowerCase().includes(query) ||
+        invoice.display_number.toLowerCase().includes(query) ||
         invoice.customer?.name.toLowerCase().includes(query) ||
         invoice.notes?.toLowerCase().includes(query);
       const displayStatus = getDisplayStatus(invoice);
@@ -204,7 +204,7 @@ export default function Invoices() {
                         <Receipt className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{invoice.invoice_number}</p>
+                        <p className="font-semibold text-sm truncate">{invoice.display_number}</p>
                         <p className="text-xs text-muted-foreground truncate">{invoice.customer?.name || "No customer"}</p>
                       </div>
                     </div>

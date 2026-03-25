@@ -186,7 +186,7 @@ export function useOverdueInvoices() {
         .from("invoices")
         .select(`
           id,
-          invoice_number,
+          display_number,
           total,
           due_date,
           customer:customers(name)
@@ -198,10 +198,10 @@ export function useOverdueInvoices() {
 
       if (error) throw error;
 
-      return (data || []).map((inv) => ({
+      return (data || []).map((inv: any) => ({
         id: inv.id,
-        client: (inv.customer as { name: string } | null)?.name || "Unknown",
-        invoiceNumber: inv.invoice_number,
+        client: inv.customer?.name || "Unknown",
+        invoiceNumber: inv.display_number,
         amount: Number(inv.total) || 0,
         daysOverdue: differenceInDays(today, new Date(inv.due_date)),
       })) as OverdueInvoice[];

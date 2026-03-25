@@ -216,7 +216,7 @@ export default function CustomerDashboard() {
                         className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                       >
                         <div>
-                          <p className="font-medium">{quote.quote_number}</p>
+                          <p className="font-medium">{quote.display_number}</p>
                           <p className="text-sm text-muted-foreground">
                             {format(new Date(quote.created_at), "MMM d, yyyy")}
                             {quote.valid_until && ` • Valid until ${format(new Date(quote.valid_until), "MMM d, yyyy")}`}
@@ -262,7 +262,7 @@ export default function CustomerDashboard() {
                           className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                         >
                           <div>
-                            <p className="font-medium">{invoice.invoice_number}</p>
+                            <p className="font-medium">{invoice.display_number}</p>
                             <p className="text-sm text-muted-foreground">
                               Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
                             </p>

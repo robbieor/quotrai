@@ -133,5 +133,5 @@ export async function downloadInvoicePdf(
   currencySymbol?: string
 ) {
   const doc = await generateInvoicePdf(invoice, branding, currencySymbol);
-  doc.save(`${invoice.invoice_number}.pdf`);
+  doc.save(`${invoice.display_number}.pdf`);
 }
