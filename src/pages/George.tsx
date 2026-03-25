@@ -169,14 +169,28 @@ export default function George() {
     addMessage("user", message);
     setIsProcessing(true);
 
+    // Show immediate thinking indicator
+    const thinkingId = crypto.randomUUID();
+    const thinkingMsg: Message = {
+      id: thinkingId,
+      role: "assistant",
+      content: "⏳ Foreman AI is thinking...",
+      timestamp: new Date(),
+    };
+    setDisplayItems(prev => [...prev, { type: "message", data: thinkingMsg }]);
+
     try {
       const { data: teamId } = await supabase.rpc("get_user_team_id");
       const { data: userData } = await supabase.auth.getUser();
       setContext({ userId: userData.user?.id, teamId: teamId || undefined });
       const result = await callWebhook(action);
+
+      // Replace thinking message with real response
+      setDisplayItems(prev => prev.filter(item => !(item.type === "message" && item.data.id === thinkingId)));
       addMessage("assistant", result);
     } catch (error) {
       console.error("Quick action error:", error);
+      setDisplayItems(prev => prev.filter(item => !(item.type === "message" && item.data.id === thinkingId)));
       addMessage("assistant", "Sorry, something went wrong. Please try again.");
     } finally {
       setIsProcessing(false);
