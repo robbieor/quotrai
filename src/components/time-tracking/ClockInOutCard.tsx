@@ -135,8 +135,16 @@ function GpsAccuracyIndicator({ accuracy }: { accuracy: number }) {
   );
 }
 
-export function ClockInOutCard() {
-  const [selectedJobId, setSelectedJobId] = useState<string>("");
+interface ClockInOutCardProps {
+  selectedJobId?: string;
+  onSelectedJobChange?: (jobId: string) => void;
+}
+
+export function ClockInOutCard({
+  selectedJobId: externalSelectedJobId,
+  onSelectedJobChange,
+}: ClockInOutCardProps = {}) {
+  const [internalSelectedJobId, setInternalSelectedJobId] = useState<string>("");
   const [clockOutNotes, setClockOutNotes] = useState("");
   const [showClockOutDialog, setShowClockOutDialog] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{
@@ -150,6 +158,12 @@ export function ClockInOutCard() {
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakElapsed, setBreakElapsed] = useState(0);
   const [locationTimestamp, setLocationTimestamp] = useState<Date | null>(null);
+
+  const selectedJobId = externalSelectedJobId ?? internalSelectedJobId;
+  const setSelectedJobId = (jobId: string) => {
+    setInternalSelectedJobId(jobId);
+    onSelectedJobChange?.(jobId);
+  };
 
   const { data: activeEntry, isLoading: loadingActive } = useActiveTimeEntry();
   const { data: jobs } = useJobs();
@@ -210,6 +224,22 @@ export function ClockInOutCard() {
       (job) => job.status === "scheduled" || job.status === "in_progress"
     );
   }, [jobs]);
+
+  useEffect(() => {
+    if (activeEntry?.job_id) {
+      setSelectedJobId(activeEntry.job_id);
+      return;
+    }
+
+    if (selectedJobId) return;
+
+    const firstTodayJob = todaysJobs[0]?.id;
+    const firstAvailableJob = availableJobs[0]?.id;
+    const nextJobId = firstTodayJob || firstAvailableJob;
+    if (nextJobId) {
+      setSelectedJobId(nextJobId);
+    }
+  }, [activeEntry?.job_id, todaysJobs, availableJobs, selectedJobId]);
 
   // Map job_id → job_site for GPS status
   const jobSiteMap = useMemo(() => {
@@ -451,15 +481,24 @@ export function ClockInOutCard() {
           site.geofence_radius
         )
       : null;
+    const isSelected = selectedJobId === job.id;
 
     return (
       <div
         key={job.id}
-        className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors space-y-2"
+        className={`p-3 rounded-lg border transition-colors space-y-2 cursor-pointer ${
+          isSelected ? "bg-primary/5 border-primary/30" : "bg-card hover:bg-muted/50"
+        }`}
+        onClick={() => setSelectedJobId(job.id)}
       >
         <div className="flex items-center gap-3">
           <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{job.title}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium truncate">{job.title}</p>
+              {isSelected && (
+                <Badge variant="outline" className="text-xs">Selected</Badge>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground truncate">
               {job.customers?.name}
               {showDate && job.scheduled_date &&
@@ -467,38 +506,65 @@ export function ClockInOutCard() {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {proximity ? (
-              <ProximityBadge status={proximity.status} distance={proximity.distance} />
+            {site ? (
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs gap-1">
+                <MapPin className="h-3 w-3" />
+                {site.validForGps ? "Verified location" : "Approximate location"}
+              </Badge>
             ) : (
               <Badge variant="outline" className="text-muted-foreground text-xs gap-1">
                 <MapPinOff className="h-3 w-3" />
                 No verified location
               </Badge>
             )}
+            {proximity && (
+              <ProximityBadge status={proximity.status} distance={proximity.distance} />
+            )}
           </div>
         </div>
 
-        {/* Site address + distance detail */}
-        {site && (
+        {site ? (
           <div className="text-xs text-muted-foreground flex items-start gap-1.5">
             <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
             <span className="truncate">{site.address}</span>
           </div>
+        ) : (
+          <div className="text-xs text-muted-foreground flex items-start gap-1.5">
+            <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />
+            <span className="truncate">GPS clock-in cannot be verified until this job has a site location.</span>
+          </div>
         )}
 
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={() => handleClockIn(job.id)}
-          disabled={clockIn.isPending}
-        >
-          {clockIn.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Play className="h-4 w-4 mr-1" />
-          )}
-          Clock In
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedJobId(job.id);
+            }}
+          >
+            View Map
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedJobId(job.id);
+              handleClockIn(job.id);
+            }}
+            disabled={clockIn.isPending}
+          >
+            {clockIn.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4 mr-1" />
+            )}
+            Clock In
+          </Button>
+        </div>
       </div>
     );
   };
