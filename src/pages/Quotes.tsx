@@ -28,11 +28,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
   sent: { label: "Sent", className: "bg-blue-100 text-blue-800" },
   accepted: { label: "Accepted", className: "bg-green-100 text-green-800" },
   declined: { label: "Declined", className: "bg-red-100 text-red-800" },
+  converted: { label: "Converted", className: "bg-purple-100 text-purple-800" },
 };
 
 type StatusFilter = "all" | Quote["status"];
