@@ -24,13 +24,25 @@ function extractTrailingSequence(value: string | null | undefined, prefixes: str
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function getNextDisplayNumber(values: Array<{ display_number?: string | null }> | null | undefined, prefix: string, fallback = 1): string {
-  const nextNumber = (values ?? []).reduce((max, item) => {
+function getNextDisplayNumber(
+  values: Array<{ display_number?: string | null }> | null | undefined,
+  prefix: string,
+  countFallback?: number
+): string {
+  const filtered = (values ?? []).filter(
+    (item) => item.display_number != null && !item.display_number.includes("NaN")
+  );
+
+  const maxFromExisting = filtered.reduce((max, item) => {
     const candidate = extractTrailingSequence(item.display_number, [prefix]);
     return candidate !== null && candidate > max ? candidate : max;
-  }, 0) + 1;
+  }, 0);
 
-  return `${prefix}${Math.max(nextNumber, fallback).toString().padStart(4, "0")}`;
+  // If reduce found nothing valid, use countFallback (total record count) as safety net
+  const base = maxFromExisting > 0 ? maxFromExisting : (countFallback ?? 0);
+  const nextNumber = base + 1;
+
+  return `${prefix}${nextNumber.toString().padStart(4, "0")}`;
 }
 
 interface WebhookRequest {
