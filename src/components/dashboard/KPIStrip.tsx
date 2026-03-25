@@ -75,10 +75,9 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const [showAll, setShowAll] = useState(false);
 
   if (isLoading) {
-    const count = isMobile ? 3 : 5;
     return (
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        {[...Array(count)].map((_, i) => (
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
           <div key={i} className="bg-card border border-border rounded-lg p-3">
             <Skeleton className="h-3 w-16 mb-2" />
             <Skeleton className="h-6 w-20 mb-1" />
@@ -94,13 +93,15 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const changeDir = data.revenueChangePercent > 0 ? "positive" : data.revenueChangePercent < 0 ? "negative" : "neutral";
   const changePct = Math.abs(data.revenueChangePercent).toFixed(0);
 
-  const allCards = [
+  // Primary 3 cards always visible
+  const primaryCards = [
     <KPICard
-      key="cash"
-      label={`Cash Collected ${suffix}`}
-      value={formatCurrency(data.cashCollectedMTD)}
-      subMetric={`${data.cashCollectedCount} payment${data.cashCollectedCount !== 1 ? "s" : ""}`}
-      onClick={() => onDrillDown?.("cash")}
+      key="revenue"
+      label={`Revenue ${suffix}`}
+      value={formatCurrency(data.revenueMTD)}
+      subMetric={`vs ${formatCurrency(data.revenueLastMonth)} ${data.comparisonLabel || "prev period"}`}
+      context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% ${data.comparisonLabel || "vs prev period"}`}
+      contextType={changeDir as "positive" | "negative" | "neutral"}
     />,
     <KPICard
       key="ar"
@@ -120,6 +121,17 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
       contextType={data.stuckJobs > 0 ? "negative" : "positive"}
       onClick={() => onDrillDown?.("jobs")}
     />,
+  ];
+
+  // Secondary cards behind "View all"
+  const secondaryCards = [
+    <KPICard
+      key="cash"
+      label={`Cash Collected ${suffix}`}
+      value={formatCurrency(data.cashCollectedMTD)}
+      subMetric={`${data.cashCollectedCount} payment${data.cashCollectedCount !== 1 ? "s" : ""}`}
+      onClick={() => onDrillDown?.("cash")}
+    />,
     <KPICard
       key="overdue30"
       label="30+ Day Overdue"
@@ -129,24 +141,21 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
       contextType={data.overdue30PlusCount > 0 ? "negative" : "positive"}
       onClick={() => onDrillDown?.("overdue30")}
     />,
-    <KPICard
-      key="revenue"
-      label={`Revenue ${suffix}`}
-      value={formatCurrency(data.revenueMTD)}
-      subMetric={`vs ${formatCurrency(data.revenueLastMonth)} ${data.comparisonLabel || "prev period"}`}
-      context={`${changeDir === "positive" ? "+" : changeDir === "negative" ? "-" : ""}${changePct}% ${data.comparisonLabel || "vs prev period"}`}
-      contextType={changeDir as "positive" | "negative" | "neutral"}
-    />,
   ];
 
-  const visibleCards = isMobile && !showAll ? allCards.slice(0, 3) : allCards;
+  const mobilePrimary = isMobile && !showAll ? primaryCards.slice(0, 3) : primaryCards;
 
   return (
     <div className="space-y-2">
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        {visibleCards}
+      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+        {mobilePrimary}
       </div>
-      {isMobile && !showAll && allCards.length > 3 && (
+      {showAll && (
+        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+          {secondaryCards}
+        </div>
+      )}
+      {!showAll && (
         <button
           onClick={() => setShowAll(true)}
           className="text-xs text-primary font-medium hover:underline w-full text-center py-1"
