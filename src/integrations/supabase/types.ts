@@ -4110,7 +4110,10 @@ export type Database = {
       }
       time_entries: {
         Row: {
+          break_duration_seconds: number | null
+          break_end: string | null
           break_end_at: string | null
+          break_start: string | null
           break_start_at: string | null
           clock_in_accuracy: number | null
           clock_in_at: string
@@ -4141,7 +4144,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          break_duration_seconds?: number | null
+          break_end?: string | null
           break_end_at?: string | null
+          break_start?: string | null
           break_start_at?: string | null
           clock_in_accuracy?: number | null
           clock_in_at: string
@@ -4172,7 +4178,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          break_duration_seconds?: number | null
+          break_end?: string | null
           break_end_at?: string | null
+          break_start?: string | null
           break_start_at?: string | null
           clock_in_accuracy?: number | null
           clock_in_at?: string
