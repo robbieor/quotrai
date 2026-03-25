@@ -81,7 +81,7 @@ export function ClockInOutCard() {
       for (const site of jobSites) {
         map.set(site.job_id, {
           hasLocation: !!(site.latitude && site.longitude),
-          validForGps: (site as any).location_valid_for_gps !== false,
+          validForGps: site.location_valid_for_gps !== false,
         });
       }
     }
