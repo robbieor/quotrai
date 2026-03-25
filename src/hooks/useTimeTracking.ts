@@ -38,6 +38,9 @@ export interface JobSite {
   latitude: number;
   longitude: number;
   geofence_radius: number;
+  location_confidence: string;
+  location_valid_for_gps: boolean;
+  geocode_source: string;
   created_at: string;
   updated_at: string;
   jobs?: { title: string } | null;
