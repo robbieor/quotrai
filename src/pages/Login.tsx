@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/quotr-logo.png";
 import { Separator } from "@/components/ui/separator";
 
 export default function Login() {
@@ -57,7 +57,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={quotrLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
+            <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your Foreman account</CardDescription>

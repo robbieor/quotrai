@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mic, CheckCircle2, Play } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/quotr-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 
 interface HeroSectionProps {
