@@ -266,7 +266,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
       }
 
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize, workflowMode });
-      toast.success("Welcome to Quotr! You're all set.");
+      toast.success("Welcome to Foreman! You're all set.");
       onComplete();
     } catch (error: any) {
       console.error("Onboarding error:", error);
@@ -289,10 +289,10 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-3">
-              <img src={quotrLogo} alt="Quotr" className="h-12 w-12 rounded-xl" />
+              <img src={quotrLogo} alt="Foreman" className="h-12 w-12 rounded-xl" />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-1">
-              {step === 1 && "Welcome to Quotr!"}
+              {step === 1 && "Welcome to Foreman!"}
               {step === 2 && "Tell us about your trade"}
               {step === 3 && "How do you work?"}
               {step === 4 && "Almost there!"}
@@ -301,7 +301,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             <p className="text-sm text-muted-foreground">
               {step === 1 && "Let's get your account set up in under 2 minutes"}
               {step === 2 && "We'll tailor your experience to your business"}
-              {step === 3 && "We'll set up Quotr to match your workflow"}
+              {step === 3 && "We'll set up Foreman to match your workflow"}
               {step === 4 && "Just a couple more preferences, then you're ready"}
               {step === 5 && "Choose which emails you'd like to send to clients"}
             </p>
@@ -369,7 +369,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
                   <Wrench className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>Your Trade & Team</CardTitle>
-                <CardDescription>Help us tailor Quotr to your business</CardDescription>
+                <CardDescription>Help us tailor Foreman to your business</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-4 px-0">
                 <div className="space-y-2">
@@ -415,7 +415,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
                   <Target className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle>How Do You Work?</CardTitle>
-                <CardDescription>We'll tailor Quotr to match your day-to-day</CardDescription>
+                <CardDescription>We'll tailor Foreman to match your day-to-day</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-4 px-0">
                 {/* Q1: Send quotes? */}

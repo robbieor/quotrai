@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 interface InvitationRequest {
   email: string;
@@ -71,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #00FFB2, #00D4FF); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Quotr</div>
+            <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Foreman</div>
             <h1 style="color: #0f172a; margin: 10px 0 0; font-size: 24px; font-weight: 700;">🎉 You're Invited!</h1>
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
@@ -88,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="margin-top: 20px; color: #64748b; font-size: 14px;">If you weren't expecting this invitation, you can safely ignore this email.</p>
           </div>
           <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-            Powered by <a href="#" style="color: #00D4FF; text-decoration: none;">Quotr</a>
+            Powered by <a href="#" style="color: #00D4FF; text-decoration: none;">Foreman</a>
           </div>
         </div>
       </body>
@@ -105,11 +105,11 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to: email,
-        from: `${inviterName || "Quotr"} <noreply@${FROM_DOMAIN}>`,
+        from: `${inviterName || "Foreman"} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
-        subject: `You've been invited to join ${teamName} on Quotr`,
+        subject: `You've been invited to join ${teamName} on Foreman`,
         html,
-        text: `${inviterName || "A team member"} has invited you to join ${teamName} on Quotr. Accept here: ${inviteUrl}`,
+        text: `${inviterName || "A team member"} has invited you to join ${teamName} on Foreman. Accept here: ${inviteUrl}`,
         purpose: "transactional",
         label: "team-invitation",
         queued_at: new Date().toISOString(),

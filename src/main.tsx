@@ -3,7 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-console.log("[Quotr] Starting app...");
+console.log("[Foreman] Starting app...");
 
 // Purge any legacy service workers and caches unconditionally.
 // If stale SW assets are found, reload once so the user never sees an old UI.
@@ -39,5 +39,5 @@ if (rootEl) {
     </HelmetProvider>
   );
 } else {
-  console.error("[Quotr] Root element not found");
+  console.error("[Foreman] Root element not found");
 }

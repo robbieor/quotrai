@@ -264,7 +264,7 @@ export default function InvoicePortal() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Powered by Quotr
+          Powered by Foreman
         </p>
       </div>
     </div>

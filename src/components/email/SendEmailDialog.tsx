@@ -38,7 +38,7 @@ export function SendEmailDialog({
   documentType,
 }: SendEmailDialogProps) {
   const [email, setEmail] = useState("");
-  const [fromName, setFromName] = useState("Quotr");
+  const [fromName, setFromName] = useState("Foreman");
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
 

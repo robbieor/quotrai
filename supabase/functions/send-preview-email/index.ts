@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const recipientEmail = user.email;
     const docLabel = documentType === "invoice" ? "invoice" : "quote";
-    const subject = `Your Quotr ${docLabel} preview`;
+    const subject = `Your Foreman ${docLabel} preview`;
     const messageId = crypto.randomUUID();
     const idempotencyKey = `preview-${docLabel}-${messageId}`;
 
@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
         </div>` : ''}
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
         <p style="color: #94a3b8; font-size: 12px;">
-          Sent from Quotr · This is an internal preview — not a customer communication.
+          Sent from Foreman · This is an internal preview — not a customer communication.
         </p>
       </div>
     `;
@@ -143,11 +143,11 @@ const handler = async (req: Request): Promise<Response> => {
         idempotency_key: idempotencyKey,
         unsubscribe_token: unsubscribeToken,
         to: recipientEmail,
-        from: `Quotr <noreply@${FROM_DOMAIN}>`,
+        from: `Foreman <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html: htmlBody,
-        text: `Your Quotr ${docLabel} preview — this is a test sent to you only.`,
+        text: `Your Foreman ${docLabel} preview — this is a test sent to you only.`,
         purpose: "transactional",
         label: `preview_${docLabel}`,
         queued_at: new Date().toISOString(),

@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -39,12 +39,12 @@ const handler = async (req: Request): Promise<Response> => {
     const emoji = isAccepted ? "🎉" : "📋";
 
     const messageId = crypto.randomUUID();
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:'Manrope',-apple-system,sans-serif;background:#f8fafc;margin:0;padding:20px;"><div style="max-width:600px;margin:0 auto;"><div style="background:linear-gradient(135deg,${isAccepted ? '#00FFB2,#00D4FF' : '#fbbf24,#f59e0b'});padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;"><div style="font-size:28px;font-weight:700;color:#0f172a;">Quotr</div><h1 style="color:#0f172a;margin:10px 0 0;font-size:24px;">${emoji} Quote ${statusLabel}</h1></div><div style="background:#fff;padding:30px;border:1px solid #e2e8f0;border-top:none;"><p>Hi ${ownerProfile.full_name || "there"},</p><p>${isAccepted ? "Great news! Your quote has been accepted by the customer." : "Your quote has received a response from the customer."}</p><div style="background:#f8fafc;padding:20px;border-radius:8px;margin:20px 0;"><p><strong>Quote:</strong> ${quote.quote_number}</p><p><strong>Customer:</strong> ${quote.customer?.name || "Unknown"}</p><p><strong>Amount:</strong> ${formattedTotal}</p></div>${isAccepted && invoiceNumber ? `<div style="background:rgba(0,255,178,0.1);border:1px solid #00D4FF;padding:15px;border-radius:8px;margin:15px 0;">✅ Invoice Created: ${invoiceNumber}</div>` : ''}${!isAccepted && declineReason ? `<div style="background:#fef3c7;border:1px solid #fbbf24;padding:15px;border-radius:8px;margin:15px 0;">💬 Customer's Reason: ${declineReason}</div>` : ''}<p>Log in to your Quotr account to view the details.</p></div><div style="text-align:center;padding:20px;color:#64748b;font-size:12px;">Powered by Quotr</div></div></body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:'Manrope',-apple-system,sans-serif;background:#f8fafc;margin:0;padding:20px;"><div style="max-width:600px;margin:0 auto;"><div style="background:linear-gradient(135deg,${isAccepted ? '#00FFB2,#00D4FF' : '#fbbf24,#f59e0b'});padding:30px 20px;text-align:center;border-radius:12px 12px 0 0;"><div style="font-size:28px;font-weight:700;color:#0f172a;">Foreman</div><h1 style="color:#0f172a;margin:10px 0 0;font-size:24px;">${emoji} Quote ${statusLabel}</h1></div><div style="background:#fff;padding:30px;border:1px solid #e2e8f0;border-top:none;"><p>Hi ${ownerProfile.full_name || "there"},</p><p>${isAccepted ? "Great news! Your quote has been accepted by the customer." : "Your quote has received a response from the customer."}</p><div style="background:#f8fafc;padding:20px;border-radius:8px;margin:20px 0;"><p><strong>Quote:</strong> ${quote.quote_number}</p><p><strong>Customer:</strong> ${quote.customer?.name || "Unknown"}</p><p><strong>Amount:</strong> ${formattedTotal}</p></div>${isAccepted && invoiceNumber ? `<div style="background:rgba(0,255,178,0.1);border:1px solid #00D4FF;padding:15px;border-radius:8px;margin:15px 0;">✅ Invoice Created: ${invoiceNumber}</div>` : ''}${!isAccepted && declineReason ? `<div style="background:#fef3c7;border:1px solid #fbbf24;padding:15px;border-radius:8px;margin:15px 0;">💬 Customer's Reason: ${declineReason}</div>` : ''}<p>Log in to your Foreman account to view the details.</p></div><div style="text-align:center;padding:20px;color:#64748b;font-size:12px;">Powered by Foreman</div></div></body></html>`;
 
     await supabase.from("email_send_log").insert({ message_id: messageId, template_name: "quote-notification", recipient_email: ownerProfile.email, status: "pending" });
     const { error: enqueueError } = await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: messageId, to: ownerProfile.email, from: `Quotr <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${emoji} Quote ${quote.quote_number} has been ${statusLabel.toLowerCase()}`, html, text: `Quote ${quote.quote_number} has been ${statusLabel.toLowerCase()}`, purpose: "transactional", label: "quote-notification", queued_at: new Date().toISOString() },
+      payload: { message_id: messageId, to: ownerProfile.email, from: `Foreman <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${emoji} Quote ${quote.quote_number} has been ${statusLabel.toLowerCase()}`, html, text: `Quote ${quote.quote_number} has been ${statusLabel.toLowerCase()}`, purpose: "transactional", label: "quote-notification", queued_at: new Date().toISOString() },
     });
     if (enqueueError) throw enqueueError;
 

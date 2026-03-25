@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
             payload: {
               message_id: messageId,
               to: customerEmail,
-              from: `Quotr <noreply@${FROM_DOMAIN}>`,
+              from: `Foreman <noreply@${FROM_DOMAIN}>`,
               sender_domain: SENDER_DOMAIN,
               subject: `Appointment Reminder: ${jobTitle}`,
               html,
