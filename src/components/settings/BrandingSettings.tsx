@@ -130,21 +130,18 @@ export function BrandingSettings() {
     }
   };
 
+  const [isSendingPreview, setIsSendingPreview] = useState(false);
+
   const handleSendPreview = async () => {
     if (!user?.email) {
       toast.error("No email found on your account");
       return;
     }
 
-    setShowWorkflowDialog(true);
-    workflow.reset();
-    workflow.startWorkflow();
+    setIsSendingPreview(true);
 
     try {
-      // Step 1: structure
-      await workflow.completeStep("structure");
-
-      // Step 2: branding
+      // Build branding for PDF
       const mockBranding = {
         id: branding?.id || "",
         team_id: branding?.team_id || "",
@@ -162,12 +159,8 @@ export function BrandingSettings() {
         created_at: branding?.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      await workflow.completeStep("branding");
 
-      // Step 3: layout
-      await workflow.completeStep("layout");
-
-      // Step 4: line items
+      // Generate PDF locally
       let pdfDoc;
       if (previewDocType === "invoice") {
         const mockInvoice = {
@@ -211,33 +204,27 @@ export function BrandingSettings() {
         } as any;
         pdfDoc = await generateQuotePdf(mockQuote, mockBranding as any, "€");
       }
-      await workflow.completeStep("line_items");
 
-      // Step 5: totals
-      await workflow.completeStep("totals");
-
-      // Step 6: pdf
       const pdfBase64 = pdfDoc.output("datauristring").split(",")[1];
-      await workflow.completeStep("pdf");
 
-      // Step 7: email
-      const { data, error } = await supabase.functions.invoke("send-preview-email", {
-        body: { pdfBase64, documentType: previewDocType },
-      });
+      // Launch backend-driven task
+      const backendSteps = PREVIEW_EMAIL_STEPS.map((s) => ({
+        step_key: s.id,
+        label: s.label,
+      }));
 
-      if (error) throw error;
-      if (!data?.queued) throw new Error("Preview email was not queued");
-
-      await workflow.completeStep("email");
-
-      if (data?.status === "queued_without_pdf") {
-        toast.warning(`Preview sent but PDF link could not be generated.`);
-      }
+      await startBackendTask(
+        "send_preview",
+        `Sending ${previewDocType} preview`,
+        backendSteps,
+        { pdfBase64, documentType: previewDocType },
+        "preview"
+      );
     } catch (err: any) {
       console.error("Preview send failed:", err);
-      const currentStep = PREVIEW_EMAIL_STEPS[workflow.state.currentStepIndex];
-      await workflow.failStep(currentStep?.id || "email", err?.message || "An unexpected error occurred");
       toast.error(err?.message || "Failed to send preview");
+    } finally {
+      setIsSendingPreview(false);
     }
   };
 
