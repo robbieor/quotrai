@@ -22,6 +22,7 @@ import {
   Coffee,
   Timer,
   Briefcase,
+  MapPinOff,
 } from "lucide-react";
 import {
   useActiveTimeEntry,
@@ -29,6 +30,7 @@ import {
   useClockOut,
   useGeolocation,
   useTimeEntries,
+  useJobSites,
 } from "@/hooks/useTimeTracking";
 import { useJobs } from "@/hooks/useJobs";
 
