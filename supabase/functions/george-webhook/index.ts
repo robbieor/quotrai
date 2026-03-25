@@ -1492,7 +1492,7 @@ serve(async (req) => {
         if (quote_id) {
           quoteQuery = quoteQuery.eq("id", quote_id);
         } else if (quote_number) {
-          quoteQuery = quoteQuery.ilike("quote_number", `%${quote_number}%`);
+          quoteQuery = quoteQuery.ilike("display_number", `%${quote_number}%`);
         }
 
         const { data: quotes, error: quoteError } = await quoteQuery.limit(1);
@@ -1513,7 +1513,7 @@ serve(async (req) => {
         if (quote.status === "declined" || quote.status === "expired") {
           response = {
             success: false,
-            message: `Quote ${quote.quote_number} is ${quote.status} and can't be converted to an invoice. Only draft, sent, or accepted quotes can be converted.`
+            message: `Quote ${quote.display_number} is ${quote.status} and can't be converted to an invoice. Only draft, sent, or accepted quotes can be converted.`
           };
           break;
         }
@@ -1529,7 +1529,7 @@ serve(async (req) => {
         if (!quoteItems || quoteItems.length === 0) {
           response = {
             success: false,
-            message: `Quote ${quote.quote_number} has no line items. Please add items to the quote first.`
+            message: `Quote ${quote.display_number} has no line items. Please add items to the quote first.`
           };
           break;
         }
@@ -1566,7 +1566,7 @@ serve(async (req) => {
             tax_rate: quote.tax_rate,
             tax_amount: quote.tax_amount,
             total: quote.total,
-            notes: quote.notes || `Created from quote ${quote.quote_number}`,
+            notes: quote.notes || `Created from quote ${quote.display_number}`,
             issue_date: issueDate,
             due_date: dueDate,
             status: "draft"
@@ -1602,8 +1602,8 @@ serve(async (req) => {
         
         response = {
           success: true,
-          message: `Done! I've created invoice ${invoiceNumber} from quote ${quote.quote_number} for ${customerName}. The total is ${currencySymbol}${parseFloat(quote.total).toFixed(2)}, due on ${dueDate}. It's saved as a draft for you to review.`,
-          data: { invoice: newInvoice, from_quote: quote.quote_number, items_count: quoteItems.length }
+          message: `Done! I've created invoice ${invoiceNumber} from quote ${quote.display_number} for ${customerName}. The total is ${currencySymbol}${parseFloat(quote.total).toFixed(2)}, due on ${dueDate}. It's saved as a draft for you to review.`,
+          data: { invoice: newInvoice, from_quote: quote.display_number, items_count: quoteItems.length }
         };
         break;
       }
@@ -2145,7 +2145,7 @@ serve(async (req) => {
 
         // Expiring quotes
         if (expiringQuotes && expiringQuotes.length > 0) {
-          const quoteList = expiringQuotes.map((q: any) => `${q.quote_number} for ${(q.customer as any)?.name || "Unknown"}`).join(", ");
+          const quoteList = expiringQuotes.map((q: any) => `${q.display_number} for ${(q.customer as any)?.name || "Unknown"}`).join(", ");
           parts.push(`📝 ${expiringQuotes.length} quote${expiringQuotes.length > 1 ? "s" : ""} expiring this week (${currencySymbol}${expiringQuotesTotal.toFixed(0)}): ${quoteList}. Consider following up.`);
         }
 
@@ -3294,7 +3294,7 @@ serve(async (req) => {
 
         if (search && filteredQuotes.length > 0) {
           filteredQuotes = filteredQuotes.filter((q: any) => 
-            q.quote_number?.toLowerCase().includes(search.toLowerCase())
+            q.display_number?.toLowerCase().includes(search.toLowerCase())
           );
         }
 
@@ -3312,7 +3312,7 @@ serve(async (req) => {
         } else {
           const quoteList = filteredQuotes.slice(0, 5).map((q: any) => {
             const clientName = q.customer?.name || "Unknown";
-            return `${q.quote_number} for ${clientName} (${currencySymbol}${parseFloat(q.total).toFixed(2)}, ${q.status})`;
+            return `${q.display_number} for ${clientName} (${currencySymbol}${parseFloat(q.total).toFixed(2)}, ${q.status})`;
           }).join("; ");
           
           const moreNote = filteredQuotes.length > 5 ? ` and ${filteredQuotes.length - 5} more` : "";
@@ -3388,7 +3388,7 @@ serve(async (req) => {
         
         response = {
           success: true,
-          message: `Done! I've updated quote ${quote.quote_number} for ${clientName} from ${oldStatus} to ${normalizedStatus}.`,
+          message: `Done! I've updated quote ${quote.display_number} for ${clientName} from ${oldStatus} to ${normalizedStatus}.`,
           data: { quote_id: quote.id, old_status: oldStatus, new_status: normalizedStatus }
         };
         break;
@@ -3449,7 +3449,7 @@ serve(async (req) => {
         
         response = {
           success: true,
-          message: `Done! I've deleted quote ${quote.quote_number} for ${clientName}.`,
+          message: `Done! I've deleted quote ${quote.display_number} for ${clientName}.`,
           data: { deleted_id: quote.id }
         };
         break;
@@ -4010,7 +4010,7 @@ serve(async (req) => {
           response = { success: true, message: "You have no pending quotes awaiting response.", data: [] };
         } else {
           const total = quotes.reduce((s: number, q: any) => s + (parseFloat(q.total) || 0), 0);
-          const list = quotes.slice(0, 5).map((q: any) => `${q.quote_number} for ${(q.customer as any)?.name || "Unknown"} (${currencySymbol}${parseFloat(q.total).toFixed(2)})`).join("; ");
+          const list = quotes.slice(0, 5).map((q: any) => `${q.display_number} for ${(q.customer as any)?.name || "Unknown"} (${currencySymbol}${parseFloat(q.total).toFixed(2)})`).join("; ");
           const more = quotes.length > 5 ? ` and ${quotes.length - 5} more` : "";
           response = { success: true, message: `You have ${quotes.length} pending quote${quotes.length > 1 ? "s" : ""} worth ${currencySymbol}${total.toFixed(2)}: ${list}${more}.`, data: quotes };
         }

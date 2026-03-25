@@ -144,7 +144,7 @@ serve(async (req) => {
       .insert({
         team_id: effectiveTeamId,
         customer_id: client.id,
-        quote_number: quoteNumber,
+        display_number: quoteNumber,
         status: "draft",
         valid_until: validUntil,
         subtotal,
@@ -186,7 +186,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         quote_id: quote.id,
-        quote_number: quoteNumber,
+        display_number: quoteNumber,
         message: `Quote ${quoteNumber} created for ${client.name}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

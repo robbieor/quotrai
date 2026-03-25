@@ -57,7 +57,7 @@ serve(async (req) => {
           .insert({
             team_id: schedule.team_id,
             customer_id: schedule.customer_id,
-            invoice_number: invoiceNumber,
+            display_number: invoiceNumber,
             status: 'draft',
             issue_date: today,
             due_date: dueDate.toISOString().split('T')[0],

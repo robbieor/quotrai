@@ -25,7 +25,7 @@ serve(async (req) => {
     // --- 1. Overdue Invoice Alerts ---
     const { data: overdueInvoices } = await supabase
       .from('invoices')
-      .select('id, invoice_number, total, due_date, customer_id, customers(name)')
+      .select('id, display_number, total, due_date, customer_id, customers(name)')
       .eq('team_id', team_id)
       .eq('status', 'pending')
       .lt('due_date', today);
@@ -37,7 +37,7 @@ serve(async (req) => {
         .select('*', { count: 'exact', head: true })
         .eq('team_id', team_id)
         .eq('type', 'invoice_overdue')
-        .like('message', `%${inv.invoice_number}%`)
+        .like('message', `%${inv.display_number}%`)
         .gte('created_at', `${today}T00:00:00Z`);
 
       if (!count || count === 0) {
@@ -47,7 +47,7 @@ serve(async (req) => {
         await supabase.from('notifications').insert({
           team_id,
           type: 'invoice_overdue',
-          title: `Invoice ${inv.invoice_number} is overdue`,
+          title: `Invoice ${inv.display_number} is overdue`,
           message: `${customerName} owes €${Number(inv.total).toFixed(2)} — ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} past due.`,
           link: '/invoices',
         });

@@ -181,7 +181,7 @@ async function importInvoices(supabase: any, teamId: string, rows: Record<string
     const rowNum = i + 2;
 
     if (!row.customer_email?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'customer_email'`); continue; }
-    if (!row.invoice_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'invoice_number'`); continue; }
+    if (!row.display_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'display_number'`); continue; }
     if (!row.issue_date?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'issue_date'`); continue; }
     if (!row.total?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'total'`); continue; }
 
@@ -189,8 +189,8 @@ async function importInvoices(supabase: any, teamId: string, rows: Record<string
     if (!customer) { result.errors.push(`Row ${rowNum}: Customer '${row.customer_email}' not found. Import customers first.`); continue; }
 
     const { data: existing } = await supabase
-      .from("invoices").select("id").eq("team_id", teamId).eq("invoice_number", row.invoice_number.trim()).maybeSingle();
-    if (existing) { result.warnings.push(`Row ${rowNum}: Invoice '${row.invoice_number}' already exists, skipped`); continue; }
+      .from("invoices").select("id").eq("team_id", teamId).eq("display_number", row.display_number.trim()).maybeSingle();
+    if (existing) { result.warnings.push(`Row ${rowNum}: Invoice '${row.display_number}' already exists, skipped`); continue; }
 
     const total = parseFloat(row.total) || 0;
     const taxRate = parseFloat(row.tax_rate) || 0;
@@ -202,7 +202,7 @@ async function importInvoices(supabase: any, teamId: string, rows: Record<string
     const dueDate = row.due_date?.trim() || new Date(new Date(issueDate).getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     const { error } = await supabase.from("invoices").insert({
-      team_id: teamId, customer_id: customer.id, invoice_number: row.invoice_number.trim(),
+      team_id: teamId, customer_id: customer.id, display_number: row.display_number.trim(),
       issue_date: issueDate, due_date: dueDate, status,
       notes: row.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
@@ -214,10 +214,10 @@ async function importInvoices(supabase: any, teamId: string, rows: Record<string
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function importInvoicesWithItems(supabase: any, teamId: string, rows: Record<string, string>[], result: ImportResult) {
-  // Group rows by invoice_number
+  // Group rows by display_number
   const groups = new Map<string, Record<string, string>[]>();
   for (const row of rows) {
-    const key = row.invoice_number?.trim();
+    const key = row.display_number?.trim();
     if (!key) continue;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(row);
@@ -233,7 +233,7 @@ async function importInvoicesWithItems(supabase: any, teamId: string, rows: Reco
     if (!customer) { result.errors.push(`Invoice '${invoiceNumber}': Customer '${headerRow.customer_email}' not found.`); continue; }
 
     const { data: existing } = await supabase
-      .from("invoices").select("id").eq("team_id", teamId).eq("invoice_number", invoiceNumber).maybeSingle();
+      .from("invoices").select("id").eq("team_id", teamId).eq("display_number", invoiceNumber).maybeSingle();
     if (existing) { result.warnings.push(`Invoice '${invoiceNumber}' already exists, skipped`); continue; }
 
     const total = parseFloat(headerRow.total) || 0;
@@ -246,7 +246,7 @@ async function importInvoicesWithItems(supabase: any, teamId: string, rows: Reco
     const dueDate = headerRow.due_date?.trim() || new Date(new Date(issueDate).getTime() + 30 * 86400000).toISOString().split("T")[0];
 
     const { data: invoice, error: invError } = await supabase.from("invoices").insert({
-      team_id: teamId, customer_id: customer.id, invoice_number: invoiceNumber,
+      team_id: teamId, customer_id: customer.id, display_number: invoiceNumber,
       issue_date: issueDate, due_date: dueDate, status,
       notes: headerRow.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
@@ -293,15 +293,15 @@ async function importQuotes(supabase: any, teamId: string, rows: Record<string, 
     const rowNum = i + 2;
 
     if (!row.customer_email?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'customer_email'`); continue; }
-    if (!row.quote_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'quote_number'`); continue; }
+    if (!row.display_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'display_number'`); continue; }
     if (!row.total?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'total'`); continue; }
 
     const customer = await findCustomerByEmail(supabase, teamId, row.customer_email);
     if (!customer) { result.errors.push(`Row ${rowNum}: Customer '${row.customer_email}' not found. Import customers first.`); continue; }
 
     const { data: existing } = await supabase
-      .from("quotes").select("id").eq("team_id", teamId).eq("quote_number", row.quote_number.trim()).maybeSingle();
-    if (existing) { result.warnings.push(`Row ${rowNum}: Quote '${row.quote_number}' already exists, skipped`); continue; }
+      .from("quotes").select("id").eq("team_id", teamId).eq("display_number", row.display_number.trim()).maybeSingle();
+    if (existing) { result.warnings.push(`Row ${rowNum}: Quote '${row.display_number}' already exists, skipped`); continue; }
 
     const total = parseFloat(row.total) || 0;
     const taxRate = parseFloat(row.tax_rate) || 0;
@@ -310,7 +310,7 @@ async function importQuotes(supabase: any, teamId: string, rows: Record<string, 
     const status = validateStatus(row.status, ["draft", "sent", "accepted", "declined", "expired"]) || "draft";
 
     const { error } = await supabase.from("quotes").insert({
-      team_id: teamId, customer_id: customer.id, quote_number: row.quote_number.trim(),
+      team_id: teamId, customer_id: customer.id, display_number: row.display_number.trim(),
       valid_until: row.valid_until?.trim() || null, status,
       notes: row.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
@@ -324,7 +324,7 @@ async function importQuotes(supabase: any, teamId: string, rows: Record<string, 
 async function importQuotesWithItems(supabase: any, teamId: string, rows: Record<string, string>[], result: ImportResult) {
   const groups = new Map<string, Record<string, string>[]>();
   for (const row of rows) {
-    const key = row.quote_number?.trim();
+    const key = row.display_number?.trim();
     if (!key) continue;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(row);
@@ -339,7 +339,7 @@ async function importQuotesWithItems(supabase: any, teamId: string, rows: Record
     if (!customer) { result.errors.push(`Quote '${quoteNumber}': Customer '${headerRow.customer_email}' not found.`); continue; }
 
     const { data: existing } = await supabase
-      .from("quotes").select("id").eq("team_id", teamId).eq("quote_number", quoteNumber).maybeSingle();
+      .from("quotes").select("id").eq("team_id", teamId).eq("display_number", quoteNumber).maybeSingle();
     if (existing) { result.warnings.push(`Quote '${quoteNumber}' already exists, skipped`); continue; }
 
     const total = parseFloat(headerRow.total) || 0;
@@ -349,7 +349,7 @@ async function importQuotesWithItems(supabase: any, teamId: string, rows: Record
     const status = validateStatus(headerRow.status, ["draft", "sent", "accepted", "declined", "expired"]) || "draft";
 
     const { data: quote, error: qError } = await supabase.from("quotes").insert({
-      team_id: teamId, customer_id: customer.id, quote_number: quoteNumber,
+      team_id: teamId, customer_id: customer.id, display_number: quoteNumber,
       valid_until: headerRow.valid_until?.trim() || null, status,
       notes: headerRow.notes?.trim() || null, subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       communication_suppressed: true, delivery_status: "not_sent",
@@ -416,14 +416,14 @@ async function importInvoiceItems(supabase: any, teamId: string, rows: Record<st
     const row = rows[i];
     const rowNum = i + 2;
 
-    if (!row.invoice_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'invoice_number'`); continue; }
+    if (!row.display_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'display_number'`); continue; }
     if (!row.description?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'description'`); continue; }
     if (!row.quantity?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'quantity'`); continue; }
     if (!row.unit_price?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'unit_price'`); continue; }
 
     const { data: invoice } = await supabase
-      .from("invoices").select("id").eq("team_id", teamId).eq("invoice_number", row.invoice_number.trim()).maybeSingle();
-    if (!invoice) { result.errors.push(`Row ${rowNum}: Invoice '${row.invoice_number}' not found.`); continue; }
+      .from("invoices").select("id").eq("team_id", teamId).eq("display_number", row.display_number.trim()).maybeSingle();
+    if (!invoice) { result.errors.push(`Row ${rowNum}: Invoice '${row.display_number}' not found.`); continue; }
 
     const quantity = parseFloat(row.quantity) || 1;
     const unitPrice = parseFloat(row.unit_price) || 0;
@@ -443,14 +443,14 @@ async function importQuoteItems(supabase: any, teamId: string, rows: Record<stri
     const row = rows[i];
     const rowNum = i + 2;
 
-    if (!row.quote_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'quote_number'`); continue; }
+    if (!row.display_number?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'display_number'`); continue; }
     if (!row.description?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'description'`); continue; }
     if (!row.quantity?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'quantity'`); continue; }
     if (!row.unit_price?.trim()) { result.errors.push(`Row ${rowNum}: Missing 'unit_price'`); continue; }
 
     const { data: quote } = await supabase
-      .from("quotes").select("id").eq("team_id", teamId).eq("quote_number", row.quote_number.trim()).maybeSingle();
-    if (!quote) { result.errors.push(`Row ${rowNum}: Quote '${row.quote_number}' not found.`); continue; }
+      .from("quotes").select("id").eq("team_id", teamId).eq("display_number", row.display_number.trim()).maybeSingle();
+    if (!quote) { result.errors.push(`Row ${rowNum}: Quote '${row.display_number}' not found.`); continue; }
 
     const quantity = parseFloat(row.quantity) || 1;
     const unitPrice = parseFloat(row.unit_price) || 0;

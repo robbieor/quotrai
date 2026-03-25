@@ -110,7 +110,7 @@ serve(async (req) => {
       .insert({
         team_id: effectiveTeamId,
         customer_id: client.id,
-        invoice_number: invoiceNumber,
+        display_number: invoiceNumber,
         status: "draft",
         issue_date: today,
         due_date: dueDate,
@@ -154,7 +154,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         invoice_id: invoice.id,
-        invoice_number: invoiceNumber,
+        display_number: invoiceNumber,
         message: `Invoice ${invoiceNumber} created for ${client.name}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
