@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLandingCurrency } from "@/hooks/useLandingCurrency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowRight, Calculator, Menu, X } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { DemoVideoSection } from "@/components/landing/DemoVideoSection";
@@ -62,7 +62,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
-        title="Quotr — AI-Powered Job Management for Field Service Businesses"
+        title="Foreman — AI-Powered Job Management for Field Service Businesses"
         description="Talk to your business. It talks back. Quotes, invoices, expenses, scheduling — all voice-powered, all in one app. Built for field service pros."
         path="/"
       />
@@ -84,8 +84,8 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
-            <span className="text-lg sm:text-xl font-bold tracking-tight">Quotr</span>
+            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+            <span className="text-lg sm:text-xl font-bold tracking-tight">Foreman</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/pricing">
