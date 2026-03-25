@@ -40,12 +40,12 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
   
   // Foreman cost
-  const quotrMonthlyCost = (teamSize * QUOTR_SEAT_PRICE) + (showVoice ? voiceUsers * QUOTR_VOICE_PRICE : 0);
+  const foremanMonthlyCost = (teamSize * FOREMAN_SEAT_PRICE) + (showVoice ? voiceUsers * FOREMAN_VOICE_PRICE : 0);
   
   // Net savings
-  const netMonthlySavings = potentialMoneySavedPerMonth - quotrMonthlyCost;
+  const netMonthlySavings = potentialMoneySavedPerMonth - foremanMonthlyCost;
   const annualSavings = netMonthlySavings * 12;
-  const roiMultiple = quotrMonthlyCost > 0 ? potentialMoneySavedPerMonth / quotrMonthlyCost : 0;
+  const roiMultiple = foremanMonthlyCost > 0 ? potentialMoneySavedPerMonth / foremanMonthlyCost : 0;
 
   // Admin headcount equivalent
   const fullTimeAdminHoursPerMonth = 160;
@@ -71,7 +71,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           roiMultiple,
           hoursSavedPerMonth: potentialHoursSavedPerMonth,
           adminHeadcountEquivalent,
-          quotrMonthlyCost,
+          foremanMonthlyCost,
         },
       });
 
@@ -301,11 +301,11 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-muted-foreground">Foreman Subscription</p>
               <p className="font-semibold">
-                €{quotrMonthlyCost}/month
+                €{foremanMonthlyCost}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamSize} seats × €{QUOTR_SEAT_PRICE}
-                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${QUOTR_VOICE_PRICE}`}
+                {teamSize} seats × €{FOREMAN_SEAT_PRICE}
+                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${FOREMAN_VOICE_PRICE}`}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50">
