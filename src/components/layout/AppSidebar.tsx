@@ -91,8 +91,8 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-border/40 bg-card">
-      {/* Premium brand header */}
+    <Sidebar className="border-r border-border/40 bg-sidebar">
+      {/* Brand header — same warm surface as everything */}
       <SidebarHeader className="p-5 pb-4">
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -106,7 +106,7 @@ export function AppSidebar() {
       <SidebarContent className="px-3">
         {filteredGroups.map(group => (
           <SidebarGroup key={group.label} className="py-1">
-            <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70 px-3 mb-1">
+            <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground px-3 mb-1">
               {group.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -118,7 +118,7 @@ export function AppSidebar() {
                         to={item.url}
                         end={item.url === "/dashboard"}
                         className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-muted/50 hover:text-foreground"
-                        activeClassName="bg-primary/8 text-foreground font-semibold shadow-sm"
+                        activeClassName="bg-primary/10 text-foreground font-semibold shadow-[0_0_12px_hsl(162_72%_42%/0.15)]"
                       >
                         <item.icon className="h-[18px] w-[18px]" />
                         <span>{item.title}</span>
