@@ -472,7 +472,7 @@ export function ClockInOutCard() {
             ) : (
               <Badge variant="outline" className="text-muted-foreground text-xs gap-1">
                 <MapPinOff className="h-3 w-3" />
-                No GPS set
+                No verified location
               </Badge>
             )}
           </div>
