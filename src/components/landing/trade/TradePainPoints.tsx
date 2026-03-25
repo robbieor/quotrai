@@ -12,7 +12,7 @@ export function TradePainPoints({ config }: Props) {
           Sound familiar?
         </h2>
         <p className="text-center text-muted-foreground mb-10">
-          These are the top reasons {config.plural.toLowerCase()} switch to Quotr.
+          These are the top reasons {config.plural.toLowerCase()} switch to Foreman.
         </p>
         <div className="grid sm:grid-cols-2 gap-4">
           {config.painPoints.map((p) => (
@@ -26,7 +26,7 @@ export function TradePainPoints({ config }: Props) {
           ))}
         </div>
         <p className="text-center text-muted-foreground mt-8 text-lg">
-          Quotr fixes all of this — and more.
+          Foreman fixes all of this — and more.
         </p>
       </div>
     </section>

@@ -91,7 +91,7 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
         title: `You've created ${invoiceCount} invoices!`,
         message: isNative
           ? "Visit quotr.work to upgrade and keep sending invoices."
-          : "You're clearly getting value from Quotr. Upgrade to keep sending invoices and collecting payments.",
+          : "You're clearly getting value from Foreman. Upgrade to keep sending invoices and collecting payments.",
         cta: isNative ? nativeCta : "Unlock Payments",
         urgency: "low",
         route,

@@ -139,7 +139,7 @@ export function GeofenceSettings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Choose how Quotr handles clock-in when you arrive at a job site.
+            Choose how Foreman handles clock-in when you arrive at a job site.
           </p>
           <div className="grid gap-3">
             {AUTO_CLOCK_OPTIONS.map((option) => (

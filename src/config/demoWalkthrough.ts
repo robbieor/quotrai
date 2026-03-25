@@ -12,7 +12,7 @@ export const demoSteps: DemoStep[] = [
     id: "dashboard",
     route: "/dashboard",
     narration:
-      "Welcome to Quotr — the all-in-one platform built for tradespeople. This is your dashboard. At a glance you can see revenue, outstanding invoices, jobs due today, and your team's recent activity. Everything updates in real time.",
+      "Welcome to Foreman — the all-in-one platform built for tradespeople. This is your dashboard. At a glance you can see revenue, outstanding invoices, jobs due today, and your team's recent activity. Everything updates in real time.",
     pauseAfter: 1500,
   },
   {

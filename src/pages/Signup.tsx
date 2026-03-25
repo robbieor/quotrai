@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { Separator } from "@/components/ui/separator";
 import { Gift, CheckCircle2, CreditCard, Clock, Shield } from "lucide-react";
 import { track } from "@/utils/analytics";
@@ -84,7 +84,7 @@ export default function Signup() {
             <div>
               <h2 className="text-xl font-semibold text-foreground mb-1">Start your free trial</h2>
               <p className="text-sm text-muted-foreground">
-                Start running your business with Quotr.
+                Start running your business with Foreman.
               </p>
             </div>
             <ul className="space-y-3">
@@ -102,7 +102,7 @@ export default function Signup() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <img src={quotrLogo} alt="Quotr" className="h-14 w-14 rounded-xl" />
+              <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
             </div>
             <CardTitle className="text-2xl">Create an account</CardTitle>
             <CardDescription>Start managing your trade business</CardDescription>
