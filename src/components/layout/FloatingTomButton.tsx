@@ -3,9 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Phone, PhoneOff, X, FileText, Receipt, Briefcase, DollarSign, Calendar, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
+import { useAgentTask } from "@/contexts/AgentTaskContext";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
 
 const quickActions = [
   { icon: FileText, label: "New Quote", action: "create_quote", message: "Help me create a new quote" },
@@ -21,6 +23,7 @@ export function FloatingTomButton() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { profile } = useProfile();
   const { hasVoiceAccess, canUseVoice } = useGeorgeAccess();
+  const { startTask } = useAgentTask();
   
   const { 
     status, 
@@ -95,6 +98,16 @@ export function FloatingTomButton() {
   const handleQuickAction = async (action: typeof quickActions[0]) => {
     setIsExpanded(false);
     
+    // Start global task visibility for mutation actions
+    const taskStepsMap: Record<string, { label: string; steps: any[] }> = {
+      create_quote: { label: "Creating quote…", steps: QUOTE_CREATION_STEPS },
+      create_invoice: { label: "Creating invoice…", steps: INVOICE_CREATION_STEPS },
+    };
+    const taskDef = taskStepsMap[action.action];
+    if (taskDef) {
+      startTask(action.action, taskDef.label, taskDef.steps);
+    }
+
     // Navigate to Foreman AI page with the quick action
     navigate("/george");
     
