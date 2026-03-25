@@ -1,23 +1,22 @@
 
 
-## Fix: Quote creation fails — display_number has no default
+## Change Capacitor Bundle ID to `ie.foreman.app`
 
-### Problem
-The `display_number` column (renamed from `quote_number`) is NOT NULL but has no DEFAULT value. The code in `useCreateQuote` correctly omits it expecting the DB to auto-generate it, but the migration only set defaults for `ref`, not `display_number`.
+### What changes
+Update `capacitor.config.ts` to replace the default Lovable bundle ID with your branded `ie.foreman.app`.
 
-### Solution
-**Database migration** — Add a default for `display_number` on both `quotes` and `invoices` tables that mirrors the `ref` default:
+### File: `capacitor.config.ts`
+- Change `appId` from `app.lovable.9b11f743854248068d3ea81555111caa` to `ie.foreman.app`
+- Change `appName` from `Foreman` to `Foreman` (no change needed, already correct)
 
-```sql
-ALTER TABLE public.quotes 
-  ALTER COLUMN display_number SET DEFAULT 'QR-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.quotes_ref_seq')::text, 5, '0');
-
-ALTER TABLE public.invoices 
-  ALTER COLUMN display_number SET DEFAULT 'IR-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.invoices_ref_seq')::text, 5, '0');
+### After this change
+On your Mac, run:
+```bash
+git pull
+npx cap sync ios
 ```
+Then in Xcode, clean the build folder (Product → Clean Build Folder) and rebuild. The new bundle ID will appear under Signing & Capabilities.
 
-This means new quotes/invoices will auto-populate `display_number` with the same format as `ref`. Users can still override it manually.
-
-### Files
-- 1 new database migration (SQL only, no code changes needed)
+### Important
+This must be done **before** your first App Store submission — the bundle ID is permanent once published.
 
