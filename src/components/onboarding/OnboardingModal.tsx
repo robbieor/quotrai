@@ -24,7 +24,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
-import quotrLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/quotr-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";
@@ -289,7 +289,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-3">
-              <img src={quotrLogo} alt="Foreman" className="h-12 w-12 rounded-xl" />
+              <img src={foremanLogo} alt="Foreman" className="h-12 w-12 rounded-xl" />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-1">
               {step === 1 && "Welcome to Foreman!"}
