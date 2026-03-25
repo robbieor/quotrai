@@ -191,6 +191,12 @@ export function useCreateInvoiceFromQuote() {
         if (itemsError) throw itemsError;
       }
 
+      // Mark quote as converted
+      await supabase
+        .from("quotes")
+        .update({ status: "converted" as any })
+        .eq("id", quoteId);
+
       return newInvoice;
     },
     onSuccess: () => {
