@@ -48,7 +48,7 @@ export default function TradeLanding() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="landing-page min-h-screen bg-background">
       <SEOHead
         title={config.seoTitle}
         description={config.seoDescription}
