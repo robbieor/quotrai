@@ -37,30 +37,30 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
   return (
     <div
       className={cn(
-        "bg-card border border-border rounded-lg p-3 transition-all duration-200 min-w-0 group relative",
-        onClick && "cursor-pointer hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm"
+        "bg-card border border-border rounded-2xl p-4 sm:p-5 transition-all duration-300 min-w-0 group relative shadow-premium",
+        onClick && "cursor-pointer hover:border-primary/30 hover:shadow-glow-teal"
       )}
       onClick={onClick}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 truncate">{label}</p>
-      <p className="text-xl font-bold text-foreground tabular-nums leading-tight truncate">{value}</p>
-      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{subMetric}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 truncate">{label}</p>
+      <p className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums leading-tight truncate">{value}</p>
+      <p className="text-xs text-muted-foreground mt-1 truncate">{subMetric}</p>
       {context && (
         <div className={cn(
-          "flex items-center gap-1 mt-1.5 text-[10px] font-medium",
+          "flex items-center gap-1 mt-2 text-xs font-medium",
           contextType === "positive" && "text-primary",
           contextType === "negative" && "text-destructive",
           contextType === "neutral" && "text-muted-foreground",
         )}>
-          {contextType === "positive" && <TrendingUp className="h-2.5 w-2.5" />}
-          {contextType === "negative" && <TrendingDown className="h-2.5 w-2.5" />}
-          {contextType === "neutral" && <Minus className="h-2.5 w-2.5" />}
+          {contextType === "positive" && <TrendingUp className="h-3 w-3" />}
+          {contextType === "negative" && <TrendingDown className="h-3 w-3" />}
+          {contextType === "neutral" && <Minus className="h-3 w-3" />}
           <span className="truncate">{context}</span>
         </div>
       )}
       {onClick && (
-        <span className="absolute top-2 right-2 text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/70 transition-colors duration-200">
-          Click to drill ↗
+        <span className="absolute top-3 right-3 text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors duration-300">
+          Drill ↗
         </span>
       )}
     </div>
@@ -76,12 +76,12 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
 
   if (isLoading) {
     return (
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-card border border-border rounded-lg p-3">
-            <Skeleton className="h-3 w-16 mb-2" />
-            <Skeleton className="h-6 w-20 mb-1" />
-            <Skeleton className="h-3 w-24" />
+          <div key={i} className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-premium">
+            <Skeleton className="h-3 w-16 mb-2.5" />
+            <Skeleton className="h-7 w-24 mb-1.5" />
+            <Skeleton className="h-3 w-28" />
           </div>
         ))}
       </div>
@@ -147,11 +147,11 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
 
   return (
     <div className="space-y-2">
-      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
         {mobilePrimary}
       </div>
       {showAll && (
-        <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
           {secondaryCards}
         </div>
       )}

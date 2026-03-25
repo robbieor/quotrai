@@ -4,23 +4,22 @@ import { ArrowRight } from "lucide-react";
 
 export function FinalCTASection() {
   return (
-    <section className="py-20 sm:py-32 px-4 sm:px-6 relative">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[700px] h-[400px] sm:h-[700px] bg-gradient-radial from-primary/10 via-transparent to-transparent rounded-full" />
+    <section className="py-24 sm:py-40 px-4 sm:px-6 relative">
+      {/* Soft radial glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[800px] h-[500px] sm:h-[800px] glow-orb" />
       </div>
 
-      <div className="container mx-auto text-center relative max-w-3xl">
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 leading-tight">
-          Start running your business{" "}
-          <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-            properly.
-          </span>
+      <div className="container mx-auto text-center relative max-w-2xl">
+        <h2 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-foreground mb-6 leading-[1.1] tracking-tight">
+          Run your business{" "}
+          <span className="text-gradient-teal">properly.</span>
         </h2>
-        <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+        <p className="text-base sm:text-lg text-muted-foreground mb-10 max-w-md mx-auto">
           30-day free trial · No credit card · Cancel anytime
         </p>
         <Link to="/signup">
-          <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2">
+          <Button size="lg" className="text-lg sm:text-xl px-10 sm:px-14 py-7 sm:py-8 font-bold rounded-2xl btn-hover-lift gap-2.5 shadow-lg shadow-primary/20">
             Start Free Trial
             <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>

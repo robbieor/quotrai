@@ -86,13 +86,13 @@ function DashboardContent() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-3">
+      <div className="space-y-5">
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
         {/* Header: title + filters */}
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
+        <div className="flex items-center gap-4 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground shrink-0">Dashboard</h1>
           <DashboardFilterBar />
         </div>
 
@@ -108,7 +108,7 @@ function DashboardContent() {
 
         {/* Analytics: Revenue + Quote Pipeline */}
         <AnimatedSection delay={80}>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             <RevenueMultiChart data={data?.revenueChartData} isLoading={isLoading} />
             <QuotePipelineCard data={data?.quoteFunnel} />
           </div>
@@ -116,7 +116,7 @@ function DashboardContent() {
 
         {/* Revenue by Job Type */}
         <AnimatedSection delay={100}>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
             <div />
           </div>
@@ -124,7 +124,7 @@ function DashboardContent() {
 
         {/* Operational Tables */}
         <AnimatedSection delay={120}>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             <JobsAtRiskTable data={data?.jobsAtRisk} />
             <InvoiceRiskTable data={data?.invoicesAtRisk} />
           </div>
@@ -132,7 +132,7 @@ function DashboardContent() {
 
         {/* Management Insights — gated */}
         <AnimatedSection delay={160}>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             <PlanGate requiredSeat="grow" featureLabel="Customer Profitability">
               <CustomerProfitabilityScatter data={data?.customerProfitability} isLoading={isLoading} />
             </PlanGate>
