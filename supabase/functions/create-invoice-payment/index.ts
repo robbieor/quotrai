@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +35,7 @@ serve(async (req) => {
       throw new Error("This invoice has already been paid");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get the team's Connect account and currency
     const { data: team } = await supabaseClient
@@ -90,8 +90,8 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       line_items: lineItems,
       mode: "payment",
-      success_url: `${returnUrl}&payment=success`,
-      cancel_url: `${returnUrl}&payment=cancelled`,
+      success_url: `${returnUrl}?payment=success`,
+      cancel_url: `${returnUrl}?payment=cancelled`,
       payment_method_types: ["card"],
       payment_intent_data: {
         application_fee_amount: applicationFee,
