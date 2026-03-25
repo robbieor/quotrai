@@ -11,7 +11,6 @@ import { TopCustomersTable } from "@/components/dashboard/TopCustomersTable";
 import { CustomerProfitabilityScatter } from "@/components/dashboard/CustomerProfitabilityScatter";
 import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
 import { DrillThroughDrawer, DrillColumn } from "@/components/dashboard/DrillThroughDrawer";
-import { ForemanAICard } from "@/components/dashboard/ForemanAICard";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -85,45 +84,31 @@ function DashboardContent() {
     }
   };
 
-  const firstName = profile?.full_name?.split(" ")[0] || "there";
-
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-3">
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4 min-w-0">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-              Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, {firstName}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Here's what's happening across your operations.</p>
-          </div>
+        {/* Header: title + filters */}
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
           <DashboardFilterBar />
         </div>
 
-        {/* Foreman AI — visually central */}
-        {canAccessGeorge && (
-          <AnimatedSection delay={0}>
-            <ForemanAICard />
-          </AnimatedSection>
-        )}
-
-        {/* Action Panel — what needs attention */}
-        <AnimatedSection delay={20}>
-          <ActionPanel alerts={data?.actionAlerts} />
-        </AnimatedSection>
-
-        {/* KPI Strip */}
-        <AnimatedSection delay={40}>
+        {/* KPI Strip — 3 primary cards */}
+        <AnimatedSection delay={0}>
           <KPIStrip data={data?.kpi} isLoading={isLoading} onDrillDown={handleKPIDrillDown} />
         </AnimatedSection>
 
-        {/* Analytics */}
+        {/* Action Panel — collapsed summary */}
+        <AnimatedSection delay={40}>
+          <ActionPanel alerts={data?.actionAlerts} />
+        </AnimatedSection>
+
+        {/* Analytics: Revenue + Quote Pipeline */}
         <AnimatedSection delay={80}>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             <RevenueMultiChart data={data?.revenueChartData} isLoading={isLoading} />
             <QuotePipelineCard data={data?.quoteFunnel} />
           </div>
@@ -131,7 +116,7 @@ function DashboardContent() {
 
         {/* Revenue by Job Type */}
         <AnimatedSection delay={100}>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
             <div />
           </div>
@@ -139,7 +124,7 @@ function DashboardContent() {
 
         {/* Operational Tables */}
         <AnimatedSection delay={120}>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             <JobsAtRiskTable data={data?.jobsAtRisk} />
             <InvoiceRiskTable data={data?.invoicesAtRisk} />
           </div>
@@ -147,7 +132,7 @@ function DashboardContent() {
 
         {/* Management Insights — gated */}
         <AnimatedSection delay={160}>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             <PlanGate requiredSeat="grow" featureLabel="Customer Profitability">
               <CustomerProfitabilityScatter data={data?.customerProfitability} isLoading={isLoading} />
             </PlanGate>

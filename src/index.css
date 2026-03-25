@@ -5,75 +5,108 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Foreman Design System — Premium Light-Mode Fintech
-   Warm off-white base, signature teal accent, editorial restraint.
+/* Quotr Design System - Revamo-inspired
+   Clean, enterprise SaaS aesthetic with teal accent
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
     --font-sans: 'Manrope', sans-serif;
+    
+    /* Light Theme - Soft teal mint background with white cards */
+    --background: 160 40% 96%;               /* Soft mint/teal background #E8F6F3 */
+    --foreground: 222 47% 11%;              /* #0f172a - Dark text */
 
-    /* ── Surface System ── */
-    --background: 40 20% 97%;                /* Warm off-white #F8F6F3 */
-    --foreground: 220 30% 15%;               /* Deep charcoal #1E2A3A */
-
-    --card: 40 25% 99%;                      /* Creamy white cards */
-    --card-foreground: 220 30% 15%;
+    --card: 0 0% 100%;                      /* Pure white cards for contrast */
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    /* ── Signature Teal ── */
-    --primary: 162 72% 42%;                  /* Confident teal #1BA97A — darker for AAA contrast */
-    --primary-foreground: 0 0% 100%;         /* White text on teal */
+    /* Teal accent #00FFB2 = 159 100% 50% */
+    --primary: 159 100% 45%;                /* Slightly darker for better contrast */
+    --primary-foreground: 222 47% 11%;      /* Dark text on teal */
 
-    --secondary: 40 15% 94%;                 /* Warm light grey */
-    --secondary-foreground: 220 30% 15%;
+    --secondary: 160 30% 92%;               /* Slightly darker mint for secondary */
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 40 12% 93%;                     /* Soft warm grey */
-    --muted-foreground: 220 12% 50%;         /* Medium grey text */
+    --muted: 160 25% 93%;                   /* Soft mint gray backgrounds */
+    --muted-foreground: 215 16% 47%;        /* #64748b - Gray text */
 
-    --accent: 162 72% 42%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 159 100% 45%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 38 92% 20%;
 
-    --border: 40 12% 90%;                    /* Barely-there warm border */
-    --input: 40 12% 90%;
-    --ring: 162 72% 42%;
+    --border: 160 20% 88%;                  /* Teal-tinted subtle borders */
+    --input: 160 20% 88%;
+    --ring: 159 100% 45%;
 
-    --radius: 0.875rem;                      /* 14px — generous but not bubbly */
+    --radius: 0.75rem;                      /* 12px border-radius */
 
-    /* ── Sidebar — matches background for seamless feel ── */
-    --sidebar-background: 40 20% 97%;
-    --sidebar-foreground: 220 30% 15%;
-    --sidebar-primary: 162 72% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 40 20% 97%;
-    --sidebar-accent-foreground: 220 30% 15%;
-    --sidebar-border: 40 12% 92%;
-    --sidebar-ring: 162 72% 42%;
+    /* Sidebar - Premium deep navy (Linear/Vercel inspired) */
+    --sidebar-background: 0 0% 100%;          /* White sidebar to contrast mint bg */
+    --sidebar-foreground: 222 47% 11%;        /* Dark text */
+    --sidebar-primary: 159 100% 45%;          /* Bright teal for active */
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 160 40% 96%;            /* Mint hover */
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 160 20% 88%;            /* Teal-tinted border */
+    --sidebar-ring: 159 100% 50%;
 
-    /* ── Charts ── */
-    --chart-1: 162 72% 42%;
-    --chart-2: 180 55% 45%;
-    --chart-3: 210 60% 55%;
-    --chart-4: 250 50% 60%;
-    --chart-5: 280 45% 58%;
+    /* Chart colors - Teal-based palette */
+    --chart-1: 159 100% 45%;
+    --chart-2: 173 80% 40%;
+    --chart-3: 197 71% 50%;
+    --chart-4: 250 60% 60%;
+    --chart-5: 280 65% 60%;
 
-    /* ── Premium tokens ── */
-    --header-bg: 220 20% 98%;               /* Nearly-white header with soft contrast */
+    /* Custom tokens for Revamo style */
+    --teal-glow: 159 100% 50%;
+    --shadow-subtle: 0 1px 3px 0 hsl(0 0% 0% / 0.06), 0 1px 2px -1px hsl(0 0% 0% / 0.06);
+    --shadow-medium: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
+    --shadow-lift: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.06);
 
-    --glow-primary: 162 72% 42%;
-    --surface-elevated: 40 25% 99%;
+    --header-bg: 220 20% 28%;              /* Deep slate for header/sidebar bars */
   }
 
-  /* No dark mode — light only */
+  /* Dark mode override */
+  .dark {
+    --background: 220 26% 9%;
+    --foreground: 210 40% 98%;
+    --card: 218 23% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 218 23% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 159 100% 50%;
+    --primary-foreground: 220 26% 9%;
+    --secondary: 218 23% 20%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 218 23% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 159 100% 50%;
+    --accent-foreground: 220 26% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 80%;
+    --border: 218 23% 22%;
+    --input: 218 23% 22%;
+    --ring: 159 100% 50%;
+    --sidebar-background: 220 26% 7%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 159 100% 50%;
+    --sidebar-primary-foreground: 220 26% 9%;
+    --sidebar-accent: 218 23% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 218 23% 18%;
+    --sidebar-ring: 159 100% 50%;
+  }
 }
 
 @layer base {
@@ -93,20 +126,20 @@
     line-height: 1.7;
   }
 
-  /* Marketing typography — oversized, confident */
+  /* Typography scale — marketing pages only */
   .landing-page h1 {
-    font-size: clamp(2.75rem, 7vw, 5rem);
+    font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 800;
-    line-height: 1.05;
-    letter-spacing: -0.035em;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
     @apply text-foreground;
   }
 
   .landing-page h2 {
-    font-size: clamp(2rem, 4.5vw, 3rem);
+    font-size: clamp(1.875rem, 4vw, 2.5rem);
     font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.025em;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
     @apply text-foreground;
   }
 
@@ -135,26 +168,27 @@
 }
 
 @layer components {
-  /* ── Buttons ── */
+  /* Primary button with teal glow */
   .btn-primary {
     @apply bg-primary text-primary-foreground font-semibold;
-    @apply rounded-2xl px-7 py-3.5;
-    @apply transition-all duration-300 ease-out;
+    @apply rounded-xl px-6 py-3;
+    @apply transition-all duration-200 ease-out;
   }
-
+  
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px hsl(162 72% 42% / 0.3);
+    box-shadow: 0 8px 24px hsl(159 100% 50% / 0.35);
   }
 
   .btn-primary:active {
     transform: translateY(0);
   }
 
+  /* Secondary/outlined button */
   .btn-secondary {
     @apply bg-transparent border-2 border-border text-foreground font-semibold;
-    @apply rounded-2xl px-7 py-3.5;
-    @apply transition-all duration-300 ease-out;
+    @apply rounded-xl px-6 py-3;
+    @apply transition-all duration-200 ease-out;
   }
 
   .btn-secondary:hover {
@@ -162,57 +196,49 @@
     transform: translateY(-1px);
   }
 
-  .btn-hover-lift {
-    @apply transition-all duration-300 ease-out;
-  }
-
-  .btn-hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px hsl(162 72% 42% / 0.25);
-  }
-
-  /* ── Cards — editorial, soft, intentional ── */
+  /* Card with hover lift effect */
   .card-hover {
-    @apply transition-all duration-300 ease-out;
-    @apply border border-border rounded-2xl;
+    @apply transition-all duration-200 ease-out;
+    @apply border border-border rounded-xl;
   }
-
+  
   .card-hover:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 60px hsl(220 30% 15% / 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px hsl(0 0% 0% / 0.08);
   }
 
+  /* Subtle card style */
   .card-subtle {
-    @apply bg-muted/40 border-0 rounded-2xl;
-    @apply transition-all duration-300;
+    @apply bg-muted/50 border-0 rounded-xl;
+    @apply transition-all duration-200;
   }
 
   .card-subtle:hover {
-    @apply bg-muted/60;
+    @apply bg-muted;
   }
 
-  /* ── Pill badge ── */
+  /* Teal pill/badge */
   .pill-teal {
     @apply inline-flex items-center gap-1.5;
-    @apply px-4 py-1.5 rounded-full;
+    @apply px-3 py-1 rounded-full;
     @apply text-sm font-medium;
-    background: hsl(162 72% 42% / 0.08);
-    color: hsl(162 72% 32%);
+    background: hsl(159 100% 50% / 0.1);
+    color: hsl(159 100% 35%);
   }
 
-  /* ── Focus ring ── */
+  /* Focus ring style */
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
     @apply focus:ring-offset-background;
   }
 
-  /* ── Nav blur ── */
+  /* Backdrop blur nav */
   .nav-blur {
-    @apply bg-background/85 backdrop-blur-xl;
-    @apply border-b border-border/40;
+    @apply bg-background/80 backdrop-blur-lg;
+    @apply border-b border-border/50;
   }
 
-  /* ── Link animation ── */
+  /* Link with underline animation */
   .link-animated {
     @apply relative inline-block;
     @apply transition-colors duration-200;
@@ -231,7 +257,7 @@
     transform: scaleX(1);
   }
 
-  /* ── Stat highlight ── */
+  /* Stat card highlight */
   .stat-highlight {
     @apply text-4xl font-bold tracking-tight;
     background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--primary)) 100%);
@@ -240,47 +266,44 @@
     background-clip: text;
   }
 
+  /* Text gradient for headlines */
   .text-gradient-teal {
-    background: linear-gradient(135deg, hsl(162 72% 42%) 0%, hsl(162 72% 55%) 100%);
+    background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(159 100% 45%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
+  /* Teal accent text */
   .text-teal {
-    color: hsl(var(--primary));
+    color: hsl(159 100% 45%);
   }
 
-  /* ── Dashboard card glow ── */
+  /* Power BI inspired dashboard cards */
   .dashboard-card-glow {
-    box-shadow: 0 1px 3px hsl(220 30% 15% / 0.04),
-                0 0 0 1px hsl(var(--border) / 0.5);
+    box-shadow: 0 4px 24px -4px hsl(var(--primary) / 0.12), 
+                0 0 0 1px hsl(var(--border) / 0.5),
+                inset 0 1px 0 0 hsl(var(--primary) / 0.05);
   }
 
   .dashboard-card-glow:hover {
-    box-shadow: 0 8px 32px hsl(162 72% 42% / 0.08),
-                0 0 0 1px hsl(var(--primary) / 0.15);
+    box-shadow: 0 8px 32px -4px hsl(var(--primary) / 0.2), 
+                0 0 0 1px hsl(var(--primary) / 0.3),
+                inset 0 1px 0 0 hsl(var(--primary) / 0.1);
   }
 
+  /* Section with subtle background */
   .section-muted {
-    @apply bg-muted/20;
-  }
-
-  /* ── Premium glow orb (hero decoration) ── */
-  .glow-orb {
-    background: radial-gradient(circle, hsl(162 72% 42% / 0.15) 0%, hsl(162 72% 42% / 0.03) 50%, transparent 70%);
-  }
-
-  .glow-orb-warm {
-    background: radial-gradient(circle, hsl(40 40% 90% / 0.5) 0%, transparent 70%);
+    @apply bg-muted/30;
   }
 }
 
 @layer utilities {
+  /* Fade up animation */
   @keyframes fade-up {
     from {
       opacity: 0;
-      transform: translateY(24px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -289,69 +312,62 @@
   }
 
   .animate-fade-up {
-    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: fade-up 0.5s ease-out forwards;
   }
 
   .animate-fade-up-delay-1 {
-    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    animation: fade-up 0.5s ease-out 0.1s forwards;
     opacity: 0;
   }
 
   .animate-fade-up-delay-2 {
-    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+    animation: fade-up 0.5s ease-out 0.2s forwards;
     opacity: 0;
   }
 
   .animate-fade-up-delay-3 {
-    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+    animation: fade-up 0.5s ease-out 0.3s forwards;
     opacity: 0;
   }
 
+  /* Pulse glow effect */
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 0 0 hsl(162 72% 42% / 0.3);
+      box-shadow: 0 0 0 0 hsl(159 100% 50% / 0.4);
     }
     50% {
-      box-shadow: 0 0 0 10px hsl(162 72% 42% / 0);
+      box-shadow: 0 0 0 8px hsl(159 100% 50% / 0);
     }
   }
 
   .animate-pulse-glow {
-    animation: pulse-glow 2.5s ease-in-out infinite;
+    animation: pulse-glow 2s ease-in-out infinite;
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  .animate-float {
-    animation: float 4s ease-in-out infinite;
-  }
-
-  /* Spacing scale */
+  /* Spacing scale (8px base) */
   .spacing-tight { @apply gap-2; }
   .spacing-normal { @apply gap-4; }
   .spacing-relaxed { @apply gap-6; }
   .spacing-loose { @apply gap-8; }
   .spacing-generous { @apply gap-12; }
 
-  /* Containers */
+  /* Container max-widths */
   .container-narrow { @apply max-w-3xl mx-auto; }
   .container-default { @apply max-w-5xl mx-auto; }
   .container-wide { @apply max-w-7xl mx-auto; }
 
-  /* Safe area */
+  /* Safe area padding for notch devices */
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0.75rem);
   }
-
+  
   .safe-area-pt {
     padding-top: env(safe-area-inset-top, 0);
   }
+
 }
 
-/* Leaflet overrides */
+/* Leaflet overrides — MUST be outside @layer for full specificity over Tailwind preflight */
 .leaflet-container img {
   max-width: none !important;
   max-height: none !important;

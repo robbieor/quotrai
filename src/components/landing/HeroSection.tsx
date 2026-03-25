@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Briefcase, FileText, Receipt, CalendarDays, Mic } from "lucide-react";
+import { ArrowRight, Mic, CheckCircle2, Play } from "lucide-react";
+import foremanLogo from "@/assets/foreman-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 
 interface HeroSectionProps {
@@ -9,197 +10,133 @@ interface HeroSectionProps {
 
 export function HeroSection({ formatPrice }: HeroSectionProps) {
   return (
-    <section className="pt-28 sm:pt-40 pb-20 sm:pb-32 px-4 sm:px-6 relative overflow-hidden">
-      {/* Background glows — subtle, asymmetric */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[15%] right-[10%] w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] rounded-full bg-primary/[0.05] blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[5%] w-[400px] h-[400px] rounded-full bg-primary/[0.03] blur-[80px]" />
+    <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-teal-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto max-w-6xl relative">
-        <div className="grid lg:grid-cols-[1fr_0.9fr] gap-12 lg:gap-20 items-center">
-
-          {/* ── LEFT — Copy ── */}
-          <div className="animate-fade-up">
-            {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 pill-teal mb-6 sm:mb-8">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Field Service. Simplified.
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl md:text-[3.5rem] lg:text-[3.75rem] font-extrabold tracking-tight text-foreground leading-[1.08] mb-5 sm:mb-6">
-              Run your business
-              <br />
-              without running yourself
-              <br />
-              <span className="text-gradient-teal">into the ground.</span>
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Left — Copy */}
+          <div className="animate-fade-up text-center lg:text-left">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
+              Talk to your business.<br />
+              <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+                It talks back.
+              </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg mb-4 sm:mb-5">
-              Foreman brings your jobs, quotes, invoices, and team into one place — so you stay in control.
+            <p className="text-base sm:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Run quotes, jobs, invoices, and payments — using voice or text.
+              Foreman handles the admin so you get paid faster and stay in control.
             </p>
 
-            <p className="text-sm font-semibold text-foreground/80 mb-8 sm:mb-10 tracking-wide">
-              Talk to your business. It talks back.
+            <p className="text-sm sm:text-base font-semibold text-foreground mb-6 sm:mb-8">
+              Built for field service pros — not accountants.
             </p>
+
+            {/* Value bullets */}
+            <ul className="space-y-2.5 mb-8 sm:mb-10 text-left max-w-md mx-auto lg:mx-0">
+              {[
+                "Create quotes and invoices in seconds",
+                "Track jobs and payments in one place",
+                "Let AI handle follow-ups and admin",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  <span className="text-sm sm:text-base text-foreground">{item}</span>
+                </li>
+              ))}
+            </ul>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 mb-5">
-              <Link to="/signup">
-                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-12 py-6 sm:py-7 font-bold rounded-2xl btn-hover-lift gap-2 shadow-lg shadow-primary/20">
+            <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-4 mb-5">
+              <Link to="/signup" className="w-full sm:w-auto">
+                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
                   Start Free Trial
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <a href="#how-it-works">
-                <Button variant="ghost" size="lg" className="text-base px-6 py-6 sm:py-7 font-medium gap-2 text-muted-foreground hover:text-foreground">
+              <a href="#how-it-works" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="text-base px-6 py-6 sm:py-7 font-medium gap-2 w-full sm:w-auto">
                   <Play className="h-4 w-4" />
                   See how it works
                 </Button>
               </a>
             </div>
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               30-day free trial · No credit card · Cancel anytime
             </p>
           </div>
 
-          {/* ── RIGHT — Floating UI cards with depth ── */}
-          <div className="relative animate-fade-up-delay-2 hidden sm:block">
-            {/* Central glow orb */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[380px] h-[380px] rounded-full bg-primary/[0.07] blur-[60px]" />
-            </div>
-
-            <div className="relative w-full max-w-md mx-auto" style={{ minHeight: 420 }}>
-
-              {/* Main card: Foreman AI chat */}
-              <div className="relative z-10 bg-card border border-border rounded-2xl overflow-hidden shadow-2xl shadow-primary/[0.06] animate-float">
-                <div className="px-5 py-3 border-b border-border/60 flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-primary/20">
-                    <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-xs text-foreground">Foreman AI</p>
-                    <div className="flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                      <span className="text-[10px] text-muted-foreground">Ready</span>
-                    </div>
-                  </div>
+          {/* Right — Foreman AI Chat Mockup */}
+          <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
+            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
+              {/* Chat header */}
+              <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-primary/30">
+                  <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
                 </div>
-                <div className="p-4 space-y-3">
-                  <div className="flex justify-end">
-                    <div className="bg-primary/8 border border-primary/12 rounded-xl rounded-br-sm px-3.5 py-2 max-w-[80%]">
-                      <p className="text-xs text-foreground">"Quote Mrs. Patterson — EV charger, 7kW"</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="h-6 w-6 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                      <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="bg-muted/30 border border-border/60 rounded-xl rounded-bl-sm px-3.5 py-2">
-                      <p className="text-xs text-foreground">Done — <span className="font-semibold text-primary">Q-0048</span> for {formatPrice(1300)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Sent to her email ✓</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="px-4 py-2.5 border-t border-border/40">
-                  <div className="flex items-center gap-2 bg-background/80 rounded-lg border border-border/50 px-3 py-2">
-                    <Mic className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs text-muted-foreground/60">Talk or type...</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm text-foreground">Foreman AI</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-xs text-muted-foreground">Online</span>
                   </div>
                 </div>
               </div>
 
-              {/* Floating satellite card — Job scheduled */}
-              <div
-                className="absolute -top-3 -right-6 z-20 bg-card border border-border rounded-xl px-4 py-3 shadow-lift animate-float"
-                style={{ animationDelay: "0.5s", animationDuration: "5s" }}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <CalendarDays className="h-4 w-4 text-primary" />
+              {/* Chat messages — tight, outcome-focused */}
+              <div className="p-5 space-y-4">
+                {/* User: create quote */}
+                <div className="flex justify-end">
+                  <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+                    <p className="text-sm text-foreground">"Quote for Mrs. Patterson — EV charger, 7kW"</p>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Job Scheduled</p>
-                    <p className="text-[10px] text-muted-foreground">Tomorrow 9am · EV Install</p>
+                </div>
+
+                {/* AI: quote created */}
+                <div className="flex gap-2.5">
+                  <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
+                    <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
+                    <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> — {formatPrice(1300, 2)}</p>
+                    <p className="text-xs text-muted-foreground">Send it to her email?</p>
+                  </div>
+                </div>
+
+                {/* User: send */}
+                <div className="flex justify-end">
+                  <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5">
+                    <p className="text-sm text-foreground">"Yes, send it"</p>
+                  </div>
+                </div>
+
+                {/* AI: sent */}
+                <div className="flex gap-2.5">
+                  <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
+                    <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5">
+                    <p className="text-sm text-foreground">✅ Sent. She can approve with one click.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Floating satellite card — Invoice paid */}
-              <div
-                className="absolute -bottom-2 -left-8 z-20 bg-card border border-border rounded-xl px-4 py-3 shadow-lift animate-float"
-                style={{ animationDelay: "1.2s", animationDuration: "5.5s" }}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Receipt className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Invoice Paid</p>
-                    <p className="text-[10px] text-muted-foreground">{formatPrice(2450)} · O'Brien job</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating satellite card — Quote approved */}
-              <div
-                className="absolute top-1/2 -right-10 z-20 bg-card border border-border rounded-xl px-4 py-3 shadow-lift animate-float"
-                style={{ animationDelay: "0.8s", animationDuration: "4.8s" }}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Quote Approved ✓</p>
-                    <p className="text-[10px] text-muted-foreground">{formatPrice(3200)} · Patterson</p>
-                  </div>
+              {/* Chat input mock */}
+              <div className="px-5 py-3 border-t border-border bg-muted/20">
+                <div className="flex items-center gap-2 bg-background rounded-xl border border-border px-4 py-2.5">
+                  <Mic className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-muted-foreground flex-1">Talk or type to Foreman AI...</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Mobile-only: simplified visual */}
-          <div className="sm:hidden animate-fade-up-delay-1">
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-2xl bg-primary/[0.05] blur-xl" />
-              <div className="relative bg-card border border-border rounded-2xl p-4 shadow-xl shadow-primary/[0.06]">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-primary/20">
-                    <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-foreground">Foreman AI</p>
-                    <span className="text-[10px] text-primary font-medium">Ready</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2">
-                  <Mic className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs text-muted-foreground">Talk or type a command...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature pills — below fold, subtle */}
-        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mt-16 sm:mt-24 animate-fade-up-delay-3">
-          {[
-            "Voice-powered quoting",
-            "Job scheduling",
-            "Auto invoicing",
-            "Payment tracking",
-            "AI follow-ups",
-          ].map((item) => (
-            <span
-              key={item}
-              className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-card border border-border text-muted-foreground shadow-sm"
-            >
-              {item}
-            </span>
-          ))}
         </div>
       </div>
     </section>
