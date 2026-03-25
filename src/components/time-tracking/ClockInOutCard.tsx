@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { format, differenceInSeconds, isToday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,8 @@ import {
   Signal,
   SignalLow,
   SignalZero,
+  MapPin,
+  RefreshCw,
 } from "lucide-react";
 import {
   useActiveTimeEntry,
@@ -39,14 +41,80 @@ import { useJobs } from "@/hooks/useJobs";
 import { useAutoClockPrompt } from "@/hooks/useAutoClockPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MapPreview } from "@/components/ui/map-preview";
+
+// Haversine distance in metres
+function haversineDistance(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Proximity status types
+type ProximityStatus = "on_site" | "nearby" | "outside" | "unavailable";
+
+function getProximityStatus(
+  userLat: number | null,
+  userLng: number | null,
+  siteLat: number,
+  siteLng: number,
+  radius: number
+): { status: ProximityStatus; distance: number | null } {
+  if (userLat == null || userLng == null) return { status: "unavailable", distance: null };
+  const dist = haversineDistance(userLat, userLng, siteLat, siteLng);
+  if (dist <= radius) return { status: "on_site", distance: Math.round(dist) };
+  if (dist <= radius * 2) return { status: "nearby", distance: Math.round(dist) };
+  return { status: "outside", distance: Math.round(dist) };
+}
+
+function ProximityBadge({ status, distance }: { status: ProximityStatus; distance: number | null }) {
+  switch (status) {
+    case "on_site":
+      return (
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs gap-1">
+          <CheckCircle2 className="h-3 w-3" />
+          On site
+        </Badge>
+      );
+    case "nearby":
+      return (
+        <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-300 text-xs gap-1">
+          <Navigation className="h-3 w-3" />
+          {distance}m away
+        </Badge>
+      );
+    case "outside":
+      return (
+        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 text-xs gap-1">
+          <MapPinOff className="h-3 w-3" />
+          {distance && distance > 1000 ? `${(distance / 1000).toFixed(1)}km` : `${distance}m`} away
+        </Badge>
+      );
+    case "unavailable":
+      return (
+        <Badge variant="outline" className="text-muted-foreground text-xs gap-1">
+          <MapPinOff className="h-3 w-3" />
+          No location
+        </Badge>
+      );
+  }
+}
 
 // GPS accuracy traffic light
 function GpsAccuracyIndicator({ accuracy }: { accuracy: number }) {
   if (accuracy <= 30) {
     return (
       <div className="flex items-center gap-1.5">
-        <Signal className="h-4 w-4 text-green-500" />
-        <span className="text-green-600 dark:text-green-400 text-sm font-medium">GPS Locked</span>
+        <Signal className="h-4 w-4 text-primary" />
+        <span className="text-primary text-sm font-medium">GPS Locked</span>
       </div>
     );
   }
@@ -81,6 +149,7 @@ export function ClockInOutCard() {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakElapsed, setBreakElapsed] = useState(0);
+  const [locationTimestamp, setLocationTimestamp] = useState<Date | null>(null);
 
   const { data: activeEntry, isLoading: loadingActive } = useActiveTimeEntry();
   const { data: jobs } = useJobs();
@@ -144,13 +213,26 @@ export function ClockInOutCard() {
 
   // Map job_id → job_site for GPS status
   const jobSiteMap = useMemo(() => {
-    const map = new Map<string, { hasLocation: boolean; validForGps: boolean }>();
+    const map = new Map<string, {
+      hasLocation: boolean;
+      validForGps: boolean;
+      latitude: number;
+      longitude: number;
+      geofence_radius: number;
+      address: string;
+    }>();
     if (jobSites) {
       for (const site of jobSites) {
-        map.set(site.job_id, {
-          hasLocation: !!(site.latitude && site.longitude),
-          validForGps: site.location_valid_for_gps !== false,
-        });
+        if (site.latitude && site.longitude) {
+          map.set(site.job_id, {
+            hasLocation: true,
+            validForGps: site.location_valid_for_gps !== false,
+            latitude: site.latitude,
+            longitude: site.longitude,
+            geofence_radius: site.geofence_radius || 200,
+            address: site.address || "",
+          });
+        }
       }
     }
     return map;
@@ -180,6 +262,7 @@ export function ClockInOutCard() {
         lng: position.coords.longitude,
         accuracy: position.coords.accuracy,
       });
+      setLocationTimestamp(new Date());
     } catch (error) {
       setLocationError(
         error instanceof Error ? error.message : "Could not get location"
@@ -238,6 +321,7 @@ export function ClockInOutCard() {
         accuracy: position.coords.accuracy,
       };
       setCurrentLocation(freshLocation);
+      setLocationTimestamp(new Date());
     } catch (error) {
       setLocationError(
         error instanceof Error ? error.message : "Could not get location"
@@ -267,6 +351,7 @@ export function ClockInOutCard() {
         accuracy: position.coords.accuracy,
       };
       setCurrentLocation(freshLocation);
+      setLocationTimestamp(new Date());
     } catch (error) {
       setLocationError(
         error instanceof Error ? error.message : "Could not get location"
@@ -332,6 +417,18 @@ export function ClockInOutCard() {
     }
   };
 
+  // Get active entry's site info
+  const activeSite = activeEntry?.job_id ? jobSiteMap.get(activeEntry.job_id) : null;
+  const activeProximity = activeSite
+    ? getProximityStatus(
+        currentLocation?.lat ?? null,
+        currentLocation?.lng ?? null,
+        activeSite.latitude,
+        activeSite.longitude,
+        activeSite.geofence_radius
+      )
+    : null;
+
   if (loadingActive) {
     return (
       <Card>
@@ -341,6 +438,70 @@ export function ClockInOutCard() {
       </Card>
     );
   }
+
+  // Render a job row with proximity info
+  const renderJobRow = (job: typeof todaysJobs[number], showDate?: boolean) => {
+    const site = jobSiteMap.get(job.id);
+    const proximity = site
+      ? getProximityStatus(
+          currentLocation?.lat ?? null,
+          currentLocation?.lng ?? null,
+          site.latitude,
+          site.longitude,
+          site.geofence_radius
+        )
+      : null;
+
+    return (
+      <div
+        key={job.id}
+        className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors space-y-2"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium truncate">{job.title}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {job.customers?.name}
+              {showDate && job.scheduled_date &&
+                ` · ${format(new Date(job.scheduled_date), "MMM d")}`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {proximity ? (
+              <ProximityBadge status={proximity.status} distance={proximity.distance} />
+            ) : (
+              <Badge variant="outline" className="text-muted-foreground text-xs gap-1">
+                <MapPinOff className="h-3 w-3" />
+                No GPS set
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Site address + distance detail */}
+        {site && (
+          <div className="text-xs text-muted-foreground flex items-start gap-1.5">
+            <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
+            <span className="truncate">{site.address}</span>
+          </div>
+        )}
+
+        <Button
+          size="sm"
+          className="w-full"
+          onClick={() => handleClockIn(job.id)}
+          disabled={clockIn.isPending}
+        >
+          {clockIn.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4 mr-1" />
+          )}
+          Clock In
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -362,25 +523,39 @@ export function ClockInOutCard() {
             </div>
           </div>
 
-          {/* GPS Accuracy — Traffic Light */}
-          <div className="flex items-center justify-center gap-2 text-sm">
-            {isGettingLocation ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-muted-foreground">Getting location...</span>
-              </>
-            ) : locationError ? (
-              <>
-                <AlertCircle className="h-4 w-4 text-destructive" />
-                <span className="text-destructive text-xs">{locationError}</span>
-                <Button variant="ghost" size="sm" onClick={fetchLocation}>
-                  Retry
-                </Button>
-              </>
-            ) : currentLocation ? (
-              <GpsAccuracyIndicator accuracy={currentLocation.accuracy} />
-            ) : null}
+          {/* GPS Status Bar */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2 text-sm">
+              {isGettingLocation ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-muted-foreground">Getting location...</span>
+                </>
+              ) : locationError ? (
+                <>
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <span className="text-destructive text-xs">{locationError}</span>
+                </>
+              ) : currentLocation ? (
+                <GpsAccuracyIndicator accuracy={currentLocation.accuracy} />
+              ) : null}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={fetchLocation}
+              disabled={isGettingLocation}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isGettingLocation ? "animate-spin" : ""}`} />
+            </Button>
           </div>
+
+          {locationTimestamp && (
+            <p className="text-[10px] text-muted-foreground text-center -mt-3">
+              Last updated {format(locationTimestamp, "h:mm:ss a")}
+            </p>
+          )}
 
           {/* Auto-Clock Prompt */}
           {pendingPrompt && (
@@ -446,29 +621,76 @@ export function ClockInOutCard() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
-                <div className="flex-1">
-                  <p className="font-medium">{activeEntry.jobs?.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {activeEntry.jobs?.customers?.name}
-                  </p>
+              {/* Active job info + verification */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+                  <div className="flex-1">
+                    <p className="font-medium">{activeEntry.jobs?.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {activeEntry.jobs?.customers?.name}
+                    </p>
+                    {activeSite && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3 w-3" />
+                        {activeSite.address}
+                      </p>
+                    )}
+                  </div>
+                  {activeEntry.clock_in_verified ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-primary/10 text-primary border-primary/30"
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      On-site
+                    </Badge>
+                  ) : activeProximity ? (
+                    <ProximityBadge status={activeProximity.status} distance={activeProximity.distance} />
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/10 text-amber-600 border-amber-200"
+                    >
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Off-site
+                    </Badge>
+                  )}
                 </div>
-                {activeEntry.clock_in_verified ? (
-                  <Badge
-                    variant="outline"
-                    className="bg-green-500/10 text-green-600 border-green-200"
-                  >
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    On-site
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className="bg-yellow-500/10 text-yellow-600 border-yellow-200"
-                  >
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    Off-site
-                  </Badge>
+
+                {/* Clock-in verification details */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 rounded bg-muted/50">
+                    <p className="text-muted-foreground">Clock-in</p>
+                    <p className="font-medium">
+                      {activeEntry.clock_in_verified ? (
+                        <span className="text-primary flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> Verified on-site
+                        </span>
+                      ) : (
+                        <span className="text-amber-600 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" /> Manual review
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="p-2 rounded bg-muted/50">
+                    <p className="text-muted-foreground">GPS Accuracy</p>
+                    <p className="font-medium">
+                      {currentLocation
+                        ? `±${Math.round(currentLocation.accuracy)}m`
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Live map showing job site + user position */}
+                {activeSite && (
+                  <MapPreview
+                    latitude={activeSite.latitude}
+                    longitude={activeSite.longitude}
+                    height="160px"
+                    geofenceRadius={activeSite.geofence_radius}
+                  />
                 )}
               </div>
 
@@ -494,48 +716,13 @@ export function ClockInOutCard() {
             </div>
           ) : (
             /* ===== CLOCKED OUT STATE — Today's Schedule ===== */
-            <div className="space-y-4">
+            <div className="space-y-3">
               {todaysJobs.length > 0 && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Today's Schedule
                   </h3>
-                  {todaysJobs.map((job) => {
-                    const gpsStatus = jobSiteMap.get(job.id);
-                    return (
-                      <div
-                        key={job.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{job.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {job.customers?.name}
-                            {job.scheduled_date &&
-                              ` • ${format(new Date(job.scheduled_date), "h:mm a")}`}
-                          </p>
-                          {!gpsStatus && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
-                              <MapPinOff className="h-3 w-3" />
-                              No GPS location set
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleClockIn(job.id)}
-                          disabled={clockIn.isPending}
-                        >
-                          {clockIn.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Play className="h-4 w-4 mr-1" />
-                          )}
-                          Start
-                        </Button>
-                      </div>
-                    );
-                  })}
+                  {todaysJobs.map((job) => renderJobRow(job))}
                 </div>
               )}
 
@@ -545,40 +732,7 @@ export function ClockInOutCard() {
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Available Jobs
                   </h3>
-                  {availableJobs.slice(0, 5).map((job) => {
-                    const gpsStatus = jobSiteMap.get(job.id);
-                    return (
-                      <div
-                        key={job.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{job.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {job.customers?.name}
-                          </p>
-                          {!gpsStatus && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
-                              <MapPinOff className="h-3 w-3" />
-                              No GPS location set
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleClockIn(job.id)}
-                          disabled={clockIn.isPending}
-                        >
-                          {clockIn.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Play className="h-4 w-4 mr-1" />
-                          )}
-                          Start
-                        </Button>
-                      </div>
-                    );
-                  })}
+                  {availableJobs.slice(0, 5).map((job) => renderJobRow(job, true))}
                 </div>
               )}
 
@@ -615,6 +769,23 @@ export function ClockInOutCard() {
                 )}
               </div>
             </div>
+
+            {/* Clock-out location verification */}
+            {activeSite && (
+              <div className="p-3 rounded-lg border space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Location Check</span>
+                  {activeProximity && (
+                    <ProximityBadge status={activeProximity.status} distance={activeProximity.distance} />
+                  )}
+                </div>
+                {currentLocation && (
+                  <p className="text-xs text-muted-foreground">
+                    GPS accuracy: ±{Math.round(currentLocation.accuracy)}m
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Notes (optional)</label>
