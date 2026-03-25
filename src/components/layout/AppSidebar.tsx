@@ -16,7 +16,6 @@ interface NavItem {
   title: string;
   url: string;
   icon: LucideIcon;
-  /** Minimum seat type required; omit for all seats */
   requiredSeat?: SeatType;
 }
 
@@ -65,7 +64,6 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-// Nav items that team-seat members (role=member) can see regardless of seat type
 const MEMBER_ALLOWED_IDS = ["jobs", "calendar", "time-tracking"];
 
 export function AppSidebar() {
@@ -79,9 +77,7 @@ export function AppSidebar() {
       .map(group => ({
         ...group,
         items: group.items.filter(item => {
-          // Team-seat members only see allowed nav items
           if (isTeamSeat && !MEMBER_ALLOWED_IDS.includes(item.id)) return false;
-          // Check seat-type access
           if (item.requiredSeat && !canAccess(item.requiredSeat)) return false;
           return true;
         }),
@@ -95,30 +91,36 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="border-b border-sidebar-border p-4 bg-header">
+    <Sidebar className="border-r border-border/40 bg-card">
+      {/* Premium brand header */}
+      <SidebarHeader className="p-5 pb-4">
         <div className="flex items-center gap-3">
-          <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-          <span className="text-xl font-bold tracking-tight text-white">Foreman</span>
+          <div className="relative">
+            <div className="absolute -inset-1 rounded-xl bg-primary/10 blur-sm" />
+            <img src={foremanLogo} alt="Foreman" className="relative h-9 w-9 rounded-xl" />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-foreground">Foreman</span>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-3">
         {filteredGroups.map(group => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-foreground font-semibold">{group.label}</SidebarGroupLabel>
+          <SidebarGroup key={group.label} className="py-1">
+            <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70 px-3 mb-1">
+              {group.label}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="space-y-0.5">
                 {group.items.map(item => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
                         end={item.url === "/dashboard"}
-                        className="flex items-center gap-3 rounded-full border border-muted-foreground/50 px-3 py-2 text-foreground transition-all duration-300 ease-out hover:bg-muted hover:translate-x-1 [&>svg]:transition-transform [&>svg]:duration-300"
-                        activeClassName="bg-primary/20 text-foreground font-medium border-primary [&>svg]:scale-110"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-muted/50 hover:text-foreground"
+                        activeClassName="bg-primary/8 text-foreground font-semibold shadow-sm"
                       >
-                        <item.icon className="h-5 w-5" />
+                        <item.icon className="h-[18px] w-[18px]" />
                         <span>{item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
@@ -130,11 +132,11 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
-        <Link to="/settings?tab=profile" className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted">
-          <Avatar className="h-9 w-9 border-2 border-muted-foreground/20">
+      <SidebarFooter className="border-t border-border/40 p-4 space-y-2">
+        <Link to="/settings?tab=profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-muted/50">
+          <Avatar className="h-9 w-9 border-2 border-border">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />
-            <AvatarFallback className="bg-primary text-primary-foreground font-medium text-sm">
+            <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
               {getInitials(profile?.full_name)}
             </AvatarFallback>
           </Avatar>
@@ -148,19 +150,23 @@ export function AppSidebar() {
           </div>
         </Link>
         
-        <SidebarMenu>
+        <SidebarMenu className="space-y-0.5">
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/settings" className="flex items-center gap-3 rounded-full border border-muted-foreground/50 px-3 py-2 text-foreground transition-all duration-300 ease-out hover:bg-muted hover:translate-x-1 [&>svg]:transition-transform [&>svg]:duration-300" activeClassName="bg-primary/20 text-foreground font-medium border-primary [&>svg]:scale-110">
-                <Settings className="h-5 w-5" />
+              <NavLink
+                to="/settings"
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-muted/50 hover:text-foreground"
+                activeClassName="bg-primary/8 text-foreground font-semibold"
+              >
+                <Settings className="h-[18px] w-[18px]" />
                 <span>Settings</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <button onClick={signOut} className="flex w-full items-center gap-3 rounded-full border border-muted-foreground/50 px-3 py-2 text-foreground transition-colors hover:bg-destructive/20 hover:text-destructive">
-                <LogOut className="h-5 w-5" />
+              <button onClick={signOut} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/8 hover:text-destructive">
+                <LogOut className="h-[18px] w-[18px]" />
                 <span>Log out</span>
               </button>
             </SidebarMenuButton>
