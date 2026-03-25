@@ -87,7 +87,7 @@ serve(async (req) => {
     }
 
     // Redirect back to settings with success
-    const appUrl = 'https://quotrai.lovable.app';
+    const appUrl = 'https://foreman.ie';
     return new Response(null, {
       status: 302,
       headers: {

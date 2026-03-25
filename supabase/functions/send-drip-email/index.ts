@@ -5,13 +5,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 interface DripRow { id: string; user_id: string; email: string; full_name: string | null; drip_step: number; send_at: string; }
 
 const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string }> = {
-  1: { subject: "Create your first quote in 60 seconds ⚡", body: (name) => `Hi ${name},\n\nWelcome to Quotr! The easiest way to get started is to create your first quote.\n\nHead to Quotes → New Quote and pick one of your trade-specific templates.\n\nHappy quoting!\n— The Quotr Team` },
+  1: { subject: "Create your first quote in 60 seconds ⚡", body: (name) => `Hi ${name},\n\nWelcome to Foreman! The easiest way to get started is to create your first quote.\n\nHead to Quotes → New Quote and pick one of your trade-specific templates.\n\nHappy quoting!\n— The Quotr Team` },
   2: { subject: "Meet Foreman AI — your hands-free assistant 🤖", body: (name) => `Hey ${name},\n\nDid you know Quotr comes with a built-in AI assistant?\n\nForeman AI can create quotes, schedule jobs, log expenses, and more — all by voice or text.\n\nTry it: Go to the Foreman AI page and say "What can you do?"\n\n— The Quotr Team` },
   3: { subject: "How much admin time could you save? 📊", body: (name) => `Hi ${name},\n\nTradespeople using Quotr save an average of 10 hours per week on admin.\n\nCurious what that means for your business? Try our ROI calculator on the homepage.\n\n— The Quotr Team` },
   4: { subject: "Your free trial ends in 2 days ⏰", body: (name) => `Hi ${name},\n\nJust a heads-up — your 14-day Quotr trial ends soon.\n\nTo keep all your data, subscribe from Settings → Billing.\n\n— The Quotr Team` },

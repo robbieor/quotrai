@@ -62,7 +62,7 @@ export const TRADES: Record<string, TradeConfig> = {
       { objection: "I don't have time to learn new software", response: "Just talk to Foreman AI — say 'Quote the Murphy boiler service' and it's done. No training needed." },
       { objection: "My lads won't use it", response: "GPS clock-in is one tap. Voice quoting works on-site, even in gloves. Zero typing required." },
       { objection: "It's another monthly cost", response: "We take 2.5% only when you get paid. No payment, no fee. Your cost is aligned with your cash flow." },
-      { objection: "I've tried software before", response: "Those were digital forms — you still did the admin. Quotr's AI does it for you." },
+      { objection: "I've tried software before", response: "Those were digital forms — you still did the admin. Foreman's AI does it for you." },
     ],
     segments: [
       { label: "Solo plumber", hook: "Quote from the van, get paid the same day." },
@@ -99,7 +99,7 @@ export const TRADES: Record<string, TradeConfig> = {
       { objection: "I don't have time to learn new software", response: "Say 'Quote the McCarthy rewire, 3-bed semi' — Foreman AI builds it using your templates. Zero learning curve." },
       { objection: "My apprentices won't use it", response: "One-tap GPS clock-in. They're already on their phones — this is simpler than WhatsApp." },
       { objection: "It's another monthly cost", response: "2.5% only when you collect payment. We earn when you earn." },
-      { objection: "I've tried software before", response: "Those tools made you fill in forms. Quotr's AI fills them for you." },
+      { objection: "I've tried software before", response: "Those tools made you fill in forms. Foreman's AI fills them for you." },
     ],
     segments: [
       { label: "Solo spark", hook: "Professional quotes in 60 seconds, straight from site." },
@@ -395,7 +395,7 @@ export const TRADES: Record<string, TradeConfig> = {
       { objection: "I don't have time to learn new software", response: "Voice quote from the roof — 'Quote Kelly bungalow, re-felt and ridge tiles.' Done." },
       { objection: "My lads won't use it", response: "GPS clock-in, one tap. Works with gloves on." },
       { objection: "It's another monthly cost", response: "2.5% on collected payments. No work, no cost." },
-      { objection: "I've tried software before", response: "Those were digital clipboards. Quotr's AI does the admin for you." },
+      { objection: "I've tried software before", response: "Those were digital clipboards. Foreman's AI does the admin for you." },
     ],
     segments: [
       { label: "Solo roofer", hook: "Professional quotes from the ladder, paid before you leave." },
@@ -577,10 +577,10 @@ export const TRADES: Record<string, TradeConfig> = {
     seoDescription:
       "Handymen use Quotr to create multi-task quotes, schedule jobs, track expenses, and invoice clients automatically. Free 30-day trial.",
     objections: [
-      { objection: "My jobs are all different", response: "That's Quotr's strength — voice-quote any type of work. No templates needed." },
+      { objection: "My jobs are all different", response: "That's Foreman's strength — voice-quote any type of work. No templates needed." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote shelves, tap, and door for Murray.' Foreman AI builds a multi-line quote." },
       { objection: "It's another monthly cost", response: "2.5% on payments collected. Small jobs, small fees." },
-      { objection: "I'm not a tech person", response: "If you can talk, you can use Quotr. That's the whole point." },
+      { objection: "I'm not a tech person", response: "If you can talk, you can use Foreman. That's the whole point." },
     ],
     segments: [
       { label: "Solo handyman", hook: "Quote anything, invoice everything." },

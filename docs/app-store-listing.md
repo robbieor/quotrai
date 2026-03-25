@@ -1,7 +1,7 @@
-# Quotr — Apple App Store Listing
+# Foreman — Apple App Store Listing
 
 ## App Name (30 characters max)
-**Quotr - Invoice & Job Tracker**
+**Foreman - Invoice & Job Tracker**
 
 ## Subtitle (30 characters max)
 Quotes, invoices & time tracking
@@ -75,12 +75,12 @@ Download Quotr today and take control of your business finances.
 4+ (No objectionable content)
 
 ## Copyright
-© 2025 Quotr Ltd
+© 2025 Foreman
 
 ## Contact Information
-- **Support URL:** https://quotr.work/terms
-- **Marketing URL:** https://quotr.work
-- **Privacy Policy URL:** https://quotr.work/privacy
+- **Support URL:** https://foreman.ie/terms
+- **Marketing URL:** https://foreman.ie
+- **Privacy Policy URL:** https://foreman.ie/privacy
 
 ## What's New in This Version
 Initial release — create quotes, invoices, track time with GPS, manage clients, and scan receipts with AI.
@@ -108,7 +108,7 @@ Same set, landscape or portrait.
 ---
 
 ## App Review Notes
-This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://quotr.work/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 30-day free trial for new users.
+This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://foreman.ie/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 30-day free trial for new users.
 
 ## Info.plist Permission Strings
 - `NSMicrophoneUsageDescription`: "Quotr uses the microphone for Foreman AI voice commands"

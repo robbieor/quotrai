@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       const firstName = profile.full_name?.split(" ")[0] || "there";
       try {
         const messageId = crypto.randomUUID();
-        const html = `<div style="font-family:'Manrope',-apple-system,sans-serif;max-width:600px;margin:0 auto;"><h2 style="color:#0f172a;">Hey ${firstName},</h2><p>We noticed you haven't been on Quotr recently. Your business doesn't stop — and neither should your quoting and invoicing.</p><div style="background:#f0fdf4;border-left:4px solid #00E6A0;padding:16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-weight:bold;">Quick wins waiting for you:</p><ul style="margin:8px 0 0;padding-left:20px;"><li>Create quotes in seconds with templates</li><li>Send invoices and get paid faster</li><li>Track your jobs and never miss an appointment</li></ul></div><a href="https://quotrai.lovable.app/dashboard" style="display:inline-block;background:#00E6A0;color:#0f172a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0;">Jump Back In →</a><p style="color:#64748b;font-size:14px;margin-top:24px;">Need help? Chat with George, your AI assistant, anytime.</p></div>`;
+        const html = `<div style="font-family:'Manrope',-apple-system,sans-serif;max-width:600px;margin:0 auto;"><h2 style="color:#0f172a;">Hey ${firstName},</h2><p>We noticed you haven't been on Quotr recently. Your business doesn't stop — and neither should your quoting and invoicing.</p><div style="background:#f0fdf4;border-left:4px solid #00E6A0;padding:16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-weight:bold;">Quick wins waiting for you:</p><ul style="margin:8px 0 0;padding-left:20px;"><li>Create quotes in seconds with templates</li><li>Send invoices and get paid faster</li><li>Track your jobs and never miss an appointment</li></ul></div><a href="https://foreman.ie/dashboard" style="display:inline-block;background:#00E6A0;color:#0f172a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0;">Jump Back In →</a><p style="color:#64748b;font-size:14px;margin-top:24px;">Need help? Chat with George, your AI assistant, anytime.</p></div>`;
 
         await supabase.from("email_send_log").insert({ message_id: messageId, template_name: "churn-reengagement", recipient_email: profile.email, status: "pending" });
         const { error: enqueueError } = await supabase.rpc("enqueue_email", {

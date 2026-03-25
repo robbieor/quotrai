@@ -266,7 +266,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
       }
 
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize, workflowMode });
-      toast.success("Welcome to Quotr! You're all set.");
+      toast.success("Welcome to Foreman! You're all set.");
       onComplete();
     } catch (error: any) {
       console.error("Onboarding error:", error);
@@ -289,10 +289,10 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-3">
-              <img src={quotrLogo} alt="Quotr" className="h-12 w-12 rounded-xl" />
+              <img src={quotrLogo} alt="Foreman" className="h-12 w-12 rounded-xl" />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-1">
-              {step === 1 && "Welcome to Quotr!"}
+              {step === 1 && "Welcome to Foreman!"}
               {step === 2 && "Tell us about your trade"}
               {step === 3 && "How do you work?"}
               {step === 4 && "Almost there!"}

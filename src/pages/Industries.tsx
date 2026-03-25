@@ -18,7 +18,7 @@ const Industries = () => {
         <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between h-14 px-4">
             <Link to="/" className="flex items-center gap-2">
-              <img src={quotrLogo} alt="Quotr" className="h-7 w-auto" />
+              <img src={quotrLogo} alt="Foreman" className="h-7 w-auto" />
             </Link>
             <Link
               to="/signup"

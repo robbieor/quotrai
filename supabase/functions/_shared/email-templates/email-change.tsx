@@ -27,7 +27,7 @@ export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }:
     <Preview>Confirm your email change for Quotr</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={logo}>Quotr</Text>
+        <Text style={logo}>Foreman</Text>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
           You requested to change your email address for Quotr from{' '}

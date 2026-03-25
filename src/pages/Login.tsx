@@ -57,10 +57,10 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={quotrLogo} alt="Quotr" className="h-14 w-14 rounded-xl" />
+            <img src={quotrLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Quotr account</CardDescription>
+          <CardDescription>Sign in to your Foreman account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button 

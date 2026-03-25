@@ -89,10 +89,10 @@ export default function InvestorProduct() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/">
-              <img src={quotrLogo} alt="Quotr" className="h-9 w-9 rounded-lg" />
+              <img src={quotrLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-foreground">Quotr — Product Overview</h1>
+              <h1 className="text-lg font-bold text-foreground">Foreman — Product Overview</h1>
               <p className="text-xs text-muted-foreground">Feature Walkthrough & Technical Architecture</p>
             </div>
           </div>

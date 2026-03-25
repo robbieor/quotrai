@@ -191,7 +191,7 @@ export default function RequestAccess() {
             <Card className="w-full max-w-lg mx-auto">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={quotrLogo} alt="Quotr" className="h-14 w-14 rounded-xl" />
+            <img src={quotrLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mx-auto mb-2">
             <Bot className="h-4 w-4 text-primary" />

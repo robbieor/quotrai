@@ -7,12 +7,12 @@ interface SEOHeadProps {
   ogImage?: string;
 }
 
-const BASE_URL = "https://quotrai.lovable.app";
+const BASE_URL = "https://foreman.ie";
 const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/2fbjCiwqjfZ3NWb65g3XjQ8mYNE2/social-images/social-1769007219850-quotr appicon.png";
 
 export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }: SEOHeadProps) {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title.includes("Quotr") ? title : `${title} | Quotr`;
+  const fullTitle = title.includes("Foreman") ? title : `${title} | Quotr`;
 
   return (
     <Helmet>
@@ -28,7 +28,7 @@ export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Quotr" />
+      <meta property="og:site_name" content="Foreman" />
     </Helmet>
   );
 }

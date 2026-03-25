@@ -5,8 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
           <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
             <div style="max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #00FFB2, #00D4FF); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-                <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Quotr</div>
+                <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Foreman</div>
                 <h1 style="color: #0f172a; margin: 10px 0 0; font-size: 20px;">Payment Reminder</h1>
               </div>
               <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
                 <p>Thank you,<br><strong>${fromName}</strong></p>
               </div>
               <div style="text-align: center; padding: 15px; color: #64748b; font-size: 12px;">
-                Powered by <a href="#" style="color: #00D4FF;">Quotr</a>
+                Powered by <a href="#" style="color: #00D4FF;">Foreman</a>
               </div>
             </div>
           </body>

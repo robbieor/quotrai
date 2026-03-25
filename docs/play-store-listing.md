@@ -1,7 +1,7 @@
-# Quotr - Google Play Store Listing
+# Foreman - Google Play Store Listing
 
 ## App Name
-**Quotr - Invoice & Expense Tracker**
+**Foreman - Invoice & Expense Tracker**
 
 ## Short Description (80 characters max)
 Create invoices, scan receipts, track expenses & time. Perfect for tradespeople.

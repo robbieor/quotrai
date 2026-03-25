@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.9b11f743854248068d3ea81555111caa',
-  appName: 'Quotr',
+  appName: 'Foreman',
   webDir: 'dist',
   server: {
     // Comment out or remove these two lines for production builds

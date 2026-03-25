@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 function escapeHtml(text: string | undefined | null): string {
   if (!text) return "";
@@ -36,20 +36,20 @@ const handler = async (req: Request): Promise<Response> => {
     const adminHtml = `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;"><div style="background:linear-gradient(135deg,#00FFB2,#00D4FF);padding:30px;text-align:center;border-radius:12px 12px 0 0;"><h1 style="color:#0f172a;margin:0;">🚀 New Early Access Request</h1></div><div style="padding:30px;background:#fff;border:1px solid #e2e8f0;border-top:none;"><p><strong>Company:</strong> ${safe.companyName}</p><p><strong>Contact:</strong> ${safe.contactName}</p><p><strong>Email:</strong> ${safe.email}</p>${safe.phone ? `<p><strong>Phone:</strong> ${safe.phone}</p>` : ''}${safe.tradeType ? `<p><strong>Trade:</strong> ${safe.tradeType}</p>` : ''}${safe.teamSize ? `<p><strong>Team Size:</strong> ${safe.teamSize}</p>` : ''}${safe.country ? `<p><strong>Country:</strong> ${safe.country}</p>` : ''}${safe.message ? `<div style="background:#f0fdf4;border-left:4px solid #00E6A0;padding:16px;margin-top:20px;"><strong>Message:</strong><p>${safe.message}</p></div>` : ''}<p style="color:#94a3b8;font-size:12px;">ID: ${savedRequest.id}</p></div></div>`;
 
     const adminMsgId = crypto.randomUUID();
-    await supabase.from("email_send_log").insert({ message_id: adminMsgId, template_name: "early-access-admin", recipient_email: "accounts@quotr.info", status: "pending" });
+    await supabase.from("email_send_log").insert({ message_id: adminMsgId, template_name: "early-access-admin", recipient_email: "accounts@foreman.ie", status: "pending" });
     await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: adminMsgId, to: "accounts@quotr.info", from: `Quotr <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `New Early Access Request: ${safe.companyName}`, html: adminHtml, text: `New early access request from ${safe.contactName} at ${safe.companyName}`, purpose: "transactional", label: "early-access-admin", queued_at: new Date().toISOString() },
+      payload: { message_id: adminMsgId, to: "accounts@foreman.ie", from: `Quotr <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `New Early Access Request: ${safe.companyName}`, html: adminHtml, text: `New early access request from ${safe.contactName} at ${safe.companyName}`, purpose: "transactional", label: "early-access-admin", queued_at: new Date().toISOString() },
     });
 
     // Confirmation to requester
-    const confirmHtml = `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;"><div style="background:linear-gradient(135deg,#00FFB2,#00D4FF);padding:40px 30px;text-align:center;border-radius:12px 12px 0 0;"><h1 style="color:#0f172a;margin:0;">Welcome to Quotr! 🎉</h1><p style="color:#0f172a;">Your request has been received</p></div><div style="padding:40px 30px;background:#fff;border:1px solid #e2e8f0;border-top:none;"><h2 style="color:#0f172a;">Hi ${safe.contactName},</h2><p>Thank you for your interest in Quotr!</p><p>We've received your early access request for <strong>${safe.companyName}</strong>. We'll be in touch within <strong>24-48 hours</strong>.</p><div style="background:#f0fdf4;border-radius:8px;padding:20px;margin:24px 0;"><p>💡 <strong>What happens next?</strong><br>We'll set up your account and walk you through the platform.</p></div><p><strong>The Quotr Team</strong></p></div></div>`;
+    const confirmHtml = `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;"><div style="background:linear-gradient(135deg,#00FFB2,#00D4FF);padding:40px 30px;text-align:center;border-radius:12px 12px 0 0;"><h1 style="color:#0f172a;margin:0;">Welcome to Foreman! 🎉</h1><p style="color:#0f172a;">Your request has been received</p></div><div style="padding:40px 30px;background:#fff;border:1px solid #e2e8f0;border-top:none;"><h2 style="color:#0f172a;">Hi ${safe.contactName},</h2><p>Thank you for your interest in Quotr!</p><p>We've received your early access request for <strong>${safe.companyName}</strong>. We'll be in touch within <strong>24-48 hours</strong>.</p><div style="background:#f0fdf4;border-radius:8px;padding:20px;margin:24px 0;"><p>💡 <strong>What happens next?</strong><br>We'll set up your account and walk you through the platform.</p></div><p><strong>The Quotr Team</strong></p></div></div>`;
 
     const confirmMsgId = crypto.randomUUID();
     await supabase.from("email_send_log").insert({ message_id: confirmMsgId, template_name: "early-access-confirm", recipient_email: email, status: "pending" });
     await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: confirmMsgId, to: email, from: `Quotr <hello@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: "Welcome to Quotr! 🚀", html: confirmHtml, text: `Hi ${contactName}, thank you for your interest in Quotr! We'll be in touch within 24-48 hours.`, purpose: "transactional", label: "early-access-confirm", queued_at: new Date().toISOString() },
+      payload: { message_id: confirmMsgId, to: email, from: `Quotr <hello@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: "Welcome to Foreman! 🚀", html: confirmHtml, text: `Hi ${contactName}, thank you for your interest in Quotr! We'll be in touch within 24-48 hours.`, purpose: "transactional", label: "early-access-confirm", queued_at: new Date().toISOString() },
     });
 
     return new Response(JSON.stringify({ success: true, message: "Request submitted successfully" }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });

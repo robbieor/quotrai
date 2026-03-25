@@ -24,21 +24,21 @@ export default function SelectPlan() {
         <Card className="max-w-md w-full text-center">
           <CardHeader>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
-              <span className="text-2xl font-bold">Quotr</span>
+              <img src={quotrLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
+              <span className="text-2xl font-bold">Foreman</span>
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
-              Subscription management is available on the web. Visit quotr.work to choose a plan or manage billing.
+              Subscription management is available on the web. Visit foreman.ie to choose a plan or manage billing.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
               className="gap-2"
-              onClick={() => openExternalUrl("https://quotr.work/settings?tab=team-billing")}
+              onClick={() => openExternalUrl("https://foreman.ie/settings?tab=team-billing")}
             >
               <ExternalLink className="h-4 w-4" />
-              Open quotr.work
+              Open foreman.ie
             </Button>
           </CardContent>
         </Card>
@@ -68,8 +68,8 @@ export default function SelectPlan() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src={quotrLogo} alt="Quotr" className="h-10 w-10 rounded-lg" />
-            <span className="text-2xl font-bold">Quotr</span>
+            <img src={quotrLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
+            <span className="text-2xl font-bold">Foreman</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Simple, transparent pricing

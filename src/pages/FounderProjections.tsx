@@ -82,7 +82,7 @@ const LAUNCH_SCENARIO = {
     "Dashcam POV: tradesperson uses George AI to schedule jobs hands-free while driving",
     "On-site: snap photo of boiler → AI generates quote in 30 seconds → customer approves on portal",
     "End-of-day: GPS auto clock-out, invoices auto-sent, payment chasers running — zero admin",
-    "Split-screen: pen & paper chaos vs Quotr — same job, 10x faster",
+    "Split-screen: pen & paper chaos vs Foreman — same job, 10x faster",
     "Testimonial-style: real tradesperson shows dashboard, \"I got paid €4K in 2 days instead of 3 weeks\"",
   ],
 };
@@ -191,10 +191,10 @@ export default function FounderProjections() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/">
-              <img src={quotrLogo} alt="Quotr" className="h-9 w-9 rounded-lg" />
+              <img src={quotrLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             </Link>
             <div>
-              <h1 className="font-bold text-foreground">Quotr — Investor Revenue Model</h1>
+              <h1 className="font-bold text-foreground">Foreman — Investor Revenue Model</h1>
               <p className="text-xs text-muted-foreground">Confidential — March 2026</p>
             </div>
           </div>
@@ -801,7 +801,7 @@ export default function FounderProjections() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center pb-8">
-          * Projections are estimates based on compound growth models. Actual results depend on execution, market conditions, and churn management. Not financial advice. Confidential — Quotr Ltd, Feb 2026.
+          * Projections are estimates based on compound growth models. Actual results depend on execution, market conditions, and churn management. Not financial advice. Confidential — Foreman, Feb 2026.
         </p>
       </main>
     </div>

@@ -65,7 +65,7 @@ You agree NOT to:
 
 - The App, including its design, code, and content, is owned by us
 - You may not copy, modify, or distribute the App
-- "Quotr" and associated logos are our trademarks
+- "Foreman" and associated logos are our trademarks
 
 ## 10. Limitation of Liability
 
@@ -110,7 +110,7 @@ If any provision of these Terms is found unenforceable, the remaining provisions
 
 ## 17. Entire Agreement
 
-These Terms, together with our Privacy Policy, constitute the entire agreement between you and Quotr.
+These Terms, together with our Privacy Policy, constitute the entire agreement between you and Foreman.
 
 ## 18. Contact
 

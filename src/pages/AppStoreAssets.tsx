@@ -89,7 +89,7 @@ export default function AppStoreAssets() {
             </Button>
           </Link>
           <div className="flex items-center gap-2">
-            <img src={quotrLogo} alt="Quotr" className="h-8 w-8 rounded-lg" />
+            <img src={quotrLogo} alt="Foreman" className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-bold tracking-tight">App Store Assets</span>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function AppStoreAssets() {
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">App Name</p>
-              <p className="font-semibold">Quotr - Invoice & Job Tracker</p>
+              <p className="font-semibold">Foreman - Invoice & Job Tracker</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Subtitle (iOS)</p>
@@ -327,11 +327,11 @@ export default function AppStoreAssets() {
           <div className="grid sm:grid-cols-2 gap-4">
             <Link to="/privacy" className="rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
               <p className="font-semibold mb-1">Privacy Policy</p>
-              <p className="text-sm text-muted-foreground">quotr.work/privacy</p>
+              <p className="text-sm text-muted-foreground">foreman.ie/privacy</p>
             </Link>
             <Link to="/terms" className="rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
               <p className="font-semibold mb-1">Terms of Service</p>
-              <p className="text-sm text-muted-foreground">quotr.work/terms</p>
+              <p className="text-sm text-muted-foreground">foreman.ie/terms</p>
             </Link>
           </div>
         </section>
