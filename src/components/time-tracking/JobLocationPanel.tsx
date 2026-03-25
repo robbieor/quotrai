@@ -114,30 +114,70 @@ export function JobLocationPanel({
     };
   }, [jobSite, userLocation]);
 
-  // STATE B: No job site selected or no coordinates
+  // Default center: user location or Dublin fallback
+  const defaultCenter: [number, number] = userLocation
+    ? [userLocation.lat, userLocation.lng]
+    : [53.3498, -6.2603];
+
+  // STATE B: No job site — show live map centered on user location
   if (!jobSite) {
+    const positions: [number, number][] = userLocation
+      ? [[userLocation.lat, userLocation.lng]]
+      : [defaultCenter];
+
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MapPin className="h-5 w-5" />
-            Job Location
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between text-base">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Live Location
+            </div>
+            <Badge variant="outline" className="text-muted-foreground gap-1">
+              <Navigation className="h-3 w-3" />
+              No job selected
+            </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-            <MapPinOff className="h-8 w-8 text-muted-foreground" />
+        <CardContent className="flex-1 flex flex-col gap-3 min-h-0">
+          <div className="flex-1 min-h-[300px] rounded-lg overflow-hidden border relative">
+            <MapContainer
+              center={defaultCenter}
+              zoom={14}
+              style={{ height: "100%", width: "100%" }}
+              scrollWheelZoom={true}
+              zoomControl={false}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              />
+              <MapController positions={positions} />
+              {userLocation && (
+                <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon} />
+              )}
+            </MapContainer>
+            {!userLocation && !isGettingLocation && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm z-[10]">
+                <div className="text-center space-y-2 p-4">
+                  <MapPinOff className="h-8 w-8 text-muted-foreground mx-auto" />
+                  <p className="text-sm font-medium">Location unavailable</p>
+                  <Button size="sm" variant="outline" onClick={onRetryLocation}>
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            )}
+            {isGettingLocation && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/40 z-[10]">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
           </div>
-          <div className="space-y-1.5">
-            <p className="font-medium text-foreground">No job location set</p>
-            <p className="text-sm text-muted-foreground max-w-[280px]">
-              Select a job from the list to see its site location, or set a verified address on the job to enable GPS clock-in verification.
-            </p>
-          </div>
-          <Badge variant="outline" className="text-muted-foreground">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            GPS verification unavailable
-          </Badge>
+          <p className="text-xs text-muted-foreground text-center">
+            Select a job to see its site location and geofence. GPS clock-in verification requires a job with a verified address.
+          </p>
         </CardContent>
       </Card>
     );
