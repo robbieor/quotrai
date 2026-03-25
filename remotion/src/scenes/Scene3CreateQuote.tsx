@@ -104,7 +104,7 @@ export const Scene3CreateQuote: React.FC = () => {
         {/* Left: George chat */}
         <div style={{ flex: "0 0 560px", display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8, opacity: userBubbleOpacity }}>
-            <Img src={staticFile("images/quotr-logo.png")} style={{ width: 36, height: 36, borderRadius: 10 }} />
+            <Img src={staticFile("images/foreman-logo.png")} style={{ width: 36, height: 36, borderRadius: 10 }} />
             <span style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · Foreman AI</span>
           </div>
 
@@ -168,7 +168,7 @@ export const Scene3CreateQuote: React.FC = () => {
           >
             <div style={{ padding: "24px 32px", borderBottom: "2px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <Img src={staticFile("images/quotr-logo.png")} style={{ width: 42, height: 42, borderRadius: 10 }} />
+                <Img src={staticFile("images/foreman-logo.png")} style={{ width: 42, height: 42, borderRadius: 10 }} />
                 <div>
                   <p style={{ fontSize: 12, color: "#94a3b8", margin: 0, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em" }}>Quote</p>
                   <p style={{ fontSize: 26, color: NAVY, margin: "2px 0 0 0", fontWeight: 800, letterSpacing: "-0.03em" }}>Q-0048</p>
