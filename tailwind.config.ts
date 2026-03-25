@@ -76,6 +76,7 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        header: "hsl(var(--header-bg))",
         teal: {
           DEFAULT: "hsl(159 100% 45%)",
           light: "hsl(159 100% 50%)",

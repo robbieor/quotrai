@@ -71,6 +71,8 @@
     --shadow-subtle: 0 1px 3px 0 hsl(0 0% 0% / 0.06), 0 1px 2px -1px hsl(0 0% 0% / 0.06);
     --shadow-medium: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
     --shadow-lift: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.06);
+
+    --header-bg: 220 20% 28%;              /* Deep slate for header/sidebar bars */
   }
 
   /* Dark mode override */
