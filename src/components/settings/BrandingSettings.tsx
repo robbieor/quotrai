@@ -159,7 +159,7 @@ export function BrandingSettings() {
       if (previewDocType === "invoice") {
         const mockInvoice = {
           id: "preview",
-          invoice_number: "INV-2025-0042",
+          display_number: "INV-2025-0042",
           issue_date: new Date().toISOString(),
           due_date: new Date(Date.now() + 14 * 86400000).toISOString(),
           status: "sent" as const,
@@ -180,7 +180,7 @@ export function BrandingSettings() {
       } else {
         const mockQuote = {
           id: "preview",
-          quote_number: "QTE-2025-0018",
+          display_number: "QTE-2025-0018",
           created_at: new Date().toISOString(),
           valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
           status: "draft" as const,

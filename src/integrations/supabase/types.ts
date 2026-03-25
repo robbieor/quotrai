@@ -1725,14 +1725,15 @@ export type Database = {
           delivery_status: string
           discount_type: string
           discount_value: number
+          display_number: string
           due_date: string
           id: string
-          invoice_number: string
           issue_date: string
           job_id: string | null
           notes: string | null
           portal_token: string | null
           quote_id: string | null
+          ref: string
           status: Database["public"]["Enums"]["invoice_status"]
           subtotal: number | null
           tax_amount: number | null
@@ -1750,14 +1751,15 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
+          display_number: string
           due_date?: string
           id?: string
-          invoice_number: string
           issue_date?: string
           job_id?: string | null
           notes?: string | null
           portal_token?: string | null
           quote_id?: string | null
+          ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number | null
           tax_amount?: number | null
@@ -1775,14 +1777,15 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
+          display_number?: string
           due_date?: string
           id?: string
-          invoice_number?: string
           issue_date?: string
           job_id?: string | null
           notes?: string | null
           portal_token?: string | null
           quote_id?: string | null
+          ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number | null
           tax_amount?: number | null
@@ -3207,12 +3210,13 @@ export type Database = {
           delivery_status: string
           discount_type: string
           discount_value: number
+          display_number: string
           id: string
           job_id: string | null
           last_viewed_at: string | null
           notes: string | null
           portal_token: string | null
-          quote_number: string
+          ref: string
           reminders_enabled: boolean | null
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number | null
@@ -3231,12 +3235,13 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
+          display_number: string
           id?: string
           job_id?: string | null
           last_viewed_at?: string | null
           notes?: string | null
           portal_token?: string | null
-          quote_number: string
+          ref?: string
           reminders_enabled?: boolean | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number | null
@@ -3255,12 +3260,13 @@ export type Database = {
           delivery_status?: string
           discount_type?: string
           discount_value?: number
+          display_number?: string
           id?: string
           job_id?: string | null
           last_viewed_at?: string | null
           notes?: string | null
           portal_token?: string | null
-          quote_number?: string
+          ref?: string
           reminders_enabled?: boolean | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number | null

@@ -15,7 +15,7 @@ export async function generateInvoicePdf(
   const config = getBrandingConfig(branding);
 
   // Add branded header
-  let startY = await addBrandingHeader(doc, config, "INVOICE", invoice.invoice_number);
+  let startY = await addBrandingHeader(doc, config, "INVOICE", invoice.display_number);
 
   // Invoice details section
   doc.setFontSize(10);
@@ -133,5 +133,5 @@ export async function downloadInvoicePdf(
   currencySymbol?: string
 ) {
   const doc = await generateInvoicePdf(invoice, branding, currencySymbol);
-  doc.save(`${invoice.invoice_number}.pdf`);
+  doc.save(`${invoice.display_number}.pdf`);
 }
