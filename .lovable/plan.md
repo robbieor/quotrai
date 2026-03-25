@@ -1,84 +1,33 @@
 
 
-# Rebrand: Quotr to Foreman — Full Scope
+# Simplify Dashboard — Reduce Visual Overload
 
-## Summary
+## Problem
+The dashboard stacks too many dense sections above the fold: filter bar + quick actions, a 4-column stats strip (Control Header), an AI recommendation bar, 5 KPI cards, action alerts, then charts and tables. It feels overwhelming.
 
-Replace all user-facing "Quotr" references with "Foreman" across the app, landing page, email templates, SEO metadata, PWA manifest, and Capacitor config. Keep the existing logo (`quotr-logo.png`) and Manrope font unchanged. Connect the `foreman.ie` custom domain.
+## Approach — Merge and Collapse
 
-## Domain Connection
+### 1. Remove the Control Header stats strip
+The 4-column stats strip (Overdue / Stale Quotes / Stuck Jobs / Status) duplicates information already shown in the KPI cards and Action Panel alerts below it. Remove it and keep only the AI recommendation row with action buttons.
 
-Connect `foreman.ie` via Project Settings > Domains. You'll need to add DNS records at your registrar:
-- **A record** `@` → `185.158.133.1`
-- **A record** `www` → `185.158.133.1`
-- **TXT record** `_lovable` → the verification value provided in the setup flow
+### 2. Consolidate the AI bar into the header row
+Move the Foreman AI recommendation + action buttons (Chase, Quotes, Jobs, Ask AI) up into the Dashboard header row, sitting alongside the filter bar. This eliminates an entire card/section.
+
+### 3. Reduce KPI cards from 5 to 3 on desktop
+Show the 3 most actionable: **Revenue**, **Outstanding AR**, **Active Jobs**. Cash Collected and 30+ Day Overdue are secondary — fold them into the drill-through or remove.
+
+### 4. Collapse Action Panel into a single summary row
+Instead of listing every alert as a separate row, show a compact single-line summary: "3 items need attention" with a "View all" expand. Only expand to full alert rows on click.
 
 ## Files to Change
 
-### 1. Create a brand config file (`src/config/brand.ts`)
-Single source of truth for all brand strings:
-```
-APP_NAME: "Foreman"
-TAGLINE: "AI-Powered Job Management for Trade Businesses"
-DOMAIN: "foreman.ie"
-SUPPORT_EMAIL: "hello@foreman.ie"
-LEGAL_ENTITY: "Foreman" (update when CRO registered)
-```
+| File | Change |
+|---|---|
+| `src/components/dashboard/ControlHeader.tsx` | Remove the stats strip grid entirely; keep only AI recommendation row, restyle as a slim inline bar |
+| `src/components/dashboard/KPIStrip.tsx` | Default to 3 cards on desktop (Revenue, Outstanding AR, Active Jobs), "View all" to expand remaining 2 |
+| `src/components/dashboard/ActionPanel.tsx` | Default collapsed to single summary line; expand on click |
+| `src/pages/Dashboard.tsx` | Move AI bar into the header flex row; remove separate ControlHeader AnimatedSection; tighten spacing |
 
-### 2. Frontend — ~30+ files referencing "Quotr"
-All `alt="Quotr"`, `"Welcome to Quotr"`, `"Quotr account"`, `"Quotr — ..."` strings replaced with brand config values.
-
-Key files:
-- **Landing page**: `Landing.tsx`, `HeroSection.tsx`, `SolutionSection.tsx`, `FinalCTASection.tsx` — nav bar text, hero copy, footer
-- **Auth pages**: `Login.tsx`, `Signup.tsx`, `ForgotPassword.tsx`, `ResetPassword.tsx`
-- **Sidebar**: `AppSidebar.tsx` — logo text
-- **Onboarding**: `OnboardingModal.tsx`, `FirstQuoteWizard.tsx`
-- **Legal**: `Terms.tsx`, `Privacy.tsx` — nav and body text
-- **Pricing**: `Pricing.tsx` — header and FAQ text
-- **SEO**: `SEOHead.tsx` — `BASE_URL` to `https://foreman.ie`, title suffix `| Foreman`
-- **Investor pages**: `InvestorPitch.tsx`, `InvestorProduct.tsx`, `InvestorMarket.tsx`, `InvestorTeam.tsx`
-- **App Store**: `AppStoreAssets.tsx`
-- **Portal pages**: `QuotePortal.tsx`, `InvoicePortal.tsx`, `CustomerDashboard.tsx`, `CustomerLogin.tsx`
-- **Dashboard**: `MorningBriefingCard.tsx`, `OnboardingChecklist.tsx`
-- **Settings**: `BrandingSettings.tsx`, `StripeConnectSetup.tsx`
-- **PWA install**: `PwaInstallBanner.tsx`
-- **Demo**: `DemoOverlay.tsx`
-
-### 3. Static files
-- `index.html` — title, meta tags, OG tags, JSON-LD structured data, all "Quotr" → "Foreman"
-- `public/manifest.json` — `name` and `short_name` → "Foreman"
-- `capacitor.config.ts` — `appName` → "Foreman"
-
-### 4. Email templates (6 files in `supabase/functions/_shared/email-templates/`)
-- `signup.tsx`, `recovery.tsx`, `magic-link.tsx`, `invite.tsx`, `email-change.tsx`, `reauthentication.tsx`
-- Replace `<Text style={logo}>Quotr</Text>` → `<Text style={logo}>Foreman</Text>`
-- Update preview text references
-
-### 5. Edge functions (~8 files)
-- `send-email/index.ts` — `FROM_DOMAIN`, `SENDER_DOMAIN`, from address text
-- `send-document-email/index.ts` — same + HTML template header
-- `send-roi-summary/index.ts` — subject lines, HTML content
-- `send-drip-email/index.ts`, `send-payment-reminder/index.ts`, `send-job-reminders/index.ts`, `send-preview-email/index.ts`
-- `george-chat/index.ts` — system prompt "Quotr" → "Foreman"
-- `create-invoice-payment/index.ts` — origin fallback URL
-- `send-team-invitation/index.ts`
-
-**Note**: Email sender domains (`quotr.work`) will need separate domain setup for `foreman.ie` — this is a follow-up step after the code rebrand.
-
-### 6. Docs (non-code)
-- `docs/app-store-listing.md`, `docs/play-store-listing.md` — app name references
-- `docs/privacy-policy.md`, `docs/terms-of-service.md`
-- `README.md`
-
-## What stays the same
-- Logo file (`src/assets/quotr-logo.png`) — same image, kept as-is (filename is internal only)
-- Font (Manrope) — unchanged
-- Color palette — unchanged
-- "Foreman AI" agent name — already correct, no change needed
-- All functionality — purely cosmetic rebrand
-
-## Deployment
-- All edge function changes require redeployment
-- Frontend changes require clicking "Update" in publish dialog
-- Domain connection is done via Project Settings > Domains
+## Result
+Above the fold goes from ~6 visual sections to ~3: header with AI bar, 3 KPI cards, and a collapsed alert summary. Charts and tables remain below unchanged.
 
