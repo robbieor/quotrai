@@ -2,11 +2,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Download, Mail, Pencil, Link2, FileText } from "lucide-react";
+import { Download, Mail, Pencil, Link2, FileText, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
+import { useCreateInvoiceFromQuote } from "@/hooks/useInvoices";
+import { useNavigate } from "react-router-dom";
 
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
@@ -41,9 +43,19 @@ export function QuoteDetailSheet({
   onSendEmail,
   onCopyPortalLink,
 }: QuoteDetailSheetProps) {
+  const createFromQuote = useCreateInvoiceFromQuote();
+  const navigate = useNavigate();
+
   if (!quote) return null;
 
   const currency = (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code);
+  const canConvert = quote.status === "accepted";
+
+  const handleConvertToInvoice = async () => {
+    await createFromQuote.mutateAsync(quote.id);
+    onOpenChange(false);
+    navigate("/invoices");
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -75,6 +87,18 @@ export function QuoteDetailSheet({
               </span>
             )}
           </div>
+
+          {/* Convert to Invoice CTA for accepted quotes */}
+          {canConvert && (
+            <Button
+              className="w-full"
+              onClick={handleConvertToInvoice}
+              disabled={createFromQuote.isPending}
+            >
+              <Receipt className="mr-1.5 h-4 w-4" />
+              {createFromQuote.isPending ? "Creating Invoice…" : "Convert to Invoice"}
+            </Button>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2 flex-wrap">
