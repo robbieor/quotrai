@@ -24,13 +24,25 @@ function extractTrailingSequence(value: string | null | undefined, prefixes: str
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function getNextDisplayNumber(values: Array<{ display_number?: string | null }> | null | undefined, prefix: string, fallback = 1): string {
-  const nextNumber = (values ?? []).reduce((max, item) => {
+function getNextDisplayNumber(
+  values: Array<{ display_number?: string | null }> | null | undefined,
+  prefix: string,
+  countFallback?: number
+): string {
+  const filtered = (values ?? []).filter(
+    (item) => item.display_number != null && !item.display_number.includes("NaN")
+  );
+
+  const maxFromExisting = filtered.reduce((max, item) => {
     const candidate = extractTrailingSequence(item.display_number, [prefix]);
     return candidate !== null && candidate > max ? candidate : max;
-  }, 0) + 1;
+  }, 0);
 
-  return `${prefix}${Math.max(nextNumber, fallback).toString().padStart(4, "0")}`;
+  // If reduce found nothing valid, use countFallback (total record count) as safety net
+  const base = maxFromExisting > 0 ? maxFromExisting : (countFallback ?? 0);
+  const nextNumber = base + 1;
+
+  return `${prefix}${nextNumber.toString().padStart(4, "0")}`;
 }
 
 interface WebhookRequest {
@@ -378,14 +390,12 @@ serve(async (req) => {
         }
 
         // Generate quote number
-        const { data: recentQuotes } = await supabase
-          .from("quotes")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentQuotes }, { count: quoteCount }] = await Promise.all([
+          supabase.from("quotes").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("quotes").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-");
+        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-", quoteCount ?? 0);
 
         // Calculate totals - use provided tax_rate or default based on user's country
         const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
@@ -1083,14 +1093,12 @@ serve(async (req) => {
         }
 
         // Generate quote number
-        const { data: recentQuotes } = await supabase
-          .from("quotes")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentQuotes }, { count: quoteCount }] = await Promise.all([
+          supabase.from("quotes").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("quotes").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-");
+        const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-", quoteCount ?? 0);
 
         // Build quote items with optional quantity overrides
         const quoteItems = templateItems.map((item: any, index: number) => {
@@ -1347,14 +1355,12 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: recentInvoices } = await supabase
-          .from("invoices")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentInvoices }, { count: invoiceCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-", invoiceCount ?? 0);
 
         // Build invoice items with optional quantity overrides
         const invoiceItems = templateItems.map((item: any) => {
@@ -1546,14 +1552,12 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: recentInvoices } = await supabase
-          .from("invoices")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentInvoices }, { count: invoiceCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-", invoiceCount ?? 0);
 
         // Due date (default 14 days)
         const daysUntilDue = due_days || 14;
@@ -3510,14 +3514,12 @@ serve(async (req) => {
         }
 
         // Generate invoice number
-        const { data: recentInvoices } = await supabase
-          .from("invoices")
-          .select("display_number")
-          .eq("team_id", company_id)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [{ data: recentInvoices }, { count: invoiceCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
 
-        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-");
+        const invoiceNumber = getNextDisplayNumber(recentInvoices, "INV-", invoiceCount ?? 0);
 
         // Calculate totals
         const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
