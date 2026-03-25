@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, AlertCircle, TrendingUp, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -5,6 +6,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import type { ActionAlert } from "@/hooks/useDashboardAnalytics";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ActionPanelProps {
   alerts: ActionAlert[] | undefined;
@@ -42,6 +44,8 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
   const { segment } = useDashboardFilters();
   const { formatCurrency } = useCurrency();
   const { canAccessGeorge } = useSeatAccess();
+  const isMobile = useIsMobile();
+  const [showAll, setShowAll] = useState(false);
 
   // Lite users only see critical/warning alerts, not AI-driven opportunities
   const visibleAlerts = alerts?.filter(
@@ -67,9 +71,13 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
     return order[a.severity] - order[b.severity];
   });
 
+  const MOBILE_LIMIT = 3;
+  const displayAlerts = isMobile && !showAll ? sorted.slice(0, MOBILE_LIMIT) : sorted;
+  const hasMore = isMobile && !showAll && sorted.length > MOBILE_LIMIT;
+
   return (
     <div className="space-y-1.5">
-      {sorted.map((alert) => {
+      {displayAlerts.map((alert) => {
         const config = severityConfig[alert.severity];
         const Icon = config.icon;
         return (
@@ -90,6 +98,14 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
           </div>
         );
       })}
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(true)}
+          className="text-xs text-primary font-medium hover:underline w-full text-center py-1"
+        >
+          View all {sorted.length} alerts
+        </button>
+      )}
     </div>
   );
 }

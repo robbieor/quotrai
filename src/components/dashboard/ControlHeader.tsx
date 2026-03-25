@@ -4,18 +4,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, FileText, Briefcase, Sparkles, Receipt } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { ControlHeaderData } from "@/hooks/useDashboardAnalytics";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useProfile } from "@/hooks/useProfile";
 import tomAvatar from "@/assets/tom-avatar.png";
 
 interface ControlHeaderProps {
   data: ControlHeaderData | undefined;
   isLoading?: boolean;
-  /** Whether to show AI recommendation and Ask AI button (Connect+ only) */
   showAI?: boolean;
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderProps) {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
+  const isMobile = useIsMobile();
+  const { profile } = useProfile();
 
   if (isLoading) {
     return (
@@ -34,7 +44,69 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
   if (!data) return null;
 
   const hasIssues = data.overdueCount > 0 || data.quotesNeedFollowUp > 0 || data.stuckJobs > 0;
+  const issueCount = (data.overdueCount > 0 ? 1 : 0) + (data.quotesNeedFollowUp > 0 ? 1 : 0) + (data.stuckJobs > 0 ? 1 : 0);
+  const firstName = profile?.full_name?.split(" ")[0] || "";
 
+  /* ── MOBILE: greeting + single CTA ── */
+  if (isMobile) {
+    // Pick the single highest-priority CTA
+    const primaryCTA = data.overdueCount > 0
+      ? { label: `Chase ${formatCurrency(data.totalOverdue)} overdue`, variant: "destructive" as const, href: "/invoices?status=overdue" }
+      : data.quotesNeedFollowUp > 0
+        ? { label: `Follow up ${data.quotesNeedFollowUp} quote${data.quotesNeedFollowUp !== 1 ? "s" : ""}`, variant: "default" as const, href: "/quotes?status=sent" }
+        : data.stuckJobs > 0
+          ? { label: `Review ${data.stuckJobs} stuck job${data.stuckJobs !== 1 ? "s" : ""}`, variant: "outline" as const, href: "/jobs?status=in_progress" }
+          : null;
+
+    return (
+      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div>
+          <p className="text-base font-semibold text-foreground">
+            {getGreeting()}{firstName ? `, ${firstName}` : ""}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {hasIssues
+              ? `${issueCount} item${issueCount !== 1 ? "s" : ""} need${issueCount === 1 ? "s" : ""} your attention`
+              : "All clear — no outstanding issues"}
+          </p>
+        </div>
+
+        {primaryCTA && (
+          <Button
+            size="sm"
+            variant={primaryCTA.variant}
+            className="w-full h-9 text-sm font-medium"
+            onClick={() => navigate(primaryCTA.href)}
+          >
+            {primaryCTA.label}
+          </Button>
+        )}
+
+        {/* Secondary text links for remaining issues */}
+        {hasIssues && (
+          <div className="flex items-center gap-3 text-xs">
+            {data.overdueCount > 0 && !primaryCTA?.href.includes("overdue") && (
+              <button onClick={() => navigate("/invoices?status=overdue")} className="text-destructive font-medium hover:underline">
+                {data.overdueCount} overdue
+              </button>
+            )}
+            {data.quotesNeedFollowUp > 0 && !primaryCTA?.href.includes("quotes") && (
+              <button onClick={() => navigate("/quotes?status=sent")} className="text-muted-foreground font-medium hover:underline">
+                {data.quotesNeedFollowUp} stale quotes
+              </button>
+            )}
+            {data.stuckJobs > 0 && !primaryCTA?.href.includes("jobs") && (
+              <button onClick={() => navigate("/jobs?status=in_progress")} className="text-muted-foreground font-medium hover:underline">
+                {data.stuckJobs} stuck jobs
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── DESKTOP: original full layout ── */
   return (
     <div className="rounded-lg border border-border bg-card">
       {/* Stats strip */}
@@ -84,9 +156,7 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
         {!showAI && (
           <div className="flex-1 min-w-0">
             <p className="text-sm text-muted-foreground">
-              {data.overdueCount > 0 || data.quotesNeedFollowUp > 0 || data.stuckJobs > 0
-                ? "Action required — review items below."
-                : "All clear — no outstanding issues."}
+              {hasIssues ? "Action required — review items below." : "All clear — no outstanding issues."}
             </p>
           </div>
         )}
