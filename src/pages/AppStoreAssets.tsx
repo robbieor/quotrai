@@ -15,7 +15,7 @@ import {
   Image,
   Globe,
 } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const iconSizes = [
   { size: "1024×1024", platform: "iOS App Store", required: true, note: "No alpha channel, no rounded corners" },

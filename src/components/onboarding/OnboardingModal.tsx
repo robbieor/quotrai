@@ -24,7 +24,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";

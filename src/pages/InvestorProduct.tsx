@@ -8,7 +8,7 @@ import {
   MessageSquare, Bell, Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const FEATURE_SECTIONS = [
   {

@@ -14,7 +14,7 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import tomAvatar from "@/assets/tom-avatar.png";
 import { track } from "@/utils/analytics";
 

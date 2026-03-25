@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLandingCurrency } from "@/hooks/useLandingCurrency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowRight, Calculator, Menu, X } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { DemoVideoSection } from "@/components/landing/DemoVideoSection";

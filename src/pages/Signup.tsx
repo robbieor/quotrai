@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { Separator } from "@/components/ui/separator";
 import { Gift, CheckCircle2, CreditCard, Clock, Shield } from "lucide-react";
 import { track } from "@/utils/analytics";

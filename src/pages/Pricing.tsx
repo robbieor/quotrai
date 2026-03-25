@@ -13,7 +13,7 @@ import {
   Zap,
   ExternalLink,
 } from "lucide-react";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 import { cn } from "@/lib/utils";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 

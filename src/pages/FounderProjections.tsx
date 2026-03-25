@@ -13,7 +13,7 @@ import {
   Video, Play, TrendingDown, Flame
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 // Market data
 const UK_TRADE_BUSINESSES = 300_000;

@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerPortalData, useIsCustomer } from "@/hooks/useCustomerPortal";
 import { toast } from "sonner";
-import foremanLogo from "@/assets/quotr-logo.png";
+import foremanLogo from "@/assets/foreman-logo.png";
 
 const quoteStatusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
