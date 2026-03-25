@@ -43,7 +43,7 @@ const TAM_BOTTOM_UP = [
 const PLATFORM_FEE_OPPORTUNITY = [
   { metric: "Avg invoiced revenue per trade SMB", value: "€8,500/mo", note: "UK avg from BEIS Small Business Survey 2024" },
   { metric: "% using online payments", value: "38% → 65%", note: "Growing 8pp/year as customer portals become standard" },
-  { metric: "Quotr platform fee", value: "2.5%", note: "Per transaction via Stripe Connect — passive, recurring" },
+  { metric: "Foreman platform fee", value: "2.5%", note: "Per transaction via Stripe Connect — passive, recurring" },
   { metric: "Platform fee per customer", value: "€130–€220/mo", note: "On top of seat revenue — success-aligned" },
 ];
 
@@ -53,13 +53,13 @@ const MARKET_DRIVERS = [
   { title: "Late Payment Crisis", desc: "UK government data: 50,000 SMBs close annually due to late payments. The Prompt Payment Code and Making Tax Digital are pushing trades toward digital invoicing — or face penalties.", icon: Clock },
   { title: "Post-COVID Digital Permanence", desc: "COVID forced 3–5 years of digital adoption in 12 months. Unlike retail, trades are only 35% digitised — the largest remaining vertical to convert.", icon: TrendingUp },
   { title: "Labour Shortage = Admin Intolerance", desc: "350,000 unfilled trade roles across the UK alone. Every hour spent on admin is an hour not billing. Automation isn't a nice-to-have — it's survival.", icon: Users },
-  { title: "Embedded Finance Tailwind", desc: "Stripe Connect, GoCardless, and open banking have made embedded payments trivial. Quotr's 2.5% platform fee would have required a banking licence 5 years ago.", icon: DollarSign },
+  { title: "Embedded Finance Tailwind", desc: "Stripe Connect, GoCardless, and open banking have made embedded payments trivial. Foreman's 2.5% platform fee would have required a banking licence 5 years ago.", icon: DollarSign },
 ];
 
 const ADJACENT_MARKETS = [
   { title: "Embedded Insurance", desc: "Trade businesses need public liability, tool cover, and van insurance. White-label embedded insurance at quote/job creation = new revenue stream. Market: €4B+.", icon: Shield },
   { title: "Materials Marketplace", desc: "Tradespeople spend €15K–€50K/yr on materials. Supplier partnerships with affiliate/wholesale pricing through the platform. Comparable: Amazon Business for trades.", icon: Building2 },
-  { title: "Trade Finance & BNPL", desc: "Offer customers 'Pay in 3' on large quotes (kitchens, extensions). Quotr earns interchange. Adjacent fintech market growing 25% CAGR.", icon: DollarSign },
+  { title: "Trade Finance & BNPL", desc: "Offer customers 'Pay in 3' on large quotes (kitchens, extensions). Foreman earns interchange. Adjacent fintech market growing 25% CAGR.", icon: DollarSign },
   { title: "Certification & Compliance", desc: "Gas Safe, NICEIC, EICR certificates are already in-product. Expand to automated compliance filing, CPD tracking, and accreditation renewals.", icon: CheckCircle2 },
   { title: "Workforce Marketplace", desc: "When demand exceeds capacity, match overflow jobs to verified tradespeople on the platform. Take rate model (10–15%). Similar to Bark/Checkatrade but embedded.", icon: Users },
   { title: "Training & Upskilling", desc: "Micro-courses on pricing, business growth, compliance — delivered via Foreman AI. Sponsored by tool manufacturers and suppliers.", icon: Rocket },
@@ -123,7 +123,7 @@ const COMPETITORS = [
 const GEOGRAPHIC_MARKETS = [
   { region: "UK & Ireland", businesses: "350K", status: "Primary launch market", flag: "🇬🇧🇮🇪", detail: "Highest late-payment rates in Europe. Making Tax Digital mandate drives urgency." },
   { region: "Australia & NZ", businesses: "200K", status: "Month 3 expansion", flag: "🇦🇺🇳🇿", detail: "English-speaking, similar trade structure. Tradify & Fergus prove demand." },
-  { region: "North America", businesses: "4M+", status: "Month 6 expansion", flag: "🇺🇸🇨🇦", detail: "Largest market. Jobber proves scale. Quotr undercuts on price with superior AI." },
+  { region: "North America", businesses: "4M+", status: "Month 6 expansion", flag: "🇺🇸🇨🇦", detail: "Largest market. Jobber proves scale. Foreman undercuts on price with superior AI." },
   { region: "Western Europe", businesses: "500K+", status: "Year 2 target", flag: "🇩🇪🇫🇷🇳🇱", detail: "Multi-language expansion. E-invoicing mandates (Germany 2025, France 2026) create tailwind." },
 ];
 
@@ -138,7 +138,7 @@ export default function InvestorMarket() {
               <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-foreground">Quotr — Market Analysis</h1>
+              <h1 className="text-lg font-bold text-foreground">Foreman — Market Analysis</h1>
               <p className="text-xs text-muted-foreground">TAM/SAM/SOM, Timing & Competitive Landscape — March 2026</p>
             </div>
           </div>
@@ -238,8 +238,8 @@ export default function InvestorMarket() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
-              Unlike pure SaaS competitors, Quotr earns revenue on both sides: predictable seat subscriptions <strong className="text-foreground">plus</strong> transaction-based 
-              platform fees that grow as the customer's business grows. A plumber processing €10K/mo through Quotr generates €250/mo in platform fees alone — 
+              Unlike pure SaaS competitors, Foreman earns revenue on both sides: predictable seat subscriptions <strong className="text-foreground">plus</strong> transaction-based 
+              platform fees that grow as the customer's business grows. A plumber processing €10K/mo through Foreman generates €250/mo in platform fees alone — 
               more than 8x the Starter seat price. This is why our blended ARPU compounds faster than any competitor.
             </p>
           </CardContent>
@@ -362,7 +362,7 @@ export default function InvestorMarket() {
             Adjacent Market Expansion — Beyond SaaS
           </h3>
           <p className="text-muted-foreground text-sm">
-            Once Quotr owns the workflow, it becomes the distribution platform for financial services, materials, and workforce — each a multi-billion-euro opportunity
+            Once Foreman owns the workflow, it becomes the distribution platform for financial services, materials, and workforce — each a multi-billion-euro opportunity
           </p>
         </div>
 
@@ -392,7 +392,7 @@ export default function InvestorMarket() {
             <Target className="h-5 w-5 text-primary" />
             Competitive Landscape
           </h3>
-          <p className="text-muted-foreground text-sm">No incumbent combines AI + embedded payments + SMB-affordable pricing. Quotr fills every gap.</p>
+          <p className="text-muted-foreground text-sm">No incumbent combines AI + embedded payments + SMB-affordable pricing. Foreman fills every gap.</p>
         </div>
 
         <div className="space-y-4">
@@ -420,7 +420,7 @@ export default function InvestorMarket() {
                       ))}
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-destructive uppercase tracking-wider mb-2">Quotr Advantages</p>
+                      <p className="text-xs font-medium text-destructive uppercase tracking-wider mb-2">Foreman Advantages</p>
                       {comp.gaps.map((g) => (
                         <div key={g} className="flex items-center gap-1.5 text-sm text-foreground mb-1">
                           <XCircle className="h-3.5 w-3.5 text-destructive" />
@@ -467,7 +467,7 @@ export default function InvestorMarket() {
           <CardContent className="p-6 text-center">
             <Zap className="h-8 w-8 text-primary mx-auto mb-3" />
             <p className="text-lg font-semibold text-foreground mb-2">
-              "Quotr is Jobber's features, at half the price, with AI that nobody else has — 
+              "Foreman is Jobber's features, at half the price, with AI that nobody else has — 
               and a payment layer that turns every invoice into revenue."
             </p>
             <p className="text-sm text-muted-foreground">

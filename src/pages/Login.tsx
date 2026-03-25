@@ -60,7 +60,7 @@ export default function Login() {
             <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Quotr account</CardDescription>
+          <CardDescription>Sign in to your Foreman account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button 

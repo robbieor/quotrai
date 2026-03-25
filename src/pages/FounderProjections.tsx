@@ -82,7 +82,7 @@ const LAUNCH_SCENARIO = {
     "Dashcam POV: tradesperson uses George AI to schedule jobs hands-free while driving",
     "On-site: snap photo of boiler → AI generates quote in 30 seconds → customer approves on portal",
     "End-of-day: GPS auto clock-out, invoices auto-sent, payment chasers running — zero admin",
-    "Split-screen: pen & paper chaos vs Quotr — same job, 10x faster",
+    "Split-screen: pen & paper chaos vs Foreman — same job, 10x faster",
     "Testimonial-style: real tradesperson shows dashboard, \"I got paid €4K in 2 days instead of 3 weeks\"",
   ],
 };
@@ -194,7 +194,7 @@ export default function FounderProjections() {
               <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             </Link>
             <div>
-              <h1 className="font-bold text-foreground">Quotr — Investor Revenue Model</h1>
+              <h1 className="font-bold text-foreground">Foreman — Investor Revenue Model</h1>
               <p className="text-xs text-muted-foreground">Confidential — March 2026</p>
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function FounderProjections() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6">
             <p className="text-lg font-semibold text-foreground mb-2">
-              Quotr is the all-in-one operating system for trade businesses.
+              Foreman is the all-in-one operating system for trade businesses.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We combine job management, quoting, invoicing, GPS time tracking, and AI-powered automation 
@@ -514,7 +514,7 @@ export default function FounderProjections() {
                     <div className="flex items-center gap-2">
                       <ArrowUpRight className="h-4 w-4 text-primary" />
                       <div>
-                        <p className="font-bold text-primary">Quotr (You)</p>
+                        <p className="font-bold text-primary">Foreman (You)</p>
                         <p className="text-xs text-muted-foreground">UK/IE → Global · AI-first · All gaps filled</p>
                       </div>
                     </div>
@@ -558,7 +558,7 @@ export default function FounderProjections() {
                 </div>
 
                 <div className="p-4 rounded-xl border border-border bg-muted/30">
-                  <p className="text-sm font-semibold text-foreground mb-2">Why They'll Switch to Quotr:</p>
+                  <p className="text-sm font-semibold text-foreground mb-2">Why They'll Switch to Foreman:</p>
                   <ul className="text-sm text-muted-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -801,7 +801,7 @@ export default function FounderProjections() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center pb-8">
-          * Projections are estimates based on compound growth models. Actual results depend on execution, market conditions, and churn management. Not financial advice. Confidential — Quotr Ltd, Feb 2026.
+          * Projections are estimates based on compound growth models. Actual results depend on execution, market conditions, and churn management. Not financial advice. Confidential — Foreman Ltd, Feb 2026.
         </p>
       </main>
     </div>

@@ -55,7 +55,7 @@ export default function Pricing() {
           <img src={foremanLogo} alt="Foreman" className="h-16 w-16 rounded-2xl mx-auto" />
           <h1 className="text-2xl font-bold">Manage Your Subscription</h1>
           <p className="text-muted-foreground">
-            Subscriptions are managed through the Quotr website. Tap below to view plans and billing.
+            Subscriptions are managed through the Foreman website. Tap below to view plans and billing.
           </p>
           <Button
             size="lg"
@@ -306,7 +306,7 @@ export default function Pricing() {
             Ready to ditch the paperwork?
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            Join trade professionals who run their entire business from Quotr.
+            Join trade professionals who run their entire business from Foreman.
           </p>
           <Link to="/signup">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">
@@ -325,7 +325,7 @@ export default function Pricing() {
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <img src={foremanLogo} alt="Foreman" className="h-6 w-6 rounded" />
-            <span>© {new Date().getFullYear()} Quotr Ltd</span>
+            <span>© {new Date().getFullYear()} Foreman Ltd</span>
           </div>
           <div className="flex gap-4">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

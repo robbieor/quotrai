@@ -198,7 +198,7 @@ export default function Landing() {
               <span className="text-xs sm:text-sm text-muted-foreground">Powered by Foreman AI</span>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground order-last sm:order-none">
-              © {new Date().getFullYear()} Quotr. All rights reserved.
+              © {new Date().getFullYear()} Foreman. All rights reserved.
             </p>
             <div className="flex items-center gap-4 sm:gap-6">
               <Link to="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link>

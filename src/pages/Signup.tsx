@@ -84,7 +84,7 @@ export default function Signup() {
             <div>
               <h2 className="text-xl font-semibold text-foreground mb-1">Start your free trial</h2>
               <p className="text-sm text-muted-foreground">
-                Start running your business with Quotr.
+                Start running your business with Foreman.
               </p>
             </div>
             <ul className="space-y-3">

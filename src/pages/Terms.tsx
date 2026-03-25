@@ -29,14 +29,14 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Agreement to Terms</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              By accessing or using Quotr ("the Service"), operated by Quotr Ltd, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
+              By accessing or using Foreman ("the Service"), operated by Foreman Ltd, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">2. Description of Service</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Quotr is a business management platform designed for trade professionals. The Service includes job management, quoting, invoicing, expense tracking, time tracking, team management, and AI-powered assistance ("Foreman AI"). Features may vary by subscription tier.
+              Foreman is a business management platform designed for trade professionals. The Service includes job management, quoting, invoicing, expense tracking, time tracking, team management, and AI-powered assistance ("Foreman AI"). Features may vary by subscription tier.
             </p>
           </section>
 
@@ -92,7 +92,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">10. Limitation of Liability</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              To the maximum extent permitted by Irish and EU law, Quotr Ltd shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service. Our total liability shall not exceed the amount paid by you in the 12 months preceding the claim.
+              To the maximum extent permitted by Irish and EU law, Foreman Ltd shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service. Our total liability shall not exceed the amount paid by you in the 12 months preceding the claim.
             </p>
           </section>
 
@@ -128,7 +128,7 @@ export default function Terms() {
 
       <footer className="py-8 px-4 sm:px-6 border-t border-border">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Quotr. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Foreman. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
           </div>

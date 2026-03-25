@@ -156,7 +156,7 @@ export default function SelectPlan() {
           <div className="grid md:grid-cols-2 gap-4">
             <FaqCard
               q="What's the platform fee?"
-              a={`Quotr charges ${PRICING.PLATFORM_FEE}% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn. Enterprise customers get a reduced ${PRICING.ENTERPRISE_PLATFORM_FEE}% rate.`}
+              a={`Foreman charges ${PRICING.PLATFORM_FEE}% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn. Enterprise customers get a reduced ${PRICING.ENTERPRISE_PLATFORM_FEE}% rate.`}
             />
             <FaqCard
               q="Can I upgrade from Starter to Pro?"
