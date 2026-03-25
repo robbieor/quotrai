@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense, Component, type ReactNode } from "react";
+import { useState, lazy, Suspense, Component, type ReactNode } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, Users, List, Bell } from "lucide-react";
@@ -7,19 +7,10 @@ import { TimeEntriesList } from "@/components/time-tracking/TimeEntriesList";
 import { GeofenceSettings } from "@/components/time-tracking/GeofenceSettings";
 import { JobLocationPanel } from "@/components/time-tracking/JobLocationPanel";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useActiveTimeEntry,
-  useJobSites,
-  useGeolocation,
-} from "@/hooks/useTimeTracking";
+import { useActiveTimeEntry, useGeolocation, useJobSites } from "@/hooks/useTimeTracking";
 import { useJobs } from "@/hooks/useJobs";
 
-// Lazy-load StaffLocationMap
-const StaffLocationMap = lazy(() =>
-  import("@/components/time-tracking/StaffLocationMap").then((m) => ({
-    default: m.StaffLocationMap,
-  }))
-);
+const StaffLocationMap = lazy(() => import("@/components/time-tracking/StaffLocationMap").then(m => ({ default: m.StaffLocationMap })));
 
 class TimeTrackingErrorBoundary extends Component<
   { children: ReactNode; fallback?: ReactNode },
@@ -37,13 +28,11 @@ class TimeTrackingErrorBoundary extends Component<
   }
   render() {
     if (this.state.hasError) {
-      return (
-        this.props.fallback || (
-          <div className="p-6 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive">
-            <p className="font-medium">Something went wrong loading this section.</p>
-            <p className="text-sm mt-1">{this.state.error?.message}</p>
-          </div>
-        )
+      return this.props.fallback || (
+        <div className="p-6 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive">
+          <p className="font-medium">Something went wrong loading this section.</p>
+          <p className="text-sm mt-1">{this.state.error?.message}</p>
+        </div>
       );
     }
     return this.props.children;
@@ -56,18 +45,13 @@ const MapFallback = () => (
   </div>
 );
 
-/** Reads active entry + job sites to provide context for the right-side map panel */
-function JobLocationPanelConnector() {
+function ClockTabContent() {
+  const [selectedJobId, setSelectedJobId] = useState("");
   const { data: activeEntry } = useActiveTimeEntry();
   const { data: jobSites } = useJobSites();
   const { data: jobs } = useJobs();
   const { getCurrentPosition } = useGeolocation();
-
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-    accuracy: number;
-  } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
 
@@ -82,66 +66,47 @@ function JobLocationPanelConnector() {
         accuracy: position.coords.accuracy,
       });
     } catch (error) {
-      setLocationError(
-        error instanceof Error ? error.message : "Could not get location"
-      );
+      setLocationError(error instanceof Error ? error.message : "Could not get location");
     } finally {
       setIsGettingLocation(false);
     }
   };
 
-  useEffect(() => {
-    fetchLocation();
-  }, []);
-
-  // Determine which job to show: active entry's job, or the first today's job with a site
-  const jobSite = useMemo(() => {
-    if (!jobSites) return null;
-
-    // If clocked in, show that job's site
-    if (activeEntry?.job_id) {
-      const site = jobSites.find((s) => s.job_id === activeEntry.job_id);
-      if (site) {
-        const job = jobs?.find((j) => j.id === activeEntry.job_id);
-        return {
-          latitude: site.latitude,
-          longitude: site.longitude,
-          geofence_radius: site.geofence_radius || 200,
-          address: site.address || "",
-          jobTitle: job?.title || site.jobs?.title || "Job Site",
-          customerName: job?.customers?.name || site.customers?.name || "",
-          validForGps: site.location_valid_for_gps !== false,
-        };
-      }
-    }
-
-    // Otherwise show the first job site available
-    if (jobSites.length > 0) {
-      const site = jobSites[0];
-      return {
-        latitude: site.latitude,
-        longitude: site.longitude,
-        geofence_radius: site.geofence_radius || 200,
-        address: site.address || "",
-        jobTitle: site.jobs?.title || "Job Site",
-        customerName: site.customers?.name || "",
-        validForGps: site.location_valid_for_gps !== false,
-      };
-    }
-
-    return null;
-  }, [activeEntry, jobSites, jobs]);
+  const selectedSite = (() => {
+    const activeJobId = activeEntry?.job_id;
+    const effectiveJobId = activeJobId || selectedJobId;
+    if (!effectiveJobId || !jobSites) return null;
+    const site = jobSites.find((item) => item.job_id === effectiveJobId);
+    if (!site) return null;
+    const job = jobs?.find((item) => item.id === effectiveJobId);
+    return {
+      latitude: site.latitude,
+      longitude: site.longitude,
+      geofence_radius: site.geofence_radius || 200,
+      address: site.address || "",
+      jobTitle: job?.title || site.jobs?.title || "Job Site",
+      customerName: job?.customers?.name || site.customers?.name || "",
+      validForGps: site.location_valid_for_gps !== false,
+    };
+  })();
 
   return (
-    <JobLocationPanel
-      jobSite={jobSite}
-      userLocation={userLocation}
-      locationError={locationError}
-      isGettingLocation={isGettingLocation}
-      onRetryLocation={fetchLocation}
-      isClocked={!!activeEntry}
-      clockInVerified={activeEntry?.clock_in_verified}
-    />
+    <div className="grid gap-6 lg:grid-cols-2">
+      <TimeTrackingErrorBoundary>
+        <ClockInOutCard selectedJobId={selectedJobId} onSelectedJobChange={setSelectedJobId} />
+      </TimeTrackingErrorBoundary>
+      <TimeTrackingErrorBoundary fallback={<MapFallback />}>
+        <JobLocationPanel
+          jobSite={selectedSite}
+          userLocation={userLocation}
+          locationError={locationError}
+          isGettingLocation={isGettingLocation}
+          onRetryLocation={fetchLocation}
+          isClocked={!!activeEntry}
+          clockInVerified={activeEntry?.clock_in_verified}
+        />
+      </TimeTrackingErrorBoundary>
+    </div>
   );
 }
 
@@ -180,14 +145,7 @@ export default function TimeTracking() {
             </TabsList>
 
             <TabsContent value="clock" className="mt-6">
-              <div className="grid gap-6 lg:grid-cols-2">
-                <TimeTrackingErrorBoundary>
-                  <ClockInOutCard />
-                </TimeTrackingErrorBoundary>
-                <TimeTrackingErrorBoundary fallback={<MapFallback />}>
-                  <JobLocationPanelConnector />
-                </TimeTrackingErrorBoundary>
-              </div>
+              <ClockTabContent />
             </TabsContent>
 
             <TabsContent value="staff" className="mt-6">
