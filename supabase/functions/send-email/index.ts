@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
           fromAddress = `${branding.company_name} <noreply@${FROM_DOMAIN}>`;
         }
       }
-      if (!fromAddress) fromAddress = `Quotr <noreply@${FROM_DOMAIN}>`;
+      if (!fromAddress) fromAddress = `Foreman <noreply@${FROM_DOMAIN}>`;
     }
 
     const recipients = Array.isArray(to) ? to : [to];
