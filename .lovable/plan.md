@@ -1,41 +1,69 @@
 
 
-## Mobile Dashboard Overhaul — Compete with Jobber/Fergus/Tradify
+## Mobile Optimization Pass — All App Pages
 
-### Problems Visible in Screenshot
-1. **KPI cards overflow** — 5 cards in a 2-col grid on 402px leaves a lone orphan card and text like currency values and comparison strings get clipped
-2. **ControlHeader stats strip overflows** — 4 stats in a 2-col grid with `divide-x` causes text to bleed off-screen
-3. **AI recommendation text truncates** — single-line `truncate` hides the full recommendation on mobile
-4. **Action buttons wrap awkwardly** — Chase/Quotes/Jobs buttons + text don't fit in a single row
-5. **Charts render too wide** — `lg:grid-cols-2` means full-width stacked charts with no mobile optimization
-6. **No mobile-native feel** — competitors like Jobber use scrollable horizontal cards, bottom-sheet navigation, and compact metric tiles
+The dashboard mobile fix was step 1. Here's what remains across every other page at a 402px viewport.
 
-### Competitor-Inspired Improvements
+### Issues by Page
 
-| Area | Current | Fix |
-|------|---------|-----|
-| **KPI Strip** | `grid-cols-2` cramped cards | Horizontal scroll strip (`flex overflow-x-auto snap-x`) — 1 card visible + peek of next. This is exactly how Jobber/Tradify show metrics on mobile |
-| **ControlHeader** | 2x2 grid with divide-x, text overflows | Stack as a compact horizontal scroll strip on mobile; hide "Status" column (already hidden); reduce font sizes |
-| **AI Recommendation** | `truncate` on one line | Allow 2-line wrap on mobile (`line-clamp-2` instead of `truncate`) |
-| **Action Buttons** | Wrap messily | Horizontal scroll row with `overflow-x-auto` |
-| **Charts** | Full width, tall on mobile | Reduce chart height on mobile (180px vs 220px), smaller card padding |
-| **Dashboard Header** | Filter bar + quick actions compete for space | On mobile, hide quick action labels (already done), collapse filter bar into single icon button |
-| **Overall padding** | `px-3` with `space-y-3` | Tighten to `space-y-2` on mobile for denser feel |
+**1. Reports (`Reports.tsx`)**
+- Page title "Reports" is `text-3xl` — too large on mobile (should be `text-2xl md:text-3xl`)
+- Subtitle has no responsive text size
+- DateRangePicker competes with title in same row on mobile
+- Tab triggers `grid-cols-3` can get cramped
+- Chart grid `lg:grid-cols-2` is fine (stacks on mobile), but stat cards use `lg:grid-cols-4` with no mobile breakpoint — 4 cards in a row won't fit
 
-### Files to Change
+**2. Time Tracking (`TimeTracking.tsx`)**
+- Title is hard-coded `text-3xl` — no mobile reduction
+- Subtitle has no responsive sizing
+- Tab grid `grid-cols-4` on a 402px screen = ~100px per tab, cramped
+- Clock tab content uses `lg:grid-cols-2` which stacks fine, but no mobile spacing adjustments
+
+**3. Leads (`Leads.tsx`)**
+- Pipeline Value stat card can overflow with large currency values on `grid-cols-2` mobile
+- Lead cards have dense content that mostly works but the action dropdown row could be tighter
+
+**4. Customers (`Customers.tsx`)**
+- Mostly fine — already uses responsive patterns
+- Table has horizontal scroll with hint — good
+
+**5. Expenses (`Expenses.tsx`)**  
+- 3rd stat card uses `col-span-2 sm:col-span-1` — spans full width on mobile, creating visual imbalance
+- "Import Fuel Card" button text is long on mobile — should truncate or abbreviate
+
+**6. Settings (`Settings.tsx`)**
+- Tab list uses `flex-wrap` which is good, but 7+ tabs wrapping creates a tall messy block on mobile
+- Already has mobile-short labels — mostly OK
+
+**7. Templates (`Templates.tsx`)**
+- Tab list for trade categories could overflow if many categories visible
+- Otherwise OK with existing responsive patterns
+
+**8. Job Calendar (`JobCalendar.tsx`)**
+- Calendar views are inherently cramped on mobile — month view cells are tiny
+- No major overflow issues identified
+
+**9. Quotes & Invoices**
+- Card grids use `sm:grid-cols-2 lg:grid-cols-3` — stacks to 1 col on mobile, which is correct
+- Status filter pills use `flex-wrap` — works fine
+- Dropdown menus use `opacity-0 group-hover:opacity-100` — invisible on touch devices (need `opacity-100` on mobile or always-visible trigger)
+
+### Plan
 
 | File | Change |
 |------|--------|
-| `src/components/dashboard/KPIStrip.tsx` | Replace `grid grid-cols-2` with `flex overflow-x-auto snap-x` on mobile, keep grid on `sm:+`. Add `min-w-[200px]` to cards, `snap-start` alignment |
-| `src/components/dashboard/ControlHeader.tsx` | Make stats strip horizontally scrollable on mobile (`flex overflow-x-auto` below `sm:`). Allow AI text to wrap 2 lines on mobile |
-| `src/components/dashboard/ActionPanel.tsx` | Already looks OK but ensure `truncate` doesn't hide critical info — allow wrapping on mobile |
-| `src/pages/Dashboard.tsx` | Tighten mobile spacing: `space-y-2 sm:space-y-3`. Hide quick-action Plus icons on mobile (just show icon buttons) |
-| `src/components/dashboard/RevenueMultiChart.tsx` | Reduce chart height on mobile: `h-[180px] sm:h-[220px]` |
-| `src/components/layout/DashboardLayout.tsx` | Reduce mobile padding: `px-2 sm:px-3 md:px-6`, `py-2 sm:py-3 md:py-6` |
+| `src/pages/Reports.tsx` | Add `text-2xl md:text-3xl` to h1, `text-sm md:text-base` to subtitle, stack DateRangePicker below title on mobile, add `md:grid-cols-2 lg:grid-cols-4` to stat cards grid |
+| `src/pages/TimeTracking.tsx` | Add `text-2xl md:text-3xl` to h1, `text-sm md:text-base` to subtitle, change tab grid to `grid-cols-4` with smaller text on mobile |
+| `src/pages/Expenses.tsx` | Change stat cards to consistent `grid-cols-3` on mobile (remove `col-span-2`), abbreviate "Import Fuel Card" button text on mobile |
+| `src/pages/Quotes.tsx` | Make dropdown trigger always visible on mobile (`opacity-100 sm:opacity-0 sm:group-hover:opacity-100`) |
+| `src/pages/Invoices.tsx` | Same dropdown visibility fix as Quotes |
+| `src/pages/Leads.tsx` | Add `truncate` to pipeline value stat to prevent overflow |
+| `src/pages/Settings.tsx` | Make tab list horizontally scrollable on mobile instead of wrapping (`overflow-x-auto flex-nowrap`) |
+| `src/pages/Templates.tsx` | Make tab list horizontally scrollable on mobile |
 
 ### Technical Approach
-- Use Tailwind responsive prefixes (`sm:`, `md:`) — no JS needed
-- KPI strip becomes a horizontally scrollable row on mobile with snap points, transitioning to the current grid on `sm:` breakpoint
-- ControlHeader stats become a scrollable row on mobile, grid on `sm:`
-- All changes are CSS-only, no data/logic changes
+- All CSS-only changes using Tailwind responsive prefixes
+- No logic or data changes
+- Focus on the highest-impact overflow and readability issues at 402px width
+- Touch-friendly: make action triggers visible without hover on mobile
 
