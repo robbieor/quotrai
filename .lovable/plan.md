@@ -1,62 +1,39 @@
 
 
-## Full Investor Deck Website — Standalone Multi-Page Site
+## Fix Video Trial Text & Improve PWA Icon Quality
 
-### What We're Building
-A complete investor deck as a standalone website with its own navigation, not connected to the app sidebar. The user will remix the project afterward and strip out app pages, leaving only the investor deck. Target: **5% global market share** (not 1%).
+### Problem 1: Video still says "14 days"
+The Remotion source already says "30 days" but the deployed MP4 (`public/foreman-demo.mp4`) was rendered before the fix. Since Remotion rendering requires the full build pipeline outside Lovable, we cannot re-render the video here. **However**, we can replace the autoplaying video's closing scene by overlaying the correct text, or note this as a manual re-render task.
 
-### Existing Assets
-You already have 5 investor pages with rich data, but they're not routed in App.tsx:
-- **InvestorPitch.tsx** (306 lines) — Problem, solution, traction, use of funds, ask
-- **InvestorMarket.tsx** (520 lines) — TAM/SAM/SOM, bottom-up analysis, competitors, market drivers
-- **InvestorProduct.tsx** (244 lines) — Feature showcase across 5 categories
-- **InvestorTeam.tsx** (261 lines) — Founder profile, hiring plan, culture
-- **FounderProjections.tsx** (849 lines) — Interactive revenue model with sliders, competitor gaps, launch scenario
+**Practical fix**: The video is autoplaying in the landing page. Since re-rendering isn't possible in Lovable, we should add a note/task to re-render via the Remotion pipeline. The source is already correct.
 
-### Plan
+### Problem 2: Faded/washed-out homescreen icon
+The manifest uses `"purpose": "any maskable"` on both icons. This causes issues because:
+- **maskable** icons need ~20% safe-zone padding (the OS crops the edges)
+- **any** icons display as-is
+- Combining both on one icon means either the maskable version looks too small, or the any version gets cropped
 
-**1. Create a shared investor layout with its own nav** — header with Foreman logo + horizontal nav links (Pitch / Market / Product / Team / Projections / Forecast). No app sidebar, no login required.
+**Fix**: Split the icon entries — use the current icon for `any` and create a properly padded version for `maskable`. Also ensure the `apple-touch-icon.png` is high-quality (180x180 minimum, ideally from the 1024px source).
 
-**2. Create the new TAM Forecast page** (`src/pages/InvestorForecast.tsx`) — the centrepiece:
+### Changes
 
-| Section | Content |
-|---------|---------|
-| Hero | "20% Equity in the AI-First Trade OS" — headline metrics |
-| ARPU milestone table | Revenue at 50 / 100 / 300 / 500 / 1K / 5K / 25K / 110K / **550K (5% global)** customers |
-| Market share comparison | Bar chart: Foreman milestones vs Fergus (12K), Tradify (25K), ServiceM8 (40K), Jobber (200K), ServiceTitan (100K) |
-| Blended ARPU breakdown | Why Foreman's €153/mo ARPU beats competitors' €30-50 pure SaaS |
-| 20% equity value table | Pre-money valuation at each milestone (8-15x ARR multiples) → 20% stake value |
-| Path to 5% | Geographic expansion timeline: UK → ANZ → US → EU over 5 years |
-| Competitor gap matrix | Feature comparison grid across 10 dimensions |
-| Investment terms | Raising amount, equity, use of funds, key milestones |
-
-Revenue computation: `blendedSeatPrice = 0.40×19 + 0.45×39 + 0.15×59 = €34/seat/mo`, `avgSeats = 3`, `platformFee = customers × €5K × 2.5%`. At 5% global (550K customers): ARR = €1.1B+.
-
-**3. Update all 5 existing investor pages** — replace their individual headers/nav with the shared investor layout component for consistent navigation between all 6 pages.
-
-**4. Add routes to App.tsx** — all under `/investor/*`:
-- `/investor/pitch` → InvestorPitch
-- `/investor/market` → InvestorMarket  
-- `/investor/product` → InvestorProduct
-- `/investor/team` → InvestorTeam
-- `/investor/projections` → FounderProjections
-- `/investor/forecast` → InvestorForecast (new)
-
-All public routes, no auth required.
-
-### Files
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/components/investor/InvestorLayout.tsx` | New — shared layout with nav header |
-| `src/pages/InvestorForecast.tsx` | New — TAM forecast + equity proposition page |
-| `src/pages/InvestorPitch.tsx` | Update header to use InvestorLayout |
-| `src/pages/InvestorMarket.tsx` | Update header to use InvestorLayout, change SOM to 5% |
-| `src/pages/InvestorProduct.tsx` | Update header to use InvestorLayout |
-| `src/pages/InvestorTeam.tsx` | Update header to use InvestorLayout |
-| `src/pages/FounderProjections.tsx` | Update header to use InvestorLayout |
-| `src/App.tsx` | Add 6 investor routes |
+| `public/manifest.json` | Split icon entries: separate `any` and `maskable` purposes, add 1024px icon entry |
+| `index.html` | Add `sizes` attribute to apple-touch-icon link |
 
-### After Implementation
-You can remix the project, delete all non-investor pages and routes, and publish as a standalone investor deck website.
+### Manifest update
+```json
+{
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
+```
+
+### Note on video
+The Remotion source is correct (30 days). The MP4 needs re-rendering via `cd remotion && bun run render` outside Lovable, then replace `public/foreman-demo.mp4`.
 
