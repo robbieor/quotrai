@@ -1,62 +1,44 @@
 
 
-## Rebrand All Emails: Quotr → Foreman + Dark Header with Teal
+## Purge All Remaining "Quotr" References from Frontend
 
-### Problem
-Every email across the platform — auth templates, document emails, preview emails, payment reminders, team invitations, drip emails, churn emails, ROI summary, job reminders, quote notifications, and early access emails — still says "Quotr" and uses the old mint-to-cyan gradient header instead of the dark navy header with teal accent that matches the app's current brand.
+The landing page navbar already says "Foreman" in code — your screenshot is showing a cached version. However, there are ~237 remaining "quotr" references across 24 frontend files that need updating.
 
-### Design
-Match the app header exactly: **dark navy background (`#0f172a`)** with **teal text/accents (`#00E6A0`)**. Replace all "Quotr" text with "Foreman". Update "from" addresses to use `Foreman` as the display name.
+### What Changes
 
-New email header pattern for all inline HTML emails:
-```text
-┌──────────────────────────────────────┐
-│  bg: #0f172a (dark navy)             │
-│  "Foreman" in #00E6A0 (teal)        │
-│  Subtitle in white                   │
-└──────────────────────────────────────┘
-```
+**User-facing text and URLs (must change):**
 
-Buttons remain teal (`#00E6A0`) with dark text. Footer says "Powered by Foreman".
+| File | What | Change |
+|------|------|--------|
+| `src/components/billing/TrialBanner.tsx` | `quotr.work` URLs and text | → `foreman.ie` |
+| `src/pages/Pricing.tsx` | `quotr.work/settings` URL | → `foreman.ie/settings` |
+| `src/pages/Terms.tsx` | `hello@quotr.info` email | → `support@foreman.ie` |
+| `src/pages/Privacy.tsx` | `hello@quotr.info` emails (×3) | → `support@foreman.ie` |
+| `src/pages/AppStoreAssets.tsx` | `quotr.work/privacy`, `quotr.work/terms` | → `foreman.ie/privacy`, `foreman.ie/terms` |
+| `src/components/landing/DashboardShowcase.tsx` | `app.quotr.ai/...` fake URL bar | → `app.foreman.ie/...` |
+| `src/components/shared/SEOHead.tsx` | `quotrai.lovable.app` base URL, OG image URL with "quotr" | → keep lovable preview URL but update OG image ref |
+| `src/components/expenses/ExpenseEmailBanner.tsx` | `expenses+...@quotr.info` | → `expenses+...@foreman.ie` |
+| `src/hooks/useUpgradePrompts.ts` | `quotr.work` URLs and text (×8) | → `foreman.ie` |
+| `src/components/landing/DemoVideoSection.tsx` | `/quotr-demo.mp4` video src | → `/foreman-demo.mp4` (or keep if file not renamed) |
+| `src/config/brand.ts` | `quotrai.lovable.app` landing URL | → keep as-is (actual deploy URL) |
 
-### Files to Change
+**Internal keys (safe to rename for consistency):**
 
-**Auth Email Templates (React Email — 6 files):**
+| File | What | Change |
+|------|------|--------|
+| `src/hooks/useAutoClockPrompt.ts` | `quotr_auto_clock_mode` localStorage key | → `foreman_auto_clock_mode` |
+| `src/hooks/useLandingCurrency.ts` | `quotr_landing_currency` cache key | → `foreman_landing_currency` |
+| `src/components/dashboard/OnboardingChecklist.tsx` | `quotr_checklist_dismissed` key | → `foreman_checklist_dismissed` |
+| `src/main.tsx` | `__quotr_sw_purged__` session key | → `__foreman_sw_purged__` |
+| `src/components/landing/ROICalculator.tsx` | `QUOTR_SEAT_PRICE`, `QUOTR_VOICE_PRICE` variable names | → `FOREMAN_SEAT_PRICE`, `FOREMAN_VOICE_PRICE` |
 
-| File | Changes |
-|------|---------|
-| `_shared/email-templates/signup.tsx` | Replace "Quotr" → "Foreman" in logo, preview text, link text. Add dark header container styling (bg `#0f172a`, logo color `#00E6A0`) |
-| `_shared/email-templates/recovery.tsx` | Same brand swap + dark header styling |
-| `_shared/email-templates/magic-link.tsx` | Same brand swap + dark header styling |
-| `_shared/email-templates/invite.tsx` | Same brand swap + dark header styling |
-| `_shared/email-templates/email-change.tsx` | Same brand swap + dark header styling |
-| `_shared/email-templates/reauthentication.tsx` | Same brand swap + dark header styling |
+**Also check remaining files** from the 24-file list for any other references.
 
-**Edge Functions with inline HTML emails (10 files):**
+### What Does NOT Change
+- `SENDER_DOMAIN` / `FROM_DOMAIN` in edge functions (`quotr.work`) — DNS-bound infrastructure
+- The Lovable preview URL (`quotrai.lovable.app`) — that's the actual deploy URL
+- The `/quotr-demo.mp4` filename if the actual file hasn't been renamed in `/public`
 
-| File | Changes |
-|------|---------|
-| `send-preview-email/index.ts` | "Quotr" → "Foreman" in subject, body, from address, footer. Gradient header → dark navy header |
-| `send-document-email/index.ts` | Same: header, from address, footer |
-| `send-email/index.ts` | Fallback from address "Quotr" → "Foreman" |
-| `send-payment-reminder/index.ts` | Header, from address, footer |
-| `send-team-invitation/index.ts` | Header, from address, subject, footer |
-| `send-quote-notification/index.ts` | Header, from address, footer |
-| `send-drip-email/index.ts` | "Quotr" → "Foreman" in templates, from address |
-| `send-roi-summary/index.ts` | Header, from address, subject, content, footer |
-| `send-job-reminders/index.ts` | From address |
-| `check-churn/index.ts` | Content text, from address, subject |
-| `request-early-access/index.ts` | Admin email, confirmation email, from address, subjects |
-| `foreman-chat/index.ts` | System prompt "Quotr" → "Foreman" |
-| `george-chat/index.ts` | System prompt "Quotr" → "Foreman" |
-
-**Note:** The `SENDER_DOMAIN` and `FROM_DOMAIN` constants (`notify.quotr.work` / `quotr.work`) are infrastructure values tied to DNS and must NOT change — only the display name and visible brand text change.
-
-### Post-Change
-Deploy all affected edge functions so the new branding takes effect immediately.
-
-### Technical Details
-- Auth templates use React Email components — will add a dark header `Section` with `backgroundColor: '#0f172a'` and logo `Text` with `color: '#00E6A0'`
-- Inline HTML emails: replace `background: linear-gradient(135deg, #00FFB2, #00D4FF)` with `background: #0f172a` and logo color from `#0f172a` to `#00E6A0`
-- All `from:` display names change from `Quotr` to `Foreman` (the `@quotr.work` domain stays as-is since it's DNS-bound)
+### Approach
+Update all 24 files in a single pass, replacing every "quotr" reference with the Foreman equivalent. Internal variable names get renamed for consistency. User-facing URLs and emails switch to `foreman.ie` / `support@foreman.ie`.
 
