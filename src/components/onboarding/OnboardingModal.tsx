@@ -128,7 +128,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [commsPrefs, setCommsPrefs] = useState<CommsPrefs>(DEFAULT_COMMS);
   const { user } = useAuth();
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   const updateData = (field: keyof OnboardingData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -145,6 +145,8 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
       case 4:
         return true;
       case 5:
+        return true;
+      case 6:
         return true;
       default:
         return false;
