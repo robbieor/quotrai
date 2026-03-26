@@ -128,9 +128,9 @@ const handler = async (req: Request): Promise<Response> => {
       </head>
       <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #00FFB2, #00D4FF); padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <div style="font-size: 28px; font-weight: 700; color: #0f172a;">Quotr</div>
-            <h1 style="color: #0f172a; margin: 10px 0 0; font-size: 24px; font-weight: 700;">${documentLabel} ${documentNumber}</h1>
+          <div style="background: #0f172a; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+            <div style="font-size: 28px; font-weight: 700; color: #00E6A0;">Foreman</div>
+            <h1 style="color: #ffffff; margin: 10px 0 0; font-size: 24px; font-weight: 700;">${documentLabel} ${documentNumber}</h1>
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
             <p>Dear ${customerName},</p>
@@ -151,7 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             ${isInvoice && portalUrl ? `
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${portalUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #00FFB2, #00D4FF); color: #0f172a; font-weight: 700; font-size: 18px; text-decoration: none; border-radius: 8px;">
+              <a href="${portalUrl}" style="display: inline-block; padding: 16px 40px; background: #00E6A0; color: #0f172a; font-weight: 700; font-size: 18px; text-decoration: none; border-radius: 8px;">
                 💳 Pay Now
               </a>
               <p style="color: #64748b; font-size: 12px; margin-top: 10px;">Secure payment via card or Apple/Google Pay</p>
@@ -166,7 +166,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>Best regards,<br><strong>${fromName}</strong></p>
           </div>
           <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px; background: #f8fafc; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
-            <p>Powered by <a href="#" style="color: #00D4FF; text-decoration: none;">Quotr</a> — Get paid sooner.</p>
+            <p>Powered by <a href="#" style="color: #00E6A0; text-decoration: none;">Foreman</a> — Get paid sooner.</p>
           </div>
         </div>
       </body>
@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to,
-        from: `${fromName} via Quotr <noreply@${FROM_DOMAIN}>`,
+        from: `${fromName} via Foreman <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: `${documentLabel} ${documentNumber} from ${fromName}`,
         html,

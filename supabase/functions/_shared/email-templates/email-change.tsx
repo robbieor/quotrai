@@ -11,6 +11,7 @@ import {
   Html,
   Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -24,19 +25,23 @@ interface EmailChangeEmailProps {
 export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for Quotr</Preview>
+    <Preview>Confirm your email change for Foreman</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={logo}>Quotr</Text>
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
-          You requested to change your email address for Quotr from{' '}
-          <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
-        </Text>
-        <Text style={text}>Click the button below to confirm this change:</Text>
-        <Button style={button} href={confirmationUrl}>Confirm Email Change</Button>
-        <Text style={footer}>If you didn't request this change, please secure your account immediately.</Text>
+        <Section style={header}>
+          <Text style={logo}>Foreman</Text>
+        </Section>
+        <Section style={content}>
+          <Heading style={h1}>Confirm your email change</Heading>
+          <Text style={text}>
+            You requested to change your email address for Foreman from{' '}
+            <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}to{' '}
+            <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
+          </Text>
+          <Text style={text}>Click the button below to confirm this change:</Text>
+          <Button style={button} href={confirmationUrl}>Confirm Email Change</Button>
+          <Text style={footer}>If you didn't request this change, please secure your account immediately.</Text>
+        </Section>
       </Container>
     </Body>
   </Html>
@@ -45,8 +50,10 @@ export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }:
 export default EmailChangeEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }
-const container = { padding: '30px 25px' }
-const logo = { fontSize: '28px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 24px' }
+const container = { margin: '0 auto', maxWidth: '600px' }
+const header = { backgroundColor: '#0f172a', padding: '30px 25px', borderRadius: '12px 12px 0 0', textAlign: 'center' as const }
+const logo = { fontSize: '28px', fontWeight: 'bold' as const, color: '#00E6A0', margin: '0' }
+const content = { padding: '30px 25px' }
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 20px' }
 const text = { fontSize: '14px', color: '#64748b', lineHeight: '1.5', margin: '0 0 25px' }
 const link = { color: 'inherit', textDecoration: 'underline' }

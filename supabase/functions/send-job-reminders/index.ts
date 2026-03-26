@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
             payload: {
               message_id: messageId,
               to: customerEmail,
-              from: `Quotr <noreply@${FROM_DOMAIN}>`,
+              from: `Foreman <noreply@${FROM_DOMAIN}>`,
               sender_domain: SENDER_DOMAIN,
               subject: `Appointment Reminder: ${jobTitle}`,
               html,

@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const recipientEmail = user.email;
     const docLabel = documentType === "invoice" ? "invoice" : "quote";
-    const subject = `Your Quotr ${docLabel} preview`;
+    const subject = `Your Foreman ${docLabel} preview`;
     const messageId = crypto.randomUUID();
     const idempotencyKey = `preview-${docLabel}-${messageId}`;
 
@@ -105,24 +105,29 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const htmlBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #0f172a; margin-bottom: 8px;">Document Preview</h2>
-        <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
-          This is a <strong>test preview</strong> sent to you only. No customer has received this document.
-        </p>
-        <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
-          Your ${docLabel} preview PDF ${pdfDownloadUrl ? 'is available for download below' : 'could not be attached — please download it from the branding settings page instead'}.
-        </p>
-        ${pdfDownloadUrl ? `
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${pdfDownloadUrl}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #00FFB2, #00D4FF); color: #0f172a; font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 8px;">
-            📎 Download Preview PDF
-          </a>
-        </div>` : ''}
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-        <p style="color: #94a3b8; font-size: 12px;">
-          Sent from Quotr · This is an internal preview — not a customer communication.
-        </p>
+      <div style="font-family: 'Manrope', -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #0f172a; padding: 30px 25px; text-align: center; border-radius: 12px 12px 0 0;">
+          <div style="font-size: 28px; font-weight: 700; color: #00E6A0;">Foreman</div>
+          <h2 style="color: #ffffff; margin: 10px 0 0; font-size: 20px; font-weight: 600;">Document Preview</h2>
+        </div>
+        <div style="padding: 30px 25px;">
+          <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+            This is a <strong>test preview</strong> sent to you only. No customer has received this document.
+          </p>
+          <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+            Your ${docLabel} preview PDF ${pdfDownloadUrl ? 'is available for download below' : 'could not be attached — please download it from the branding settings page instead'}.
+          </p>
+          ${pdfDownloadUrl ? `
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${pdfDownloadUrl}" style="display: inline-block; padding: 12px 24px; background: #00E6A0; color: #0f172a; font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 8px;">
+              📎 Download Preview PDF
+            </a>
+          </div>` : ''}
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="color: #94a3b8; font-size: 12px;">
+            Sent from Foreman · This is an internal preview — not a customer communication.
+          </p>
+        </div>
       </div>
     `;
 
@@ -143,11 +148,11 @@ const handler = async (req: Request): Promise<Response> => {
         idempotency_key: idempotencyKey,
         unsubscribe_token: unsubscribeToken,
         to: recipientEmail,
-        from: `Quotr <noreply@${FROM_DOMAIN}>`,
+        from: `Foreman <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html: htmlBody,
-        text: `Your Quotr ${docLabel} preview — this is a test sent to you only.`,
+        text: `Your Foreman ${docLabel} preview — this is a test sent to you only.`,
         purpose: "transactional",
         label: `preview_${docLabel}`,
         queued_at: new Date().toISOString(),
