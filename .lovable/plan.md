@@ -1,69 +1,89 @@
 
 
-## Mobile Optimization Pass — All App Pages
+## Fix Foreman AI Voice Agent Freeze & Achieve Sub-3s Connection
 
-The dashboard mobile fix was step 1. Here's what remains across every other page at a 402px viewport.
+### Root Causes of the 15s Freeze
 
-### Issues by Page
+1. **Serial waterfall of 5 blocking steps**: Mic permission → preflight edge function call → DB insert → dynamic variables build → `withRetry(attemptConnection)`. Each awaits the previous.
+2. **Preflight is redundant**: It calls `elevenlabs-agent-token` to test connectivity, then `attemptConnection` calls it again implicitly via the signed URL. That's **two round trips** to ElevenLabs before the user hears anything.
+3. **15-second CONNECTION_TIMEOUT**: If the preflight is slow, the user stares at a spinner for 15s before anything happens.
+4. **Retry with exponential backoff**: 2s → 4s → 8s delays between retries. If the first attempt times out at 15s, the user waits 15s + 2s + 15s = 32s before seeing a failure.
+5. **No UI feedback during connection**: The button shows a spinner but there's no "Connecting..." status bar or audio cue — feels frozen.
+6. **WebSocket fallback is slower than WebRTC**: When a signed URL is obtained, the code uses `connectionType: "websocket"` instead of the recommended `"webrtc"` with a conversation token.
 
-**1. Reports (`Reports.tsx`)**
-- Page title "Reports" is `text-3xl` — too large on mobile (should be `text-2xl md:text-3xl`)
-- Subtitle has no responsive text size
-- DateRangePicker competes with title in same row on mobile
-- Tab triggers `grid-cols-3` can get cramped
-- Chart grid `lg:grid-cols-2` is fine (stacks on mobile), but stat cards use `lg:grid-cols-4` with no mobile breakpoint — 4 cards in a row won't fit
+### The Fix — Parallel, WebRTC-First, Instant Feedback
 
-**2. Time Tracking (`TimeTracking.tsx`)**
-- Title is hard-coded `text-3xl` — no mobile reduction
-- Subtitle has no responsive sizing
-- Tab grid `grid-cols-4` on a 402px screen = ~100px per tab, cramped
-- Clock tab content uses `lg:grid-cols-2` which stacks fine, but no mobile spacing adjustments
+**Step 1: Switch to WebRTC with conversation tokens (fastest path)**
 
-**3. Leads (`Leads.tsx`)**
-- Pipeline Value stat card can overflow with large currency values on `grid-cols-2` mobile
-- Lead cards have dense content that mostly works but the action dropdown row could be tighter
-
-**4. Customers (`Customers.tsx`)**
-- Mostly fine — already uses responsive patterns
-- Table has horizontal scroll with hint — good
-
-**5. Expenses (`Expenses.tsx`)**  
-- 3rd stat card uses `col-span-2 sm:col-span-1` — spans full width on mobile, creating visual imbalance
-- "Import Fuel Card" button text is long on mobile — should truncate or abbreviate
-
-**6. Settings (`Settings.tsx`)**
-- Tab list uses `flex-wrap` which is good, but 7+ tabs wrapping creates a tall messy block on mobile
-- Already has mobile-short labels — mostly OK
-
-**7. Templates (`Templates.tsx`)**
-- Tab list for trade categories could overflow if many categories visible
-- Otherwise OK with existing responsive patterns
-
-**8. Job Calendar (`JobCalendar.tsx`)**
-- Calendar views are inherently cramped on mobile — month view cells are tiny
-- No major overflow issues identified
-
-**9. Quotes & Invoices**
-- Card grids use `sm:grid-cols-2 lg:grid-cols-3` — stacks to 1 col on mobile, which is correct
-- Status filter pills use `flex-wrap` — works fine
-- Dropdown menus use `opacity-0 group-hover:opacity-100` — invisible on touch devices (need `opacity-100` on mobile or always-visible trigger)
-
-### Plan
+The `elevenlabs-agent-token` edge function currently fetches a **signed URL** (for WebSocket). Change it to fetch a **conversation token** (for WebRTC) — this is ElevenLabs' recommended protocol with lower latency.
 
 | File | Change |
 |------|--------|
-| `src/pages/Reports.tsx` | Add `text-2xl md:text-3xl` to h1, `text-sm md:text-base` to subtitle, stack DateRangePicker below title on mobile, add `md:grid-cols-2 lg:grid-cols-4` to stat cards grid |
-| `src/pages/TimeTracking.tsx` | Add `text-2xl md:text-3xl` to h1, `text-sm md:text-base` to subtitle, change tab grid to `grid-cols-4` with smaller text on mobile |
-| `src/pages/Expenses.tsx` | Change stat cards to consistent `grid-cols-3` on mobile (remove `col-span-2`), abbreviate "Import Fuel Card" button text on mobile |
-| `src/pages/Quotes.tsx` | Make dropdown trigger always visible on mobile (`opacity-100 sm:opacity-0 sm:group-hover:opacity-100`) |
-| `src/pages/Invoices.tsx` | Same dropdown visibility fix as Quotes |
-| `src/pages/Leads.tsx` | Add `truncate` to pipeline value stat to prevent overflow |
-| `src/pages/Settings.tsx` | Make tab list horizontally scrollable on mobile instead of wrapping (`overflow-x-auto flex-nowrap`) |
-| `src/pages/Templates.tsx` | Make tab list horizontally scrollable on mobile |
+| `supabase/functions/elevenlabs-agent-token/index.ts` | Change API call from `get-signed-url` to `conversation/token` endpoint. Return `{ token, agentId }` instead of `{ signedUrl }` |
 
-### Technical Approach
-- All CSS-only changes using Tailwind responsive prefixes
-- No logic or data changes
-- Focus on the highest-impact overflow and readability issues at 402px width
-- Touch-friendly: make action triggers visible without hover on mobile
+**Step 2: Eliminate the redundant preflight check**
+
+Remove the separate `runPreflightCheck()` call. The token fetch in `attemptConnection` IS the preflight — if it fails, we fall back to public agent.
+
+| File | Change |
+|------|--------|
+| `src/contexts/VoiceAgentContext.tsx` | Remove `runPreflightCheck()` call from `startConversation`. Merge token fetch into `attemptConnection` directly. |
+
+**Step 3: Parallelize mic + token + DB conversation creation**
+
+Run all three in parallel with `Promise.all`:
+- `navigator.mediaDevices.getUserMedia()` — mic permission
+- `supabase.functions.invoke("elevenlabs-agent-token")` — get token
+- `supabase.rpc("get_user_team_id")` + `supabase.auth.getUser()` — user context
+
+This cuts 3 serial round trips into 1 parallel batch.
+
+| File | Change |
+|------|--------|
+| `src/contexts/VoiceAgentContext.tsx` | Restructure `startConversation` to use `Promise.allSettled` for mic + token + context in parallel |
+
+**Step 4: Reduce timeout and retries**
+
+- Cut `CONNECTION_TIMEOUT` from 15s → 8s
+- Reduce `MAX_RETRIES` from 3 → 2
+- Reduce `INITIAL_RETRY_DELAY` from 2s → 1s
+
+| File | Change |
+|------|--------|
+| `src/hooks/useVoiceConnectionReliability.ts` | Update constants: timeout 8s, retries 2, delay 1s |
+
+**Step 5: Add instant "Connecting..." UI feedback**
+
+Show a pulsing status bar immediately when the user taps the call button — before any async work starts. This prevents the "frozen" feeling.
+
+| File | Change |
+|------|--------|
+| `src/components/george/GeorgeMobileInput.tsx` | Show connecting state bar with animation when `isConnecting` is true: "Connecting to Foreman AI..." with a pulse dot |
+
+**Step 6: Defer DB conversation creation**
+
+Move the `george_conversations.insert()` to AFTER the WebRTC session connects (in the `onConnect` callback). This removes another serial DB call from the critical path.
+
+| File | Change |
+|------|--------|
+| `src/contexts/VoiceAgentContext.tsx` | Move conversation DB insert from `startConversation` to the `onConnect` callback |
+
+### Expected Result
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Time to first audio | 8-15s (or timeout) | 2-3s |
+| Worst case (retry) | 32s | 10s |
+| UI feedback | Spinner only | Animated "Connecting..." bar |
+| Connection protocol | WebSocket (slow) | WebRTC (fast) |
+| Serial network calls | 5 | 1 parallel batch |
+
+### Files Changed
+
+| File | Summary |
+|------|---------|
+| `supabase/functions/elevenlabs-agent-token/index.ts` | Switch to conversation token endpoint for WebRTC |
+| `src/contexts/VoiceAgentContext.tsx` | Parallelize startup, remove preflight, defer DB insert, use WebRTC |
+| `src/hooks/useVoiceConnectionReliability.ts` | Tighten timeout/retry constants |
+| `src/components/george/GeorgeMobileInput.tsx` | Add "Connecting..." status bar |
 
