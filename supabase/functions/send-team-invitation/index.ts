@@ -71,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto;">
           <div style="background: #0f172a; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <div style="font-size: 28px; font-weight: 700; color: #00E6A0;">Foreman</div>
+            <img src="https://quotrai.lovable.app/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
             <h1 style="color: #ffffff; margin: 10px 0 0; font-size: 24px; font-weight: 700;">🎉 You're Invited!</h1>
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
