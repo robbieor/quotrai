@@ -122,7 +122,7 @@ export function SubscriptionOverview() {
         <CardContent>
           <div className="text-center py-6 space-y-4">
             <div className="p-6 rounded-lg border border-dashed space-y-3">
-              <p className="text-lg font-semibold">Start your 14-day free trial</p>
+              <p className="text-lg font-semibold">Start your 30-day free trial</p>
               <p className="text-sm text-muted-foreground">
                 No credit card required. Full access to all features including Foreman AI.
               </p>
