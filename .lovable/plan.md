@@ -1,70 +1,31 @@
 
 
-## Jobs, Quotes & Invoices — Dense Table + Stats Overhaul
+## Fix Quotes Page — Ambiguous Relationship Error
 
-All three pages currently use inconsistent layouts (Jobs: simple list, Quotes/Invoices: card grid). The Expenses page now sets the standard with a dense sortable table, stats strip, and bulk actions. These three pages need to match.
+### Problem
+The quotes query fails with HTTP 300 because there are two foreign key relationships between `quotes` and `jobs`:
+1. `quotes.job_id → jobs.id` (many-to-one, quote linked to a job)
+2. `jobs.quote_id → quotes.id` (one-to-many, job created from a quote)
 
-### Jobs Page (`src/pages/Jobs.tsx`)
+PostgREST can't pick which one to use, so the main query silently fails and returns no data. The stats query (which doesn't join `jobs`) works fine and returns 1,209 quotes.
 
-**Current**: Simple div-list with `border-b` rows, no sorting, no stats, no bulk actions.
-
-**Changes**:
-- Add KPI stats strip: Active Jobs count, Scheduled This Week, Total Value (pipeline), Completed This Month
-- Replace div-list with dense `<table>` using `SortableHeader` — columns: Title, Customer, Status, Scheduled Date, Value, Actions
-- Hide Customer column on mobile
-- Add `useTableSort` + `useTableSelection` for sortable headers and checkbox multi-select
-- Add `TableSelectionBar` for bulk delete
-- Keep click-to-open `JobDetailSheet` behavior
-
-### Quotes Page (`src/pages/Quotes.tsx`)
-
-**Current**: Card grid (`grid-cols-3`), no sorting, no stats strip beyond status counts in filter pills.
-
-**Changes**:
-- Add KPI stats strip: Total Pipeline Value, Accepted Rate %, Avg Quote Value, Quotes This Month
-- Replace card grid with dense `<table>` — columns: Quote #, Customer, Date, Status, Items, Total, Actions
-- Keep status filter pills (they work well)
-- Add `useTableSort` + `useTableSelection`
-- Add `TableSelectionBar` for bulk delete/export
-- Keep click-to-open `QuoteDetailSheet`
-- Hide Items column on mobile
-
-### Invoices Page (`src/pages/Invoices.tsx`)
-
-**Current**: Card grid identical to Quotes, no sorting, no revenue stats.
-
-**Changes**:
-- Add KPI stats strip: Outstanding Total, Overdue Total, Paid This Month, Avg Days to Pay
-- Replace card grid with dense `<table>` — columns: Invoice #, Customer, Due Date, Status, Items, Total, Actions
-- Keep status filter pills
-- Add `useTableSort` + `useTableSelection`
-- Add `TableSelectionBar` for bulk delete/export
-- Keep click-to-open `InvoiceDetailSheet`
-- Overdue rows get subtle red-tinted background
-- Hide Items column on mobile
-
-### Shared Pattern (all 3 pages)
-
-| Element | Spec |
-|---------|------|
-| Table headers | `h-8`, `text-[10px]`, `uppercase tracking-wider`, `bg-muted/60` via `SortableHeader` |
-| Table rows | `py-0.5`, `text-[11px]` body, hover `bg-muted/30` |
-| Stats strip | Horizontal scroll on mobile, 4 cards with trend indicators |
-| Checkbox column | First column, `w-8` |
-| Actions column | Last column, `DropdownMenu` with existing actions |
-| Mobile | Hide low-value columns (Items, Customer on Jobs), show key 3-4 columns only |
+### Fix
+Disambiguate the join by specifying the FK name in the select string. Change `job:jobs(id, title)` to `job:jobs!quotes_job_id_fkey(id, title)` in `useQuotes.ts`.
 
 ### Files Changed
 
-| File | Summary |
+| File | Change |
 |------|--------|
-| `src/pages/Jobs.tsx` | Full rewrite: dense table, stats strip, sort, selection, bulk actions |
-| `src/pages/Quotes.tsx` | Full rewrite: dense table replacing card grid, stats strip, sort, selection |
-| `src/pages/Invoices.tsx` | Full rewrite: dense table replacing card grid, stats strip, sort, selection, overdue highlighting |
+| `src/hooks/useQuotes.ts` | Add `!quotes_job_id_fkey` hint to both `useQuotes()` and `useQuote()` select strings |
 
-### Technical Notes
-- Reuse `SortableHeader`, `useTableSort`, `useTableSelection`, `TableSelectionBar` — all exist
-- No DB changes needed
-- All existing dialog/sheet integrations preserved (JobDetailSheet, QuoteDetailSheet, InvoiceDetailSheet)
-- Status filter pills kept on Quotes and Invoices (proven UX pattern)
+### Specific Change
+```typescript
+// Before
+job:jobs(id, title),
+
+// After
+job:jobs!quotes_job_id_fkey(id, title),
+```
+
+Applied in two places: the list query (line ~23) and the single-quote query (line ~41).
 
