@@ -39,21 +39,21 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
     <div className="rounded-lg border border-border bg-card">
       {/* Stats strip */}
       <div className="flex overflow-x-auto scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-4 divide-x divide-border border-b border-border">
-        <div className="p-3 text-center">
+        <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p>
           <p className={`text-lg font-bold tabular-nums ${data.overdueCount > 0 ? "text-destructive" : "text-foreground"}`}>
             {formatCurrency(data.totalOverdue)}
           </p>
           <p className="text-[10px] text-muted-foreground">{data.overdueCount} invoice{data.overdueCount !== 1 ? "s" : ""}</p>
         </div>
-        <div className="p-3 text-center">
+        <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Stale Quotes</p>
           <p className={`text-lg font-bold tabular-nums ${data.quotesNeedFollowUp > 0 ? "text-amber-500" : "text-foreground"}`}>
             {data.quotesNeedFollowUp}
           </p>
           <p className="text-[10px] text-muted-foreground">{formatCurrency(data.quotesFollowUpValue)} at risk</p>
         </div>
-        <div className="p-3 text-center">
+        <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Stuck Jobs</p>
           <p className={`text-lg font-bold tabular-nums ${data.stuckJobs > 0 ? "text-amber-500" : "text-foreground"}`}>
             {data.stuckJobs}
