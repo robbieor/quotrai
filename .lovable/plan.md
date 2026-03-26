@@ -1,44 +1,25 @@
 
 
-## Fix Landing Page Demo Video — Replace Quotr with Foreman
+## Fix Trial Duration: 14 days → 30 days
 
 ### Problem
-The pre-rendered MP4 (`/quotr-demo.mp4`) on the landing page still shows "Quotr" branding throughout all 7 scenes. The Remotion source files also reference `quotr-logo.png` and display "Quotr" text.
+Multiple files incorrectly state "14-day" trial when the actual trial period is 30 days. This was introduced during the Quotr→Foreman rebrand.
 
-### Steps
+### Files to Fix
 
-**Step 1: Copy Foreman logo into Remotion assets**
-- Copy `src/assets/foreman-logo.png` → `remotion/public/images/foreman-logo.png`
+| File | Current | Fix |
+|------|---------|-----|
+| `remotion/src/scenes/Scene7Closing.tsx` | "Try Foreman free for 14 days" | → "Try Foreman free for 30 days" |
+| `src/components/billing/SubscriptionOverview.tsx` | "Start your 14-day free trial" | → "Start your 30-day free trial" |
+| `src/pages/Terms.tsx` | "14-day free trial" | → "30-day free trial" |
+| `supabase/functions/send-drip-email/index.ts` | "your 14-day Foreman trial ends soon" | → "your 30-day Foreman trial ends soon" |
 
-**Step 2: Update all Remotion scene files**
+### Not Changed (correct usage of "14 days")
+- **Payment terms placeholder** in BrandingSettings — "Payment due within 14 days" refers to invoice payment terms, not trial
+- **Scene5ConvertJob** — "Due in 14 days" refers to invoice due date, not trial
+- **FounderProjections** — "Get paid 14 days faster" is a marketing claim, not trial
+- **george-webhook** invoice due date default — business logic, not trial
 
-| File | Changes |
-|------|---------|
-| `remotion/src/scenes/Scene2MeetQuotr.tsx` | Rename to `Scene2MeetForeman.tsx`. Change "Meet **Quotr**" → "Meet **Foreman**". Change `quotr-logo.png` → `foreman-logo.png`. Update tagline to "Your AI office manager." |
-| `remotion/src/scenes/Scene3CreateQuote.tsx` | Replace all `quotr-logo.png` → `foreman-logo.png` |
-| `remotion/src/scenes/Scene4SendQuote.tsx` | Replace all `quotr-logo.png` → `foreman-logo.png` |
-| `remotion/src/scenes/Scene5ConvertJob.tsx` | Replace `quotr-logo.png` → `foreman-logo.png` |
-| `remotion/src/scenes/Scene7Closing.tsx` | Replace `quotr-logo.png` → `foreman-logo.png`. Change "Quotr" text → "Foreman". Change "Try Quotr free for 30 days" → "Try Foreman free for 14 days" |
-| `remotion/src/MainVideo.tsx` | Update import from `Scene2MeetQuotr` → `Scene2MeetForeman` |
-
-**Step 3: Re-render the MP4**
-- Run the Remotion render script to produce `foreman-demo.mp4`
-- Copy output to `public/foreman-demo.mp4`
-
-**Step 4: Update landing page video reference**
-- `src/components/landing/DemoVideoSection.tsx`: Change `src="/quotr-demo.mp4"` → `src="/foreman-demo.mp4"`
-
-### Files Changed
-
-| File | Summary |
-|------|---------|
-| `remotion/src/scenes/Scene2MeetQuotr.tsx` → `Scene2MeetForeman.tsx` | Rebrand scene |
-| `remotion/src/scenes/Scene3CreateQuote.tsx` | Logo swap |
-| `remotion/src/scenes/Scene4SendQuote.tsx` | Logo swap |
-| `remotion/src/scenes/Scene5ConvertJob.tsx` | Logo swap |
-| `remotion/src/scenes/Scene7Closing.tsx` | Logo + text swap |
-| `remotion/src/MainVideo.tsx` | Update import |
-| `remotion/public/images/foreman-logo.png` | New asset |
-| `src/components/landing/DemoVideoSection.tsx` | Update video src |
-| `public/foreman-demo.mp4` | New rendered video |
+### Note
+The Remotion scene change means the video should be re-rendered to reflect the updated text. However, since re-rendering requires the full Remotion build pipeline, this will be done as a follow-up after the code changes.
 
