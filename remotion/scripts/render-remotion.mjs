@@ -29,7 +29,7 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/quotr-demo.mp4",
+  outputLocation: "/mnt/documents/foreman-demo.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
