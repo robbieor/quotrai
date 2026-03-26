@@ -60,9 +60,9 @@ export default function Pricing() {
           <Button
             size="lg"
             className="w-full gap-2"
-            onClick={() => openExternalUrl("https://quotr.work/settings")}
+            onClick={() => openExternalUrl("https://foreman.ie/settings")}
           >
-            Open quotr.work
+            Open foreman.ie
             <ExternalLink className="h-4 w-4" />
           </Button>
           <Link to="/dashboard">

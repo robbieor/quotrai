@@ -25,8 +25,8 @@ console.log("[Foreman] Starting app...");
       await Promise.all(keys.map((k) => caches.delete(k)));
     } catch { /* ignore */ }
   }
-  if (hadSW && !sessionStorage.getItem("__quotr_sw_purged__")) {
-    sessionStorage.setItem("__quotr_sw_purged__", "1");
+  if (hadSW && !sessionStorage.getItem("__foreman_sw_purged__")) {
+    sessionStorage.setItem("__foreman_sw_purged__", "1");
     window.location.reload();
   }
 })();

@@ -24,7 +24,7 @@ const CURRENCY_MAP: Record<string, CurrencyInfo> = {
 const DEFAULT_CURRENCY: CurrencyInfo = { code: "USD", symbol: "$", rate: 1.08 };
 const FALLBACK_CURRENCY: CurrencyInfo = { code: "EUR", symbol: "€", rate: 1 };
 
-const CACHE_KEY = "quotr_landing_currency";
+const CACHE_KEY = "foreman_landing_currency";
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 export function useLandingCurrency() {

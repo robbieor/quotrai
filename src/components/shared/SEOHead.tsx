@@ -8,7 +8,7 @@ interface SEOHeadProps {
 }
 
 const BASE_URL = "https://quotrai.lovable.app";
-const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/2fbjCiwqjfZ3NWb65g3XjQ8mYNE2/social-images/social-1769007219850-quotr appicon.png";
+const DEFAULT_OG = "https://storage.googleapis.com/gpt-engineer-file-uploads/2fbjCiwqjfZ3NWb65g3XjQ8mYNE2/social-images/social-1769007219850-quotr appicon.png"; // legacy OG image URL — asset name retained
 
 export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }: SEOHeadProps) {
   const url = `${BASE_URL}${path}`;

@@ -29,16 +29,16 @@ export default function SelectPlan() {
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
-              Subscription management is available on the web. Visit quotr.work to choose a plan or manage billing.
+              Subscription management is available on the web. Visit foreman.ie to choose a plan or manage billing.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
               className="gap-2"
-              onClick={() => openExternalUrl("https://quotr.work/settings?tab=team-billing")}
+              onClick={() => openExternalUrl("https://foreman.ie/settings?tab=team-billing")}
             >
               <ExternalLink className="h-4 w-4" />
-              Open quotr.work
+              Open foreman.ie
             </Button>
           </CardContent>
         </Card>
@@ -123,7 +123,7 @@ export default function SelectPlan() {
                 ))}
               </ul>
               <Button variant="outline" className="w-full gap-2" asChild>
-                <a href="mailto:hello@quotr.ai">
+                <a href="mailto:support@foreman.ie">
                   <MessageSquare className="h-4 w-4" /> Contact Us
                 </a>
               </Button>

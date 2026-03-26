@@ -12,8 +12,8 @@ import { toast } from "sonner";
 // Conservative defaults validated against industry benchmarks (Jobber, Tradify)
 const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
-const QUOTR_SEAT_PRICE = 29; // €29/month per seat
-const QUOTR_VOICE_PRICE = 20; // €20/month per voice seat
+const FOREMAN_SEAT_PRICE = 29; // €29/month per seat
+const FOREMAN_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
 const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
 
@@ -40,12 +40,12 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
   
   // Foreman cost
-  const quotrMonthlyCost = (teamSize * QUOTR_SEAT_PRICE) + (showVoice ? voiceUsers * QUOTR_VOICE_PRICE : 0);
+  const foremanMonthlyCost = (teamSize * FOREMAN_SEAT_PRICE) + (showVoice ? voiceUsers * FOREMAN_VOICE_PRICE : 0);
   
   // Net savings
-  const netMonthlySavings = potentialMoneySavedPerMonth - quotrMonthlyCost;
+  const netMonthlySavings = potentialMoneySavedPerMonth - foremanMonthlyCost;
   const annualSavings = netMonthlySavings * 12;
-  const roiMultiple = quotrMonthlyCost > 0 ? potentialMoneySavedPerMonth / quotrMonthlyCost : 0;
+  const roiMultiple = foremanMonthlyCost > 0 ? potentialMoneySavedPerMonth / foremanMonthlyCost : 0;
 
   // Admin headcount equivalent
   const fullTimeAdminHoursPerMonth = 160;
@@ -71,7 +71,7 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
           roiMultiple,
           hoursSavedPerMonth: potentialHoursSavedPerMonth,
           adminHeadcountEquivalent,
-          quotrMonthlyCost,
+          foremanMonthlyCost,
         },
       });
 
