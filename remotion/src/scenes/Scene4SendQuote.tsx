@@ -68,7 +68,7 @@ export const Scene4SendQuote: React.FC = () => {
       {/* Left: Chat */}
       <div style={{ flex: "0 0 500px", display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4, opacity: userOpacity }}>
-          <Img src={staticFile("images/quotr-logo.png")} style={{ width: 32, height: 32, borderRadius: 8 }} />
+          <Img src={staticFile("images/foreman-logo.png")} style={{ width: 32, height: 32, borderRadius: 8 }} />
           <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · Foreman AI</span>
         </div>
 
@@ -102,7 +102,7 @@ export const Scene4SendQuote: React.FC = () => {
         <div style={{ background: "white", borderRadius: 16, padding: "40px", maxWidth: 500, boxShadow: "0 25px 80px rgba(0,0,0,0.5)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
             <div>
-              <Img src={staticFile("images/quotr-logo.png")} style={{ width: 48, height: 48, borderRadius: 12, marginBottom: 8 }} />
+              <Img src={staticFile("images/foreman-logo.png")} style={{ width: 48, height: 48, borderRadius: 12, marginBottom: 8 }} />
               <p style={{ fontSize: 12, color: "#64748b", margin: 0, fontWeight: 700 }}>Your Company Ltd</p>
             </div>
             <div style={{ textAlign: "right" }}>

@@ -43,7 +43,7 @@ export function DemoVideoSection() {
               else { videoRef.current?.pause(); setIsPlaying(false); }
             }}
           >
-            <source src="/quotr-demo.mp4" type="video/mp4" />
+            <source src="/foreman-demo.mp4" type="video/mp4" />
           </video>
 
           {/* Play overlay */}
