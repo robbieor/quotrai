@@ -65,13 +65,13 @@ export default function Reports() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-            <p className="text-muted-foreground">Analyze your business performance</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Reports</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Analyze your business performance</p>
           </div>
           <DateRangePicker dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statsLoading ? (
             <>
               <StatCardSkeleton />
@@ -113,7 +113,7 @@ export default function Reports() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-md grid-cols-3 text-xs sm:text-sm">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="financial">Financial</TabsTrigger>
             <TabsTrigger value="operations">Operations</TabsTrigger>
