@@ -27,8 +27,8 @@ const TAM_SAM_SOM = [
   {
     label: "SOM",
     full: "Serviceable Obtainable Market",
-    value: "€270M",
-    desc: "Year 3 target: 1.5% penetration → 67K customers × €335/mo blended ARPU incl. platform fees",
+    value: "€900M",
+    desc: "Year 5 target: 5% penetration → 550K customers × €227/mo blended ARPU incl. platform fees",
     color: "bg-primary/30 border-primary/50",
   },
 ];
