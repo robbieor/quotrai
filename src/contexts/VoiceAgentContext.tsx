@@ -112,7 +112,6 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   
   // Initialize reliability hook (no health monitoring — ElevenLabs SDK manages connection state)
   const {
-    runPreflightCheck,
     withRetry,
     resetRetryState,
     MAX_RETRIES,
@@ -430,16 +429,16 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
 
   // Core connection logic (extracted for retry wrapper)
   const attemptConnection = useCallback(async (
-    preflightResult: { signedUrl?: string; usePublicAgent?: boolean },
+    tokenResult: { token?: string; usePublicAgent?: boolean },
     dynamicVariables: Record<string, string>
   ) => {
     console.log("[VoiceAgent] 🚀 Starting session...");
     
-    if (preflightResult.signedUrl) {
-      console.log("[VoiceAgent] Using signed URL for authentication");
+    if (tokenResult.token) {
+      console.log("[VoiceAgent] Using conversation token for WebRTC");
       await conversation.startSession({
-        signedUrl: preflightResult.signedUrl,
-        connectionType: "websocket",
+        conversationToken: tokenResult.token,
+        connectionType: "webrtc",
         dynamicVariables,
       });
     } else {
@@ -464,68 +463,57 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     console.log("[VoiceAgent] 🎙️ Starting voice connection...");
 
     try {
-      // Step 1: Request microphone permission first (no retry on mic issues)
-      console.log("[VoiceAgent] Requesting microphone permission...");
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("[VoiceAgent] ✅ Microphone permission granted");
-      } catch (micError) {
-        console.error("[VoiceAgent] ❌ Microphone error:", micError);
-        const reason = (micError as Error).name === "NotAllowedError" 
+      // Parallel: mic permission + token fetch + user context — all at once
+      const [micResult, tokenResult, teamResult, userResult] = await Promise.allSettled([
+        navigator.mediaDevices.getUserMedia({ audio: true }),
+        supabase.functions.invoke("elevenlabs-agent-token", { body: {} }),
+        supabase.rpc("get_user_team_id"),
+        supabase.auth.getUser(),
+      ]);
+
+      // Check mic permission (hard failure)
+      if (micResult.status === "rejected") {
+        console.error("[VoiceAgent] ❌ Microphone error:", micResult.reason);
+        const reason = (micResult.reason as Error).name === "NotAllowedError" 
           ? "microphone_denied" 
           : "microphone_unavailable";
-        handleFailure({ reason, error: micError });
+        handleFailure({ reason, error: micResult.reason });
         setIsConnecting(false);
         return;
       }
+      console.log("[VoiceAgent] ✅ Microphone permission granted");
 
-      // Step 2: Run pre-flight check to verify ElevenLabs connectivity
-      console.log("[VoiceAgent] 🔍 Running pre-flight check...");
-      const preflightResult = await runPreflightCheck();
-      
-      if (!preflightResult.success) {
-        console.error("[VoiceAgent] ❌ Pre-flight check failed:", preflightResult.error);
-        handleFailure({ reason: "connection_failed", error: new Error(preflightResult.error) });
-        setIsConnecting(false);
-        setVoiceUnavailable(true);
-        return;
-      }
-      console.log("[VoiceAgent] ✅ Pre-flight check passed");
-
-      // Step 3: Create a new conversation in the database
-      const { data: teamId } = await supabase.rpc("get_user_team_id");
-      const { data: user } = await supabase.auth.getUser();
-      
-      if (teamId && user.user?.id) {
-        const { data: newConversation, error } = await supabase
-          .from("george_conversations")
-          .insert({
-            team_id: teamId,
-            user_id: user.user.id,
-            title: `Voice call - ${new Date().toLocaleString()}`,
-          })
-          .select()
-          .single();
-        
-        if (!error && newConversation) {
-          conversationIdRef.current = newConversation.id;
-          setCurrentConversationId(newConversation.id);
-          console.log("[VoiceAgent] Created conversation:", newConversation.id);
-        }
+      // Process token result (soft failure — falls back to public agent)
+      let tokenData: { token?: string; usePublicAgent?: boolean } = { usePublicAgent: true };
+      if (tokenResult.status === "fulfilled" && tokenResult.value?.data?.token) {
+        tokenData = { token: tokenResult.value.data.token };
+        console.log("[VoiceAgent] ✅ Got conversation token");
+      } else {
+        console.warn("[VoiceAgent] Token fetch failed, using public agent fallback");
       }
 
-      // Step 4: Build dynamic variables
-      const dynamicVariables: Record<string, string> = {};
+      // Process user context
+      const teamId = teamResult.status === "fulfilled" ? teamResult.value?.data : null;
+      const user = userResult.status === "fulfilled" ? userResult.value?.data?.user : null;
 
-      if (context?.userName) {
-        dynamicVariables.user_name = context.userName;
+      // Store context
+      if (context) {
         contextRef.current = context;
       }
-      if (context?.teamId) {
-        dynamicVariables.team_id = context.teamId;
+      if (teamId && user?.id) {
+        contextRef.current = {
+          ...contextRef.current,
+          userId: user.id,
+          teamId: teamId,
+          userName: context?.userName || contextRef.current.userName,
+        };
       }
 
-      // Add current date and time
+      // Build dynamic variables
+      const dynamicVariables: Record<string, string> = {};
+      if (contextRef.current.userName) dynamicVariables.user_name = contextRef.current.userName;
+      if (contextRef.current.teamId) dynamicVariables.team_id = contextRef.current.teamId;
+
       const now = new Date();
       dynamicVariables.current_date = now.toISOString().split("T")[0];
       dynamicVariables.current_time = now.toTimeString().slice(0, 5);
@@ -539,9 +527,9 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
         minute: "2-digit",
       });
 
-      // Step 5: Attempt connection with automatic retry
+      // Attempt connection with retry (DB insert deferred to onConnect)
       const { success, error } = await withRetry(
-        () => attemptConnection(preflightResult, dynamicVariables),
+        () => attemptConnection(tokenData, dynamicVariables),
         "ElevenLabs connection",
         (attempt) => {
           setRetryAttempt(attempt);
@@ -551,7 +539,27 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
         }
       );
 
-      if (!success) {
+      if (success) {
+        // Defer DB conversation creation — do it after connection succeeds
+        if (teamId && user?.id) {
+          supabase
+            .from("george_conversations")
+            .insert({
+              team_id: teamId,
+              user_id: user.id,
+              title: `Voice call - ${new Date().toLocaleString()}`,
+            })
+            .select()
+            .single()
+            .then(({ data: newConversation, error: dbError }) => {
+              if (!dbError && newConversation) {
+                conversationIdRef.current = newConversation.id;
+                setCurrentConversationId(newConversation.id);
+                console.log("[VoiceAgent] Created conversation:", newConversation.id);
+              }
+            });
+        }
+      } else {
         console.error("[VoiceAgent] ❌ Connection failed after retries:", error);
         toast.dismiss("voice-retry");
         toast.error("Unable to connect after multiple attempts", {
@@ -573,7 +581,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       setRetryAttempt(0);
       toast.dismiss("voice-retry");
     }
-  }, [conversation, isConnecting, handleFailure, getFailureReason, runPreflightCheck, withRetry, attemptConnection, MAX_RETRIES]);
+  }, [conversation, isConnecting, handleFailure, getFailureReason, withRetry, attemptConnection, MAX_RETRIES]);
 
   const stopConversation = useCallback(async () => {
     try {

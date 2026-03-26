@@ -1,9 +1,9 @@
 import { useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 2000;
-const CONNECTION_TIMEOUT = 15000;
+const MAX_RETRIES = 2;
+const INITIAL_RETRY_DELAY = 1000;
+const CONNECTION_TIMEOUT = 8000;
 
 interface RetryState {
   attempts: number;
