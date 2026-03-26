@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 function escapeHtml(text: string | undefined | null): string {
   if (!text) return "";
@@ -39,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase.from("email_send_log").insert({ message_id: adminMsgId, template_name: "early-access-admin", recipient_email: "support@foreman.ie", status: "pending" });
     await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: adminMsgId, to: "support@foreman.ie", from: `Foreman <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `New Early Access Request: ${safe.companyName}`, html: adminHtml, text: `New early access request from ${safe.contactName} at ${safe.companyName}`, purpose: "transactional", label: "early-access-admin", queued_at: new Date().toISOString() },
+      payload: { message_id: adminMsgId, to: "support@foreman.ie", from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `New Early Access Request: ${safe.companyName}`, html: adminHtml, text: `New early access request from ${safe.contactName} at ${safe.companyName}`, purpose: "transactional", label: "early-access-admin", queued_at: new Date().toISOString() },
     });
 
     // Confirmation to requester
@@ -49,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase.from("email_send_log").insert({ message_id: confirmMsgId, template_name: "early-access-confirm", recipient_email: email, status: "pending" });
     await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: confirmMsgId, to: email, from: `Foreman <hello@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: "Welcome to Foreman! 🚀", html: confirmHtml, text: `Hi ${contactName}, thank you for your interest in Foreman! We'll be in touch within 24-48 hours.`, purpose: "transactional", label: "early-access-confirm", queued_at: new Date().toISOString() },
+      payload: { message_id: confirmMsgId, to: email, from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: "Welcome to Foreman! 🚀", html: confirmHtml, text: `Hi ${contactName}, thank you for your interest in Foreman! We'll be in touch within 24-48 hours.`, purpose: "transactional", label: "early-access-confirm", queued_at: new Date().toISOString() },
     });
 
     return new Response(JSON.stringify({ success: true, message: "Request submitted successfully" }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });

@@ -5,8 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
           payload: {
             message_id: messageId,
             to: customer.email,
-            from: `${fromName} via Foreman <noreply@${FROM_DOMAIN}>`,
+            from: `${fromName} via Foreman <support@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject, html,
             text: `Payment reminder for invoice ${inv.display_number} - €${Number(inv.total).toFixed(2)} overdue by ${daysOverdue} days`,

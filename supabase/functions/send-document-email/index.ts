@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 interface EmailRequest {
   to: string;
@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to,
-        from: `${fromName} via Foreman <noreply@${FROM_DOMAIN}>`,
+        from: `${fromName} via Foreman <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: `${documentLabel} ${documentNumber} from ${fromName}`,
         html,

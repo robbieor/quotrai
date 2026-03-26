@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
         await supabase.from("email_send_log").insert({ message_id: messageId, template_name: "churn-reengagement", recipient_email: profile.email, status: "pending" });
         const { error: enqueueError } = await supabase.rpc("enqueue_email", {
           queue_name: "transactional_emails",
-          payload: { message_id: messageId, to: profile.email, from: `Foreman <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${firstName}, we miss you on Foreman! 🛠️`, html, text: `Hey ${firstName}, we noticed you haven't been on Foreman recently. Jump back in!`, purpose: "transactional", label: "churn-reengagement", queued_at: new Date().toISOString() },
+          payload: { message_id: messageId, to: profile.email, from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${firstName}, we miss you on Foreman! 🛠️`, html, text: `Hey ${firstName}, we noticed you haven't been on Foreman recently. Jump back in!`, purpose: "transactional", label: "churn-reengagement", queued_at: new Date().toISOString() },
         });
         if (enqueueError) throw enqueueError;
 

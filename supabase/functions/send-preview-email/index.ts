@@ -6,8 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -148,7 +148,7 @@ const handler = async (req: Request): Promise<Response> => {
         idempotency_key: idempotencyKey,
         unsubscribe_token: unsubscribeToken,
         to: recipientEmail,
-        from: `Foreman <noreply@${FROM_DOMAIN}>`,
+        from: `Foreman <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html: htmlBody,

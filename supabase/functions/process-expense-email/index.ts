@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SENDER_DOMAIN = "notify.quotr.work";
-const FROM_DOMAIN = "quotr.work";
+const SENDER_DOMAIN = "notify.foreman.ie";
+const FROM_DOMAIN = "foreman.ie";
 
 const VALID_CATEGORIES = [
   "materials", "equipment", "vehicle", "fuel", "tools",
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         await adminSupabase.from("email_send_log").insert({ message_id: messageId, template_name: "expense-confirmation", recipient_email: senderAddr, status: "pending" });
         await adminSupabase.rpc("enqueue_email", {
           queue_name: "transactional_emails",
-          payload: { message_id: messageId, to: senderAddr, from: `Quotr Expenses <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `✅ Expense logged: ${description}`, html: confirmHtml, text: `Expense logged: ${description} - ${amount.toFixed(2)}`, purpose: "transactional", label: "expense-confirmation", queued_at: new Date().toISOString() },
+          payload: { message_id: messageId, to: senderAddr, from: `Foreman Expenses <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `✅ Expense logged: ${description}`, html: confirmHtml, text: `Expense logged: ${description} - ${amount.toFixed(2)}`, purpose: "transactional", label: "expense-confirmation", queued_at: new Date().toISOString() },
         });
 
         // Audit log entry
