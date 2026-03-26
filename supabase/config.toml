@@ -131,3 +131,6 @@ verify_jwt = false
 
 [functions.run-task]
 verify_jwt = false
+
+[functions.sync-agent-tools]
+verify_jwt = false
