@@ -220,57 +220,37 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
 
     setSubmitting(true);
     try {
-      const workflowMode = computeWorkflowMode({
-        sendsQuotes: data.sendsQuotes ?? false,
-        tracksJobs: data.tracksJobs ?? false,
-        teamSize: data.businessSize,
-        priority: data.priority,
-      });
+      // Ensure profile is saved (may already be done at step 4→5 transition)
+      await saveProfileIfNeeded();
 
-      const { error: profileError } = await supabase
+      // Mark onboarding complete
+      await supabase
         .from("profiles")
-        .update({
-          full_name: data.fullName,
-          company_name: data.companyName,
-          phone: data.phone || null,
-          trade_type: data.tradeType,
-          business_size: data.businessSize,
-          currency: data.currency,
-          country: data.country,
-          workflow_mode: workflowMode,
-          onboarding_completed: true,
-        })
+        .update({ onboarding_completed: true })
         .eq("id", user.id);
 
-      if (profileError) throw profileError;
+      const resolvedTeamId = teamId || (await (async () => {
+        const { data: p } = await supabase.from("profiles").select("team_id").eq("id", user.id).single();
+        return p?.team_id;
+      })());
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("team_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.team_id) {
-        await supabase
-          .from("teams")
-          .update({ name: data.companyName })
-          .eq("id", profile.team_id);
-
+      if (resolvedTeamId) {
+        // Save comms preferences
         const { data: existing } = await supabase
           .from("comms_settings")
           .select("id")
-          .eq("team_id", profile.team_id)
+          .eq("team_id", resolvedTeamId)
           .maybeSingle();
 
         if (existing) {
           await supabase
             .from("comms_settings")
             .update({ ...commsPrefs, updated_at: new Date().toISOString() })
-            .eq("team_id", profile.team_id);
+            .eq("team_id", resolvedTeamId);
         } else {
           await supabase
             .from("comms_settings")
-            .insert({ team_id: profile.team_id, ...commsPrefs });
+            .insert({ team_id: resolvedTeamId, ...commsPrefs });
         }
 
         // Seed sample data so user sees value immediately
@@ -281,7 +261,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               name: "Sample Customer",
               email: "sample@example.com",
               phone: "+44 7700 900000",
-              team_id: profile.team_id,
+              team_id: resolvedTeamId,
               notes: "This is a sample customer — feel free to edit or delete.",
             })
             .select("id")
@@ -292,7 +272,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               .from("quotes")
               .insert({
                 customer_id: sampleCustomer.id,
-                team_id: profile.team_id,
+                team_id: resolvedTeamId,
                 display_number: "Q-SAMPLE-001",
                 status: "draft" as const,
                 subtotal: 450,
@@ -307,18 +287,23 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               .insert({
                 title: "Sample Job — Kitchen Repair",
                 customer_id: sampleCustomer.id,
-                team_id: profile.team_id,
+                team_id: resolvedTeamId,
                 status: "pending",
                 description: "This is a sample job to show you around. Edit or delete it anytime.",
                 ...(sampleQuote ? { quote_id: sampleQuote.id } : {}),
               });
           }
         } catch (seedErr) {
-          // Non-critical — don't block onboarding if seeding fails
           console.warn("Sample data seeding failed:", seedErr);
         }
       }
 
+      const workflowMode = computeWorkflowMode({
+        sendsQuotes: data.sendsQuotes ?? false,
+        tracksJobs: data.tracksJobs ?? false,
+        teamSize: data.businessSize,
+        priority: data.priority,
+      });
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize, workflowMode });
       toast.success("Welcome to Foreman! You're all set.");
       onComplete();
