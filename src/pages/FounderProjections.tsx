@@ -12,8 +12,7 @@ import {
   AlertTriangle, Hammer, BanknoteIcon, Timer, XCircle, Percent,
   Video, Play, TrendingDown, Flame
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/foreman-logo.png";
+import InvestorLayout from "@/components/investor/InvestorLayout";
 
 // Market data
 const UK_TRADE_BUSINESSES = 300_000;
@@ -185,27 +184,7 @@ export default function FounderProjections() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/">
-              <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-            </Link>
-            <div>
-              <h1 className="font-bold text-foreground">Foreman — Investor Revenue Model</h1>
-              <p className="text-xs text-muted-foreground">Confidential — March 2026</p>
-            </div>
-          </div>
-          <Badge variant="outline" className="gap-1.5 border-destructive/30 text-destructive">
-            <Shield className="h-3 w-3" />
-            Confidential
-          </Badge>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <InvestorLayout title="Foreman — Investor Revenue Model" subtitle="Confidential — March 2026">
         {/* Mission Statement */}
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6">
@@ -803,8 +782,7 @@ export default function FounderProjections() {
         <p className="text-xs text-muted-foreground text-center pb-8">
           * Projections are estimates based on compound growth models. Actual results depend on execution, market conditions, and churn management. Not financial advice. Confidential — Foreman Ltd, Feb 2026.
         </p>
-      </main>
-    </div>
+    </InvestorLayout>
   );
 }
 

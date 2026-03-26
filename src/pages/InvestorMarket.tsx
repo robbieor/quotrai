@@ -7,7 +7,7 @@ import {
   Clock, Building2, Smartphone, Bot
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/foreman-logo.png";
+import InvestorLayout from "@/components/investor/InvestorLayout";
 
 const TAM_SAM_SOM = [
   {
@@ -27,8 +27,8 @@ const TAM_SAM_SOM = [
   {
     label: "SOM",
     full: "Serviceable Obtainable Market",
-    value: "€270M",
-    desc: "Year 3 target: 1.5% penetration → 67K customers × €335/mo blended ARPU incl. platform fees",
+    value: "€900M",
+    desc: "Year 5 target: 5% penetration → 550K customers × €227/mo blended ARPU incl. platform fees",
     color: "bg-primary/30 border-primary/50",
   },
 ];
@@ -129,35 +129,7 @@ const GEOGRAPHIC_MARKETS = [
 
 export default function InvestorMarket() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/">
-              <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">Foreman — Market Analysis</h1>
-              <p className="text-xs text-muted-foreground">TAM/SAM/SOM, Timing & Competitive Landscape — March 2026</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <nav className="hidden md:flex items-center gap-4 text-sm mr-4">
-              <Link to="/pitch" className="text-muted-foreground hover:text-foreground transition-colors">Pitch</Link>
-              <Link to="/product" className="text-muted-foreground hover:text-foreground transition-colors">Product</Link>
-              <Link to="/team" className="text-muted-foreground hover:text-foreground transition-colors">Team</Link>
-              <Link to="/founder" className="text-muted-foreground hover:text-foreground transition-colors">Financials</Link>
-            </nav>
-            <Badge variant="outline" className="gap-1.5 border-destructive/30 text-destructive">
-              <Shield className="h-3 w-3" />
-              Confidential
-            </Badge>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+    <InvestorLayout title="Foreman — Market Analysis" subtitle="TAM/SAM/SOM, Timing & Competitive Landscape — March 2026">
         {/* TAM SAM SOM */}
         <div className="text-center max-w-3xl mx-auto space-y-2 py-4">
           <h2 className="text-gradient-teal">€18B Market Opportunity</h2>
@@ -480,7 +452,7 @@ export default function InvestorMarket() {
 
         {/* Navigation */}
         <div className="grid sm:grid-cols-3 gap-4 pt-4">
-          <Link to="/pitch">
+          <Link to="/investor/pitch">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -491,7 +463,7 @@ export default function InvestorMarket() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/product">
+          <Link to="/investor/product">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -502,7 +474,7 @@ export default function InvestorMarket() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/founder">
+          <Link to="/investor/projections">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -514,7 +486,6 @@ export default function InvestorMarket() {
             </Card>
           </Link>
         </div>
-      </main>
-    </div>
+    </InvestorLayout>
   );
 }

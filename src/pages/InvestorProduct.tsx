@@ -8,7 +8,7 @@ import {
   MessageSquare, Bell, Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import foremanLogo from "@/assets/foreman-logo.png";
+import InvestorLayout from "@/components/investor/InvestorLayout";
 
 const FEATURE_SECTIONS = [
   {
@@ -83,35 +83,7 @@ const ROADMAP = [
 
 export default function InvestorProduct() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/">
-              <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">Foreman — Product Overview</h1>
-              <p className="text-xs text-muted-foreground">Feature Walkthrough & Technical Architecture</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <nav className="hidden md:flex items-center gap-4 text-sm mr-4">
-              <Link to="/pitch" className="text-muted-foreground hover:text-foreground transition-colors">Pitch</Link>
-              <Link to="/market" className="text-muted-foreground hover:text-foreground transition-colors">Market</Link>
-              <Link to="/team" className="text-muted-foreground hover:text-foreground transition-colors">Team</Link>
-              <Link to="/founder" className="text-muted-foreground hover:text-foreground transition-colors">Financials</Link>
-            </nav>
-            <Badge variant="outline" className="gap-1.5 border-destructive/30 text-destructive">
-              <Shield className="h-3 w-3" />
-              Confidential
-            </Badge>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+    <InvestorLayout title="Foreman — Product Overview" subtitle="Feature Walkthrough & Technical Architecture">
         {/* Hero */}
         <div className="text-center max-w-3xl mx-auto space-y-4 py-4">
           <Badge className="bg-primary/10 text-primary border-primary/20">
@@ -204,7 +176,7 @@ export default function InvestorProduct() {
 
         {/* Navigation */}
         <div className="grid sm:grid-cols-3 gap-4 pt-4">
-          <Link to="/pitch">
+          <Link to="/investor/pitch">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -215,7 +187,7 @@ export default function InvestorProduct() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/market">
+          <Link to="/investor/market">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -226,7 +198,7 @@ export default function InvestorProduct() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/founder">
+          <Link to="/investor/projections">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -238,7 +210,6 @@ export default function InvestorProduct() {
             </Card>
           </Link>
         </div>
-      </main>
-    </div>
+    </InvestorLayout>
   );
 }

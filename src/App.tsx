@@ -48,6 +48,12 @@ const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const AIAuditHistory = lazy(() => import("./pages/AIAuditHistory"));
 const Industries = lazy(() => import("./pages/Industries"));
+const InvestorPitch = lazy(() => import("./pages/InvestorPitch"));
+const InvestorMarket = lazy(() => import("./pages/InvestorMarket"));
+const InvestorProduct = lazy(() => import("./pages/InvestorProduct"));
+const InvestorTeam = lazy(() => import("./pages/InvestorTeam"));
+const InvestorProjections = lazy(() => import("./pages/FounderProjections"));
+const InvestorForecast = lazy(() => import("./pages/InvestorForecast"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -116,6 +122,14 @@ const App = () => {
                 <Route path="/app-store-assets" element={<AppStoreAssets />} />
                 <Route path="/industries" element={<Industries />} />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
+
+                {/* Investor deck */}
+                <Route path="/investor/pitch" element={<InvestorPitch />} />
+                <Route path="/investor/market" element={<InvestorMarket />} />
+                <Route path="/investor/product" element={<InvestorProduct />} />
+                <Route path="/investor/team" element={<InvestorTeam />} />
+                <Route path="/investor/projections" element={<InvestorProjections />} />
+                <Route path="/investor/forecast" element={<InvestorForecast />} />
 
                 {/* Portal pages */}
                 <Route path="/quote/:token" element={<QuotePortal />} />
