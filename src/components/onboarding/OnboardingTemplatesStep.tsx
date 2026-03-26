@@ -75,7 +75,7 @@ export function OnboardingTemplatesStep({ teamId }: OnboardingTemplatesStepProps
     const rate = parseFloat(newRate) || 45;
 
     // Get user's trade category from their first template
-    const category = templates[0]?.category || "general";
+    const category = (templates[0]?.category || "general") as Database["public"]["Enums"]["trade_category"];
 
     const { data, error } = await supabase
       .from("templates")
