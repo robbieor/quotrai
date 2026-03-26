@@ -42,7 +42,6 @@ serve(async (req) => {
 
     if (!ELEVENLABS_API_KEY) {
       console.error("ElevenLabs API key not configured");
-      // Return agent ID for public agent fallback
       return new Response(
         JSON.stringify({ 
           agentId: ELEVENLABS_AGENT_ID,
@@ -52,11 +51,11 @@ serve(async (req) => {
       );
     }
 
-    console.log("Requesting signed URL for agent:", ELEVENLABS_AGENT_ID);
+    console.log("Requesting conversation token for agent:", ELEVENLABS_AGENT_ID);
 
-    // Try to get a signed URL for the agent
+    // Get a conversation token for WebRTC (faster than signed URL for WebSocket)
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${ELEVENLABS_AGENT_ID}`,
+      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${ELEVENLABS_AGENT_ID}`,
       {
         method: "GET",
         headers: {
@@ -67,25 +66,24 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("ElevenLabs signed URL error:", response.status, errorText);
+      console.error("ElevenLabs token error:", response.status, errorText);
       
-      // Fallback to public agent if signed URL fails
       return new Response(
         JSON.stringify({ 
           agentId: ELEVENLABS_AGENT_ID,
           usePublicAgent: true,
-          error: `Signed URL failed: ${response.status}` 
+          error: `Token fetch failed: ${response.status}` 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const { signed_url } = await response.json();
-    console.log("Got signed URL successfully");
+    const { token } = await response.json();
+    console.log("Got conversation token successfully");
 
     return new Response(
       JSON.stringify({ 
-        signedUrl: signed_url,
+        token,
         agentId: ELEVENLABS_AGENT_ID 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -94,7 +92,6 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error("elevenlabs-agent-token error:", error);
     
-    // Fallback to public agent on error
     return new Response(
       JSON.stringify({ 
         agentId: ELEVENLABS_AGENT_ID,

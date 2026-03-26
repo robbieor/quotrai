@@ -166,6 +166,16 @@ export function GeorgeMobileInput({
 
   return (
     <div className="px-3 pt-2 pb-3 safe-area-pb bg-background border-t border-border">
+      {/* Connecting status bar */}
+      {isConnecting && !isConnected && (
+        <div className="flex items-center justify-center gap-2 mb-3 py-2 px-3 bg-primary/10 rounded-full border border-primary/20 animate-pulse">
+          <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+          <span className="text-xs font-medium text-primary">
+            Connecting to Foreman AI...
+          </span>
+        </div>
+      )}
+
       {/* Voice status bar */}
       {isConnected && (
         <div className="flex items-center justify-center gap-2 mb-3 py-2 px-3 bg-primary/10 rounded-full border border-primary/20">
