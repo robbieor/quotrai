@@ -193,7 +193,7 @@ export default function InvestorTeam() {
 
         {/* Navigation */}
         <div className="grid sm:grid-cols-3 gap-4 pt-4">
-          <Link to="/pitch">
+          <Link to="/investor/pitch">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -204,7 +204,7 @@ export default function InvestorTeam() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/market">
+          <Link to="/investor/market">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -215,7 +215,7 @@ export default function InvestorTeam() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/founder">
+          <Link to="/investor/projections">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>

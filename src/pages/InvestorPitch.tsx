@@ -238,7 +238,7 @@ export default function InvestorPitch() {
 
         {/* Navigation to other investor pages */}
         <div className="grid sm:grid-cols-3 gap-4 pt-4">
-          <Link to="/market">
+          <Link to="/investor/market">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -249,7 +249,7 @@ export default function InvestorPitch() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/product">
+          <Link to="/investor/product">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
@@ -260,7 +260,7 @@ export default function InvestorPitch() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/founder">
+          <Link to="/investor/projections">
             <Card className="card-hover cursor-pointer group">
               <CardContent className="p-5 flex items-center justify-between">
                 <div>
