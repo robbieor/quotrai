@@ -6,6 +6,7 @@ import {
   CheckCircle2, ArrowRight, Lightbulb, AlertTriangle, Users,
   Clock, Receipt, Smartphone, BarChart3
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import InvestorLayout from "@/components/investor/InvestorLayout";
 
 const PROBLEM_STATS = [

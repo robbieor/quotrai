@@ -6,6 +6,7 @@ import {
   ArrowRight, MapPin, BarChart3, Zap, Layers, DollarSign, Rocket,
   Clock, Building2, Smartphone, Bot
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import InvestorLayout from "@/components/investor/InvestorLayout";
 
 const TAM_SAM_SOM = [

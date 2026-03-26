@@ -5,6 +5,7 @@ import {
   Shield, Users, ArrowRight, Briefcase, GraduationCap,
   Code2, Lightbulb, Target, Heart, Rocket
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import InvestorLayout from "@/components/investor/InvestorLayout";
 
 const FOUNDERS = [
