@@ -1,34 +1,46 @@
 
 
-## Add Foreman Logo to All Emails
+## Switch Email Sending Domain from quotr.work to foreman.ie
 
-### Problem
-Emails currently show "Foreman" as styled text. The user wants the actual `foreman-logo.png` image displayed in email headers. Font stays as Manrope.
+### Current State
+All 13 edge functions use `SENDER_DOMAIN = "notify.quotr.work"` and `FROM_DOMAIN = "quotr.work"`. The `quotr.work` domain is verified and active. The `foreman.ie` domain is NOT yet configured for email sending.
 
-### Approach
+### Step 1: Set up foreman.ie email domain
+Configure `foreman.ie` (subdomain `notify.foreman.ie`) as the email sending domain via the email domain setup flow. This requires you to add NS records at your domain registrar pointing `notify.foreman.ie` to Lovable's nameservers.
 
-**Step 1: Host the logo publicly**
-- Upload `src/assets/foreman-logo.png` to the project's file storage (public bucket) so it has a permanent URL accessible from email clients.
-- Alternatively, copy it to the `public/` folder so it's served from the preview/published URL.
+### Step 2: Update all edge functions
+Once `foreman.ie` is verified, update all 13 edge functions:
 
-**Step 2: Update React Email auth templates (6 files)**
-Replace the `<Text style={logo}>Foreman</Text>` with an `<Img>` component from `@react-email/components`:
-```
-<Img src="PUBLIC_LOGO_URL" alt="Foreman" width="140" height="auto" />
-```
-Files: `signup.tsx`, `recovery.tsx`, `magic-link.tsx`, `invite.tsx`, `email-change.tsx`, `reauthentication.tsx`
+| Constant | Old Value | New Value |
+|----------|-----------|-----------|
+| `SENDER_DOMAIN` | `notify.quotr.work` | `notify.foreman.ie` |
+| `FROM_DOMAIN` | `quotr.work` | `foreman.ie` |
 
-**Step 3: Update inline HTML edge function emails (~10 files)**
-Replace `<div style="font-size: 28px; font-weight: 700; color: #00E6A0;">Foreman</div>` with:
-```html
-<img src="PUBLIC_LOGO_URL" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
-```
-Files: `send-preview-email`, `send-document-email`, `send-payment-reminder`, `send-team-invitation`, `send-quote-notification`, `send-drip-email`, `send-roi-summary`, `check-churn`, `request-early-access`
+Also update all `from:` addresses to use `support@foreman.ie` instead of `noreply@quotr.work`.
 
-**Step 4: Deploy**
-Redeploy all affected edge functions.
+**Files (13):**
+- `send-document-email/index.ts`
+- `send-preview-email/index.ts`
+- `send-email/index.ts`
+- `send-payment-reminder/index.ts`
+- `send-team-invitation/index.ts`
+- `send-quote-notification/index.ts`
+- `send-drip-email/index.ts`
+- `send-roi-summary/index.ts`
+- `send-job-reminders/index.ts`
+- `check-churn/index.ts`
+- `request-early-access/index.ts`
+- `process-expense-email/index.ts`
+- `auth-email-hook/index.ts`
 
-### Technical Detail
-- The logo will be placed at `public/foreman-logo.png` and referenced via the published URL (`https://quotrai.lovable.app/foreman-logo.png`) — this is the most reliable approach for email image hosting since it's a static asset served by the CDN.
-- Email clients that block images will show the "Foreman" alt text as fallback.
+### Step 3: Update the auth email hook
+Change `SITE_NAME`, `ROOT_DOMAIN`, and `FROM_DOMAIN` in `auth-email-hook/index.ts` to use `foreman.ie`.
+
+### Step 4: Deploy all affected edge functions
+
+### Step 5: (Optional) Retire quotr.work email domain
+Once foreman.ie is confirmed working, the old quotr.work NS records can be removed from your registrar.
+
+### Important
+Step 1 requires your action — you'll need to add DNS records at your foreman.ie domain registrar. The setup dialog will show exactly which records to add.
 
