@@ -112,7 +112,6 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   
   // Initialize reliability hook (no health monitoring — ElevenLabs SDK manages connection state)
   const {
-    runPreflightCheck,
     withRetry,
     resetRetryState,
     MAX_RETRIES,
