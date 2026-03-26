@@ -135,7 +135,7 @@ export default function Leads() {
             <p className="text-xs text-muted-foreground">Won</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{formatCurrency(stats.pipeline)}</p>
+            <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.pipeline)}</p>
             <p className="text-xs text-muted-foreground">Pipeline Value</p>
           </CardContent></Card>
         </div>

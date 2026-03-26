@@ -150,7 +150,7 @@ export default function Templates() {
 
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as TradeCategory | "all")}>
-          <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
+          <TabsList className="overflow-x-auto flex-nowrap h-auto gap-1 bg-muted/50 p-1 justify-start w-full">
             <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
             {visibleCategories.map((cat) => (
               <TabsTrigger key={cat} value={cat} className="text-xs">

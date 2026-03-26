@@ -115,8 +115,9 @@ export default function Expenses() {
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button variant="outline" onClick={() => setFuelCardOpen(true)} className="flex-1 sm:flex-none">
-              <Fuel className="mr-2 h-4 w-4" />
-              Import Fuel Card
+              <Fuel className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Import Fuel Card</span>
+              <span className="sm:hidden">Fuel</span>
             </Button>
             <Button onClick={handleNewExpense} className="flex-1 sm:flex-none">
               <Plus className="mr-2 h-4 w-4" />
