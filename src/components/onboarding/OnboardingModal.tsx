@@ -583,8 +583,13 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             </Card>
           )}
 
-          {/* Step 5 — Comms */}
-          {step === 5 && (
+          {/* Step 5 — Prices */}
+          {step === 5 && teamId && (
+            <OnboardingTemplatesStep teamId={teamId} />
+          )}
+
+          {/* Step 6 — Comms */}
+          {step === 6 && (
             <OnboardingCommsStep prefs={commsPrefs} onChange={setCommsPrefs} />
           )}
 
