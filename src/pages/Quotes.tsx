@@ -3,9 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, Briefcase } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays } from "lucide-react";
 import { useQuotes, Quote } from "@/hooks/useQuotes";
 import { QuoteFormDialog } from "@/components/quotes/QuoteFormDialog";
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog";
@@ -14,12 +16,16 @@ import { downloadQuotePdf } from "@/lib/pdf/quotePdf";
 import { SendEmailDialog } from "@/components/email/SendEmailDialog";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 import { useCurrency } from "@/hooks/useCurrency";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { toast } from "sonner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
+import { SortableHeader } from "@/components/shared/table/SortableHeader";
+import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +47,7 @@ export default function Quotes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
-  const { symbol: currencySymbol } = useCurrency();
+  const { symbol: currencySymbol, formatCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get("status") as StatusFilter) || "all");
   const [formOpen, setFormOpen] = useState(false);
@@ -50,7 +56,6 @@ export default function Quotes() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
-  // Auto-open detail sheet from highlight param
   useEffect(() => {
     const highlightId = searchParams.get("highlight");
     if (highlightId && quotes && quotes.length > 0) {
@@ -76,6 +81,9 @@ export default function Quotes() {
     });
   }, [quotes, searchQuery, statusFilter]);
 
+  const { sortedData, handleSort, getSortDirection } = useTableSort(filteredQuotes);
+  const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
+
   const statusCounts = useMemo(() => {
     if (!quotes) return { all: 0, draft: 0, sent: 0, accepted: 0, declined: 0 };
     return {
@@ -85,6 +93,23 @@ export default function Quotes() {
       accepted: quotes.filter((q) => q.status === "accepted").length,
       declined: quotes.filter((q) => q.status === "declined").length,
     };
+  }, [quotes]);
+
+  // Stats
+  const stats = useMemo(() => {
+    if (!quotes || quotes.length === 0) return { pipelineValue: 0, acceptanceRate: 0, avgValue: 0, thisMonth: 0 };
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const nonDeclined = quotes.filter((q) => q.status !== "declined");
+    const pipelineValue = nonDeclined.filter((q) => q.status === "sent" || q.status === "draft").reduce((sum, q) => sum + Number(q.total), 0);
+    const decided = quotes.filter((q) => q.status === "accepted" || q.status === "declined");
+    const acceptanceRate = decided.length > 0 ? Math.round((quotes.filter((q) => q.status === "accepted").length / decided.length) * 100) : 0;
+    const avgValue = quotes.length > 0 ? quotes.reduce((sum, q) => sum + Number(q.total), 0) / quotes.length : 0;
+    const thisMonth = quotes.filter((q) => isWithinInterval(new Date(q.created_at), { start: monthStart, end: monthEnd })).length;
+
+    return { pipelineValue, acceptanceRate, avgValue, thisMonth };
   }, [quotes]);
 
   const handleEdit = (quote: Quote) => { setSelectedQuote(quote); setFormOpen(true); };
@@ -99,12 +124,39 @@ export default function Quotes() {
     toast.success("Portal link copied to clipboard");
   };
 
+  const handleExport = () => {
+    const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+    const data = selected.length > 0 ? selected : sortedData;
+    const csv = [
+      ["Quote #", "Customer", "Status", "Date", "Items", "Total"].join(","),
+      ...data.map((q) => [
+        `"${q.display_number}"`,
+        `"${q.customer?.name || ""}"`,
+        q.status,
+        format(new Date(q.created_at), "yyyy-MM-dd"),
+        q.quote_items.length,
+        q.total,
+      ].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "quotes-export.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const kpiCards = [
+    { label: "Pipeline Value", value: formatCurrency(stats.pipelineValue), icon: BarChart3 },
+    { label: "Acceptance Rate", value: `${stats.acceptanceRate}%`, icon: PieChart },
+    { label: "Avg Quote Value", value: formatCurrency(stats.avgValue), icon: TrendingUp },
+    { label: "Quotes This Month", value: stats.thisMonth, icon: CalendarDays },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         <UpgradePromptBanner />
 
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Quotes</h1>
@@ -116,13 +168,27 @@ export default function Quotes() {
           </Button>
         </div>
 
-        {/* Search */}
+        {/* KPI Strip */}
+        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
+          {kpiCards.map((kpi) => (
+            <Card key={kpi.label} className="min-w-[160px] flex-1 snap-start">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <kpi.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{kpi.label}</span>
+                </div>
+                <span className="text-lg font-bold">{kpi.value}</span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search quotes..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
 
-        {/* Status filter tabs */}
+        {/* Status filter pills */}
         <div className="flex gap-2 flex-wrap">
           {(["all", "draft", "sent", "accepted", "declined"] as StatusFilter[]).map((status) => (
             <button
@@ -141,102 +207,134 @@ export default function Quotes() {
           ))}
         </div>
 
-        {/* Content */}
-        {isLoading ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-40 rounded-xl" />
-            ))}
-          </div>
-        ) : filteredQuotes.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title={searchQuery || statusFilter !== "all" ? "No quotes match your filters" : "Win more work with professional quotes"}
-            description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter to find what you're looking for." : "Create branded quotes in seconds, send them to customers, and track when they're accepted — all from one place."}
-            actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Quote" : undefined}
-            onAction={!searchQuery && statusFilter === "all" ? handleNewQuote : undefined}
+        <Card>
+          <TableSelectionBar
+            selectedCount={selectedRows.size}
+            onClear={clearSelection}
+            onExport={handleExport}
           />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredQuotes.map((quote) => {
-              const currency = (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code);
-              return (
-                <div
-                  key={quote.id}
-                  onClick={() => handleViewQuote(quote)}
-                  className="group relative bg-card rounded-xl border border-border/60 p-4 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
-                >
-                  {/* Top row */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                        <FileText className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{quote.display_number}</p>
-                        <p className="text-xs text-muted-foreground truncate">{quote.customer?.name || "No customer"}</p>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownloadPdf(quote); }}>
-                          <Download className="mr-2 h-4 w-4" /> Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSendEmail(quote); }}>
-                          <Mail className="mr-2 h-4 w-4" /> Send via Email
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleCopyPortalLink(quote); }}>
-                          <Link2 className="mr-2 h-4 w-4" /> Copy Portal Link
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(quote); }}>
-                          <Pencil className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(quote); }} className="text-destructive focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  {/* Total */}
-                  <p className="text-xl font-bold mb-3">
-                    {formatCurrencyValue(Number(quote.total), currency)}
-                  </p>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between">
-                    <Badge className={cn("text-xs", statusConfig[quote.status].className)}>
-                      {statusConfig[quote.status].label}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(quote.created_at), "MMM d, yyyy")}
-                    </span>
-                  </div>
-
-                  {/* Items count & linked job */}
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-xs text-muted-foreground">
-                      {quote.quote_items.length} {quote.quote_items.length === 1 ? "item" : "items"}
-                    </p>
-                    {quote.job && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Briefcase className="h-3 w-3" />
-                        {quote.job.title}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            ) : sortedData.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={FileText}
+                  title={searchQuery || statusFilter !== "all" ? "No quotes match your filters" : "Win more work with professional quotes"}
+                  description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter to find what you're looking for." : "Create branded quotes in seconds, send them to customers, and track when they're accepted — all from one place."}
+                  actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Quote" : undefined}
+                  onAction={!searchQuery && statusFilter === "all" ? handleNewQuote : undefined}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="h-8 w-8 px-2 bg-muted/60">
+                        <Checkbox
+                          checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                          onCheckedChange={handleSelectAll}
+                          className="h-3.5 w-3.5"
+                        />
+                      </th>
+                      <SortableHeader sortDirection={getSortDirection("display_number" as any)} onSort={() => handleSort("display_number" as any)} className="text-[10px] uppercase tracking-wider">
+                        Quote #
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("customer" as any)} onSort={() => handleSort("customer" as any)} className="text-[10px] uppercase tracking-wider hidden md:table-cell">
+                        Customer
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("created_at" as any)} onSort={() => handleSort("created_at" as any)} className="text-[10px] uppercase tracking-wider hidden sm:table-cell">
+                        Date
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="text-[10px] uppercase tracking-wider">
+                        Status
+                      </SortableHeader>
+                      <th className="h-8 px-3 text-[10px] uppercase tracking-wider font-semibold text-foreground/80 bg-muted/60 hidden lg:table-cell">Items</th>
+                      <SortableHeader sortDirection={getSortDirection("total" as any)} onSort={() => handleSort("total" as any)} className="text-[10px] uppercase tracking-wider" align="right">
+                        Total
+                      </SortableHeader>
+                      <th className="h-8 w-10 bg-muted/60" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedData.map((quote, idx) => {
+                      const currency = (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code);
+                      return (
+                        <tr
+                          key={quote.id}
+                          onClick={() => handleViewQuote(quote)}
+                          className={cn(
+                            "border-b border-border/30 cursor-pointer transition-colors hover:bg-muted/30",
+                            selectedRows.has(idx) && "bg-primary/5"
+                          )}
+                        >
+                          <td className="px-2 py-0.5 w-8" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selectedRows.has(idx)}
+                              onCheckedChange={(c) => handleCheckboxChange(idx, c)}
+                              className="h-3.5 w-3.5"
+                            />
+                          </td>
+                          <td className="px-3 py-0.5">
+                            <span className="text-[11px] font-medium">{quote.display_number}</span>
+                          </td>
+                          <td className="px-3 py-0.5 hidden md:table-cell">
+                            <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{quote.customer?.name || "—"}</span>
+                          </td>
+                          <td className="px-3 py-0.5 hidden sm:table-cell">
+                            <span className="text-[11px] text-muted-foreground">{format(new Date(quote.created_at), "MMM d, yyyy")}</span>
+                          </td>
+                          <td className="px-3 py-0.5">
+                            <Badge className={cn(statusConfig[quote.status].className, "text-[10px] px-1.5 py-0")}>
+                              {statusConfig[quote.status].label}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-0.5 hidden lg:table-cell">
+                            <span className="text-[11px] text-muted-foreground">{quote.quote_items.length}</span>
+                          </td>
+                          <td className="px-3 py-0.5 text-right">
+                            <span className="text-[11px] font-semibold">{formatCurrencyValue(Number(quote.total), currency)}</span>
+                          </td>
+                          <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <MoreHorizontal className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(quote)}>
+                                  <Download className="mr-2 h-4 w-4" /> Download PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleSendEmail(quote)}>
+                                  <Mail className="mr-2 h-4 w-4" /> Send via Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleCopyPortalLink(quote)}>
+                                  <Link2 className="mr-2 h-4 w-4" /> Copy Portal Link
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleEdit(quote)}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDelete(quote)} className="text-destructive focus:text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <QuoteFormDialog open={formOpen} onOpenChange={setFormOpen} quote={selectedQuote} />

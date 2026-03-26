@@ -1,13 +1,15 @@
 import { useState, useMemo, useEffect } from "react";
-import { format, isPast, isToday } from "date-fns";
+import { format, isPast, isToday, startOfMonth, endOfMonth, isWithinInterval, differenceInDays } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Search, Receipt, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, DollarSign } from "lucide-react";
+import { Plus, Search, Receipt, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, DollarSign, AlertTriangle, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 import { useInvoices, useUpdateInvoiceStatus, useDeleteInvoice, Invoice } from "@/hooks/useInvoices";
 import { InvoiceFormDialog } from "@/components/invoices/InvoiceFormDialog";
 import { DeleteInvoiceDialog } from "@/components/invoices/DeleteInvoiceDialog";
@@ -24,6 +26,10 @@ import { RecurringInvoicesSection } from "@/components/invoices/RecurringInvoice
 import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
+import { SortableHeader } from "@/components/shared/table/SortableHeader";
+import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +63,7 @@ export default function Invoices() {
   const updateStatus = useUpdateInvoiceStatus();
   const deleteInvoice = useDeleteInvoice();
   const { branding } = useCompanyBranding();
-  const { symbol: currencySymbol } = useCurrency();
+  const { symbol: currencySymbol, formatCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get("status") as StatusFilter) || "all");
   const [formOpen, setFormOpen] = useState(false);
@@ -68,7 +74,6 @@ export default function Invoices() {
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  // Auto-open detail sheet from highlight param
   useEffect(() => {
     const highlightId = searchParams.get("highlight");
     if (highlightId && invoices && invoices.length > 0) {
@@ -95,6 +100,9 @@ export default function Invoices() {
     });
   }, [invoices, searchQuery, statusFilter]);
 
+  const { sortedData, handleSort, getSortDirection } = useTableSort(filteredInvoices);
+  const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
+
   const statusCounts = useMemo(() => {
     if (!invoices) return { all: 0, draft: 0, pending: 0, paid: 0, overdue: 0 };
     return {
@@ -104,6 +112,25 @@ export default function Invoices() {
       paid: invoices.filter((i) => getDisplayStatus(i) === "paid").length,
       overdue: invoices.filter((i) => getDisplayStatus(i) === "overdue").length,
     };
+  }, [invoices]);
+
+  // Stats
+  const stats = useMemo(() => {
+    if (!invoices || invoices.length === 0) return { outstanding: 0, overdue: 0, paidMonth: 0, avgDaysToPay: 0 };
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const outstanding = invoices.filter((i) => i.status !== "paid" && i.status !== "draft").reduce((sum, i) => sum + Number(i.total), 0);
+    const overdue = invoices.filter((i) => getDisplayStatus(i) === "overdue").reduce((sum, i) => sum + Number(i.total), 0);
+    const paidMonth = invoices.filter((i) => i.status === "paid" && (i as any).paid_at && isWithinInterval(new Date((i as any).paid_at), { start: monthStart, end: monthEnd })).reduce((sum, i) => sum + Number(i.total), 0);
+
+    const paidInvoices = invoices.filter((i) => i.status === "paid" && (i as any).paid_at);
+    const avgDaysToPay = paidInvoices.length > 0
+      ? Math.round(paidInvoices.reduce((sum, i) => sum + differenceInDays(new Date((i as any).paid_at), new Date(i.created_at)), 0) / paidInvoices.length)
+      : 0;
+
+    return { outstanding, overdue, paidMonth, avgDaysToPay };
   }, [invoices]);
 
   const handleEdit = (invoice: Invoice) => { setSelectedInvoice(invoice); setFormOpen(true); };
@@ -119,12 +146,39 @@ export default function Invoices() {
   };
   const handlePaymentTracker = (invoice: Invoice) => { setSelectedInvoice(invoice); setPaymentSheetOpen(true); };
 
+  const handleExport = () => {
+    const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+    const data = selected.length > 0 ? selected : sortedData;
+    const csv = [
+      ["Invoice #", "Customer", "Due Date", "Status", "Items", "Total"].join(","),
+      ...data.map((inv) => [
+        `"${inv.display_number}"`,
+        `"${inv.customer?.name || ""}"`,
+        inv.due_date,
+        getDisplayStatus(inv),
+        inv.invoice_items.length,
+        inv.total,
+      ].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "invoices-export.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const kpiCards = [
+    { label: "Outstanding", value: formatCurrency(stats.outstanding), icon: Clock },
+    { label: "Overdue", value: formatCurrency(stats.overdue), icon: AlertTriangle, alert: stats.overdue > 0 },
+    { label: "Paid This Month", value: formatCurrency(stats.paidMonth), icon: CheckCircle2 },
+    { label: "Avg Days to Pay", value: stats.avgDaysToPay, icon: TrendingUp },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         <UpgradePromptBanner />
 
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Invoices</h1>
@@ -144,13 +198,27 @@ export default function Invoices() {
           </div>
         </div>
 
-        {/* Search */}
+        {/* KPI Strip */}
+        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
+          {kpiCards.map((kpi) => (
+            <Card key={kpi.label} className={cn("min-w-[160px] flex-1 snap-start", kpi.alert && "border-destructive/30")}>
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <kpi.icon className={cn("h-3.5 w-3.5", kpi.alert ? "text-destructive" : "text-muted-foreground")} />
+                  <span className={cn("text-[10px] uppercase tracking-wider font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
+                </div>
+                <span className={cn("text-lg font-bold", kpi.alert && "text-destructive")}>{kpi.value}</span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search invoices..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
 
-        {/* Status filter tabs */}
+        {/* Status filter pills */}
         <div className="flex gap-2 flex-wrap">
           {(["all", "draft", "pending", "paid", "overdue"] as StatusFilter[]).map((status) => (
             <button
@@ -163,109 +231,150 @@ export default function Invoices() {
                   : "bg-card text-muted-foreground border-border hover:bg-muted"
               )}
             >
-              {status === "all" ? "All" : statusConfig[status].label}
-              <span className="ml-1.5 opacity-70">{statusCounts[status]}</span>
+              {status === "all" ? "All" : (statusConfig[status]?.label || status)}
+              <span className="ml-1.5 opacity-70">{statusCounts[status as keyof typeof statusCounts]}</span>
             </button>
           ))}
         </div>
 
-        {/* Content */}
-        {isLoading ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-40 rounded-xl" />
-            ))}
-          </div>
-        ) : filteredInvoices.length === 0 ? (
-          <EmptyState
-            icon={Receipt}
-            title={searchQuery || statusFilter !== "all" ? "No invoices match your filters" : "Get paid faster with professional invoices"}
-            description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter." : "Create invoices, send them via email or portal link, and track payments — so nothing slips through the cracks."}
-            actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Invoice" : undefined}
-            onAction={!searchQuery && statusFilter === "all" ? handleNewInvoice : undefined}
-            secondaryActionLabel={!searchQuery && statusFilter === "all" ? "From a Quote" : undefined}
-            onSecondaryAction={!searchQuery && statusFilter === "all" ? () => setFromQuoteOpen(true) : undefined}
+        <Card>
+          <TableSelectionBar
+            selectedCount={selectedRows.size}
+            onClear={clearSelection}
+            onExport={handleExport}
           />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredInvoices.map((invoice) => {
-              const displayStatus = getDisplayStatus(invoice);
-              const currency = invoice.currency || getCurrencyFromCountry(invoice.customer?.country_code);
-              return (
-                <div
-                  key={invoice.id}
-                  onClick={() => handleViewInvoice(invoice)}
-                  className="group relative bg-card rounded-xl border border-border/60 p-4 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
-                >
-                  {/* Top row */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                        <Receipt className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{invoice.display_number}</p>
-                        <p className="text-xs text-muted-foreground truncate">{invoice.customer?.name || "No customer"}</p>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownloadPdf(invoice); }}>
-                          <Download className="mr-2 h-4 w-4" /> Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSendEmail(invoice); }}>
-                          <Mail className="mr-2 h-4 w-4" /> Send via Email
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleCopyPortalLink(invoice); }}>
-                          <Link2 className="mr-2 h-4 w-4" /> Copy Portal Link
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePaymentTracker(invoice); }}>
-                          <DollarSign className="mr-2 h-4 w-4" /> Payment Tracker
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(invoice); }}>
-                          <Pencil className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(invoice); }} className="text-destructive focus:text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  {/* Total */}
-                  <p className="text-xl font-bold mb-3">
-                    {formatCurrencyValue(Number(invoice.total), currency)}
-                  </p>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between">
-                    <Badge className={cn("text-xs", (statusConfig[displayStatus] || fallbackStatus).className)}>
-                      {(statusConfig[displayStatus] || fallbackStatus).label}
-                    </Badge>
-                    <span className={cn(
-                      "text-xs",
-                      displayStatus === "overdue" ? "text-destructive font-medium" : "text-muted-foreground"
-                    )}>
-                      Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
-                    </span>
-                  </div>
-
-                  {/* Items count */}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {invoice.invoice_items.length} {invoice.invoice_items.length === 1 ? "item" : "items"}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            ) : sortedData.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={Receipt}
+                  title={searchQuery || statusFilter !== "all" ? "No invoices match your filters" : "Get paid faster with professional invoices"}
+                  description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter." : "Create invoices, send them via email or portal link, and track payments — so nothing slips through the cracks."}
+                  actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Invoice" : undefined}
+                  onAction={!searchQuery && statusFilter === "all" ? handleNewInvoice : undefined}
+                  secondaryActionLabel={!searchQuery && statusFilter === "all" ? "From a Quote" : undefined}
+                  onSecondaryAction={!searchQuery && statusFilter === "all" ? () => setFromQuoteOpen(true) : undefined}
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="h-8 w-8 px-2 bg-muted/60">
+                        <Checkbox
+                          checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                          onCheckedChange={handleSelectAll}
+                          className="h-3.5 w-3.5"
+                        />
+                      </th>
+                      <SortableHeader sortDirection={getSortDirection("display_number" as any)} onSort={() => handleSort("display_number" as any)} className="text-[10px] uppercase tracking-wider">
+                        Invoice #
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("customer" as any)} onSort={() => handleSort("customer" as any)} className="text-[10px] uppercase tracking-wider hidden md:table-cell">
+                        Customer
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("due_date" as any)} onSort={() => handleSort("due_date" as any)} className="text-[10px] uppercase tracking-wider hidden sm:table-cell">
+                        Due Date
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="text-[10px] uppercase tracking-wider">
+                        Status
+                      </SortableHeader>
+                      <th className="h-8 px-3 text-[10px] uppercase tracking-wider font-semibold text-foreground/80 bg-muted/60 hidden lg:table-cell">Items</th>
+                      <SortableHeader sortDirection={getSortDirection("total" as any)} onSort={() => handleSort("total" as any)} className="text-[10px] uppercase tracking-wider" align="right">
+                        Total
+                      </SortableHeader>
+                      <th className="h-8 w-10 bg-muted/60" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedData.map((invoice, idx) => {
+                      const displayStatus = getDisplayStatus(invoice);
+                      const currency = invoice.currency || getCurrencyFromCountry(invoice.customer?.country_code);
+                      const isOverdue = displayStatus === "overdue";
+                      return (
+                        <tr
+                          key={invoice.id}
+                          onClick={() => handleViewInvoice(invoice)}
+                          className={cn(
+                            "border-b border-border/30 cursor-pointer transition-colors hover:bg-muted/30",
+                            selectedRows.has(idx) && "bg-primary/5",
+                            isOverdue && "bg-red-50/50 dark:bg-red-950/10"
+                          )}
+                        >
+                          <td className="px-2 py-0.5 w-8" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selectedRows.has(idx)}
+                              onCheckedChange={(c) => handleCheckboxChange(idx, c)}
+                              className="h-3.5 w-3.5"
+                            />
+                          </td>
+                          <td className="px-3 py-0.5">
+                            <span className="text-[11px] font-medium">{invoice.display_number}</span>
+                          </td>
+                          <td className="px-3 py-0.5 hidden md:table-cell">
+                            <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{invoice.customer?.name || "—"}</span>
+                          </td>
+                          <td className="px-3 py-0.5 hidden sm:table-cell">
+                            <span className={cn("text-[11px]", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
+                              {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                            </span>
+                          </td>
+                          <td className="px-3 py-0.5">
+                            <Badge className={cn((statusConfig[displayStatus] || fallbackStatus).className, "text-[10px] px-1.5 py-0")}>
+                              {(statusConfig[displayStatus] || fallbackStatus).label}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-0.5 hidden lg:table-cell">
+                            <span className="text-[11px] text-muted-foreground">{invoice.invoice_items.length}</span>
+                          </td>
+                          <td className="px-3 py-0.5 text-right">
+                            <span className="text-[11px] font-semibold">{formatCurrencyValue(Number(invoice.total), currency)}</span>
+                          </td>
+                          <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <MoreHorizontal className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>
+                                  <Download className="mr-2 h-4 w-4" /> Download PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleSendEmail(invoice)}>
+                                  <Mail className="mr-2 h-4 w-4" /> Send via Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleCopyPortalLink(invoice)}>
+                                  <Link2 className="mr-2 h-4 w-4" /> Copy Portal Link
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handlePaymentTracker(invoice)}>
+                                  <DollarSign className="mr-2 h-4 w-4" /> Payment Tracker
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleEdit(invoice)}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDelete(invoice)} className="text-destructive focus:text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Separator className="my-6" />

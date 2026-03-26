@@ -1,12 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCurrency } from "@/hooks/useCurrency";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, MoreVertical, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, Loader2, Briefcase, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { DeleteJobDialog } from "@/components/jobs/DeleteJobDialog";
@@ -34,8 +35,11 @@ import {
 } from "@/hooks/useJobs";
 import { useCreateJobWithSite } from "@/hooks/useCreateJobWithSite";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Briefcase as BriefcaseIcon } from "lucide-react";
 import { JobDetailSheet } from "@/components/jobs/JobDetailSheet";
+import { SortableHeader } from "@/components/shared/table/SortableHeader";
+import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
+import { useTableSort } from "@/hooks/useTableSort";
+import { useTableSelection } from "@/hooks/useTableSelection";
 
 const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
@@ -58,8 +62,8 @@ export default function Jobs() {
   const createJobWithSite = useCreateJobWithSite();
   const updateJob = useUpdateJob();
   const deleteJob = useDeleteJob();
+  const { formatCurrency } = useCurrency();
 
-  // Auto-open detail sheet from highlight param
   useEffect(() => {
     const highlightId = searchParams.get("highlight");
     if (highlightId && jobs && jobs.length > 0) {
@@ -71,13 +75,42 @@ export default function Jobs() {
     }
   }, [searchParams, jobs, setSearchParams]);
 
-  const filteredJobs = jobs?.filter((job) => {
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredJobs = useMemo(() => {
+    return (jobs || []).filter((job) => {
+      const matchesSearch =
+        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.customers?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || job.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [jobs, searchQuery, statusFilter]);
+
+  const { sortedData, handleSort, getSortDirection } = useTableSort(filteredJobs);
+  const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
+
+  // Stats
+  const stats = useMemo(() => {
+    if (!jobs || jobs.length === 0) return { active: 0, scheduledWeek: 0, pipelineValue: 0, completedMonth: 0, prevMonthCompleted: 0 };
+    const now = new Date();
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    const prevMonthStart = startOfMonth(subMonths(now, 1));
+    const prevMonthEnd = endOfMonth(subMonths(now, 1));
+
+    const active = jobs.filter((j) => j.status === "in_progress" || j.status === "scheduled").length;
+    const scheduledWeek = jobs.filter((j) => j.scheduled_date && isWithinInterval(new Date(j.scheduled_date), { start: weekStart, end: weekEnd })).length;
+    const pipelineValue = jobs.filter((j) => j.status !== "completed" && j.status !== "cancelled").reduce((sum, j) => sum + (j.estimated_value || 0), 0);
+    const completedMonth = jobs.filter((j) => j.status === "completed" && j.updated_at && isWithinInterval(new Date(j.updated_at), { start: monthStart, end: monthEnd })).length;
+    const prevMonthCompleted = jobs.filter((j) => j.status === "completed" && j.updated_at && isWithinInterval(new Date(j.updated_at), { start: prevMonthStart, end: prevMonthEnd })).length;
+
+    return { active, scheduledWeek, pipelineValue, completedMonth, prevMonthCompleted };
+  }, [jobs]);
+
+  const completedChange = stats.prevMonthCompleted > 0
+    ? Math.round(((stats.completedMonth - stats.prevMonthCompleted) / stats.prevMonthCompleted) * 100)
+    : stats.completedMonth > 0 ? 100 : 0;
 
   const handleCreateOrUpdate = (values: {
     title: string;
@@ -91,53 +124,50 @@ export default function Jobs() {
   }) => {
     const { location, ...jobValues } = values;
     if (selectedJob) {
-      updateJob.mutate(
-        { id: selectedJob.id, ...jobValues },
-        {
-          onSuccess: () => {
-            setFormDialogOpen(false);
-            setSelectedJob(null);
-          },
-        }
-      );
+      updateJob.mutate({ id: selectedJob.id, ...jobValues }, { onSuccess: () => { setFormDialogOpen(false); setSelectedJob(null); } });
     } else {
-      createJobWithSite.mutate(
-        {
-          job: jobValues,
-          autoCreateSite: !!location,
-          siteLocation: location,
-        },
-        {
-          onSuccess: () => {
-            setFormDialogOpen(false);
-          },
-        }
-      );
+      createJobWithSite.mutate({ job: jobValues, autoCreateSite: !!location, siteLocation: location }, { onSuccess: () => { setFormDialogOpen(false); } });
     }
   };
 
   const handleDelete = () => {
     if (selectedJob) {
-      deleteJob.mutate(selectedJob.id, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setSelectedJob(null);
-        },
-      });
+      deleteJob.mutate(selectedJob.id, { onSuccess: () => { setDeleteDialogOpen(false); setSelectedJob(null); } });
     }
   };
 
-  const openEditDialog = (job: Job) => {
-    setSelectedJob(job);
-    setFormDialogOpen(true);
+  const handleBulkDelete = () => {
+    const selectedJobs = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+    selectedJobs.forEach((job) => deleteJob.mutate(job.id));
+    clearSelection();
   };
 
-  const openDeleteDialog = (job: Job) => {
-    setSelectedJob(job);
-    setDeleteDialogOpen(true);
+  const handleExport = () => {
+    const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+    const data = selected.length > 0 ? selected : sortedData;
+    const csv = [
+      ["Title", "Customer", "Status", "Scheduled Date", "Value"].join(","),
+      ...data.map((j) => [
+        `"${j.title}"`,
+        `"${j.customers?.name || ""}"`,
+        j.status,
+        j.scheduled_date || "",
+        j.estimated_value || 0,
+      ].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "jobs-export.csv"; a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const { formatCurrency } = useCurrency();
+  const kpiCards = [
+    { label: "Active Jobs", value: stats.active, icon: Activity },
+    { label: "Scheduled This Week", value: stats.scheduledWeek, icon: CalendarDays },
+    { label: "Pipeline Value", value: formatCurrency(stats.pipelineValue), icon: Briefcase },
+    { label: "Completed This Month", value: stats.completedMonth, icon: CheckCircle2, change: completedChange },
+  ];
 
   return (
     <DashboardLayout>
@@ -147,27 +177,39 @@ export default function Jobs() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Jobs</h1>
             <p className="text-sm md:text-base text-muted-foreground">Manage and track all your jobs</p>
           </div>
-          <Button
-            onClick={() => {
-              setSelectedJob(null);
-              setFormDialogOpen(true);
-            }}
-            className="w-full sm:w-auto"
-          >
+          <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             New Job
           </Button>
         </div>
 
+        {/* KPI Strip */}
+        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
+          {kpiCards.map((kpi) => (
+            <Card key={kpi.label} className="min-w-[160px] flex-1 snap-start">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <kpi.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{kpi.label}</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold">{kpi.value}</span>
+                  {kpi.change !== undefined && kpi.change !== 0 && (
+                    <span className={cn("text-[10px] font-medium flex items-center gap-0.5", kpi.change > 0 ? "text-green-600" : "text-red-500")}>
+                      {kpi.change > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                      {Math.abs(kpi.change)}%
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search jobs..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <Input placeholder="Search jobs..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -176,118 +218,132 @@ export default function Jobs() {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {JOB_STATUSES.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
+                <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>All Jobs</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <TableSelectionBar
+            selectedCount={selectedRows.size}
+            onClear={clearSelection}
+            onExport={handleExport}
+            onBulkDelete={handleBulkDelete}
+          />
+          <CardContent className="p-0">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
-              <div className="text-center py-12 text-destructive">
-                Failed to load jobs. Please try again.
+              <div className="text-center py-12 text-destructive">Failed to load jobs. Please try again.</div>
+            ) : sortedData.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={Briefcase}
+                  title={searchQuery || statusFilter !== "all" ? "No jobs match your filters" : "Schedule and track every job"}
+                  description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter." : "Create jobs, assign them to customers, schedule dates, and track progress from start to finish."}
+                  actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Job" : undefined}
+                  onAction={!searchQuery && statusFilter === "all" ? () => { setSelectedJob(null); setFormDialogOpen(true); } : undefined}
+                />
               </div>
-            ) : filteredJobs?.length === 0 ? (
-              <EmptyState
-                icon={BriefcaseIcon}
-                title={searchQuery || statusFilter !== "all" ? "No jobs match your filters" : "Schedule and track every job"}
-                description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter." : "Create jobs, assign them to customers, schedule dates, and track progress from start to finish."}
-                actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Job" : undefined}
-                onAction={!searchQuery && statusFilter === "all" ? () => { setSelectedJob(null); setFormDialogOpen(true); } : undefined}
-              />
             ) : (
-              <div className="space-y-1">
-                {filteredJobs?.map((job) => (
-                    <div
-                      key={job.id}
-                      onClick={() => setDetailJob(job)}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between py-3 md:py-4 border-b border-border last:border-0 hover:bg-muted/50 -mx-4 px-4 cursor-pointer transition-colors gap-2 sm:gap-4"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-sm md:text-base">{job.title}</p>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                        <span className="text-xs md:text-sm text-muted-foreground truncate">
-                          {job.customers?.name || "No customer"}
-                        </span>
-                        <span className="text-xs text-muted-foreground sm:hidden">
-                          {job.scheduled_date
-                            ? format(new Date(job.scheduled_date), "MMM d")
-                            : "Not scheduled"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
-                      <span className="text-sm text-muted-foreground hidden sm:block">
-                        {job.scheduled_date
-                          ? format(new Date(job.scheduled_date), "MMM d, yyyy")
-                          : "Not scheduled"}
-                      </span>
-                      <Badge className={cn(statusColors[job.status], "text-xs")}>
-                        {JOB_STATUSES.find((s) => s.value === job.status)?.label}
-                      </Badge>
-                      <span className="font-semibold text-sm md:text-base hidden md:block w-24 text-right">
-                        {formatCurrency(job.estimated_value)}
-                      </span>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(job)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openDeleteDialog(job)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="h-8 w-8 px-2 bg-muted/60">
+                        <Checkbox
+                          checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                          onCheckedChange={handleSelectAll}
+                          className="h-3.5 w-3.5"
+                        />
+                      </th>
+                      <SortableHeader sortDirection={getSortDirection("title" as any)} onSort={() => handleSort("title" as any)} className="text-[10px] uppercase tracking-wider">
+                        Title
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("customers" as any)} onSort={() => handleSort("customers" as any)} className="text-[10px] uppercase tracking-wider hidden md:table-cell">
+                        Customer
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="text-[10px] uppercase tracking-wider">
+                        Status
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("scheduled_date" as any)} onSort={() => handleSort("scheduled_date" as any)} className="text-[10px] uppercase tracking-wider hidden sm:table-cell">
+                        Scheduled
+                      </SortableHeader>
+                      <SortableHeader sortDirection={getSortDirection("estimated_value" as any)} onSort={() => handleSort("estimated_value" as any)} className="text-[10px] uppercase tracking-wider" align="right">
+                        Value
+                      </SortableHeader>
+                      <th className="h-8 w-10 bg-muted/60" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedData.map((job, idx) => (
+                      <tr
+                        key={job.id}
+                        onClick={() => setDetailJob(job)}
+                        className={cn(
+                          "border-b border-border/30 cursor-pointer transition-colors hover:bg-muted/30",
+                          selectedRows.has(idx) && "bg-primary/5"
+                        )}
+                      >
+                        <td className="px-2 py-0.5 w-8" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedRows.has(idx)}
+                            onCheckedChange={(c) => handleCheckboxChange(idx, c)}
+                            className="h-3.5 w-3.5"
+                          />
+                        </td>
+                        <td className="px-3 py-0.5">
+                          <span className="text-[11px] font-medium truncate block max-w-[200px]">{job.title}</span>
+                        </td>
+                        <td className="px-3 py-0.5 hidden md:table-cell">
+                          <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{job.customers?.name || "—"}</span>
+                        </td>
+                        <td className="px-3 py-0.5">
+                          <Badge className={cn(statusColors[job.status], "text-[10px] px-1.5 py-0")}>
+                            {JOB_STATUSES.find((s) => s.value === job.status)?.label}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-0.5 hidden sm:table-cell">
+                          <span className="text-[11px] text-muted-foreground">
+                            {job.scheduled_date ? format(new Date(job.scheduled_date), "MMM d, yyyy") : "—"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-0.5 text-right">
+                          <span className="text-[11px] font-semibold">{formatCurrency(job.estimated_value)}</span>
+                        </td>
+                        <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <MoreVertical className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => { setSelectedJob(job); setFormDialogOpen(true); }}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSelectedJob(job); setDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      <JobFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        job={selectedJob}
-        onSubmit={handleCreateOrUpdate}
-        isLoading={createJobWithSite.isPending || updateJob.isPending}
-      />
-
-      <DeleteJobDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        job={selectedJob}
-        onConfirm={handleDelete}
-        isLoading={deleteJob.isPending}
-      />
-
-      <JobDetailSheet
-        open={!!detailJob}
-        onOpenChange={(open) => !open && setDetailJob(null)}
-        job={detailJob}
-      />
+      <JobFormDialog open={formDialogOpen} onOpenChange={setFormDialogOpen} job={selectedJob} onSubmit={handleCreateOrUpdate} isLoading={createJobWithSite.isPending || updateJob.isPending} />
+      <DeleteJobDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} job={selectedJob} onConfirm={handleDelete} isLoading={deleteJob.isPending} />
+      <JobDetailSheet open={!!detailJob} onOpenChange={(open) => !open && setDetailJob(null)} job={detailJob} />
     </DashboardLayout>
   );
 }
