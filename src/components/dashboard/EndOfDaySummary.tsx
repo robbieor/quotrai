@@ -17,8 +17,7 @@ export function EndOfDaySummary() {
 
   const now = new Date();
   const hour = now.getHours();
-  // Show after 5pm
-  if (hour < 17) return null;
+  const isAfter5pm = hour >= 17;
 
   const { data: summary, isLoading } = useQuery({
     queryKey: ["end-of-day-summary", profile?.team_id, format(now, "yyyy-MM-dd")],
