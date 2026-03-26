@@ -215,7 +215,8 @@ export default function PriceBook() {
             icon={Package}
             title="No price book items"
             description="Add materials and labour rates to auto-fill quote line items with accurate pricing."
-            action={{ label: "Add First Item", onClick: () => { setEditItem(null); setShowForm(true); } }}
+            actionLabel="Add First Item"
+            onAction={() => { setEditItem(null); setShowForm(true); }}
           />
         ) : (
           <Card>

@@ -111,8 +111,8 @@ export function EndOfDaySummary() {
               <p className="text-[10px] text-muted-foreground">Invoiced</p>
             </div>
             <div className="text-center p-2 rounded-lg bg-background/80">
-              <Receipt className="h-4 w-4 mx-auto text-green-600 mb-1" />
-              <p className="text-lg font-bold text-green-600">{formatCurrency(summary.totalPayments)}</p>
+              <Receipt className="h-4 w-4 mx-auto text-primary mb-1" />
+              <p className="text-lg font-bold text-primary">{formatCurrency(summary.totalPayments)}</p>
               <p className="text-[10px] text-muted-foreground">Received</p>
             </div>
           </div>
