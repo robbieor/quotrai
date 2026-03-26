@@ -153,8 +153,57 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     }
   };
 
-  const handleNext = () => {
+  const saveProfileIfNeeded = async () => {
+    if (profileSaved || !user) return;
+    const workflowMode = computeWorkflowMode({
+      sendsQuotes: data.sendsQuotes ?? false,
+      tracksJobs: data.tracksJobs ?? false,
+      teamSize: data.businessSize,
+      priority: data.priority,
+    });
+
+    await supabase
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        company_name: data.companyName,
+        phone: data.phone || null,
+        trade_type: data.tradeType,
+        business_size: data.businessSize,
+        currency: data.currency,
+        country: data.country,
+        workflow_mode: workflowMode,
+      })
+      .eq("id", user.id);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("team_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.team_id) {
+      await supabase
+        .from("teams")
+        .update({ name: data.companyName })
+        .eq("id", profile.team_id);
+      setTeamId(profile.team_id);
+    }
+    setProfileSaved(true);
+  };
+
+  const handleNext = async () => {
     if (step < totalSteps) {
+      // Save profile before entering the templates step (step 5)
+      if (step === 4 && !profileSaved) {
+        try {
+          await saveProfileIfNeeded();
+        } catch (err) {
+          console.error("Profile save error:", err);
+          toast.error("Failed to save profile. Please try again.");
+          return;
+        }
+      }
       track("onboarding_step", { step: step + 1 });
       setStep(step + 1);
     }
