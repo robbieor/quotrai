@@ -1,25 +1,36 @@
 
 
-## Fix Trial Duration: 14 days → 30 days
+## Create ElevenLabs Agent Tool Sync Script
 
 ### Problem
-Multiple files incorrectly state "14-day" trial when the actual trial period is 30 days. This was introduced during the Quotr→Foreman rebrand.
+Tool definitions for the Foreman voice agent (agent_2701kffwpjhvf4gvt2cxpsx6j3rb) must currently be updated manually via the ElevenLabs dashboard. There's no sync script in the codebase despite one being referenced in memory.
 
-### Files to Fix
+### Solution
+Create a sync edge function that pushes all client tool definitions to the ElevenLabs agent via `PATCH /v1/convai/agents/{agent_id}`. Can be triggered on-demand.
 
-| File | Current | Fix |
-|------|---------|-----|
-| `remotion/src/scenes/Scene7Closing.tsx` | "Try Foreman free for 14 days" | → "Try Foreman free for 30 days" |
-| `src/components/billing/SubscriptionOverview.tsx` | "Start your 14-day free trial" | → "Start your 30-day free trial" |
-| `src/pages/Terms.tsx` | "14-day free trial" | → "30-day free trial" |
-| `supabase/functions/send-drip-email/index.ts` | "your 14-day Foreman trial ends soon" | → "your 30-day Foreman trial ends soon" |
+### Steps
 
-### Not Changed (correct usage of "14 days")
-- **Payment terms placeholder** in BrandingSettings — "Payment due within 14 days" refers to invoice payment terms, not trial
-- **Scene5ConvertJob** — "Due in 14 days" refers to invoice due date, not trial
-- **FounderProjections** — "Get paid 14 days faster" is a marketing claim, not trial
-- **george-webhook** invoice due date default — business logic, not trial
+**Step 1: Create tool definitions file**
+- `supabase/functions/_shared/foreman-tool-definitions.ts` — single source of truth for all 59 tool schemas (name, description, parameters, type: "client")
+- Extract from current `george-webhook/index.ts` handler logic to ensure parity
 
-### Note
-The Remotion scene change means the video should be re-rendered to reflect the updated text. However, since re-rendering requires the full Remotion build pipeline, this will be done as a follow-up after the code changes.
+**Step 2: Create sync edge function**
+- `supabase/functions/sync-agent-tools/index.ts`
+- Reads tool definitions, calls `PATCH https://api.elevenlabs.io/v1/convai/agents/{agent_id}` with `conversation_config.tools` payload
+- Uses existing `ELEVENLABS_API_KEY` secret (needs Write scope)
+- Returns success/diff summary
+
+**Step 3: Add convenience script**
+- A simple curl command or frontend button in Settings → Foreman AI to trigger the sync
+
+### Files
+
+| File | Action |
+|------|--------|
+| `supabase/functions/_shared/foreman-tool-definitions.ts` | New — all tool schemas |
+| `supabase/functions/sync-agent-tools/index.ts` | New — PATCH endpoint |
+| `src/components/settings/ForemanAISettings.tsx` | Add "Sync Tools" button for admin use |
+
+### Prerequisites
+- `ELEVENLABS_API_KEY` must have `ElevenAgents: Write` scope (per memory note, this is already configured)
 
