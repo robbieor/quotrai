@@ -9,11 +9,14 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const LOGO_URL = 'https://quotrai.lovable.app/foreman-logo.png'
 
 interface InviteEmailProps {
   siteName: string
@@ -28,7 +31,7 @@ export const InviteEmail = ({ siteName, siteUrl, confirmationUrl }: InviteEmailP
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Text style={logo}>Foreman</Text>
+          <Img src={LOGO_URL} alt="Foreman" width="140" style={logoImg} />
         </Section>
         <Section style={content}>
           <Heading style={h1}>You've been invited</Heading>
@@ -50,7 +53,7 @@ export default InviteEmail
 const main = { backgroundColor: '#ffffff', fontFamily: "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }
 const container = { margin: '0 auto', maxWidth: '600px' }
 const header = { backgroundColor: '#0f172a', padding: '30px 25px', borderRadius: '12px 12px 0 0', textAlign: 'center' as const }
-const logo = { fontSize: '28px', fontWeight: 'bold' as const, color: '#00E6A0', margin: '0' }
+const logoImg = { display: 'block' as const, margin: '0 auto' }
 const content = { padding: '30px 25px' }
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 20px' }
 const text = { fontSize: '14px', color: '#64748b', lineHeight: '1.5', margin: '0 0 25px' }
