@@ -301,11 +301,11 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-muted-foreground">Foreman Subscription</p>
               <p className="font-semibold">
-                €{quotrMonthlyCost}/month
+                €{foremanMonthlyCost}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamSize} seats × €{QUOTR_SEAT_PRICE}
-                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${QUOTR_VOICE_PRICE}`}
+                {teamSize} seats × €{FOREMAN_SEAT_PRICE}
+                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${FOREMAN_VOICE_PRICE}`}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50">
