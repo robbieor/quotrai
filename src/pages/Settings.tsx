@@ -46,6 +46,7 @@ export default function Settings() {
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("EUR");
+  const [selectedTradeType, setSelectedTradeType] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
@@ -53,6 +54,15 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync state with profile when it loads
+  const TRADE_TYPES = [
+    "Electrician", "Plumber", "HVAC Technician", "Carpenter", "Painter & Decorator",
+    "Roofer", "Landscaper", "Builder / General Contractor", "Locksmith", "Handyman",
+    "Cleaning Services", "Pest Control", "Pool & Spa", "Pressure Washing", "Fencing",
+    "Appliance Repair", "Auto Detailing", "Garage Door Services", "Tree Services",
+    "Restoration", "Solar", "Flooring", "Tiler", "Property Maintenance",
+    "Concrete & Masonry", "Window & Door Installation", "Other",
+  ];
+
   useEffect(() => {
     if (profile) {
       if (profile.full_name && !fullName) {
@@ -63,6 +73,9 @@ export default function Settings() {
       }
       if (profile.currency) {
         setSelectedCurrency(profile.currency as CurrencyCode);
+      }
+      if (profile.trade_type && !selectedTradeType) {
+        setSelectedTradeType(profile.trade_type);
       }
     }
   }, [profile]);
@@ -143,6 +156,7 @@ export default function Settings() {
         full_name: fullName,
         avatar_url: cleanAvatarUrl || undefined,
         currency: selectedCurrency,
+        trade_type: selectedTradeType || undefined,
       });
       toast.success("Profile updated successfully");
     } catch (error) {
@@ -283,6 +297,24 @@ export default function Settings() {
                     />
                     <p className="text-xs text-muted-foreground">
                       Email cannot be changed
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tradeType">Trade Type</Label>
+                    <Select value={selectedTradeType} onValueChange={setSelectedTradeType}>
+                      <SelectTrigger id="tradeType">
+                        <SelectValue placeholder="Select your trade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TRADE_TYPES.map((trade) => (
+                          <SelectItem key={trade} value={trade}>
+                            {trade}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Controls which templates are shown throughout the app
                     </p>
                   </div>
                   <div className="space-y-2">
