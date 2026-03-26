@@ -1,23 +1,44 @@
 
 
-## Fix Calendar Header Mobile Layout
+## Fix Landing Page Demo Video — Replace Quotr with Foreman
 
 ### Problem
-At 402px, the header tries to fit "Today" button + nav arrows + "March 2026" title + Day/Week/Month toggle all in one row. The view toggle pills are oversized and "Month" gets clipped off-screen.
+The pre-rendered MP4 (`/quotr-demo.mp4`) on the landing page still shows "Quotr" branding throughout all 7 scenes. The Remotion source files also reference `quotr-logo.png` and display "Quotr" text.
 
-### Changes
+### Steps
 
-**File: `src/components/calendar/CalendarHeader.tsx`**
+**Step 1: Copy Foreman logo into Remotion assets**
+- Copy `src/assets/foreman-logo.png` → `remotion/public/images/foreman-logo.png`
 
-1. **Stack header into two rows on mobile** — wrap the container with `flex-wrap` so the title + nav sit on row 1 and the view toggle sits on row 2
-2. **Shrink view toggle pills on mobile** — use `text-xs px-2 py-1 h-7 md:text-sm md:px-3 md:h-9` instead of the default `size="sm"` button sizing
-3. **Reduce title font on mobile** — `text-sm md:text-lg` for the month/year heading
-4. **Shrink Today button on mobile** — smaller padding with `text-xs md:text-sm`
+**Step 2: Update all Remotion scene files**
 
-| Element | Before | After (mobile) |
-|---------|--------|----------------|
-| View toggle buttons | `size="sm"` (default padding) | `h-7 px-2 text-xs` |
-| Month title | `text-lg` | `text-sm md:text-lg` |
-| Today button | `size="sm"` | `text-xs h-7 md:h-9 md:text-sm` |
-| Container | single row | `flex-wrap gap-2` to allow wrapping |
+| File | Changes |
+|------|---------|
+| `remotion/src/scenes/Scene2MeetQuotr.tsx` | Rename to `Scene2MeetForeman.tsx`. Change "Meet **Quotr**" → "Meet **Foreman**". Change `quotr-logo.png` → `foreman-logo.png`. Update tagline to "Your AI office manager." |
+| `remotion/src/scenes/Scene3CreateQuote.tsx` | Replace all `quotr-logo.png` → `foreman-logo.png` |
+| `remotion/src/scenes/Scene4SendQuote.tsx` | Replace all `quotr-logo.png` → `foreman-logo.png` |
+| `remotion/src/scenes/Scene5ConvertJob.tsx` | Replace `quotr-logo.png` → `foreman-logo.png` |
+| `remotion/src/scenes/Scene7Closing.tsx` | Replace `quotr-logo.png` → `foreman-logo.png`. Change "Quotr" text → "Foreman". Change "Try Quotr free for 30 days" → "Try Foreman free for 14 days" |
+| `remotion/src/MainVideo.tsx` | Update import from `Scene2MeetQuotr` → `Scene2MeetForeman` |
+
+**Step 3: Re-render the MP4**
+- Run the Remotion render script to produce `foreman-demo.mp4`
+- Copy output to `public/foreman-demo.mp4`
+
+**Step 4: Update landing page video reference**
+- `src/components/landing/DemoVideoSection.tsx`: Change `src="/quotr-demo.mp4"` → `src="/foreman-demo.mp4"`
+
+### Files Changed
+
+| File | Summary |
+|------|---------|
+| `remotion/src/scenes/Scene2MeetQuotr.tsx` → `Scene2MeetForeman.tsx` | Rebrand scene |
+| `remotion/src/scenes/Scene3CreateQuote.tsx` | Logo swap |
+| `remotion/src/scenes/Scene4SendQuote.tsx` | Logo swap |
+| `remotion/src/scenes/Scene5ConvertJob.tsx` | Logo swap |
+| `remotion/src/scenes/Scene7Closing.tsx` | Logo + text swap |
+| `remotion/src/MainVideo.tsx` | Update import |
+| `remotion/public/images/foreman-logo.png` | New asset |
+| `src/components/landing/DemoVideoSection.tsx` | Update video src |
+| `public/foreman-demo.mp4` | New rendered video |
 
