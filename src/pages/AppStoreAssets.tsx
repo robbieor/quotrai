@@ -327,11 +327,11 @@ export default function AppStoreAssets() {
           <div className="grid sm:grid-cols-2 gap-4">
             <Link to="/privacy" className="rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
               <p className="font-semibold mb-1">Privacy Policy</p>
-              <p className="text-sm text-muted-foreground">quotr.work/privacy</p>
+              <p className="text-sm text-muted-foreground">foreman.ie/privacy</p>
             </Link>
             <Link to="/terms" className="rounded-lg border border-border bg-card p-4 hover:border-primary/50 transition-colors">
               <p className="font-semibold mb-1">Terms of Service</p>
-              <p className="text-sm text-muted-foreground">quotr.work/terms</p>
+              <p className="text-sm text-muted-foreground">foreman.ie/terms</p>
             </Link>
           </div>
         </section>
