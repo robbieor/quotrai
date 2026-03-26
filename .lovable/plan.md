@@ -1,67 +1,44 @@
 
 
-# Fix Agent Issues & Ensure All Skills Work
+# Generate Complete ElevenLabs Client Tool JSON
 
-## Current Problems
+## The Situation
 
-### 1. `Q-0NaN` display_number bug (CRITICAL — still live)
-The edge function logs show `george-webhook` is still producing `Q-0NaN` quote numbers, causing unique constraint violations and 500 errors. The `getNextDisplayNumber` function was fixed in the source but the **deployed version** may be stale, or there's a race condition when no quotes exist yet (the reduce returns 0, but the prefix extraction fails on legacy data).
+Yes — every client tool registered in the frontend (`useElevenLabsAgent.ts`) must have a matching JSON definition in the ElevenLabs dashboard. If a tool exists in the code but not in the dashboard, the agent will never call it. There are **52 client tools** registered.
 
-**Root cause**: The `extractTrailingSequence` function requires the display_number to start with the prefix (e.g. "Q-"). If any existing quotes have null/empty display_numbers or non-matching prefixes, the reduce stays at 0 and `getNextDisplayNumber` returns `Q-0001` — but the logs show `Q-0NaN`, meaning the deployed code is still the OLD version that does `parseInt` directly on a potentially undefined value.
+## What I'll Do
 
-**Fix**: Redeploy `george-webhook` with the current source code, and add a database cleanup migration to delete/fix the broken `Q-0NaN` record.
+Generate a downloadable JSON file containing all 52 tool definitions with correct names, descriptions, and parameter schemas — ready to paste into the ElevenLabs dashboard.
 
-### 2. ElevenLabs Voice Agent — external dependency, not a Lovable issue
-The voice agent uses the ElevenLabs Conversational AI SDK (`@elevenlabs/react`) with agent ID `agent_2701kffwpjhvf4gvt2cxpsx6j3rb`. This is an **external ElevenLabs agent** configured in their dashboard. Issues include:
-- Connection reliability depends on ElevenLabs API availability
-- The `ELEVENLABS_API_KEY` secret is configured — so signed URLs should work
-- Client tools (52 registered) all route to `george-webhook`, which is currently failing due to the `Q-0NaN` bug
+The tools break down into these categories:
 
-**Lovable does NOT provide conversational voice agents.** Lovable AI provides text-based LLM completions (Gemini/GPT-5) via the AI Gateway — which is already what `george-chat` uses for text interactions. The voice agent must remain on ElevenLabs.
+| Category | Tools | Count |
+|----------|-------|-------|
+| Summaries | get_today_summary, get_week_ahead_summary, get_todays_jobs, get_monthly_summary, get_financial_summary, get_week_schedule | 6 |
+| Jobs | create_job, list_jobs, get_jobs_for_date, get_upcoming_jobs, reschedule_job, update_job_status, delete_job, check_availability | 8 |
+| Customers | create_customer, update_customer, delete_customer, list_customers, search_customer, get_client_info | 6 |
+| Quotes | create_quote, list_quotes, get_pending_quotes, update_quote_status, delete_quote, merge_quotes | 6 |
+| Invoices | create_invoice, list_invoices, get_outstanding_invoices, get_overdue_invoices, update_invoice_status, delete_invoice, create_invoice_from_quote, send_invoice_reminder | 8 |
+| Templates | get_templates, get_template_details, search_templates, list_template_categories, suggest_template, use_template_for_quote, create_invoice_from_template, add_template_to_quote, add_template_to_invoice | 9 |
+| Payments | record_payment, get_payment_history, get_outstanding_balance | 3 |
+| Expenses | log_expense, list_expenses, delete_expense | 3 |
+| Enquiries | create_enquiry, list_enquiries, update_enquiry, update_enquiry_status, convert_enquiry_to_customer, convert_enquiry_to_quote | 6 |
+| Advisory | get_business_insights, draft_customer_message, estimate_job_cost, ask_foreman | 4 |
 
-### 3. Text-based agent (`george-chat`) — uses Lovable AI Gateway
-The text chat agent already uses the Lovable AI Gateway correctly. It calls `george-webhook` for tool execution, same as the voice agent. Both paths share the same backend — so fixing the webhook fixes both.
+## Output
 
-## Plan
+A single JSON file at `/mnt/documents/elevenlabs-client-tools.json` containing every tool definition with:
+- `name` matching the exact function name in the webhook
+- `description` explaining what the tool does (helps the agent decide when to use it)
+- `parameters` as a JSON Schema object matching the TypeScript types in `useElevenLabsAgent.ts`
+- All tools set to `type: "client"` (executed by the frontend, not server-side)
 
-### Step 1: Fix the `Q-0NaN` broken record in database
-Create a migration to clean up the corrupted quote record:
-```sql
-DELETE FROM quotes WHERE display_number = 'Q-0NaN';
-```
+## How to Use It
 
-### Step 2: Redeploy `george-webhook`
-The current source code already has the fixed `getNextDisplayNumber` with `extractTrailingSequence`. Force a redeploy to ensure the running version matches the source.
+1. Open ElevenLabs dashboard → your agent → Tools
+2. For each tool, add a new "Client" tool
+3. Paste the name, description, and parameters schema from the JSON file
+4. Save
 
-### Step 3: Add defensive fallback in `getNextDisplayNumber`
-Add a database-level fallback: if the reduce-based approach returns 0 (no valid numbers found), query the count of existing records + 1 as a safety net.
-
-### Step 4: Verify all skill categories work
-After the webhook is fixed, all 52+ skills across both voice and text paths will work since they all route through the same `george-webhook` endpoint. The skill categories are:
-- Summaries (today, week, financial) 
-- Jobs CRUD (create, list, reschedule, update status, delete)
-- Customers CRUD (create, list, search, update, delete)
-- Quotes CRUD (create, list, update status, delete)
-- Invoices CRUD (create, list, update status, delete, reminders)
-- Expenses CRUD (log, list, delete)
-- Templates (list, use for quote/invoice, suggest)
-- Payments (record, history, outstanding balance)
-- Advisory (business insights, estimate cost, ask foreman)
-- Enquiries (create, list, update, convert)
-
-## Answer to your questions
-
-| Question | Answer |
-|----------|--------|
-| What's causing ElevenLabs agent issues? | The `george-webhook` backend is returning 500 errors due to a `Q-0NaN` display_number collision. This breaks any voice skill that creates quotes. |
-| Does Lovable provide similar agents? | Lovable AI provides text-based LLM completions (already used by `george-chat`). It does not provide real-time voice agents — ElevenLabs is the right choice for that. |
-| Are all agent skills working? | All 52+ skills route through `george-webhook`. Once the NaN bug is fixed and redeployed, all skills will work on both voice and text paths. |
-
-## Files to change
-
-| File | Change |
-|------|--------|
-| New migration | `DELETE FROM quotes WHERE display_number = 'Q-0NaN'` |
-| `supabase/functions/george-webhook/index.ts` | Add count-based fallback in `getNextDisplayNumber` |
-| Redeploy | `george-webhook` edge function |
+This is a one-time setup. After this, any new skills added to `george-webhook` + `useElevenLabsAgent.ts` just need a matching entry added in the dashboard.
 
