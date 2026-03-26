@@ -57,7 +57,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">5. Free Trial</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              New accounts receive a 14-day free trial with full access to platform features. No credit card is required to start a trial. At the end of the trial, you must select a paid plan to continue using the Service.
+               New accounts receive a 30-day free trial with full access to platform features. No credit card is required to start a trial. At the end of the trial, you must select a paid plan to continue using the Service.
             </p>
           </section>
 

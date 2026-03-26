@@ -14,7 +14,7 @@ const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => 
   1: { subject: "Create your first quote in 60 seconds ⚡", body: (name) => `Hi ${name},\n\nWelcome to Foreman! The easiest way to get started is to create your first quote.\n\nHead to Quotes → New Quote and pick one of your trade-specific templates.\n\nHappy quoting!\n— The Foreman Team` },
   2: { subject: "Meet Foreman AI — your hands-free assistant 🤖", body: (name) => `Hey ${name},\n\nDid you know Foreman comes with a built-in AI assistant?\n\nForeman AI can create quotes, schedule jobs, log expenses, and more — all by voice or text.\n\nTry it: Go to the Foreman AI page and say "What can you do?"\n\n— The Foreman Team` },
   3: { subject: "How much admin time could you save? 📊", body: (name) => `Hi ${name},\n\nTradespeople using Foreman save an average of 10 hours per week on admin.\n\nCurious what that means for your business? Try our ROI calculator on the homepage.\n\n— The Foreman Team` },
-  4: { subject: "Your free trial ends in 2 days ⏰", body: (name) => `Hi ${name},\n\nJust a heads-up — your 14-day Foreman trial ends soon.\n\nTo keep all your data, subscribe from Settings → Billing.\n\n— The Foreman Team` },
+  4: { subject: "Your free trial ends in 2 days ⏰", body: (name) => `Hi ${name},\n\nJust a heads-up — your 30-day Foreman trial ends soon.\n\nTo keep all your data, subscribe from Settings → Billing.\n\n— The Foreman Team` },
 };
 
 Deno.serve(async (req) => {

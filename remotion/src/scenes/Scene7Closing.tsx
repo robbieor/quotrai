@@ -65,7 +65,7 @@ export const Scene7Closing: React.FC = () => {
 
           <div style={{ opacity: ctaOpacity, marginTop: 28 }}>
             <span style={{ fontSize: 24, color: "rgba(255,255,255,0.7)", fontWeight: 700, letterSpacing: "0.03em" }}>
-              Try Foreman free for 14 days
+              Try Foreman free for 30 days
             </span>
           </div>
         </div>
