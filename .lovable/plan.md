@@ -1,44 +1,34 @@
 
 
-## Purge All Remaining "Quotr" References from Frontend
+## Add Foreman Logo to All Emails
 
-The landing page navbar already says "Foreman" in code — your screenshot is showing a cached version. However, there are ~237 remaining "quotr" references across 24 frontend files that need updating.
-
-### What Changes
-
-**User-facing text and URLs (must change):**
-
-| File | What | Change |
-|------|------|--------|
-| `src/components/billing/TrialBanner.tsx` | `quotr.work` URLs and text | → `foreman.ie` |
-| `src/pages/Pricing.tsx` | `quotr.work/settings` URL | → `foreman.ie/settings` |
-| `src/pages/Terms.tsx` | `hello@quotr.info` email | → `support@foreman.ie` |
-| `src/pages/Privacy.tsx` | `hello@quotr.info` emails (×3) | → `support@foreman.ie` |
-| `src/pages/AppStoreAssets.tsx` | `quotr.work/privacy`, `quotr.work/terms` | → `foreman.ie/privacy`, `foreman.ie/terms` |
-| `src/components/landing/DashboardShowcase.tsx` | `app.quotr.ai/...` fake URL bar | → `app.foreman.ie/...` |
-| `src/components/shared/SEOHead.tsx` | `quotrai.lovable.app` base URL, OG image URL with "quotr" | → keep lovable preview URL but update OG image ref |
-| `src/components/expenses/ExpenseEmailBanner.tsx` | `expenses+...@quotr.info` | → `expenses+...@foreman.ie` |
-| `src/hooks/useUpgradePrompts.ts` | `quotr.work` URLs and text (×8) | → `foreman.ie` |
-| `src/components/landing/DemoVideoSection.tsx` | `/quotr-demo.mp4` video src | → `/foreman-demo.mp4` (or keep if file not renamed) |
-| `src/config/brand.ts` | `quotrai.lovable.app` landing URL | → keep as-is (actual deploy URL) |
-
-**Internal keys (safe to rename for consistency):**
-
-| File | What | Change |
-|------|------|--------|
-| `src/hooks/useAutoClockPrompt.ts` | `quotr_auto_clock_mode` localStorage key | → `foreman_auto_clock_mode` |
-| `src/hooks/useLandingCurrency.ts` | `quotr_landing_currency` cache key | → `foreman_landing_currency` |
-| `src/components/dashboard/OnboardingChecklist.tsx` | `quotr_checklist_dismissed` key | → `foreman_checklist_dismissed` |
-| `src/main.tsx` | `__quotr_sw_purged__` session key | → `__foreman_sw_purged__` |
-| `src/components/landing/ROICalculator.tsx` | `QUOTR_SEAT_PRICE`, `QUOTR_VOICE_PRICE` variable names | → `FOREMAN_SEAT_PRICE`, `FOREMAN_VOICE_PRICE` |
-
-**Also check remaining files** from the 24-file list for any other references.
-
-### What Does NOT Change
-- `SENDER_DOMAIN` / `FROM_DOMAIN` in edge functions (`quotr.work`) — DNS-bound infrastructure
-- The Lovable preview URL (`quotrai.lovable.app`) — that's the actual deploy URL
-- The `/quotr-demo.mp4` filename if the actual file hasn't been renamed in `/public`
+### Problem
+Emails currently show "Foreman" as styled text. The user wants the actual `foreman-logo.png` image displayed in email headers. Font stays as Manrope.
 
 ### Approach
-Update all 24 files in a single pass, replacing every "quotr" reference with the Foreman equivalent. Internal variable names get renamed for consistency. User-facing URLs and emails switch to `foreman.ie` / `support@foreman.ie`.
+
+**Step 1: Host the logo publicly**
+- Upload `src/assets/foreman-logo.png` to the project's file storage (public bucket) so it has a permanent URL accessible from email clients.
+- Alternatively, copy it to the `public/` folder so it's served from the preview/published URL.
+
+**Step 2: Update React Email auth templates (6 files)**
+Replace the `<Text style={logo}>Foreman</Text>` with an `<Img>` component from `@react-email/components`:
+```
+<Img src="PUBLIC_LOGO_URL" alt="Foreman" width="140" height="auto" />
+```
+Files: `signup.tsx`, `recovery.tsx`, `magic-link.tsx`, `invite.tsx`, `email-change.tsx`, `reauthentication.tsx`
+
+**Step 3: Update inline HTML edge function emails (~10 files)**
+Replace `<div style="font-size: 28px; font-weight: 700; color: #00E6A0;">Foreman</div>` with:
+```html
+<img src="PUBLIC_LOGO_URL" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+```
+Files: `send-preview-email`, `send-document-email`, `send-payment-reminder`, `send-team-invitation`, `send-quote-notification`, `send-drip-email`, `send-roi-summary`, `check-churn`, `request-early-access`
+
+**Step 4: Deploy**
+Redeploy all affected edge functions.
+
+### Technical Detail
+- The logo will be placed at `public/foreman-logo.png` and referenced via the published URL (`https://quotrai.lovable.app/foreman-logo.png`) — this is the most reliable approach for email image hosting since it's a static asset served by the CDN.
+- Email clients that block images will show the "Foreman" alt text as fallback.
 
