@@ -1,22 +1,37 @@
 
 
-## Add Trade Type Selector to Profile Settings
+## Fix Home Screen App Icon (PWA)
 
 ### Problem
-The profile settings page shows Name, Email, and Currency but no Trade Type field. Users can't change their trade after onboarding, and the trade type drives which templates are shown.
+The PWA icons (`icon-192.png`, `icon-512.png`) are still the old Quotr branding. When users add the app to their home screen, they see the wrong icon.
 
-### What Changes
+### Solution
+Generate new properly sized PWA icons from the existing `foreman-logo.png` and update references.
+
+### Steps
+
+**Step 1: Generate new icons**
+Use a script to resize `public/foreman-logo.png` into:
+- `icon-192.png` (192x192) — Android PWA
+- `icon-512.png` (512x512) — Android PWA splash
+- `apple-touch-icon.png` (180x180) — iOS home screen
+
+Place them with a white or transparent background, logo centered.
+
+**Step 2: Update `index.html`**
+- Change the `apple-touch-icon` href from `/icon-192.png` to `/apple-touch-icon.png` with `sizes="180x180"`
+
+**Step 3: Update `manifest.json`**
+- Add a `"purpose": "any maskable"` field to the icon entries for better Android adaptive icon support
+- Optionally add the 180x180 entry
+
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/pages/Settings.tsx` | Add a Trade Type `<Select>` dropdown between Email and Currency fields. Populate with the same trade types list used in onboarding. Add `selectedTradeType` state, sync from `profile?.trade_type`, include in `handleSaveProfile` update call. |
-| `src/hooks/useProfile.ts` | Add `trade_type` to the `updateProfile` mutation's accepted fields type |
-
-### Trade Types List
-Reuse the same list from onboarding: Electrician, Plumber, HVAC Technician, Carpenter, Painter & Decorator, Roofer, Landscaper, Builder / General Contractor, Locksmith, Handyman, Cleaning Services, Pest Control, Pool & Spa, Pressure Washing, Fencing, Appliance Repair, Auto Detailing, Garage Door Services, Tree Services, Restoration, Solar, Flooring, Tiler, Property Maintenance, Concrete & Masonry, Window & Door Installation, Other.
-
-### UI Detail
-- Label: "Trade Type"
-- Helper text: "Controls which templates are shown throughout the app"
-- Placed after the Email field, before Currency
+| `public/icon-192.png` | Overwrite with Foreman-branded 192x192 icon |
+| `public/icon-512.png` | Overwrite with Foreman-branded 512x512 icon |
+| `public/apple-touch-icon.png` | New 180x180 icon for iOS |
+| `index.html` | Update apple-touch-icon href |
+| `public/manifest.json` | Add `purpose` field to icon entries |
 
