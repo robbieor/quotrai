@@ -116,7 +116,7 @@ export default function InvoicePortal() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl">
-              T
+              {invoice.team.name?.charAt(0) || "F"}
             </div>
             <div>
               <h1 className="text-2xl font-bold">{invoice.team.name}</h1>

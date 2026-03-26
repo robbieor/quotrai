@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import type { Job } from "@/hooks/useJobs";
 import { DraggableJobCard } from "./DraggableJobCard";
 import { DroppableCell } from "./DroppableCell";
+import { TravelChip } from "./RouteOptimizer";
 
 interface DayViewProps {
   currentDate: Date;
@@ -148,15 +149,28 @@ export function DayView({
               >
                 {hourJobs.length > 0 && (
                   <div className="space-y-1">
-                    {hourJobs.map((job) => (
-                      <DraggableJobCard
-                        key={job.id}
-                        job={job}
-                        onClick={() => onJobClick(job)}
-                        onJobDragStart={onJobDragStart}
-                        onJobDragEnd={onJobDragEnd}
-                      />
-                    ))}
+                    {hourJobs.map((job, jobIdx) => {
+                      // Find previous job in the day for travel chip
+                      const allScheduled = dayJobs
+                        .filter((j) => j.scheduled_time)
+                        .sort((a, b) => (a.scheduled_time || "").localeCompare(b.scheduled_time || ""));
+                      const jobGlobalIdx = allScheduled.findIndex((j) => j.id === job.id);
+                      const prevJob = jobGlobalIdx > 0 ? allScheduled[jobGlobalIdx - 1] : null;
+
+                      return (
+                        <div key={job.id}>
+                          {prevJob && jobIdx === 0 && (
+                            <TravelChip from={prevJob} to={job} />
+                          )}
+                          <DraggableJobCard
+                            job={job}
+                            onClick={() => onJobClick(job)}
+                            onJobDragStart={onJobDragStart}
+                            onJobDragEnd={onJobDragEnd}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </DroppableCell>
