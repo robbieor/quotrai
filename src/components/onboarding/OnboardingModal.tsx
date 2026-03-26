@@ -28,6 +28,7 @@ import foremanLogo from "@/assets/foreman-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";
+import { OnboardingTemplatesStep } from "@/components/onboarding/OnboardingTemplatesStep";
 import { computeWorkflowMode } from "@/hooks/useWorkflowMode";
 
 const tradeTypes = [
