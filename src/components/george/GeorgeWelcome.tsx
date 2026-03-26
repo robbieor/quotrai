@@ -1,4 +1,4 @@
-import { Calendar, FileText, Receipt, Send } from "lucide-react";
+import { Calendar, FileText, Receipt, Send, CalendarDays, PlusCircle } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
 import tomAvatar from "@/assets/tom-avatar.png";
@@ -13,20 +13,40 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
   const isMobile = useIsMobile();
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
-  // Mobile: Clean centered welcome with light theme - scrollable
+  const actions = isMobile ? mobileQuickActions : quickActions;
+
   if (isMobile) {
     return (
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center justify-center min-h-full px-6 py-8 bg-background">
+        <div className="flex flex-col items-center justify-center min-h-full px-5 py-6 bg-background">
           {/* Avatar */}
-          <div className="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center mb-6 border border-border overflow-hidden">
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center mb-4 border border-border overflow-hidden">
             <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
           </div>
 
           {/* Welcome text */}
-          <p className="text-center text-muted-foreground text-base leading-relaxed max-w-xs">
-            Hey {firstName}, I'm Foreman AI — your assistant for managing jobs, quotes, and invoices.
+          <p className="text-center text-muted-foreground text-sm leading-relaxed max-w-xs mb-5">
+            Hey {firstName}, I'm Foreman AI — your assistant for jobs, quotes, and invoices.
           </p>
+
+          {/* Quick actions grid — mobile */}
+          <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
+            {actions.map((qa) => (
+              <button
+                key={qa.label}
+                onClick={() => onQuickAction?.(qa.action, qa.message)}
+                disabled={isProcessing}
+                className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/50 active:scale-[0.97] transition-all border border-transparent active:border-border disabled:opacity-50"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <qa.icon className="h-4 w-4 text-primary" />
+                </div>
+                <span className="text-xs font-medium text-left leading-tight">
+                  {qa.label}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -53,7 +73,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
 
       {/* Quick Actions Grid - Desktop only */}
       <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-        {quickActions.map((qa) => (
+        {actions.map((qa) => (
           <button
             key={qa.label}
             onClick={() => onQuickAction?.(qa.action, qa.message)}
@@ -72,7 +92,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
   );
 }
 
-// Quick actions for desktop only
+// Quick actions for desktop
 const quickActions = [
   {
     icon: Calendar,
@@ -84,6 +104,46 @@ const quickActions = [
     icon: FileText,
     label: "Create quote",
     message: "Help me create a new quote",
+    action: null,
+  },
+  {
+    icon: Receipt,
+    label: "Log expense",
+    message: "I need to log an expense",
+    action: null,
+  },
+  {
+    icon: Send,
+    label: "Overdue invoices",
+    message: "Which invoices are overdue?",
+    action: "get_overdue_invoices",
+  },
+];
+
+// Mobile quick actions — 6 items in compact 2-col grid
+const mobileQuickActions = [
+  {
+    icon: Calendar,
+    label: "Today's jobs",
+    message: "What jobs do I have scheduled for today?",
+    action: "get_todays_jobs",
+  },
+  {
+    icon: FileText,
+    label: "Create quote",
+    message: "Help me create a new quote",
+    action: null,
+  },
+  {
+    icon: CalendarDays,
+    label: "Week ahead",
+    message: "Give me a summary of my week ahead",
+    action: "get_week_ahead_summary",
+  },
+  {
+    icon: PlusCircle,
+    label: "Create invoice",
+    message: "Help me create a new invoice",
     action: null,
   },
   {
