@@ -1,46 +1,45 @@
 
 
-## Switch Email Sending Domain from quotr.work to foreman.ie
+## Add Template Pricing Step to Onboarding
 
-### Current State
-All 13 edge functions use `SENDER_DOMAIN = "notify.quotr.work"` and `FROM_DOMAIN = "quotr.work"`. The `quotr.work` domain is verified and active. The `foreman.ie` domain is NOT yet configured for email sending.
+### Problem
+New users complete onboarding without setting up their templates/pricing. This means the AI agent (Foreman) has no templates to pull from for quick quoting, making the app feel empty on first use.
 
-### Step 1: Set up foreman.ie email domain
-Configure `foreman.ie` (subdomain `notify.foreman.ie`) as the email sending domain via the email domain setup flow. This requires you to add NS records at your domain registrar pointing `notify.foreman.ie` to Lovable's nameservers.
+### Solution
+Add a new **Step 5: "Set Your Prices"** to the onboarding modal (between current Step 4 "Preferences" and Step 5 "Comms", making it a 6-step flow). This step will:
 
-### Step 2: Update all edge functions
-Once `foreman.ie` is verified, update all 13 edge functions:
+1. **Auto-seed trade templates** — call `seed_team_templates` RPC based on the user's selected trade (from Step 2)
+2. **Show a list of seeded templates** with editable labour rate per template
+3. **Let users add a custom template** inline (name + labour rate)
+4. Users can skip or continue — templates are already saved, this step just lets them review/tweak pricing
 
-| Constant | Old Value | New Value |
-|----------|-----------|-----------|
-| `SENDER_DOMAIN` | `notify.quotr.work` | `notify.foreman.ie` |
-| `FROM_DOMAIN` | `quotr.work` | `foreman.ie` |
+### UI Design
+- Header: "Set Your Prices" with a price tag icon
+- Subtitle: "Review your default templates and set your labour rates. Foreman uses these to create quotes instantly."
+- A scrollable list of template cards showing: template name, default labour rate (editable inline input), estimated duration
+- An "Add Template" button at the bottom for custom additions
+- All changes save directly to the database as the user edits
 
-Also update all `from:` addresses to use `support@foreman.ie` instead of `noreply@quotr.work`.
+### Files to Change
 
-**Files (13):**
-- `send-document-email/index.ts`
-- `send-preview-email/index.ts`
-- `send-email/index.ts`
-- `send-payment-reminder/index.ts`
-- `send-team-invitation/index.ts`
-- `send-quote-notification/index.ts`
-- `send-drip-email/index.ts`
-- `send-roi-summary/index.ts`
-- `send-job-reminders/index.ts`
-- `check-churn/index.ts`
-- `request-early-access/index.ts`
-- `process-expense-email/index.ts`
-- `auth-email-hook/index.ts`
+| File | Change |
+|------|--------|
+| `src/components/onboarding/OnboardingModal.tsx` | Increase `totalSteps` to 6. Add new Step 5 component. Move current Comms step to Step 6. After profile save in `handleComplete`, call `seed_team_templates` RPC before seeding sample data. In new Step 5, fetch and display seeded templates with editable labour rates. |
+| `src/components/onboarding/OnboardingTemplatesStep.tsx` | **New file.** Standalone component showing the user's seeded templates with inline-editable labour rates and an "Add Template" button. Uses `useTemplates` hook to fetch and `supabase` to update rates. |
 
-### Step 3: Update the auth email hook
-Change `SITE_NAME`, `ROOT_DOMAIN`, and `FROM_DOMAIN` in `auth-email-hook/index.ts` to use `foreman.ie`.
+### Step Labels Update
+`["Profile", "Trade", "Workflow", "Preferences", "Prices", "Comms"]`
 
-### Step 4: Deploy all affected edge functions
+### Flow
+1. User completes Steps 1-4 (unchanged)
+2. On entering Step 5, templates are auto-seeded for the user's trade (if not already seeded)
+3. User sees their templates, adjusts labour rates, optionally adds custom templates
+4. Step 6 is the existing Comms preferences step
+5. "Get Started" completes onboarding as before
 
-### Step 5: (Optional) Retire quotr.work email domain
-Once foreman.ie is confirmed working, the old quotr.work NS records can be removed from your registrar.
-
-### Important
-Step 1 requires your action — you'll need to add DNS records at your foreman.ie domain registrar. The setup dialog will show exactly which records to add.
+### Technical Details
+- Template seeding uses the existing `seed_team_templates` RPC — no new migrations needed
+- Labour rate updates use `supabase.from("templates").update({ labour_rate_default }).eq("id", templateId)`
+- The step needs the `team_id` which is created during profile save — so we'll trigger `handleComplete`'s profile save logic earlier (on Step 4 → 5 transition) or seed templates eagerly using the team_id from the profile query
+- Adding a new template inline will insert into `templates` table with the user's trade category
 
