@@ -548,6 +548,9 @@ export function BrandingSettings() {
                 value={formData.bank_details || ""}
                 onChange={(e) => updateField("bank_details", e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Displayed on invoices and quotes for bank transfer payments only — not used for online payments.
+              </p>
             </div>
           </CardContent>
         </Card>
