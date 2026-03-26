@@ -40,6 +40,11 @@ export default function Templates() {
       setHasInitializedCategory(true);
     }
   }, [userTradeCategory, hasInitializedCategory]);
+
+  // Filter visible category tabs: only show user's trade + general, or all if no trade set
+  const visibleCategories = userTradeCategory
+    ? TRADE_CATEGORIES.filter(cat => cat === userTradeCategory || cat === "general")
+    : TRADE_CATEGORIES;
   
   const { data: templates, isLoading } = useTemplates(
     selectedCategory === "all" ? undefined : selectedCategory
@@ -147,7 +152,7 @@ export default function Templates() {
         <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as TradeCategory | "all")}>
           <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-            {TRADE_CATEGORIES.map((cat) => (
+            {visibleCategories.map((cat) => (
               <TabsTrigger key={cat} value={cat} className="text-xs">
                 {getTradeCategoryLabel(cat)}
               </TabsTrigger>
