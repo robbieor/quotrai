@@ -1,4 +1,4 @@
-import { FileText, Receipt, Briefcase, Users, DollarSign, Bell, Info, Hash, Calendar, Clock, User, StickyNote, Layers } from "lucide-react";
+import { FileText, Receipt, Briefcase, Users, DollarSign, Bell, Info, Hash, Calendar, Clock, User, StickyNote, Layers, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ActionOutput } from "@/types/foreman-actions";
 
@@ -149,17 +149,21 @@ export function ActionOutputPreview({ output, onAction }: ActionOutputPreviewPro
       {/* Quick actions */}
       {output.quick_actions && output.quick_actions.length > 0 && (
         <div className="flex flex-wrap gap-2 p-3 mt-2 border-t border-border">
-          {output.quick_actions.map((qa) => (
-            <Button
-              key={qa.action}
-              variant={qa.variant === "destructive" ? "destructive" : qa.variant === "outline" ? "outline" : "default"}
-              size="sm"
-              onClick={() => onAction?.(qa.action)}
-              className="text-xs h-8"
-            >
-              {qa.label}
-            </Button>
-          ))}
+          {output.quick_actions.map((qa) => {
+            const isNavigate = qa.action.startsWith("navigate:");
+            return (
+              <Button
+                key={qa.action}
+                variant={qa.variant === "destructive" ? "destructive" : qa.variant === "outline" ? "outline" : "default"}
+                size="sm"
+                onClick={() => onAction?.(qa.action)}
+                className="text-xs h-8"
+              >
+                {isNavigate && <ExternalLink className="h-3 w-3 mr-1" />}
+                {qa.label}
+              </Button>
+            );
+          })}
         </div>
       )}
     </div>

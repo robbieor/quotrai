@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { FOREMAN_TOOL_DEFINITIONS } from "../_shared/foreman-tool-definitions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,310 +20,23 @@ interface ChatRequest {
   };
 }
 
-// ─── TOOL DEFINITIONS ───────────────────────────────────────────────
-const tools = [
-  {
+// ─── Convert ElevenLabs client-tool format → OpenAI function-calling format ──
+function buildOpenAITools(): any[] {
+  return FOREMAN_TOOL_DEFINITIONS.map((t) => ({
     type: "function",
     function: {
-      name: "get_today_summary",
-      description: "Get a morning briefing summary including today's jobs, recent payments, overdue invoices, and pending quotes",
-      parameters: { type: "object", properties: {}, required: [] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_week_ahead_summary",
-      description: "Get a weekly planning summary including upcoming jobs, expected income, invoices due, and expiring quotes for the next 7 days",
-      parameters: { type: "object", properties: {}, required: [] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_todays_jobs",
-      description: "Get jobs scheduled for today",
-      parameters: { type: "object", properties: {}, required: [] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_jobs_for_date",
-      description: "Get jobs scheduled for a specific date",
+      name: t.name,
+      description: t.description,
       parameters: {
         type: "object",
-        properties: { date: { type: "string", description: "YYYY-MM-DD" } },
-        required: ["date"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "check_availability",
-      description: "Check available time slots for a specific date",
-      parameters: {
-        type: "object",
-        properties: {
-          date: { type: "string", description: "YYYY-MM-DD" },
-          preferred_time: { type: "string", description: "HH:MM" }
-        },
-        required: ["date"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_job",
-      description: "Create a new job/appointment in the calendar",
-      parameters: {
-        type: "object",
-        properties: {
-          client_name: { type: "string" },
-          job_title: { type: "string" },
-          scheduled_date: { type: "string", description: "YYYY-MM-DD" },
-          scheduled_time: { type: "string", description: "HH:MM (24h)" },
-          description: { type: "string" },
-          estimated_value: { type: "number" }
-        },
-        required: ["client_name", "job_title", "scheduled_date"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "reschedule_job",
-      description: "Reschedule an existing job to a new date/time",
-      parameters: {
-        type: "object",
-        properties: {
-          job_title: { type: "string" },
-          client_name: { type: "string" },
-          new_date: { type: "string", description: "YYYY-MM-DD" },
-          new_time: { type: "string", description: "HH:MM (24h)" }
-        },
-        required: ["new_date"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "update_job_status",
-      description: "Update the status of a job",
-      parameters: {
-        type: "object",
-        properties: {
-          job_title: { type: "string" },
-          client_name: { type: "string" },
-          new_status: { type: "string", enum: ["pending", "scheduled", "in_progress", "completed", "cancelled"] }
-        },
-        required: ["new_status"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_quote",
-      description: "Create a new quote/estimate for a client. IMPORTANT: Always create as draft. Never send to client automatically.",
-      parameters: {
-        type: "object",
-        properties: {
-          client_name: { type: "string" },
-          items: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                description: { type: "string" },
-                quantity: { type: "number" },
-                unit_price: { type: "number" }
-              },
-              required: ["description", "quantity", "unit_price"]
-            }
-          },
-          notes: { type: "string" },
-          tax_rate: { type: "number" }
-        },
-        required: ["client_name", "items"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_overdue_invoices",
-      description: "Get list of overdue invoices",
-      parameters: { type: "object", properties: {}, required: [] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "send_invoice_reminder",
-      description: "Draft a payment reminder for an invoice. Does NOT send automatically — requires user confirmation.",
-      parameters: {
-        type: "object",
-        properties: {
-          display_number: { type: "string" },
-          invoice_id: { type: "string" }
-        },
-        required: []
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "log_expense",
-      description: "Log a business expense",
-      parameters: {
-        type: "object",
-        properties: {
-          vendor_name: { type: "string" },
-          amount: { type: "number" },
-          category: { type: "string", enum: ["materials", "fuel", "tools", "labor", "permits", "other"] },
-          description: { type: "string" }
-        },
-        required: ["vendor_name", "amount"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_client_info",
-      description: "Look up information about a client/customer",
-      parameters: {
-        type: "object",
-        properties: { client_name: { type: "string" } },
-        required: ["client_name"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_templates",
-      description: "Get available quote/job templates",
-      parameters: { type: "object", properties: {}, required: [] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_invoice_from_template",
-      description: "Create a draft invoice for a client using a template. Does NOT send automatically.",
-      parameters: {
-        type: "object",
-        properties: {
-          client_name: { type: "string" },
-          template_name: { type: "string" },
-          additional_notes: { type: "string" }
-        },
-        required: ["client_name", "template_name"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "use_template_for_quote",
-      description: "Create a draft quote for a client using a template. Does NOT send automatically.",
-      parameters: {
-        type: "object",
-        properties: {
-          client_name: { type: "string" },
-          template_name: { type: "string" },
-          additional_notes: { type: "string" }
-        },
-        required: ["client_name", "template_name"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_template_details",
-      description: "Get full details of a specific template including line items and pricing.",
-      parameters: {
-        type: "object",
-        properties: {
-          template_name: { type: "string" },
-          template_id: { type: "string" }
-        },
-        required: []
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_invoice",
-      description: "Create a new draft invoice for a client with line items. Does NOT send automatically.",
-      parameters: {
-        type: "object",
-        properties: {
-          client_name: { type: "string" },
-          items: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                description: { type: "string" },
-                quantity: { type: "number" },
-                unit_price: { type: "number" }
-              },
-              required: ["description", "quantity", "unit_price"]
-            }
-          },
-          notes: { type: "string" },
-          tax_rate: { type: "number" }
-        },
-        required: ["client_name", "items"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "search_templates",
-      description: "Search for templates by keyword or job type.",
-      parameters: {
-        type: "object",
-        properties: {
-          query: { type: "string" },
-          category: { type: "string" }
-        },
-        required: ["query"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "list_template_categories",
-      description: "List all template categories.",
-      parameters: { type: "object", properties: {}, required: [] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "suggest_template",
-      description: "Suggest the best template for a job based on description.",
-      parameters: {
-        type: "object",
-        properties: { job_description: { type: "string" } },
-        required: ["job_description"]
-      }
-    }
-  }
-];
+        properties: t.parameters.properties || {},
+        required: t.parameters.required || [],
+      },
+    },
+  }));
+}
+
+const tools = buildOpenAITools();
 
 // ─── INTENT CLASSIFICATION ──────────────────────────────────────────
 function classifyIntent(toolCalls: any[]): { intent: string; label: string; outputType: string } {
@@ -350,6 +64,14 @@ function classifyIntent(toolCalls: any[]): { intent: string; label: string; outp
     search_templates: { intent: "templates", label: "Search Templates", outputType: "info" },
     list_template_categories: { intent: "templates", label: "Template Categories", outputType: "info" },
     suggest_template: { intent: "templates", label: "Template Suggestion", outputType: "info" },
+    create_customer: { intent: "create_customer", label: "Create Customer", outputType: "client" },
+    get_customer_history: { intent: "customer_history", label: "Customer History", outputType: "info" },
+    search_customers: { intent: "search_customers", label: "Search Customers", outputType: "info" },
+    record_payment: { intent: "record_payment", label: "Record Payment", outputType: "info" },
+    get_week_schedule: { intent: "view_schedule", label: "Week Schedule", outputType: "info" },
+    get_monthly_summary: { intent: "briefing", label: "Monthly Summary", outputType: "info" },
+    get_financial_summary: { intent: "briefing", label: "Financial Summary", outputType: "info" },
+    get_outstanding_balance: { intent: "briefing", label: "Outstanding Balance", outputType: "info" },
   };
   return map[name] || { intent: name, label: name, outputType: "info" };
 }
@@ -363,6 +85,7 @@ function extractEntities(toolCalls: any[]): any[] {
     try { params = JSON.parse(tc.function.arguments || "{}"); } catch { continue; }
     const fieldLabels: Record<string, string> = {
       client_name: "Customer",
+      customer_name: "Customer",
       job_title: "Job",
       scheduled_date: "Date",
       scheduled_time: "Time",
@@ -383,7 +106,7 @@ function extractEntities(toolCalls: any[]): any[] {
       job_description: "Job Type",
     };
     for (const [key, value] of Object.entries(params)) {
-      if (key === "items") continue; // skip array items for now
+      if (key === "items") continue;
       if (value !== undefined && value !== null && value !== "") {
         const displayValue = key === "amount" || key === "estimated_value" 
           ? `€${Number(value).toLocaleString()}` 
@@ -449,7 +172,6 @@ function needsConfirmation(toolCalls: any[]): any | null {
   if (!toolCalls?.length) return null;
   const name = toolCalls[0].function.name;
   
-  // External communication actions always require confirmation
   if (name === "send_invoice_reminder") {
     return {
       id: crypto.randomUUID(),
@@ -463,12 +185,11 @@ function needsConfirmation(toolCalls: any[]): any | null {
     };
   }
 
-  // Record-creating actions get a medium-risk confirmation gate
   const recordCreators = ["create_quote", "create_invoice", "create_invoice_from_template", "use_template_for_quote", "create_job"];
   if (recordCreators.includes(name)) {
     let params: any = {};
     try { params = JSON.parse(toolCalls[0].function.arguments || "{}"); } catch {}
-    const clientLabel = params.client_name ? ` for ${params.client_name}` : "";
+    const clientLabel = params.client_name || params.customer_name ? ` for ${params.client_name || params.customer_name}` : "";
     const actionLabels: Record<string, string> = {
       create_quote: "Create Quote",
       create_invoice: "Create Invoice",
@@ -502,18 +223,16 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
 
   const isWrite = ["create_quote", "create_invoice", "use_template_for_quote", "create_invoice_from_template", "create_job", "log_expense"].includes(name);
   
-  if (!isWrite) return null; // Info responses are handled via text_response
+  if (!isWrite) return null;
 
   const quickActions = [
     { label: "Edit", action: "edit", variant: "outline" as const },
     { label: "Save Draft", action: "save_draft", variant: "default" as const },
   ];
 
-  // Never auto-add "Send" — user must request it explicitly
-
-  // Build rich preview_data from tool parameters
   const previewData: Record<string, string> = {};
-  if (params.client_name) previewData["Customer"] = params.client_name;
+  const clientName = params.client_name || params.customer_name;
+  if (clientName) previewData["Customer"] = clientName;
   if (params.template_name) previewData["Template"] = params.template_name;
   if (params.job_title) previewData["Job"] = params.job_title;
   if (params.scheduled_date) previewData["Date"] = params.scheduled_date;
@@ -523,7 +242,6 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
   if (params.vendor_name) previewData["Vendor"] = params.vendor_name;
   if (params.category) previewData["Category"] = params.category;
 
-  // Summarise line items if present
   if (Array.isArray(params.items) && params.items.length > 0) {
     previewData["Items"] = `${params.items.length} line item${params.items.length > 1 ? "s" : ""}`;
     const subtotal = params.items.reduce((sum: number, it: any) => sum + (it.quantity || 1) * (it.unit_price || 0), 0);
@@ -537,7 +255,6 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
     }
   }
 
-  // Add result data
   if (params.amount) previewData["Amount"] = `€${Number(params.amount).toLocaleString("en-IE", { minimumFractionDigits: 2 })}`;
   if (result?.display_number) previewData["Quote #"] = result.display_number;
   if (result?.display_number) previewData["Invoice #"] = result.display_number;
@@ -546,11 +263,11 @@ function buildOutput(intent: any, toolCalls: any[], toolResults: any[]): any | n
   return {
     type: intent.outputType,
     title: result?.message || `${intent.label} completed`,
-    summary: result?.display_number || result?.display_number || result?.job_id 
+    summary: result?.display_number || result?.job_id 
       ? `Draft record created successfully` 
       : undefined,
     record_id: result?.quote_id || result?.invoice_id || result?.job_id || result?.expense_id,
-    record_number: result?.display_number || result?.display_number,
+    record_number: result?.display_number,
     preview_data: Object.keys(previewData).length > 0 ? previewData : undefined,
     quick_actions: quickActions,
   };
@@ -565,10 +282,11 @@ function buildMemory(toolCalls: any[], toolResults: any[], existingMemory?: any)
   try { params = JSON.parse(toolCalls[0].function.arguments || "{}"); } catch {}
   const result = toolResults?.[0]?.result || toolResults?.[0];
 
-  if (params.client_name) {
+  const clientName = params.client_name || params.customer_name;
+  if (clientName) {
     memory.current_customer = { 
       id: result?.customer_id || "", 
-      name: params.client_name 
+      name: clientName,
     };
   }
   if (result?.quote_id) {
@@ -608,16 +326,7 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } }
     });
 
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const userId = user.id;
-    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
+    // ─── PARALLEL: Auth + Profile ───────────────────────────────
     const { message, conversation_id, memory_context }: ChatRequest = await req.json();
 
     if (!message) {
@@ -627,25 +336,52 @@ serve(async (req) => {
       );
     }
 
-    // ─── PARALLEL: Profile + Team membership ────────────────────
-    const { data: profile } = await serviceSupabase
-      .from("profiles")
-      .select("team_id, full_name")
-      .eq("id", userId)
-      .single();
+    const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!profile?.team_id) {
+    // Parallelise: auth + profile fetch
+    const [authResult, profileResult] = await Promise.all([
+      userSupabase.auth.getUser(),
+      // We need userId for profile, but we can start with the token
+      // Actually we need to auth first. Let's just auth then parallel the rest.
+      Promise.resolve(null),
+    ]);
+
+    const { data: { user }, error: authError } = authResult;
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = user.id;
+
+    // ─── PARALLEL: Profile + Membership + Preferences ───────────
+    const [profileRes, membershipRes, prefsRes] = await Promise.all([
+      serviceSupabase.from("profiles").select("team_id, full_name").eq("id", userId).single(),
+      serviceSupabase.from("team_memberships").select("id").eq("user_id", userId).limit(1).maybeSingle(),
+      serviceSupabase.from("foreman_ai_preferences").select("*").eq("user_id", userId).maybeSingle(),
+    ]);
+
+    if (!profileRes.data?.team_id) {
       return new Response(
         JSON.stringify({ error: "User not in a team" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const teamId = profile.team_id;
-    const userName = profile.full_name || "there";
+    const teamId = profileRes.data.team_id;
+    const userName = profileRes.data.full_name || "there";
+    const userPrefs = prefsRes.data;
+
+    if (!membershipRes.data) {
+      return new Response(
+        JSON.stringify({ error: "Not a team member" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // ─── QUICK-ACTION SHORT-CIRCUIT ─────────────────────────────
-    // For known button-initiated messages, skip the AI entirely
     const quickActionShortCircuits: Record<string, { intent: string; label: string; response: string }> = {
       "Help me create a new quote": {
         intent: "create_quote",
@@ -657,12 +393,16 @@ serve(async (req) => {
         label: "Log Expense",
         response: "No problem! Tell me the details:\n\n1. **Vendor/supplier** — where did you spend?\n2. **Amount** — how much?\n3. **Category** — materials, fuel, tools, labour, permits, or other\n\nFor example:\n> *\"€85 at Screwfix for materials\"*",
       },
+      "Help me create a new invoice": {
+        intent: "create_invoice",
+        label: "Create Invoice",
+        response: "Sure! I'll need:\n\n1. **Customer name** — who is this for?\n2. **Line items** — description, quantity, and price for each\n3. **Any notes** — payment terms, references, etc.\n\nFor example:\n> *\"Invoice John Murphy for boiler service €250\"*",
+      },
     };
 
     const shortCircuit = quickActionShortCircuits[message];
     if (shortCircuit) {
       const actionId = crypto.randomUUID();
-      // Still create conversation + save messages in background
       let activeConversationId = conversation_id;
       if (!activeConversationId) {
         const { data: newConv } = await serviceSupabase
@@ -672,8 +412,8 @@ serve(async (req) => {
           .single();
         if (newConv) activeConversationId = newConv.id;
       }
+      // Fire and forget
       if (activeConversationId) {
-        // Fire and forget — don't await
         serviceSupabase.from("george_messages").insert([
           { conversation_id: activeConversationId, role: "user", content: message },
           { conversation_id: activeConversationId, role: "assistant", content: shortCircuit.response },
@@ -702,32 +442,7 @@ serve(async (req) => {
 
     console.log("george-chat: Processing message:", message);
 
-    // ─── PARALLEL: Membership + Preferences + Conversation ──────
-    const [membershipResult, prefsResult] = await Promise.all([
-      serviceSupabase
-        .from("team_memberships")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("team_id", teamId)
-        .single(),
-      serviceSupabase
-        .from("foreman_ai_preferences")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("team_id", teamId)
-        .maybeSingle(),
-    ]);
-
-    if (!membershipResult.data) {
-      return new Response(
-        JSON.stringify({ error: "Not a team member" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const userPrefs = prefsResult.data;
-
-    // ─── CONVERSATION MANAGEMENT ──────────────────────────────────
+    // ─── PARALLEL: Conversation + History ─────────────────────────
     let activeConversationId = conversation_id;
     if (!activeConversationId) {
       const { data: newConv } = await serviceSupabase
@@ -742,7 +457,7 @@ serve(async (req) => {
       if (newConv) activeConversationId = newConv.id;
     }
 
-    // ─── PARALLEL: Save user message + fetch history ────────────
+    // Save user message + fetch history in parallel
     const [, historyResult] = await Promise.all([
       activeConversationId
         ? serviceSupabase.from("george_messages").insert({ conversation_id: activeConversationId, role: "user", content: message })
@@ -764,7 +479,6 @@ serve(async (req) => {
 
     // ─── MEMORY CONTEXT ──────────────────────────────────────────
     let memoryPrompt = "";
-    const memoryResolutionLog: any[] = [];
     if (memory_context) {
       const parts: string[] = [];
       if (memory_context.current_customer) {
@@ -779,7 +493,6 @@ serve(async (req) => {
       if (memory_context.current_invoice) {
         parts.push(`Current invoice: ${memory_context.current_invoice.number} (id: ${memory_context.current_invoice.id})`);
       }
-      // Session entities for "same customer", "use the same description" etc.
       if (memory_context.session_entities?.length) {
         parts.push(`\nRecent session references:`);
         for (const entity of memory_context.session_entities) {
@@ -789,7 +502,7 @@ serve(async (req) => {
       if (parts.length > 0) {
         memoryPrompt = `\n\nACTIVE CONTEXT (from current session):\n${parts.join("\n")}\nUse this context when the user says "same customer", "that quote", "the same description", "make it X", etc.
 When resolving an ambiguous follow-up using context, mention which context you used in your response (e.g. "Using your current draft quote...").
-If there are multiple possible matches and you're unsure, ASK a compact clarifying question instead of guessing. Example: "I found 2 John Murphys — do you mean John Murphy (Electrical) or John Murphy (Plumbing)?"`;
+If there are multiple possible matches and you're unsure, ASK a compact clarifying question instead of guessing.`;
       }
     }
 
@@ -831,8 +544,9 @@ IMPORTANT RULES:
 
     if (!lovableApiKey) {
       const fallbackMsg = "I can help you check today's jobs, create quotes, log expenses, or chase overdue invoices. What would you like to do?";
+      // Fire and forget
       if (activeConversationId) {
-        await serviceSupabase.from("george_messages").insert({
+        serviceSupabase.from("george_messages").insert({
           conversation_id: activeConversationId, role: "assistant", content: fallbackMsg,
         });
       }
@@ -840,18 +554,8 @@ IMPORTANT RULES:
         JSON.stringify({
           message: fallbackMsg,
           conversation_id: activeConversationId,
-          action_plan: {
-            action_id: actionId,
-            status: "completed",
-            input_source: "typed",
-            command_text: message,
-            timestamp: now.toISOString(),
-            intent: "chat",
-            intent_label: "Chat",
-            entities: [],
-            steps: [],
-            text_response: fallbackMsg,
-          },
+          // No action_plan for pure chat — renders as plain bubble
+          action_plan: null,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -893,11 +597,12 @@ IMPORTANT RULES:
     } catch (aiErr) {
       console.error("george-chat: AI call failed:", aiErr);
       const fallbackMsg = "I'm having trouble right now. You can still use the app normally — please try again in a minute.";
+      // Fire and forget
       if (activeConversationId) {
-        await serviceSupabase.from("george_messages").insert({
+        serviceSupabase.from("george_messages").insert({
           conversation_id: activeConversationId, role: "assistant", content: fallbackMsg,
         });
-        await serviceSupabase.from("george_conversations")
+        serviceSupabase.from("george_conversations")
           .update({ updated_at: now.toISOString() })
           .eq("id", activeConversationId);
       }
@@ -938,11 +643,9 @@ IMPORTANT RULES:
         let parameters = {};
         try { parameters = JSON.parse(toolCall.function.arguments || "{}"); } catch {}
 
-        // Check if this tool call needs confirmation — if so, defer execution
         if (recordCreators.includes(functionName)) {
           console.log(`george-chat: Deferring ${functionName} — requires confirmation`);
           pendingToolCalls.push({ function_name: functionName, parameters });
-          // Push a synthetic result so the follow-up AI call works
           toolResults.push({ name: functionName, result: { message: `Action prepared — waiting for your confirmation before saving to the system. DO NOT tell the user this has been saved or created yet.`, deferred: true } });
           deferredExecution = true;
         } else {
@@ -995,7 +698,6 @@ IMPORTANT RULES:
           const followUpData = await followUpResponse.json();
           finalMessage = followUpData.choices?.[0]?.message?.content ||
             toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
-          // Override misleading AI message when execution is deferred
           if (deferredExecution) {
             finalMessage = "I've prepared everything — please review and confirm below to save.";
           }
@@ -1009,25 +711,38 @@ IMPORTANT RULES:
       finalMessage = choice?.message?.content || "I'm here to help you manage your business. What would you like to do?";
     }
 
-    // ─── PERSIST RESPONSE ─────────────────────────────────────────
+    // ─── PERSIST RESPONSE (fire and forget) ───────────────────────
     if (activeConversationId) {
-      await serviceSupabase.from("george_messages").insert({
+      serviceSupabase.from("george_messages").insert({
         conversation_id: activeConversationId, role: "assistant", content: finalMessage,
       });
-      await serviceSupabase.from("george_conversations")
+      serviceSupabase.from("george_conversations")
         .update({ updated_at: now.toISOString() })
         .eq("id", activeConversationId);
     }
 
     // ─── BUILD STRUCTURED ACTION PLAN ─────────────────────────────
     const intentInfo = classifyIntent(toolCalls);
+    const hasAction = toolCalls.length > 0;
+
+    // Change 5: For pure chat (no tools called), return action_plan: null
+    if (!hasAction) {
+      return new Response(
+        JSON.stringify({
+          message: finalMessage,
+          conversation_id: activeConversationId,
+          action_plan: null,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const entities = extractEntities(toolCalls);
     const steps = buildActionSteps(toolCalls, toolResults);
     const confirmation = needsConfirmation(toolCalls);
     const output = buildOutput(intentInfo, toolCalls, toolResults);
     const updatedMemory = buildMemory(toolCalls, toolResults, memory_context);
 
-    const hasAction = toolCalls.length > 0;
     const anyFailed = steps.some((s: any) => s.status === "failed");
 
     const actionPlan: any = {
@@ -1050,50 +765,33 @@ IMPORTANT RULES:
       conversation_id: activeConversationId,
     };
 
-    // ─── AUDIT LOG ────────────────────────────────────────────────
-    if (hasAction) {
-      // Build memory resolution log
-      const memoryLog: any = {};
-      if (memory_context?.current_customer) {
-        memoryLog.customer_context_used = memory_context.current_customer.name;
-      }
-      if (memory_context?.current_quote) {
-        memoryLog.quote_context_used = memory_context.current_quote.number;
-      }
-      if (memory_context?.current_invoice) {
-        memoryLog.invoice_context_used = memory_context.current_invoice.number;
-      }
-      if (memory_context?.current_job) {
-        memoryLog.job_context_used = memory_context.current_job.title;
-      }
-      if (memory_context?.session_entities?.length) {
-        memoryLog.session_entities_available = memory_context.session_entities.length;
-      }
-      if (userPrefs) {
-        memoryLog.preferences_applied = true;
-      }
+    // ─── AUDIT LOG (fire and forget) ──────────────────────────────
+    const memoryLog: any = {};
+    if (memory_context?.current_customer) memoryLog.customer_context_used = memory_context.current_customer.name;
+    if (memory_context?.current_quote) memoryLog.quote_context_used = memory_context.current_quote.number;
+    if (memory_context?.current_invoice) memoryLog.invoice_context_used = memory_context.current_invoice.number;
+    if (memory_context?.current_job) memoryLog.job_context_used = memory_context.current_job.title;
+    if (memory_context?.session_entities?.length) memoryLog.session_entities_available = memory_context.session_entities.length;
+    if (userPrefs) memoryLog.preferences_applied = true;
 
-      try {
-        await serviceSupabase.from("ai_action_audit").insert({
-          team_id: teamId,
-          user_id: userId,
-          action_id: actionId,
-          command_text: message,
-          intent: intentInfo.intent,
-          intent_label: intentInfo.label,
-          entities: JSON.stringify(entities),
-          steps: JSON.stringify(steps),
-          status: actionPlan.status,
-          output_type: intentInfo.outputType,
-          output_record_id: output?.record_id || null,
-          confirmation_required: !!confirmation,
-          conversation_id: activeConversationId,
-          memory_resolution_log: Object.keys(memoryLog).length > 0 ? memoryLog : null,
-        });
-      } catch (auditErr) {
-        console.error("george-chat: Audit log error (non-fatal):", auditErr);
-      }
-    }
+    serviceSupabase.from("ai_action_audit").insert({
+      team_id: teamId,
+      user_id: userId,
+      action_id: actionId,
+      command_text: message,
+      intent: intentInfo.intent,
+      intent_label: intentInfo.label,
+      entities: JSON.stringify(entities),
+      steps: JSON.stringify(steps),
+      status: actionPlan.status,
+      output_type: intentInfo.outputType,
+      output_record_id: output?.record_id || null,
+      confirmation_required: !!confirmation,
+      conversation_id: activeConversationId,
+      memory_resolution_log: Object.keys(memoryLog).length > 0 ? memoryLog : null,
+    }).then(({ error }) => {
+      if (error) console.error("george-chat: Audit log error (non-fatal):", error);
+    });
 
     return new Response(
       JSON.stringify({

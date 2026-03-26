@@ -145,6 +145,7 @@ export default function George() {
 
   /** Enhanced handler that processes structured action plans */
   const handleStructuredResponse = useCallback((responseData: any, conversationId?: string) => {
+    // If action_plan is null/undefined, the backend signalled a pure chat response — skip action plan rendering
     if (responseData.action_plan) {
       addActionPlan(responseData.action_plan);
 
@@ -165,32 +166,29 @@ export default function George() {
     queryClient.invalidateQueries({ queryKey: ["customers"] });
   }, [addActionPlan, queryClient, globalStartTask]);
 
-  const handleQuickAction = useCallback(async (action: string, message: string) => {
+  const handleQuickAction = useCallback(async (action: string | null, message: string) => {
     addMessage("user", message);
     setIsProcessing(true);
 
-    // Show immediate thinking indicator
-    const thinkingId = crypto.randomUUID();
-    const thinkingMsg: Message = {
-      id: thinkingId,
-      role: "assistant",
-      content: "⏳ Foreman AI is thinking...",
-      timestamp: new Date(),
-    };
-    setDisplayItems(prev => [...prev, { type: "message", data: thinkingMsg }]);
-
     try {
-      const { data: teamId } = await supabase.rpc("get_user_team_id");
-      const { data: userData } = await supabase.auth.getUser();
-      setContext({ userId: userData.user?.id, teamId: teamId || undefined });
-      const result = await callWebhook(action);
-
-      // Replace thinking message with real response
-      setDisplayItems(prev => prev.filter(item => !(item.type === "message" && item.data.id === thinkingId)));
-      addMessage("assistant", result);
+      if (action) {
+        // Direct webhook call for actions like get_todays_jobs
+        const { data: teamId } = await supabase.rpc("get_user_team_id");
+        const { data: userData } = await supabase.auth.getUser();
+        setContext({ userId: userData.user?.id, teamId: teamId || undefined });
+        const result = await callWebhook(action);
+        addMessage("assistant", result);
+      } else {
+        // No action — route through george-chat as a normal message
+        // The input components handle this, but for quick actions without action we dispatch an event
+        window.dispatchEvent(new CustomEvent("foremanai-quick-action", {
+          detail: { message, autoSend: true },
+        }));
+        setIsProcessing(false);
+        return;
+      }
     } catch (error) {
       console.error("Quick action error:", error);
-      setDisplayItems(prev => prev.filter(item => !(item.type === "message" && item.data.id === thinkingId)));
       addMessage("assistant", "Sorry, something went wrong. Please try again.");
     } finally {
       setIsProcessing(false);
@@ -228,6 +226,16 @@ export default function George() {
     setPhotoQuoteSuggestion(null);
   }, [navigate]);
 
+  // Route map for inline navigation after confirmation
+  const routeMap: Record<string, string> = {
+    create_quote: "/quotes",
+    create_invoice: "/invoices",
+    create_invoice_from_template: "/invoices",
+    use_template_for_quote: "/quotes",
+    create_job: "/jobs",
+    log_expense: "/expenses",
+  };
+
   const handleConfirmation = useCallback(async (planId: string, action: "confirm" | "review" | "cancel") => {
     const plan = displayItems.find(i => i.type === "action_plan" && i.data.action_id === planId);
     
@@ -255,9 +263,24 @@ export default function George() {
       setIsProcessing(false);
     }
 
+    // Determine the navigation target for inline link
+    const firstTool = plan?.type === "action_plan" ? plan.data.pending_tool_calls?.[0]?.function_name : null;
+    const targetRoute = firstTool ? routeMap[firstTool] : null;
+
     setDisplayItems(prev =>
       prev.map(item => {
         if (item.type === "action_plan" && item.data.action_id === planId) {
+          const updatedOutput = item.data.output ? {
+            ...item.data.output,
+            // Add inline navigation action after confirmation
+            quick_actions: action === "confirm" && targetRoute
+              ? [
+                  { label: `View ${item.data.intent_label || "Record"}`, action: `navigate:${targetRoute}`, variant: "default" as const },
+                  { label: "Edit", action: "edit", variant: "outline" as const },
+                ]
+              : item.data.output.quick_actions,
+          } : item.data.output;
+
           return {
             ...item,
             data: {
@@ -265,6 +288,7 @@ export default function George() {
               status: action === "confirm" ? "completed" as const : action === "cancel" ? "failed" as const : item.data.status,
               confirmation_gate: undefined,
               pending_tool_calls: undefined,
+              output: updatedOutput,
             },
           };
         }
@@ -274,33 +298,20 @@ export default function George() {
 
     if (action === "confirm") {
       addMessage("assistant", "✅ Done! Your record has been created.");
-      // Complete global task
       globalCompleteTask("Record created successfully");
-      // Determine where to navigate based on the tool calls
-      const firstTool = plan?.type === "action_plan" ? plan.data.pending_tool_calls?.[0]?.function_name : null;
-      const routeMap: Record<string, string> = {
-        create_quote: "/quotes",
-        create_invoice: "/invoices",
-        create_invoice_from_template: "/invoices",
-        use_template_for_quote: "/quotes",
-        create_job: "/jobs",
-        log_expense: "/expenses",
-      };
-      const targetRoute = firstTool ? routeMap[firstTool] : null;
-      if (targetRoute) {
-        const { toast: sonnerToast } = await import("sonner");
-        sonnerToast.success("Record created successfully", {
-          action: { label: "View", onClick: () => navigate(targetRoute) },
-        });
-      }
     } else if (action === "cancel") {
       addMessage("assistant", "❌ Action cancelled. No records were created.");
     } else {
       addMessage("assistant", "Opening for review...");
     }
-  }, [addMessage, displayItems, queryClient]);
+  }, [addMessage, displayItems, queryClient, globalCompleteTask]);
 
   const handleOutputAction = useCallback((planId: string, action: string) => {
+    // Handle inline navigation links (navigate:/quotes etc.)
+    if (action.startsWith("navigate:")) {
+      navigate(action.replace("navigate:", ""));
+      return;
+    }
     if (action === "edit") {
       const plan = displayItems.find(i => i.type === "action_plan" && i.data.action_id === planId);
       if (plan && plan.type === "action_plan") {
