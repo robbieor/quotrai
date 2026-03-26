@@ -111,6 +111,8 @@ interface OnboardingModalProps {
 export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [data, setData] = useState<OnboardingData>({
     fullName: "",
     companyName: "",
