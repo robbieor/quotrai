@@ -37,13 +37,13 @@ export function RevenueMultiChart({ data, isLoading }: RevenueMultiChartProps) {
       <CardHeader className="pb-1 px-4 pt-4">
         <CardTitle className="text-sm font-medium">Revenue vs Cash vs Overdue</CardTitle>
       </CardHeader>
-      <CardContent className="px-2 pb-3">
+      <CardContent className="px-2 pb-3 h-[180px] sm:h-[220px]">
         {!data || data.length === 0 ? (
-          <div className="h-[220px] flex items-center justify-center">
+          <div className="h-[180px] sm:h-[220px] flex items-center justify-center">
             <p className="text-xs text-muted-foreground">No data yet</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />

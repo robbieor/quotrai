@@ -38,22 +38,22 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
   return (
     <div className="rounded-lg border border-border bg-card">
       {/* Stats strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-border border-b border-border overflow-x-auto">
-        <div className="p-3 text-center">
+      <div className="flex overflow-x-auto scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-4 divide-x divide-border border-b border-border">
+        <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p>
           <p className={`text-lg font-bold tabular-nums ${data.overdueCount > 0 ? "text-destructive" : "text-foreground"}`}>
             {formatCurrency(data.totalOverdue)}
           </p>
           <p className="text-[10px] text-muted-foreground">{data.overdueCount} invoice{data.overdueCount !== 1 ? "s" : ""}</p>
         </div>
-        <div className="p-3 text-center">
+        <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Stale Quotes</p>
           <p className={`text-lg font-bold tabular-nums ${data.quotesNeedFollowUp > 0 ? "text-amber-500" : "text-foreground"}`}>
             {data.quotesNeedFollowUp}
           </p>
           <p className="text-[10px] text-muted-foreground">{formatCurrency(data.quotesFollowUpValue)} at risk</p>
         </div>
-        <div className="p-3 text-center">
+        <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Stuck Jobs</p>
           <p className={`text-lg font-bold tabular-nums ${data.stuckJobs > 0 ? "text-amber-500" : "text-foreground"}`}>
             {data.stuckJobs}
@@ -76,7 +76,7 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
             <div className="h-7 w-7 rounded-lg overflow-hidden border border-primary/20 shrink-0">
               <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
             </div>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-sm text-muted-foreground line-clamp-2 sm:truncate">
               <span className="font-medium text-foreground">Foreman AI:</span> {data.aiRecommendation}
             </p>
           </div>
@@ -90,7 +90,7 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
             </p>
           </div>
         )}
-        <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
           {data.overdueCount > 0 && (
             <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => navigate("/invoices?status=overdue")}>
               <Receipt className="h-3 w-3" /> Chase

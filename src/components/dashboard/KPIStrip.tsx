@@ -35,7 +35,7 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
   return (
     <div
       className={cn(
-        "bg-card border border-border rounded-lg p-3 transition-all duration-200 min-w-0 group relative",
+        "bg-card border border-border rounded-lg p-3 transition-all duration-200 min-w-[170px] shrink-0 snap-start sm:min-w-0 sm:shrink group relative",
         onClick && "cursor-pointer hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm"
       )}
       onClick={onClick}
@@ -72,9 +72,9 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
 
   if (isLoading) {
     return (
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:overflow-visible sm:pb-0">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-card border border-border rounded-lg p-3">
+          <div key={i} className="bg-card border border-border rounded-lg p-3 min-w-[170px] shrink-0 snap-start sm:min-w-0 sm:shrink">
             <Skeleton className="h-3 w-16 mb-2" />
             <Skeleton className="h-6 w-20 mb-1" />
             <Skeleton className="h-3 w-24" />
@@ -90,7 +90,7 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const changePct = Math.abs(data.revenueChangePercent).toFixed(0);
 
   return (
-    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:overflow-visible sm:pb-0">
       <KPICard
         label={`Cash Collected ${suffix}`}
         value={formatCurrency(data.cashCollectedMTD)}

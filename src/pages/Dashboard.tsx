@@ -96,7 +96,7 @@ function DashboardContent() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         <UpgradePromptBanner />
         <OnboardingChecklist />
 
