@@ -8,7 +8,7 @@
  */
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
-const STORAGE_KEY = "quotr_utm";
+const STORAGE_KEY = "foreman_utm";
 
 export type UtmParams = Partial<Record<(typeof UTM_KEYS)[number], string>>;
 
