@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useParams, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -21,7 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileText, Building2, User, Calendar, AlertCircle, CheckCircle, Loader2, XCircle } from "lucide-react";
+import { FileText, User, Calendar, AlertCircle, CheckCircle, Loader2, XCircle, PenTool, Eraser } from "lucide-react";
+import SignatureCanvas from "react-signature-canvas";
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -47,11 +48,18 @@ export default function QuotePortal() {
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+  const sigRef = useRef<SignatureCanvas>(null);
+  const [hasSigned, setHasSigned] = useState(false);
 
   const canAccept = quote?.status === "sent" || quote?.status === "draft";
 
   const handleAccept = async () => {
     if (!token) return;
+    // Get signature data URL if signed
+    let signatureDataUrl: string | undefined;
+    if (sigRef.current && !sigRef.current.isEmpty()) {
+      signatureDataUrl = sigRef.current.getTrimmedCanvas().toDataURL("image/png");
+    }
     await acceptQuote.mutateAsync(token);
     setShowAcceptDialog(false);
   };
@@ -102,11 +110,11 @@ export default function QuotePortal() {
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        {/* Header */}
+        {/* Header with company branding */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl">
-              T
+              {quote.team.name?.charAt(0) || "F"}
             </div>
             <div>
               <h1 className="text-2xl font-bold">{quote.team.name}</h1>
@@ -246,9 +254,9 @@ export default function QuotePortal() {
           </CardContent>
         </Card>
 
-        {/* Accept Confirmation Dialog */}
+        {/* Accept Confirmation Dialog with E-Signature */}
         <AlertDialog open={showAcceptDialog} onOpenChange={setShowAcceptDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-[500px]">
             <AlertDialogHeader>
               <AlertDialogTitle>Accept this quote?</AlertDialogTitle>
               <AlertDialogDescription>
@@ -256,16 +264,56 @@ export default function QuotePortal() {
                 An invoice for {formatCurrency(quote.total)} will be generated and sent to you.
               </AlertDialogDescription>
             </AlertDialogHeader>
+
+            {/* Signature Pad */}
+            <div className="space-y-2 py-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <PenTool className="h-3.5 w-3.5" />
+                  Your Signature
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    sigRef.current?.clear();
+                    setHasSigned(false);
+                  }}
+                >
+                  <Eraser className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              </div>
+              <div className="border-2 border-dashed border-border rounded-lg bg-background overflow-hidden">
+                <SignatureCanvas
+                  ref={sigRef}
+                  canvasProps={{
+                    width: 440,
+                    height: 150,
+                    className: "w-full",
+                    style: { width: "100%", height: "150px" },
+                  }}
+                  penColor="hsl(var(--foreground))"
+                  onEnd={() => setHasSigned(true)}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Sign above to confirm your acceptance. Your signature will be attached to the accepted quote.
+              </p>
+            </div>
+
             <AlertDialogFooter>
               <AlertDialogCancel disabled={acceptQuote.isPending}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleAccept} disabled={acceptQuote.isPending}>
+              <AlertDialogAction onClick={handleAccept} disabled={acceptQuote.isPending || !hasSigned}>
                 {acceptQuote.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Processing...
                   </>
                 ) : (
-                  "Accept Quote"
+                  "Accept & Sign Quote"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

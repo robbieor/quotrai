@@ -24,7 +24,6 @@ serve(async (req) => {
       );
     }
 
-    // Verify auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -47,7 +46,6 @@ serve(async (req) => {
 
     const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user profile and team
     const { data: profile } = await serviceSupabase
       .from("profiles")
       .select("team_id, trade_type, currency")
@@ -61,30 +59,40 @@ serve(async (req) => {
       );
     }
 
-    const { image_url, additional_context } = await req.json();
+    const { image_url, image_urls, additional_context } = await req.json();
+    const allImageUrls: string[] = image_urls || (image_url ? [image_url] : []);
 
-    if (!image_url) {
+    if (allImageUrls.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Image URL is required" }),
+        JSON.stringify({ error: "At least one image URL is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Fetch user's templates with items for pricing context
-    const { data: templates } = await serviceSupabase
-      .from("templates")
-      .select("id, name, category, description, estimated_duration, labour_rate_default")
-      .eq("team_id", profile.team_id)
-      .eq("is_active", true)
-      .limit(50);
+    // Fetch templates, template items, and price book in parallel
+    const [templatesRes, priceBookRes] = await Promise.all([
+      serviceSupabase
+        .from("templates")
+        .select("id, name, category, description, estimated_duration, labour_rate_default")
+        .eq("team_id", profile.team_id)
+        .eq("is_active", true)
+        .limit(50),
+      serviceSupabase
+        .from("supplier_price_book")
+        .select("item_name, supplier_name, category, unit, cost_price, sell_price")
+        .eq("team_id", profile.team_id)
+        .limit(200),
+    ]);
+
+    const templates = templatesRes.data || [];
+    const priceBook = priceBookRes.data || [];
 
     const { data: templateItems } = await serviceSupabase
       .from("template_items")
       .select("template_id, description, quantity, unit_price, unit, item_type, is_material")
-      .in("template_id", (templates || []).map((t) => t.id));
+      .in("template_id", templates.map((t) => t.id));
 
-    // Build template context for the AI
-    const templateContext = (templates || []).map((t) => {
+    const templateContext = templates.map((t) => {
       const items = (templateItems || []).filter((i) => i.template_id === t.id);
       const totalPrice = items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
       return {
@@ -108,22 +116,26 @@ serve(async (req) => {
     const currency = profile.currency || "EUR";
     const tradeType = profile.trade_type || "general";
 
-    // Call Gemini vision to analyse the photo
     const systemPrompt = `You are an expert ${tradeType} trade estimator. You analyse photos of job sites and identify what work needs to be done, then generate a quote with line items and pricing.
 
 You have access to the user's saved templates and pricing:
 ${JSON.stringify(templateContext, null, 2)}
 
+${priceBook.length > 0 ? `You also have access to the user's supplier price book. Use these prices when matching materials:
+${JSON.stringify(priceBook, null, 2)}` : ""}
+
 Currency: ${currency}
 
 INSTRUCTIONS:
-1. Analyse the photo to identify the type of work needed
-2. Match it to the most relevant template(s) from the user's saved templates
-3. If no template matches, use your trade knowledge to estimate line items and fair pricing for the ${tradeType} trade
-4. Generate a structured quote suggestion
+1. Analyse ALL provided photos to identify the type of work needed
+2. Cross-reference details across multiple photos for a complete picture
+3. Match to the most relevant template(s) from the user's saved templates
+4. When materials are identified, check the supplier price book for accurate pricing
+5. If no template or price book match, use your trade knowledge to estimate
+6. For each material, include a "material_name" field with the specific material identified
 
 IMPORTANT:
-- Use the user's template pricing when a match exists
+- Use supplier price book sell_price when a match exists
 - Be specific about materials and labour
 - Include realistic quantities
 - The user will review and adjust before sending
@@ -139,7 +151,8 @@ Respond with a JSON object using this EXACT structure (no markdown, just raw JSO
       "description": "Line item description",
       "quantity": 1,
       "unit_price": 100,
-      "is_material": false
+      "is_material": false,
+      "material_name": "Specific material name or null"
     }
   ],
   "subtotal": 500,
@@ -148,7 +161,19 @@ Respond with a JSON object using this EXACT structure (no markdown, just raw JSO
   "follow_up_questions": ["Question about measurements?", "Question about materials?"]
 }`;
 
-    console.log("george-photo-quote: Sending image to Gemini for analysis");
+    console.log(`george-photo-quote: Sending ${allImageUrls.length} image(s) to AI for analysis`);
+
+    // Build content array with all images
+    const contentParts: any[] = allImageUrls.map((url) => ({
+      type: "image_url",
+      image_url: { url },
+    }));
+    contentParts.push({
+      type: "text",
+      text: additional_context
+        ? `Here are ${allImageUrls.length} photo(s) of the job. Additional context: "${additional_context}". Analyse and generate a quote.`
+        : `Here are ${allImageUrls.length} photo(s) of the job. Analyse and generate a quote suggestion with line items.`,
+    });
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -160,21 +185,7 @@ Respond with a JSON object using this EXACT structure (no markdown, just raw JSO
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: image_url },
-              },
-              {
-                type: "text",
-                text: additional_context
-                  ? `Here's a photo of the job. Additional context from the tradesperson: "${additional_context}". Analyse this and generate a quote.`
-                  : "Here's a photo of the job. Analyse this and generate a quote suggestion with line items.",
-              },
-            ],
-          },
+          { role: "user", content: contentParts },
         ],
         temperature: 0.3,
         max_tokens: 2000,
@@ -206,7 +217,6 @@ Respond with a JSON object using this EXACT structure (no markdown, just raw JSO
 
     console.log("george-photo-quote: Raw AI response:", content);
 
-    // Parse the JSON response (strip markdown code fences if present)
     let quoteData;
     try {
       const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();

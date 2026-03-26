@@ -32,6 +32,7 @@ import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useEffect } from "react";
+import { EndOfDaySummary } from "@/components/dashboard/EndOfDaySummary";
 
 const quickActions = [
   { label: "New Quote", icon: FileText, route: "/quotes" },
@@ -97,6 +98,7 @@ function DashboardContent() {
   return (
     <DashboardLayout>
       <div className="space-y-2 sm:space-y-3">
+        <EndOfDaySummary />
         <UpgradePromptBanner />
         <OnboardingChecklist />
 

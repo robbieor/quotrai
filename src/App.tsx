@@ -35,6 +35,7 @@ const Documents = lazy(() => import("./pages/Documents"));
 const Certificates = lazy(() => import("./pages/Certificates"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const TimeTracking = lazy(() => import("./pages/TimeTracking"));
+const PriceBook = lazy(() => import("./pages/PriceBook"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const AppStoreAssets = lazy(() => import("./pages/AppStoreAssets"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -134,6 +135,7 @@ const App = () => {
                 <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
                 <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
                 <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
+                <Route path="/price-book" element={<RoleGuard><PriceBook /></RoleGuard>} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/time-tracking" element={<TimeTracking />} />
                 <Route path="/settings" element={<Settings />} />
