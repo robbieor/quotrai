@@ -22,7 +22,7 @@ export function useQuotes() {
         .select(`
           *,
           customer:customers(name, country_code),
-          job:jobs(id, title),
+          job:jobs!quotes_job_id_fkey(id, title),
           quote_items(*)
         `, { count: "exact" })
         .order("created_at", { ascending: false })
@@ -47,7 +47,7 @@ export function useQuote(id: string | null) {
         .select(`
           *,
           customer:customers(name, country_code),
-          job:jobs(id, title),
+          job:jobs!quotes_job_id_fkey(id, title),
           quote_items(*)
         `)
         .eq("id", id)
