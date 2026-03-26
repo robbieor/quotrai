@@ -2058,6 +2058,79 @@ export type Database = {
           },
         ]
       }
+      job_photos: {
+        Row: {
+          caption: string | null
+          id: string
+          job_id: string
+          photo_url: string
+          team_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          id?: string
+          job_id: string
+          photo_url: string
+          team_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          id?: string
+          job_id?: string
+          photo_url?: string
+          team_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_photos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_photos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_job_profitability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_photos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_jobs_at_risk"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_photos_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "v_segment_jobs_at_risk"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_photos_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_photos_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_reminders: {
         Row: {
           created_at: string
@@ -2418,6 +2491,8 @@ export type Database = {
           estimated_value: number | null
           id: string
           labour_cost: number | null
+          latitude: number | null
+          longitude: number | null
           materials_cost: number | null
           quote_id: string | null
           recurring_job_id: string | null
@@ -2436,6 +2511,8 @@ export type Database = {
           estimated_value?: number | null
           id?: string
           labour_cost?: number | null
+          latitude?: number | null
+          longitude?: number | null
           materials_cost?: number | null
           quote_id?: string | null
           recurring_job_id?: string | null
@@ -2454,6 +2531,8 @@ export type Database = {
           estimated_value?: number | null
           id?: string
           labour_cost?: number | null
+          latitude?: number | null
+          longitude?: number | null
           materials_cost?: number | null
           quote_id?: string | null
           recurring_job_id?: string | null
@@ -3263,6 +3342,7 @@ export type Database = {
           phone: string | null
           referral_code: string | null
           team_id: string | null
+          timezone: string | null
           trade_type: string | null
           updated_at: string
           workflow_mode: string | null
@@ -3298,6 +3378,7 @@ export type Database = {
           phone?: string | null
           referral_code?: string | null
           team_id?: string | null
+          timezone?: string | null
           trade_type?: string | null
           updated_at?: string
           workflow_mode?: string | null
@@ -3333,6 +3414,7 @@ export type Database = {
           phone?: string | null
           referral_code?: string | null
           team_id?: string | null
+          timezone?: string | null
           trade_type?: string | null
           updated_at?: string
           workflow_mode?: string | null
@@ -3463,6 +3545,8 @@ export type Database = {
           portal_token: string | null
           ref: string
           reminders_enabled: boolean | null
+          signature_url: string | null
+          signed_at: string | null
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number | null
           tax_amount: number | null
@@ -3488,6 +3572,8 @@ export type Database = {
           portal_token?: string | null
           ref?: string
           reminders_enabled?: boolean | null
+          signature_url?: string | null
+          signed_at?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number | null
           tax_amount?: number | null
@@ -3513,6 +3599,8 @@ export type Database = {
           portal_token?: string | null
           ref?: string
           reminders_enabled?: boolean | null
+          signature_url?: string | null
+          signed_at?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number | null
           tax_amount?: number | null
@@ -4046,6 +4134,60 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_price_book: {
+        Row: {
+          category: string | null
+          cost_price: number
+          created_at: string
+          id: string
+          item_name: string
+          last_updated: string
+          sell_price: number
+          supplier_name: string | null
+          team_id: string
+          unit: string | null
+        }
+        Insert: {
+          category?: string | null
+          cost_price?: number
+          created_at?: string
+          id?: string
+          item_name: string
+          last_updated?: string
+          sell_price?: number
+          supplier_name?: string | null
+          team_id: string
+          unit?: string | null
+        }
+        Update: {
+          category?: string | null
+          cost_price?: number
+          created_at?: string
+          id?: string
+          item_name?: string
+          last_updated?: string
+          sell_price?: number
+          supplier_name?: string | null
+          team_id?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_price_book_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_price_book_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
