@@ -44,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase.from("email_send_log").insert({ message_id: messageId, template_name: "quote-notification", recipient_email: ownerProfile.email, status: "pending" });
     const { error: enqueueError } = await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: messageId, to: ownerProfile.email, from: `Foreman <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${emoji} Quote ${quote.display_number} has been ${statusLabel.toLowerCase()}`, html, text: `Quote ${quote.display_number} has been ${statusLabel.toLowerCase()}`, purpose: "transactional", label: "quote-notification", queued_at: new Date().toISOString() },
+      payload: { message_id: messageId, to: ownerProfile.email, from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${emoji} Quote ${quote.display_number} has been ${statusLabel.toLowerCase()}`, html, text: `Quote ${quote.display_number} has been ${statusLabel.toLowerCase()}`, purpose: "transactional", label: "quote-notification", queued_at: new Date().toISOString() },
     });
     if (enqueueError) throw enqueueError;
 

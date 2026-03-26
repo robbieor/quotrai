@@ -105,7 +105,7 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to: email,
-        from: `${inviterName || "Foreman"} <noreply@${FROM_DOMAIN}>`,
+        from: `${inviterName || "Foreman"} <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: `You've been invited to join ${teamName} on Foreman`,
         html,

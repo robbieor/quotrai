@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
           payload: {
             message_id: messageId,
             to: customer.email,
-            from: `${fromName} via Foreman <noreply@${FROM_DOMAIN}>`,
+            from: `${fromName} via Foreman <support@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject, html,
             text: `Payment reminder for invoice ${inv.display_number} - €${Number(inv.total).toFixed(2)} overdue by ${daysOverdue} days`,

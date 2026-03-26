@@ -93,10 +93,10 @@ Deno.serve(async (req) => {
       if (profile?.team_id) {
         const { data: branding } = await supabase.from("company_branding").select("company_name, company_email").eq("team_id", profile.team_id).single();
         if (branding?.company_name) {
-          fromAddress = `${branding.company_name} <noreply@${FROM_DOMAIN}>`;
+          fromAddress = `${branding.company_name} <support@${FROM_DOMAIN}>`;
         }
       }
-      if (!fromAddress) fromAddress = `Foreman <noreply@${FROM_DOMAIN}>`;
+      if (!fromAddress) fromAddress = `Foreman <support@${FROM_DOMAIN}>`;
     }
 
     const recipients = Array.isArray(to) ? to : [to];

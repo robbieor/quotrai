@@ -37,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase.from("email_send_log").insert({ message_id: messageId, template_name: "roi-summary", recipient_email: data.email, status: "pending" });
     const { error: enqueueError } = await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
-      payload: { message_id: messageId, to: data.email, from: `Foreman <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${firstName}, you could save ${formatCurrency(data.monthlyNetSavings)}/month with Foreman`, html: emailHtml, text: `Hey ${firstName}, you could save ${formatCurrency(data.monthlyNetSavings)}/month with Foreman.`, purpose: "transactional", label: "roi-summary", queued_at: new Date().toISOString() },
+      payload: { message_id: messageId, to: data.email, from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `${firstName}, you could save ${formatCurrency(data.monthlyNetSavings)}/month with Foreman`, html: emailHtml, text: `Hey ${firstName}, you could save ${formatCurrency(data.monthlyNetSavings)}/month with Foreman.`, purpose: "transactional", label: "roi-summary", queued_at: new Date().toISOString() },
     });
     if (enqueueError) throw enqueueError;
 

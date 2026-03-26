@@ -148,7 +148,7 @@ const handler = async (req: Request): Promise<Response> => {
         idempotency_key: idempotencyKey,
         unsubscribe_token: unsubscribeToken,
         to: recipientEmail,
-        from: `Foreman <noreply@${FROM_DOMAIN}>`,
+        from: `Foreman <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html: htmlBody,
