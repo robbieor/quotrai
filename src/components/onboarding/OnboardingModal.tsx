@@ -315,7 +315,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     }
   };
 
-  const stepLabels = ["Profile", "Trade", "Workflow", "Preferences", "Comms"];
+  const stepLabels = ["Profile", "Trade", "Workflow", "Preferences", "Prices", "Comms"];
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
