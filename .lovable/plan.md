@@ -1,98 +1,133 @@
 
 
-## Foreman AI UX Overhaul — From Confusing to "Whoa"
+## 5 Big-Ticket Features — Implementation Plan
 
-### Current Problems Identified
+### Feature 1: AI Photo-to-Quote Evolution
 
-After a full code review, here are the issues degrading the Foreman AI experience:
+**Current state**: Single photo upload → single AI analysis → basic line items. No multi-photo, no material detection labels, no price book lookup.
 
-**1. Text chat is slow (2-4s round trips)**
-- `george-chat` makes 5+ serial network calls: auth → profile → membership check → conversation create → save message → AI call → tool execution → follow-up AI call → save response → audit log
-- That's **10 sequential awaits** before the user sees a response
+**Upgrades**:
 
-**2. Mobile welcome screen is empty — no quick actions**
-- Desktop shows 4 quick-action buttons (Today's jobs, Create quote, Log expense, Overdue invoices)
-- Mobile shows only "Hey {name}, I'm Foreman AI" with zero actionable UI — dead end
+| Change | File | Detail |
+|--------|------|--------|
+| Multi-photo upload (up to 5) | `PhotoQuoteButton.tsx` | Change `fileInputRef` to accept `multiple`, collect array of files, show thumbnail strip |
+| Batch image analysis | `george-photo-quote/index.ts` | Accept `image_urls: string[]`, send all images in one AI prompt with instruction to cross-reference across photos |
+| Material identification badges | `PhotoQuoteCard.tsx` | Already has `is_material` flag — add detected material name field (e.g. "15mm copper pipe") from AI response |
+| Annotated preview | `PhotoQuoteCard.tsx` | Show uploaded photos in a mini gallery above line items with tap-to-zoom |
+| Price book lookup | `george-photo-quote/index.ts` | After AI generates line items, cross-reference against `supplier_price_book` table (new) to fill unit prices from saved supplier rates instead of AI guesses |
 
-**3. No streaming — user stares at a blank screen**
-- `george-chat` returns the complete response only after all processing finishes
-- No progressive feedback for text chat (voice has "Listening..." but text has nothing)
-
-**4. Duplicate "thinking" indicators that don't help**
-- `handleQuickAction` adds a fake "⏳ Foreman AI is thinking..." message then removes it — janky flash
-- `LiveActionFeed` has its own `isProcessing` spinner — two competing indicators
-
-**5. Action plan cards appear for simple chat messages**
-- Every response wraps in an `action_plan` object even for "What's VAT in Ireland?" — shows unnecessary timeline/entity panels for conversational answers
-
-**6. Confirmation flow breaks context**
-- After confirming, user gets "✅ Done! Your record has been created." but no link to the actual record in the feed — the toast with "View" link is easily missed
-
-**7. george-chat tool definitions are out of sync with george-webhook**
-- `george-chat` defines ~20 tools, `george-webhook` handles 59+ functions — the text agent can't access 39 capabilities the voice agent has
+**New DB table**: `supplier_price_book` (ties into Feature 6 below)
 
 ---
 
-### Plan: 7 Changes, Ordered by Impact
+### Feature 3: Client Self-Service Portal Upgrade
 
-#### Change 1: Add Quick Actions to Mobile Welcome
-**File:** `src/components/george/GeorgeWelcome.tsx`
-- Show the same 4 quick-action buttons on mobile (smaller grid, 2x2)
-- Add 2 mobile-specific actions: "Week ahead" and "Create invoice"
-- Use compact card style matching the iOS-native feel
+**Current state**: `QuotePortal` has Accept/Decline buttons. `InvoicePortal` has Pay Now via Stripe. No e-signature, no progress photos, no follow-up request form.
 
-#### Change 2: Stream Text Chat Responses
-**Files:** `supabase/functions/george-chat/index.ts`, `src/components/george/GeorgeMobileInput.tsx`, `src/components/george/GeorgeAgentInput.tsx`
-- For non-tool-calling messages (pure chat), use `stream: true` and return SSE chunks so the response types progressively
-- For tool-calling messages, keep the current approach but add a skeleton "Foreman AI is working..." card immediately (not a fake message)
-- Frontend: use `ReadableStream` reader to progressively append text to the assistant message
+**Upgrades**:
 
-#### Change 3: Parallelize george-chat Backend Calls
-**File:** `supabase/functions/george-chat/index.ts`
-- Batch all pre-AI-call DB operations into a single `Promise.all`: profile, membership, conversation upsert, history fetch
-- Move message persistence + audit log to fire-and-forget (don't await after response is ready)
-- Move conversation creation to happen in parallel with history fetch (currently sequential)
-- Target: reduce pre-AI overhead from ~800ms to ~200ms
+| Change | File | Detail |
+|--------|------|--------|
+| E-signature on quote acceptance | `QuotePortal.tsx` | Add a canvas-based signature pad (react-signature-canvas) shown in the Accept dialog. Save signature image to storage, record `signed_at` + `signature_url` on quote |
+| Progress photos gallery | `QuotePortal.tsx`, `InvoicePortal.tsx` | New section showing job photos (from `job_photos` table) grouped by date, visible to customer |
+| Follow-up work request | `QuotePortal.tsx` | After quote is accepted, show a "Request Additional Work" form that creates a new lead/enquiry linked to the customer |
+| Company branding on portal | Both portals | Replace hardcoded "T" avatar with team logo from `team_branding` table, show company colors |
 
-#### Change 4: Sync Tool Definitions — Text Agent Gets Full 59-Tool Set
-**File:** `supabase/functions/george-chat/index.ts`
-- Import from `_shared/foreman-tool-definitions.ts` (already created) instead of the inline 20-tool array
-- Convert the ElevenLabs client-tool format to OpenAI function-calling format
-- This gives text chat parity with voice: customers CRUD, payments, scheduling, expenses, all advisory tools
+**New DB tables**: `job_photos` (job_id, photo_url, caption, uploaded_at, uploaded_by), add `signature_url` + `signed_at` columns to quotes
 
-#### Change 5: Smart Response Rendering — Skip Action Plan for Chat
-**Files:** `supabase/functions/george-chat/index.ts`, `src/pages/George.tsx`
-- When `intent === "chat"` and no tools were called, return `action_plan: null` instead of a hollow action plan object
-- Frontend: when `action_plan` is null, render as a plain chat bubble (faster, cleaner)
-- Action plan cards only appear for actual tool-invoked actions
-
-#### Change 6: Remove Fake Thinking Message
-**File:** `src/pages/George.tsx`
-- Delete the `thinkingId` pattern in `handleQuickAction` that creates/removes a fake "⏳" message
-- Instead, set `isProcessing = true` which already shows the proper `LiveActionFeed` spinner
-- Eliminates the janky flash of a message appearing and disappearing
-
-#### Change 7: Inline Record Link in Confirmation Result
-**Files:** `src/pages/George.tsx`, `src/components/george/action-mode/ActionOutputPreview.tsx`
-- After confirmation, update the action plan card's output to show a "View Quote →" / "View Invoice →" button directly in the card
-- Remove reliance on easily-missed toast notifications for navigation
+**New edge function**: None — portal hooks already exist, just extend `usePortal`
 
 ---
 
-### Files Changed Summary
+### Feature 4: Smart Scheduling
 
-| File | Change |
-|------|--------|
-| `src/components/george/GeorgeWelcome.tsx` | Add mobile quick-action grid |
-| `supabase/functions/george-chat/index.ts` | Stream chat responses, parallelize DB calls, import shared tools, skip action_plan for chat |
-| `src/components/george/GeorgeMobileInput.tsx` | Handle SSE streaming for text responses |
-| `src/components/george/GeorgeAgentInput.tsx` | Handle SSE streaming for text responses |
-| `src/pages/George.tsx` | Remove fake thinking message, improve confirmation result display |
-| `src/components/george/action-mode/ActionOutputPreview.tsx` | Add inline navigation button after confirmation |
+**Current state**: Calendar has drag-and-drop rescheduling. No travel time, no route awareness, no address-based optimization.
 
-### Expected Impact
-- **Response perceived latency**: 3-4s → <1s (streaming first token)
-- **Mobile first-open experience**: Empty screen → 6 actionable buttons
-- **Text agent capabilities**: 20 tools → 59 tools (full parity with voice)
-- **UI jank**: Eliminated fake thinking messages and hollow action plan cards
+**Upgrades**:
+
+| Change | File | Detail |
+|--------|------|--------|
+| Travel time estimates between jobs | `DayView.tsx`, `WeekView.tsx` | Show estimated travel time between consecutive jobs using straight-line distance calculation (Haversine) from job site addresses |
+| Route optimization suggestion | New: `src/components/calendar/RouteOptimizer.tsx` | "Optimize Day" button that reorders jobs to minimize total travel. Uses a nearest-neighbour algorithm on job site coordinates |
+| Job site coordinates | `JobFormDialog.tsx` | When address is entered, geocode it (using existing address autocomplete) and store lat/lng on the job |
+| Visual travel indicators | `DayView.tsx` | Between job cards, show a small "🚗 ~15 min" chip with estimated drive time |
+
+**DB change**: Add `latitude`, `longitude` columns to `jobs` table (nullable, populated from address autocomplete)
+
+**No external API needed** for MVP — use Haversine formula for distance, assume 30mph average speed for time estimate. Can upgrade to Google Directions API later.
+
+---
+
+### Feature 6: Supplier Price Book
+
+**Current state**: No supplier/material pricing system. Quote line item prices are manually entered or AI-guessed.
+
+**Implementation**:
+
+| Change | File | Detail |
+|--------|------|--------|
+| New page: Supplier Price Book | `src/pages/PriceBook.tsx` | Searchable table of materials with supplier, unit price, last updated date |
+| CSV import | `supabase/functions/import-price-book/index.ts` | Parse CSV with columns: item_name, supplier, unit, unit_price, category |
+| Price lookup in quote creation | `QuoteLineItems.tsx` | Autocomplete on description field that searches price book, auto-fills unit price |
+| Margin indicator | `QuoteLineItems.tsx` | If price book match found, show margin % badge (sell price vs cost price) |
+| Photo-quote integration | `george-photo-quote/index.ts` | After AI identifies materials, look up price book for accurate pricing |
+
+**New DB table**:
+```sql
+supplier_price_book (
+  id uuid PK,
+  team_id uuid FK,
+  item_name text,
+  supplier_name text,
+  category text,
+  unit text, -- "each", "metre", "box"
+  cost_price numeric,
+  sell_price numeric,
+  last_updated timestamptz
+)
+```
+
+**Route**: Add `/price-book` to `App.tsx`, add sidebar nav item under "Documents" or as its own section
+
+---
+
+### Feature 7: End-of-Day AI Summary
+
+**Implementation**:
+
+| Change | File | Detail |
+|--------|------|--------|
+| Summary edge function | `supabase/functions/end-of-day-summary/index.ts` | Queries today's completed jobs, hours logged (time_entries), invoices sent, payments received, tomorrow's scheduled jobs. Formats into a concise summary via AI |
+| Push notification | Same function | Sends summary as email + creates a notification record in `notifications` table |
+| In-app summary card | `src/components/dashboard/EndOfDaySummary.tsx` | If current time is after 5pm, show today's summary card at top of dashboard |
+| Cron trigger | DB cron or manual trigger | Schedule for 5pm in user's timezone (store timezone preference on profile) |
+| Foreman AI integration | `george-chat/index.ts` | Add "end_of_day_summary" to quick-action short-circuit map so users can ask "How did today go?" |
+
+**DB changes**: Add `timezone` column to `profiles` table (default 'Europe/Dublin')
+
+---
+
+### Implementation Order (by dependency)
+
+1. **Supplier Price Book** (Feature 6) — standalone, no dependencies, enables Feature 1
+2. **Photo-to-Quote Evolution** (Feature 1) — depends on price book for pricing lookup
+3. **Client Portal Upgrade** (Feature 3) — standalone, high customer-facing impact
+4. **Smart Scheduling** (Feature 4) — needs lat/lng on jobs, standalone otherwise
+5. **End-of-Day Summary** (Feature 7) — standalone, ties dashboard + AI together
+
+### Total New Files
+- `src/pages/PriceBook.tsx`
+- `supabase/functions/import-price-book/index.ts`
+- `src/components/calendar/RouteOptimizer.tsx`
+- `supabase/functions/end-of-day-summary/index.ts`
+- `src/components/dashboard/EndOfDaySummary.tsx`
+
+### Total Modified Files
+- `PhotoQuoteButton.tsx`, `PhotoQuoteCard.tsx`, `george-photo-quote/index.ts`
+- `QuotePortal.tsx`, `InvoicePortal.tsx`, `usePortal.ts`
+- `QuoteLineItems.tsx`
+- `DayView.tsx`, `WeekView.tsx`, `JobFormDialog.tsx`
+- `George.tsx`, `george-chat/index.ts`
+- `App.tsx` (new route), `AppSidebar.tsx` (new nav item)
+- 4 DB migrations
 
