@@ -73,11 +73,11 @@ export function EndOfDaySummary() {
         totalPayments,
       };
     },
-    enabled: !!profile?.team_id,
+    enabled: !!profile?.team_id && isAfter5pm,
     staleTime: 5 * 60 * 1000,
   });
 
-  if (isLoading || !summary) return null;
+  if (!isAfter5pm || isLoading || !summary) return null;
 
   const hasActivity = summary.completedJobs.length > 0 || summary.invoicesSent.length > 0 || summary.payments.length > 0;
   if (!hasActivity && summary.tomorrowJobs.length === 0) return null;
