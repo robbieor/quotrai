@@ -123,11 +123,11 @@ export default function Invoices() {
 
     const outstanding = invoices.filter((i) => i.status !== "paid" && i.status !== "draft").reduce((sum, i) => sum + Number(i.total), 0);
     const overdue = invoices.filter((i) => getDisplayStatus(i) === "overdue").reduce((sum, i) => sum + Number(i.total), 0);
-    const paidMonth = invoices.filter((i) => i.status === "paid" && i.paid_at && isWithinInterval(new Date(i.paid_at), { start: monthStart, end: monthEnd })).reduce((sum, i) => sum + Number(i.total), 0);
+    const paidMonth = invoices.filter((i) => i.status === "paid" && (i as any).paid_at && isWithinInterval(new Date((i as any).paid_at), { start: monthStart, end: monthEnd })).reduce((sum, i) => sum + Number(i.total), 0);
 
-    const paidInvoices = invoices.filter((i) => i.status === "paid" && i.paid_at);
+    const paidInvoices = invoices.filter((i) => i.status === "paid" && (i as any).paid_at);
     const avgDaysToPay = paidInvoices.length > 0
-      ? Math.round(paidInvoices.reduce((sum, i) => sum + differenceInDays(new Date(i.paid_at!), new Date(i.created_at)), 0) / paidInvoices.length)
+      ? Math.round(paidInvoices.reduce((sum, i) => sum + differenceInDays(new Date((i as any).paid_at), new Date(i.created_at)), 0) / paidInvoices.length)
       : 0;
 
     return { outstanding, overdue, paidMonth, avgDaysToPay };
