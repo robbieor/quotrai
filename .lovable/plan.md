@@ -1,37 +1,41 @@
 
 
-## Fix Home Screen App Icon (PWA)
+## Mobile Dashboard Overhaul — Compete with Jobber/Fergus/Tradify
 
-### Problem
-The PWA icons (`icon-192.png`, `icon-512.png`) are still the old Quotr branding. When users add the app to their home screen, they see the wrong icon.
+### Problems Visible in Screenshot
+1. **KPI cards overflow** — 5 cards in a 2-col grid on 402px leaves a lone orphan card and text like currency values and comparison strings get clipped
+2. **ControlHeader stats strip overflows** — 4 stats in a 2-col grid with `divide-x` causes text to bleed off-screen
+3. **AI recommendation text truncates** — single-line `truncate` hides the full recommendation on mobile
+4. **Action buttons wrap awkwardly** — Chase/Quotes/Jobs buttons + text don't fit in a single row
+5. **Charts render too wide** — `lg:grid-cols-2` means full-width stacked charts with no mobile optimization
+6. **No mobile-native feel** — competitors like Jobber use scrollable horizontal cards, bottom-sheet navigation, and compact metric tiles
 
-### Solution
-Generate new properly sized PWA icons from the existing `foreman-logo.png` and update references.
+### Competitor-Inspired Improvements
 
-### Steps
-
-**Step 1: Generate new icons**
-Use a script to resize `public/foreman-logo.png` into:
-- `icon-192.png` (192x192) — Android PWA
-- `icon-512.png` (512x512) — Android PWA splash
-- `apple-touch-icon.png` (180x180) — iOS home screen
-
-Place them with a white or transparent background, logo centered.
-
-**Step 2: Update `index.html`**
-- Change the `apple-touch-icon` href from `/icon-192.png` to `/apple-touch-icon.png` with `sizes="180x180"`
-
-**Step 3: Update `manifest.json`**
-- Add a `"purpose": "any maskable"` field to the icon entries for better Android adaptive icon support
-- Optionally add the 180x180 entry
+| Area | Current | Fix |
+|------|---------|-----|
+| **KPI Strip** | `grid-cols-2` cramped cards | Horizontal scroll strip (`flex overflow-x-auto snap-x`) — 1 card visible + peek of next. This is exactly how Jobber/Tradify show metrics on mobile |
+| **ControlHeader** | 2x2 grid with divide-x, text overflows | Stack as a compact horizontal scroll strip on mobile; hide "Status" column (already hidden); reduce font sizes |
+| **AI Recommendation** | `truncate` on one line | Allow 2-line wrap on mobile (`line-clamp-2` instead of `truncate`) |
+| **Action Buttons** | Wrap messily | Horizontal scroll row with `overflow-x-auto` |
+| **Charts** | Full width, tall on mobile | Reduce chart height on mobile (180px vs 220px), smaller card padding |
+| **Dashboard Header** | Filter bar + quick actions compete for space | On mobile, hide quick action labels (already done), collapse filter bar into single icon button |
+| **Overall padding** | `px-3` with `space-y-3` | Tighten to `space-y-2` on mobile for denser feel |
 
 ### Files to Change
 
 | File | Change |
 |------|--------|
-| `public/icon-192.png` | Overwrite with Foreman-branded 192x192 icon |
-| `public/icon-512.png` | Overwrite with Foreman-branded 512x512 icon |
-| `public/apple-touch-icon.png` | New 180x180 icon for iOS |
-| `index.html` | Update apple-touch-icon href |
-| `public/manifest.json` | Add `purpose` field to icon entries |
+| `src/components/dashboard/KPIStrip.tsx` | Replace `grid grid-cols-2` with `flex overflow-x-auto snap-x` on mobile, keep grid on `sm:+`. Add `min-w-[200px]` to cards, `snap-start` alignment |
+| `src/components/dashboard/ControlHeader.tsx` | Make stats strip horizontally scrollable on mobile (`flex overflow-x-auto` below `sm:`). Allow AI text to wrap 2 lines on mobile |
+| `src/components/dashboard/ActionPanel.tsx` | Already looks OK but ensure `truncate` doesn't hide critical info — allow wrapping on mobile |
+| `src/pages/Dashboard.tsx` | Tighten mobile spacing: `space-y-2 sm:space-y-3`. Hide quick-action Plus icons on mobile (just show icon buttons) |
+| `src/components/dashboard/RevenueMultiChart.tsx` | Reduce chart height on mobile: `h-[180px] sm:h-[220px]` |
+| `src/components/layout/DashboardLayout.tsx` | Reduce mobile padding: `px-2 sm:px-3 md:px-6`, `py-2 sm:py-3 md:py-6` |
+
+### Technical Approach
+- Use Tailwind responsive prefixes (`sm:`, `md:`) — no JS needed
+- KPI strip becomes a horizontally scrollable row on mobile with snap points, transitioning to the current grid on `sm:` breakpoint
+- ControlHeader stats become a scrollable row on mobile, grid on `sm:`
+- All changes are CSS-only, no data/logic changes
 
