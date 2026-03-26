@@ -335,14 +335,16 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               {step === 2 && "Tell us about your trade"}
               {step === 3 && "How do you work?"}
               {step === 4 && "Almost there!"}
-              {step === 5 && "Communication preferences"}
+              {step === 5 && "Set your prices"}
+              {step === 6 && "Communication preferences"}
             </h2>
             <p className="text-sm text-muted-foreground">
               {step === 1 && "Let's get your account set up in under 2 minutes"}
               {step === 2 && "We'll tailor your experience to your business"}
               {step === 3 && "We'll set up Foreman to match your workflow"}
               {step === 4 && "Just a couple more preferences, then you're ready"}
-              {step === 5 && "Choose which emails you'd like to send to clients"}
+              {step === 5 && "Review your templates and labour rates — Foreman uses these to quote instantly"}
+              {step === 6 && "Choose which emails you'd like to send to clients"}
             </p>
           </div>
 
