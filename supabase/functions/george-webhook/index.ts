@@ -196,8 +196,9 @@ serve(async (req) => {
       }
 
       case "create_job": {
-        const { client_name, client_phone, job_title, description, scheduled_date, scheduled_time, estimated_value } = parameters as {
-          client_name: string;
+        const { client_name: _client_name, customer_name: _customer_name, client_phone, job_title, description, scheduled_date, scheduled_time, estimated_value } = parameters as {
+          client_name?: string;
+          customer_name?: string;
           client_phone?: string;
           job_title: string;
           description?: string;
@@ -205,6 +206,7 @@ serve(async (req) => {
           scheduled_time?: string;
           estimated_value?: number;
         };
+        const client_name = _client_name || _customer_name || "";
 
         if (!client_name || !job_title || !scheduled_date) {
           response = {
@@ -340,8 +342,9 @@ serve(async (req) => {
       }
 
       case "create_quote": {
-        const { client_name, client_phone, items, notes, valid_until, tax_rate, job_id, job_title } = parameters as {
-          client_name: string;
+        const { client_name: _client_name, customer_name: _customer_name, client_phone, items, notes, valid_until, tax_rate, job_id, job_title } = parameters as {
+          client_name?: string;
+          customer_name?: string;
           client_phone?: string;
           items: Array<{ description: string; quantity: number; unit_price: number }>;
           notes?: string;
@@ -350,6 +353,7 @@ serve(async (req) => {
           job_id?: string;
           job_title?: string;
         };
+        const client_name = _client_name || _customer_name || "";
 
         if (!client_name || !items || items.length === 0) {
           response = {
@@ -518,10 +522,12 @@ serve(async (req) => {
       }
 
       case "send_invoice_reminder": {
-        const { invoice_id, invoice_number } = parameters as {
+        const { invoice_id, invoice_number: _invoice_number, display_number: _display_number_reminder } = parameters as {
           invoice_id?: string;
           invoice_number?: string;
+          display_number?: string;
         };
+        const invoice_number = _invoice_number || _display_number_reminder;
 
         // Find the invoice
         let invoiceQuery = supabase
@@ -619,13 +625,15 @@ serve(async (req) => {
       }
 
       case "log_expense": {
-        const { vendor_name, amount, category, description, job_id } = parameters as {
-          vendor_name: string;
+        const { vendor_name: _vendor_name, vendor: _vendor, amount, category, description, job_id } = parameters as {
+          vendor_name?: string;
+          vendor?: string;
           amount: number;
           category?: string;
           description?: string;
           job_id?: string;
         };
+        const vendor_name = _vendor_name || _vendor || "";
 
         if (!vendor_name || amount === undefined) {
           response = {
@@ -2376,13 +2384,15 @@ serve(async (req) => {
       }
 
       case "record_payment": {
-        const { invoice_id, invoice_number, amount, payment_method, notes } = parameters as {
+        const { invoice_id, invoice_number: _inv_number, display_number: _disp_number_pay, amount, payment_method, notes } = parameters as {
           invoice_id?: string;
           invoice_number?: string;
+          display_number?: string;
           amount: number;
           payment_method?: string;
           notes?: string;
         };
+        const invoice_number = _inv_number || _disp_number_pay;
 
         if (!amount || amount <= 0) {
           response = {
@@ -3337,11 +3347,13 @@ serve(async (req) => {
       }
 
       case "update_quote_status": {
-        const { quote_id, quote_number, new_status } = parameters as {
+        const { quote_id, quote_number: _quote_number, display_number: _disp_number_qs, new_status } = parameters as {
           quote_id?: string;
           quote_number?: string;
+          display_number?: string;
           new_status: string;
         };
+        const quote_number = _quote_number || _disp_number_qs;
 
         const validStatuses = ["draft", "sent", "accepted", "rejected", "expired"];
         const normalizedStatus = new_status.toLowerCase();
@@ -3405,10 +3417,12 @@ serve(async (req) => {
       }
 
       case "delete_quote": {
-        const { quote_id, quote_number } = parameters as {
+        const { quote_id, quote_number: _quote_number_del, display_number: _disp_number_qd } = parameters as {
           quote_id?: string;
           quote_number?: string;
+          display_number?: string;
         };
+        const quote_number = _quote_number_del || _disp_number_qd;
 
         // Find the quote
         let quoteQuery = supabase
@@ -3466,14 +3480,16 @@ serve(async (req) => {
       }
 
       case "create_invoice": {
-        const { client_name, client_phone, items, notes, due_days, tax_rate } = parameters as {
-          client_name: string;
+        const { client_name: _client_name_inv, customer_name: _customer_name_inv, client_phone, items, notes, due_days, tax_rate } = parameters as {
+          client_name?: string;
+          customer_name?: string;
           client_phone?: string;
           items: Array<{ description: string; quantity: number; unit_price: number }>;
           notes?: string;
           due_days?: number;
           tax_rate?: number;
         };
+        const client_name = _client_name_inv || _customer_name_inv || "";
 
         if (!client_name || !items || items.length === 0) {
           response = {
@@ -3642,11 +3658,13 @@ serve(async (req) => {
       }
 
       case "update_invoice_status": {
-        const { invoice_id, invoice_number, new_status } = parameters as {
+        const { invoice_id, invoice_number: _inv_number_us, display_number: _disp_number_us, new_status } = parameters as {
           invoice_id?: string;
           invoice_number?: string;
+          display_number?: string;
           new_status: string;
         };
+        const invoice_number = _inv_number_us || _disp_number_us;
 
         const validStatuses = ["draft", "pending", "paid", "overdue", "cancelled"];
         const normalizedStatus = new_status.toLowerCase();
@@ -3710,10 +3728,12 @@ serve(async (req) => {
       }
 
       case "delete_invoice": {
-        const { invoice_id, invoice_number } = parameters as {
+        const { invoice_id, invoice_number: _inv_number_del, display_number: _disp_number_del } = parameters as {
           invoice_id?: string;
           invoice_number?: string;
+          display_number?: string;
         };
+        const invoice_number = _inv_number_del || _disp_number_del;
 
         // Find the invoice
         let invoiceQuery = supabase
