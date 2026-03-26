@@ -56,20 +56,20 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange }
   };
 
   return (
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={goToToday}>
+    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <div className="flex items-center gap-1.5">
+        <Button variant="outline" size="sm" className="h-7 text-xs md:h-9 md:text-sm" onClick={goToToday}>
           Today
         </Button>
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={navigatePrevious}>
+          <Button variant="ghost" size="icon" className="h-7 w-7 md:h-9 md:w-9" onClick={navigatePrevious}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={navigateNext}>
+          <Button variant="ghost" size="icon" className="h-7 w-7 md:h-9 md:w-9" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <h2 className="text-lg font-semibold">{getHeaderTitle()}</h2>
+        <h2 className="text-sm md:text-lg font-semibold truncate">{getHeaderTitle()}</h2>
       </div>
       <div className="flex items-center border rounded-lg overflow-hidden">
         {(["day", "week", "month"] as CalendarViewType[]).map((v) => (
@@ -77,7 +77,7 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange }
             key={v}
             variant={view === v ? "default" : "ghost"}
             size="sm"
-            className="rounded-none capitalize"
+            className="rounded-none capitalize h-7 px-2 text-xs md:h-9 md:px-3 md:text-sm"
             onClick={() => onViewChange(v)}
           >
             {v}
