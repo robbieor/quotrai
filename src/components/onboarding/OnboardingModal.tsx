@@ -28,6 +28,7 @@ import foremanLogo from "@/assets/foreman-logo.png";
 import { COUNTRIES } from "@/constants/countries";
 import { track } from "@/utils/analytics";
 import { OnboardingCommsStep } from "@/components/onboarding/OnboardingCommsStep";
+import { OnboardingTemplatesStep } from "@/components/onboarding/OnboardingTemplatesStep";
 import { computeWorkflowMode } from "@/hooks/useWorkflowMode";
 
 const tradeTypes = [
@@ -110,6 +111,8 @@ interface OnboardingModalProps {
 export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [data, setData] = useState<OnboardingData>({
     fullName: "",
     companyName: "",
@@ -125,7 +128,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
   const [commsPrefs, setCommsPrefs] = useState<CommsPrefs>(DEFAULT_COMMS);
   const { user } = useAuth();
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   const updateData = (field: keyof OnboardingData, value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
@@ -143,13 +146,64 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
         return true;
       case 5:
         return true;
+      case 6:
+        return true;
       default:
         return false;
     }
   };
 
-  const handleNext = () => {
+  const saveProfileIfNeeded = async () => {
+    if (profileSaved || !user) return;
+    const workflowMode = computeWorkflowMode({
+      sendsQuotes: data.sendsQuotes ?? false,
+      tracksJobs: data.tracksJobs ?? false,
+      teamSize: data.businessSize,
+      priority: data.priority,
+    });
+
+    await supabase
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        company_name: data.companyName,
+        phone: data.phone || null,
+        trade_type: data.tradeType,
+        business_size: data.businessSize,
+        currency: data.currency,
+        country: data.country,
+        workflow_mode: workflowMode,
+      })
+      .eq("id", user.id);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("team_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.team_id) {
+      await supabase
+        .from("teams")
+        .update({ name: data.companyName })
+        .eq("id", profile.team_id);
+      setTeamId(profile.team_id);
+    }
+    setProfileSaved(true);
+  };
+
+  const handleNext = async () => {
     if (step < totalSteps) {
+      // Save profile before entering the templates step (step 5)
+      if (step === 4 && !profileSaved) {
+        try {
+          await saveProfileIfNeeded();
+        } catch (err) {
+          console.error("Profile save error:", err);
+          toast.error("Failed to save profile. Please try again.");
+          return;
+        }
+      }
       track("onboarding_step", { step: step + 1 });
       setStep(step + 1);
     }
@@ -166,57 +220,37 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
 
     setSubmitting(true);
     try {
-      const workflowMode = computeWorkflowMode({
-        sendsQuotes: data.sendsQuotes ?? false,
-        tracksJobs: data.tracksJobs ?? false,
-        teamSize: data.businessSize,
-        priority: data.priority,
-      });
+      // Ensure profile is saved (may already be done at step 4→5 transition)
+      await saveProfileIfNeeded();
 
-      const { error: profileError } = await supabase
+      // Mark onboarding complete
+      await supabase
         .from("profiles")
-        .update({
-          full_name: data.fullName,
-          company_name: data.companyName,
-          phone: data.phone || null,
-          trade_type: data.tradeType,
-          business_size: data.businessSize,
-          currency: data.currency,
-          country: data.country,
-          workflow_mode: workflowMode,
-          onboarding_completed: true,
-        })
+        .update({ onboarding_completed: true })
         .eq("id", user.id);
 
-      if (profileError) throw profileError;
+      const resolvedTeamId = teamId || (await (async () => {
+        const { data: p } = await supabase.from("profiles").select("team_id").eq("id", user.id).single();
+        return p?.team_id;
+      })());
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("team_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.team_id) {
-        await supabase
-          .from("teams")
-          .update({ name: data.companyName })
-          .eq("id", profile.team_id);
-
+      if (resolvedTeamId) {
+        // Save comms preferences
         const { data: existing } = await supabase
           .from("comms_settings")
           .select("id")
-          .eq("team_id", profile.team_id)
+          .eq("team_id", resolvedTeamId)
           .maybeSingle();
 
         if (existing) {
           await supabase
             .from("comms_settings")
             .update({ ...commsPrefs, updated_at: new Date().toISOString() })
-            .eq("team_id", profile.team_id);
+            .eq("team_id", resolvedTeamId);
         } else {
           await supabase
             .from("comms_settings")
-            .insert({ team_id: profile.team_id, ...commsPrefs });
+            .insert({ team_id: resolvedTeamId, ...commsPrefs });
         }
 
         // Seed sample data so user sees value immediately
@@ -227,7 +261,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               name: "Sample Customer",
               email: "sample@example.com",
               phone: "+44 7700 900000",
-              team_id: profile.team_id,
+              team_id: resolvedTeamId,
               notes: "This is a sample customer — feel free to edit or delete.",
             })
             .select("id")
@@ -238,7 +272,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               .from("quotes")
               .insert({
                 customer_id: sampleCustomer.id,
-                team_id: profile.team_id,
+                team_id: resolvedTeamId,
                 display_number: "Q-SAMPLE-001",
                 status: "draft" as const,
                 subtotal: 450,
@@ -253,18 +287,23 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               .insert({
                 title: "Sample Job — Kitchen Repair",
                 customer_id: sampleCustomer.id,
-                team_id: profile.team_id,
+                team_id: resolvedTeamId,
                 status: "pending",
                 description: "This is a sample job to show you around. Edit or delete it anytime.",
                 ...(sampleQuote ? { quote_id: sampleQuote.id } : {}),
               });
           }
         } catch (seedErr) {
-          // Non-critical — don't block onboarding if seeding fails
           console.warn("Sample data seeding failed:", seedErr);
         }
       }
 
+      const workflowMode = computeWorkflowMode({
+        sendsQuotes: data.sendsQuotes ?? false,
+        tracksJobs: data.tracksJobs ?? false,
+        teamSize: data.businessSize,
+        priority: data.priority,
+      });
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize, workflowMode });
       toast.success("Welcome to Foreman! You're all set.");
       onComplete();
@@ -276,7 +315,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
     }
   };
 
-  const stepLabels = ["Profile", "Trade", "Workflow", "Preferences", "Comms"];
+  const stepLabels = ["Profile", "Trade", "Workflow", "Preferences", "Prices", "Comms"];
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -296,14 +335,16 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
               {step === 2 && "Tell us about your trade"}
               {step === 3 && "How do you work?"}
               {step === 4 && "Almost there!"}
-              {step === 5 && "Communication preferences"}
+              {step === 5 && "Set your prices"}
+              {step === 6 && "Communication preferences"}
             </h2>
             <p className="text-sm text-muted-foreground">
               {step === 1 && "Let's get your account set up in under 2 minutes"}
               {step === 2 && "We'll tailor your experience to your business"}
               {step === 3 && "We'll set up Foreman to match your workflow"}
               {step === 4 && "Just a couple more preferences, then you're ready"}
-              {step === 5 && "Choose which emails you'd like to send to clients"}
+              {step === 5 && "Review your templates and labour rates — Foreman uses these to quote instantly"}
+              {step === 6 && "Choose which emails you'd like to send to clients"}
             </p>
           </div>
 
@@ -542,8 +583,13 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
             </Card>
           )}
 
-          {/* Step 5 — Comms */}
-          {step === 5 && (
+          {/* Step 5 — Prices */}
+          {step === 5 && teamId && (
+            <OnboardingTemplatesStep teamId={teamId} />
+          )}
+
+          {/* Step 6 — Comms */}
+          {step === 6 && (
             <OnboardingCommsStep prefs={commsPrefs} onChange={setCommsPrefs} />
           )}
 
