@@ -457,6 +457,29 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     resetRetryState();
   }, [conversation, resetRetryState]);
 
+  // Pre-warm: fetch token in background so it's ready when user taps "Call"
+  const preWarmToken = useCallback(() => {
+    // Skip if we already have a fresh token
+    if (cachedTokenRef.current && Date.now() - cachedTokenRef.current.fetchedAt < TOKEN_TTL_MS) {
+      console.log("[VoiceAgent] Token already cached, skipping pre-warm");
+      return;
+    }
+    console.log("[VoiceAgent] 🔥 Pre-warming conversation token...");
+    supabase.functions.invoke("elevenlabs-agent-token", { body: {} })
+      .then(({ data, error }) => {
+        if (!error && data?.token) {
+          cachedTokenRef.current = { token: data.token, fetchedAt: Date.now() };
+          console.log("[VoiceAgent] ✅ Token pre-warmed");
+        } else {
+          cachedTokenRef.current = { usePublicAgent: true, fetchedAt: Date.now() };
+          console.warn("[VoiceAgent] Token pre-warm fell back to public agent");
+        }
+      })
+      .catch(() => {
+        cachedTokenRef.current = { usePublicAgent: true, fetchedAt: Date.now() };
+      });
+  }, []);
+
   const startConversation = useCallback(async (context?: AgentContext) => {
     if (isConnecting || conversation.status === "connected") return;
 
@@ -466,12 +489,22 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     console.log("[VoiceAgent] 🎙️ Starting voice connection...");
 
     try {
-      // Parallel: mic permission + token fetch + user context — all at once
-      const [micResult, tokenResult, teamResult, userResult] = await Promise.allSettled([
+      // Use pre-loaded context if provided (from FloatingTomButton's profile)
+      if (context) {
+        contextRef.current = {
+          ...contextRef.current,
+          ...context,
+        };
+      }
+
+      // Parallel: mic permission + token (only if not pre-warmed)
+      const needsToken = !cachedTokenRef.current || Date.now() - cachedTokenRef.current.fetchedAt > TOKEN_TTL_MS;
+      
+      const [micResult, tokenFetchResult] = await Promise.allSettled([
         navigator.mediaDevices.getUserMedia({ audio: true }),
-        supabase.functions.invoke("elevenlabs-agent-token", { body: {} }),
-        supabase.rpc("get_user_team_id"),
-        supabase.auth.getUser(),
+        needsToken
+          ? supabase.functions.invoke("elevenlabs-agent-token", { body: {} })
+          : Promise.resolve(null),
       ]);
 
       // Check mic permission (hard failure)
@@ -486,33 +519,21 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       }
       console.log("[VoiceAgent] ✅ Microphone permission granted");
 
-      // Process token result (soft failure — falls back to public agent)
+      // Use cached token or freshly fetched one
       let tokenData: { token?: string; usePublicAgent?: boolean } = { usePublicAgent: true };
-      if (tokenResult.status === "fulfilled" && tokenResult.value?.data?.token) {
-        tokenData = { token: tokenResult.value.data.token };
-        console.log("[VoiceAgent] ✅ Got conversation token");
+      if (!needsToken && cachedTokenRef.current?.token) {
+        tokenData = { token: cachedTokenRef.current.token };
+        console.log("[VoiceAgent] ✅ Using pre-warmed token");
+      } else if (tokenFetchResult.status === "fulfilled" && tokenFetchResult.value?.data?.token) {
+        tokenData = { token: tokenFetchResult.value.data.token };
+        console.log("[VoiceAgent] ✅ Got fresh conversation token");
       } else {
-        console.warn("[VoiceAgent] Token fetch failed, using public agent fallback");
+        console.warn("[VoiceAgent] Token unavailable, using public agent fallback");
       }
+      // Clear cached token after use (single-use)
+      cachedTokenRef.current = null;
 
-      // Process user context
-      const teamId = teamResult.status === "fulfilled" ? teamResult.value?.data : null;
-      const user = userResult.status === "fulfilled" ? userResult.value?.data?.user : null;
-
-      // Store context
-      if (context) {
-        contextRef.current = context;
-      }
-      if (teamId && user?.id) {
-        contextRef.current = {
-          ...contextRef.current,
-          userId: user.id,
-          teamId: teamId,
-          userName: context?.userName || contextRef.current.userName,
-        };
-      }
-
-      // Build dynamic variables
+      // Build dynamic variables from already-loaded context
       const dynamicVariables: Record<string, string> = {};
       if (contextRef.current.userName) dynamicVariables.user_name = contextRef.current.userName;
       if (contextRef.current.teamId) dynamicVariables.team_id = contextRef.current.teamId;
@@ -530,7 +551,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
         minute: "2-digit",
       });
 
-      // Attempt connection with retry (DB insert deferred to onConnect)
+      // Attempt connection with retry
       const { success, error } = await withRetry(
         () => attemptConnection(tokenData, dynamicVariables),
         "ElevenLabs connection",
@@ -543,13 +564,15 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
       );
 
       if (success) {
-        // Defer DB conversation creation — do it after connection succeeds
-        if (teamId && user?.id) {
+        // Defer DB conversation creation
+        const userId = contextRef.current.userId;
+        const teamId = contextRef.current.teamId;
+        if (teamId && userId) {
           supabase
             .from("george_conversations")
             .insert({
               team_id: teamId,
-              user_id: user.id,
+              user_id: userId,
               title: `Voice call - ${new Date().toLocaleString()}`,
             })
             .select()
@@ -631,6 +654,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
         callWebhook,
         setContext,
         resetVoiceAvailability,
+        preWarmToken,
       }}
     >
       {children}
