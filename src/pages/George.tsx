@@ -383,6 +383,8 @@ export default function George() {
               <GeorgeChatArea
                 messages={messages}
                 isProcessing={isProcessing}
+                streamingText={streamingText}
+                lastError={lastChatError}
                 onQuickAction={handleQuickAction}
                 onMenuClick={() => setSidebarOpen(true)}
               />
@@ -405,6 +407,7 @@ export default function George() {
               onAssistantMessage={handleAssistantMessage}
               onStructuredResponse={handleStructuredResponse}
               onPhotoQuote={handlePhotoQuote}
+              onStreamingUpdate={handleStreamingUpdate}
               conversationId={activeConversationId}
               memoryContext={memoryPayload}
             />
@@ -462,6 +465,8 @@ export default function George() {
                 <GeorgeChatArea
                   messages={messages}
                   isProcessing={isProcessing}
+                  streamingText={streamingText}
+                  lastError={lastChatError}
                   onQuickAction={handleQuickAction}
                   onMenuClick={() => setSidebarOpen(true)}
                 />
@@ -482,6 +487,7 @@ export default function George() {
                 onAssistantMessage={handleAssistantMessage}
                 onStructuredResponse={handleStructuredResponse}
                 onPhotoQuote={handlePhotoQuote}
+                onStreamingUpdate={handleStreamingUpdate}
                 conversationId={activeConversationId}
                 textareaRef={textInputRef}
                 memoryContext={memoryPayload}
