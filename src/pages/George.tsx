@@ -38,6 +38,8 @@ export default function George() {
   const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [lastChatError, setLastChatError] = useState<string | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [photoQuoteSuggestion, setPhotoQuoteSuggestion] = useState<PhotoQuoteSuggestion | null>(null);
