@@ -31,6 +31,7 @@ interface VoiceAgentContextType {
   callWebhook: (functionName: string, parameters?: Record<string, unknown>) => Promise<string>;
   setContext: (context: AgentContext) => void;
   resetVoiceAvailability: () => void;
+  preWarmToken: () => void;
 }
 
 const VoiceAgentContext = createContext<VoiceAgentContextType | null>(null);
@@ -67,6 +68,8 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const contextRef = useRef<AgentContext>({});
   const queryClient = useQueryClient();
   const lastToastRef = useRef<number>(0);
+  const cachedTokenRef = useRef<{ token?: string; usePublicAgent?: boolean; fetchedAt: number } | null>(null);
+  const TOKEN_TTL_MS = 45_000; // tokens valid ~60s, use within 45s
 
   // Webhook caller that invalidates relevant React Query caches after mutations
   const callGeorgeWebhook = useCallback(async (
