@@ -4,12 +4,13 @@ import { FOREMAN_TOOL_DEFINITIONS } from "../_shared/foreman-tool-definitions.ts
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ChatRequest {
   message: string;
   conversation_id: string | null;
+  stream?: boolean;
   memory_context?: {
     current_customer?: { id: string; name: string };
     current_job?: { id: string; title: string };
@@ -327,7 +328,7 @@ serve(async (req) => {
     });
 
     // ─── PARALLEL: Auth + Profile ───────────────────────────────
-    const { message, conversation_id, memory_context }: ChatRequest = await req.json();
+    const { message, conversation_id, memory_context, stream: streamRequested }: ChatRequest = await req.json();
 
     if (!message) {
       return new Response(
@@ -569,7 +570,12 @@ IMPORTANT RULES:
 
     console.log("george-chat: Calling AI with tools");
 
+    // ─── STREAMING-FIRST AI CALL ──────────────────────────────────
+    // Always call with stream:true. If no tool calls, pipe SSE to client.
+    // If tool calls, buffer and handle as before.
     let aiData: any;
+    let streamResponse: Response | null = null;
+    
     try {
       const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -584,16 +590,127 @@ IMPORTANT RULES:
           tool_choice: "auto",
           temperature: 0.7,
           max_tokens: 1000,
+          stream: true,
         }),
       });
 
       if (!aiResponse.ok) {
+        if (aiResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (aiResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI usage limit reached. Please add credits." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
         const errorText = await aiResponse.text();
         console.error("AI request failed:", errorText);
         throw new Error("AI request failed");
       }
 
-      aiData = await aiResponse.json();
+      // Read the SSE stream to detect tool calls vs pure text
+      const reader = aiResponse.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let collectedContent = "";
+      let collectedToolCalls: any[] = [];
+      let toolCallBuffers: Record<number, { id: string; name: string; arguments: string }> = {};
+      let finishReason = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const chunk = JSON.parse(jsonStr);
+            const delta = chunk.choices?.[0]?.delta;
+            if (delta?.content) collectedContent += delta.content;
+            if (delta?.tool_calls) {
+              for (const tc of delta.tool_calls) {
+                const idx = tc.index ?? 0;
+                if (!toolCallBuffers[idx]) {
+                  toolCallBuffers[idx] = { id: tc.id || "", name: tc.function?.name || "", arguments: "" };
+                }
+                if (tc.id) toolCallBuffers[idx].id = tc.id;
+                if (tc.function?.name) toolCallBuffers[idx].name = tc.function.name;
+                if (tc.function?.arguments) toolCallBuffers[idx].arguments += tc.function.arguments;
+              }
+            }
+            if (chunk.choices?.[0]?.finish_reason) {
+              finishReason = chunk.choices[0].finish_reason;
+            }
+          } catch { /* partial JSON, ignore */ }
+        }
+      }
+
+      // Build tool calls array from buffers
+      collectedToolCalls = Object.values(toolCallBuffers).filter(tc => tc.name).map(tc => ({
+        id: tc.id,
+        type: "function",
+        function: { name: tc.name, arguments: tc.arguments },
+      }));
+
+      const hasToolCalls = collectedToolCalls.length > 0;
+
+      // ─── PURE CHAT + STREAMING → pipe as SSE ────────────────────
+      if (!hasToolCalls && streamRequested && collectedContent) {
+        // Save assistant message (fire and forget)
+        if (activeConversationId) {
+          serviceSupabase.from("george_messages").insert({
+            conversation_id: activeConversationId, role: "assistant", content: collectedContent,
+          });
+          serviceSupabase.from("george_conversations")
+            .update({ updated_at: now.toISOString() })
+            .eq("id", activeConversationId);
+        }
+
+        // Build SSE response from collected content — send in small chunks for typewriter effect
+        const encoder = new TextEncoder();
+        const sseChunks: string[] = [];
+
+        // Send conversation_id as first event
+        sseChunks.push(`data: ${JSON.stringify({ conversation_id: activeConversationId })}\n\n`);
+
+        // Split content into word-sized chunks for natural streaming
+        const words = collectedContent.split(/(\s+)/);
+        for (let i = 0; i < words.length; i++) {
+          const chunk = {
+            choices: [{ delta: { content: words[i] }, index: 0, finish_reason: i === words.length - 1 ? "stop" : null }],
+          };
+          sseChunks.push(`data: ${JSON.stringify(chunk)}\n\n`);
+        }
+        sseChunks.push("data: [DONE]\n\n");
+
+        const sseBody = sseChunks.join("");
+        return new Response(encoder.encode(sseBody), {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+        });
+      }
+
+      // ─── Build aiData for tool-call or non-streaming path ───────
+      aiData = {
+        choices: [{
+          message: {
+            role: "assistant",
+            content: collectedContent || null,
+            tool_calls: hasToolCalls ? collectedToolCalls : undefined,
+          },
+          finish_reason: finishReason,
+        }],
+      };
     } catch (aiErr) {
       console.error("george-chat: AI call failed:", aiErr);
       const fallbackMsg = "I'm having trouble right now. You can still use the app normally — please try again in a minute.";
@@ -666,46 +783,48 @@ IMPORTANT RULES:
         }
       }
 
-      // Follow-up AI call with tool results
-      const toolResultMessages = toolResults.map((tr, idx) => ({
-        role: "tool" as const,
-        tool_call_id: toolCalls[idx].id,
-        content: JSON.stringify(tr.result),
-      }));
+      // For deferred (confirmation-gated) actions, skip the expensive second AI call
+      if (deferredExecution) {
+        finalMessage = "I've prepared everything — please review and confirm below to save.";
+      } else {
+        // Follow-up AI call with tool results for executed actions
+        const toolResultMessages = toolResults.map((tr, idx) => ({
+          role: "tool" as const,
+          tool_call_id: toolCalls[idx].id,
+          content: JSON.stringify(tr.result),
+        }));
 
-      const followUpMessages = [
-        ...aiMessages,
-        choice.message,
-        ...toolResultMessages,
-      ];
+        const followUpMessages = [
+          ...aiMessages,
+          choice.message,
+          ...toolResultMessages,
+        ];
 
-      try {
-        const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${lovableApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3-flash-preview",
-            messages: followUpMessages,
-            temperature: 0.7,
-            max_tokens: 500,
-          }),
-        });
+        try {
+          const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${lovableApiKey}`,
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: followUpMessages,
+              temperature: 0.7,
+              max_tokens: 500,
+            }),
+          });
 
-        if (followUpResponse.ok) {
-          const followUpData = await followUpResponse.json();
-          finalMessage = followUpData.choices?.[0]?.message?.content ||
-            toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
-          if (deferredExecution) {
-            finalMessage = "I've prepared everything — please review and confirm below to save.";
+          if (followUpResponse.ok) {
+            const followUpData = await followUpResponse.json();
+            finalMessage = followUpData.choices?.[0]?.message?.content ||
+              toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
+          } else {
+            finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
           }
-        } else {
+        } catch {
           finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
         }
-      } catch {
-        finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
       }
     } else {
       finalMessage = choice?.message?.content || "I'm here to help you manage your business. What would you like to do?";

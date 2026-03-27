@@ -15,6 +15,9 @@ interface Message {
 interface GeorgeChatAreaProps {
   messages: Message[];
   isProcessing?: boolean;
+  streamingText?: string;
+  lastError?: string | null;
+  onRetry?: () => void;
   onQuickAction?: (action: string, message: string) => void;
   onMenuClick?: () => void;
 }
@@ -22,6 +25,9 @@ interface GeorgeChatAreaProps {
 export function GeorgeChatArea({ 
   messages, 
   isProcessing, 
+  streamingText,
+  lastError,
+  onRetry,
   onQuickAction,
   onMenuClick
 }: GeorgeChatAreaProps) {
@@ -43,14 +49,18 @@ export function GeorgeChatArea({
   if (isMobile) {
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Mobile header */}
         {onMenuClick && <GeorgeMobileHeader onMenuClick={onMenuClick} />}
 
-        {/* Content area */}
         {messages.length === 0 ? (
           <GeorgeWelcome onQuickAction={handleQuickAction} isProcessing={isProcessing} />
         ) : (
-          <GeorgeMessageList messages={messages} isProcessing={isProcessing} />
+          <GeorgeMessageList
+            messages={messages}
+            isProcessing={isProcessing}
+            streamingText={streamingText}
+            lastError={lastError}
+            onRetry={onRetry}
+          />
         )}
       </div>
     );
@@ -67,19 +77,23 @@ export function GeorgeChatArea({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      {/* Desktop header */}
       <div className="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
           <Bot className="h-4 w-4 text-primary" />
         </div>
         <span className="font-medium">Foreman AI</span>
         <Badge variant="secondary" className="text-xs">
-          Your Foreman AI
+          AI Operating System
         </Badge>
       </div>
 
-      {/* Messages */}
-      <GeorgeMessageList messages={messages} isProcessing={isProcessing} />
+      <GeorgeMessageList
+        messages={messages}
+        isProcessing={isProcessing}
+        streamingText={streamingText}
+        lastError={lastError}
+        onRetry={onRetry}
+      />
     </div>
   );
 }

@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Lock, Phone, PhoneOff } from "lucide-react";
+import { Send, Loader2, Lock, Phone, PhoneOff, Slash } from "lucide-react";
 import { PhotoQuoteButton, type PhotoQuoteSuggestion } from "./PhotoQuoteButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
+import { useForemanChat } from "@/hooks/useForemanChat";
+import { getSlashHints, type SlashCommandHint } from "@/utils/slashCommandParser";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -14,6 +16,7 @@ interface GeorgeMobileInputProps {
   onAssistantMessage?: (message: string, conversationId?: string) => void;
   onStructuredResponse?: (responseData: any, conversationId?: string) => void;
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
+  onStreamingUpdate?: (text: string) => void;
   conversationId?: string | null;
   memoryContext?: any;
 }
@@ -23,11 +26,12 @@ export function GeorgeMobileInput({
   onAssistantMessage,
   onStructuredResponse,
   onPhotoQuote,
+  onStreamingUpdate,
   conversationId,
   memoryContext,
 }: GeorgeMobileInputProps) {
   const [message, setMessage] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [slashHints, setSlashHints] = useState<SlashCommandHint[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const { profile } = useProfile();
   const {
@@ -51,6 +55,20 @@ export function GeorgeMobileInput({
 
   const isConnected = status === "connected";
 
+  // Consolidated chat hook
+  const {
+    sendMessage: sendChatMessage,
+    isProcessing,
+    lastError,
+  } = useForemanChat({
+    conversationId: conversationId || null,
+    memoryContext,
+    onUserMessage,
+    onAssistantMessage,
+    onStructuredResponse,
+    onStreamingUpdate,
+  });
+
   useEffect(() => {
     async function loadContext() {
       const { data: teamId } = await supabase.rpc("get_user_team_id");
@@ -72,17 +90,13 @@ export function GeorgeMobileInput({
       const { message: actionMessage, action } = e.detail;
 
       if (action) {
-        setIsProcessing(true);
         onUserMessage?.(actionMessage);
-
         try {
           const result = await callWebhook(action);
           onAssistantMessage?.(result);
         } catch (error) {
           console.error("Quick action error:", error);
           toast.error("Failed to process action");
-        } finally {
-          setIsProcessing(false);
         }
       } else {
         setMessage(actionMessage);
@@ -102,43 +116,30 @@ export function GeorgeMobileInput({
     };
   }, [callWebhook, onUserMessage, onAssistantMessage]);
 
+  // Slash command hints
+  useEffect(() => {
+    setSlashHints(getSlashHints(message));
+  }, [message]);
+
   const handleSendMessage = async () => {
     const text = message.trim();
     if (!text || isProcessing) return;
 
     setMessage("");
-    onUserMessage?.(text);
+    setSlashHints([]);
 
     if (isConnected) {
+      onUserMessage?.(text);
       sendTextMessage(text);
     } else {
-      setIsProcessing(true);
-      try {
-        const response = await supabase.functions.invoke("george-chat", {
-          body: {
-            message: text,
-            conversation_id: conversationId || null,
-            memory_context: memoryContext || undefined,
-          },
-        });
-
-        if (response.error) throw response.error;
-
-        const assistantMessage = response.data.message || "I'm here to help!";
-        const newConversationId = response.data.conversation_id;
-        
-        if (response.data.action_plan) {
-          onStructuredResponse?.(response.data, newConversationId);
-        } else {
-          onAssistantMessage?.(assistantMessage, newConversationId);
-        }
-      } catch (error) {
-        console.error("Chat error:", error);
-        toast.error("Failed to send message");
-      } finally {
-        setIsProcessing(false);
-      }
+      await sendChatMessage(text);
     }
+  };
+
+  const handleSlashSelect = (hint: SlashCommandHint) => {
+    setMessage(hint.command + " ");
+    setSlashHints([]);
+    inputRef.current?.focus();
   };
 
   const toggleConnection = async () => {
@@ -194,7 +195,26 @@ export function GeorgeMobileInput({
         </div>
       )}
 
-      {/* Input bar - light theme */}
+      {/* Slash command autocomplete */}
+      {slashHints.length > 0 && (
+        <div className="mb-2 bg-popover border border-border rounded-xl shadow-lg overflow-hidden">
+          {slashHints.map((hint) => (
+            <button
+              key={hint.command}
+              onClick={() => handleSlashSelect(hint)}
+              className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted transition-colors text-left"
+            >
+              <Slash className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <span className="text-sm font-medium">{hint.command}</span>
+                <span className="text-xs text-muted-foreground ml-2">{hint.label}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Input bar */}
       <div className="flex items-center gap-2 bg-white border border-border rounded-full px-2 py-1.5 shadow-sm">
         {/* Photo Quote Button */}
         <PhotoQuoteButton
@@ -214,7 +234,7 @@ export function GeorgeMobileInput({
               handleSendMessage();
             }
           }}
-          placeholder="Ask anything"
+          placeholder="Ask anything or type /"
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground min-w-0 py-2"
           disabled={isProcessing}
         />
@@ -234,7 +254,6 @@ export function GeorgeMobileInput({
             )}
           </Button>
         ) : (
-          /* Voice call button - green phone */
           <Button
             variant={isConnected ? "default" : "ghost"}
             size="icon"

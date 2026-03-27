@@ -38,6 +38,8 @@ export default function George() {
   const [displayItems, setDisplayItems] = useState<DisplayItem[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [lastChatError, setLastChatError] = useState<string | null>(null);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [photoQuoteSuggestion, setPhotoQuoteSuggestion] = useState<PhotoQuoteSuggestion | null>(null);
@@ -128,9 +130,12 @@ export default function George() {
 
   const handleUserMessage = useCallback((message: string) => {
     addMessage("user", message);
+    setStreamingText("");
+    setLastChatError(null);
   }, [addMessage]);
 
   const handleAssistantMessage = useCallback((message: string, conversationId?: string) => {
+    setStreamingText("");
     addMessage("assistant", message);
     if (conversationId && !activeConversationId) {
       setActiveConversationId(conversationId);
@@ -140,6 +145,10 @@ export default function George() {
       queryClient.invalidateQueries({ queryKey: ["george-messages", conversationId || activeConversationId] });
     }
   }, [addMessage, activeConversationId, queryClient]);
+
+  const handleStreamingUpdate = useCallback((text: string) => {
+    setStreamingText(text);
+  }, []);
 
   const { startTask: globalStartTask, completeTask: globalCompleteTask } = useAgentTask();
 
@@ -374,6 +383,8 @@ export default function George() {
               <GeorgeChatArea
                 messages={messages}
                 isProcessing={isProcessing}
+                streamingText={streamingText}
+                lastError={lastChatError}
                 onQuickAction={handleQuickAction}
                 onMenuClick={() => setSidebarOpen(true)}
               />
@@ -396,6 +407,7 @@ export default function George() {
               onAssistantMessage={handleAssistantMessage}
               onStructuredResponse={handleStructuredResponse}
               onPhotoQuote={handlePhotoQuote}
+              onStreamingUpdate={handleStreamingUpdate}
               conversationId={activeConversationId}
               memoryContext={memoryPayload}
             />
@@ -453,6 +465,8 @@ export default function George() {
                 <GeorgeChatArea
                   messages={messages}
                   isProcessing={isProcessing}
+                  streamingText={streamingText}
+                  lastError={lastChatError}
                   onQuickAction={handleQuickAction}
                   onMenuClick={() => setSidebarOpen(true)}
                 />
@@ -473,6 +487,7 @@ export default function George() {
                 onAssistantMessage={handleAssistantMessage}
                 onStructuredResponse={handleStructuredResponse}
                 onPhotoQuote={handlePhotoQuote}
+                onStreamingUpdate={handleStreamingUpdate}
                 conversationId={activeConversationId}
                 textareaRef={textInputRef}
                 memoryContext={memoryPayload}

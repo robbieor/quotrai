@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, RefObject } from "react";
-import { Send, Loader2, Phone, PhoneOff, Lock } from "lucide-react";
+import { Send, Loader2, Phone, PhoneOff, Lock, Slash } from "lucide-react";
 import { PhotoQuoteButton, type PhotoQuoteSuggestion } from "./PhotoQuoteButton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
+import { useForemanChat } from "@/hooks/useForemanChat";
+import { getSlashHints, type SlashCommandHint } from "@/utils/slashCommandParser";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -21,6 +23,7 @@ interface GeorgeAgentInputProps {
   onAssistantMessage?: (message: string, conversationId?: string) => void;
   onStructuredResponse?: (responseData: any, conversationId?: string) => void;
   onPhotoQuote?: (suggestion: PhotoQuoteSuggestion) => void;
+  onStreamingUpdate?: (text: string) => void;
   conversationId?: string | null;
   textareaRef?: RefObject<HTMLTextAreaElement>;
   memoryContext?: any;
@@ -31,12 +34,13 @@ export function GeorgeAgentInput({
   onAssistantMessage,
   onStructuredResponse,
   onPhotoQuote,
+  onStreamingUpdate,
   conversationId,
   textareaRef: externalTextareaRef,
   memoryContext,
 }: GeorgeAgentInputProps) {
   const [message, setMessage] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [slashHints, setSlashHints] = useState<SlashCommandHint[]>([]);
   const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = externalTextareaRef || internalTextareaRef;
   const { profile } = useProfile();
@@ -61,6 +65,20 @@ export function GeorgeAgentInput({
 
   const isConnected = status === "connected";
 
+  // Consolidated chat hook
+  const {
+    sendMessage: sendChatMessage,
+    isProcessing,
+    lastError,
+  } = useForemanChat({
+    conversationId: conversationId || null,
+    memoryContext,
+    onUserMessage,
+    onAssistantMessage,
+    onStructuredResponse,
+    onStreamingUpdate,
+  });
+
   // Set user context on mount and profile change
   useEffect(() => {
     async function loadContext() {
@@ -81,52 +99,18 @@ export function GeorgeAgentInput({
     const handleQuickAction = async (e: CustomEvent<{ message: string; action?: string; autoSend?: boolean }>) => {
       const { message: actionMessage, action, autoSend } = e.detail;
       
-      // If we have a direct action, call webhook
       if (action) {
-        setIsProcessing(true);
         onUserMessage?.(actionMessage);
-        
         try {
           const result = await callWebhook(action);
           onAssistantMessage?.(result);
         } catch (error) {
           console.error("Quick action error:", error);
           toast.error("Failed to process action");
-        } finally {
-          setIsProcessing(false);
         }
       } else if (autoSend !== false) {
-        // Auto-send the message (for demo script)
-        setIsProcessing(true);
-        onUserMessage?.(actionMessage);
-        
-        try {
-          const response = await supabase.functions.invoke("george-chat", {
-            body: {
-              message: actionMessage,
-              conversation_id: conversationId || null,
-              memory_context: memoryContext || undefined,
-            },
-          });
-
-          if (response.error) throw response.error;
-          
-          const assistantMessage = response.data.message || "I'm here to help!";
-          const newConversationId = response.data.conversation_id;
-          
-          if (response.data.action_plan) {
-            onStructuredResponse?.(response.data, newConversationId);
-          } else {
-            onAssistantMessage?.(assistantMessage, newConversationId);
-          }
-        } catch (error) {
-          console.error("Chat error:", error);
-          toast.error("Failed to send message");
-        } finally {
-          setIsProcessing(false);
-        }
+        await sendChatMessage(actionMessage);
       } else {
-        // Just set the message for manual send
         setMessage(actionMessage);
         textareaRef.current?.focus();
       }
@@ -136,7 +120,7 @@ export function GeorgeAgentInput({
     return () => {
       window.removeEventListener("foremanai-quick-action", handleQuickAction as EventListener);
     };
-  }, [callWebhook, onUserMessage, onAssistantMessage, conversationId]);
+  }, [callWebhook, onUserMessage, onAssistantMessage, sendChatMessage]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -146,44 +130,23 @@ export function GeorgeAgentInput({
     }
   }, [message]);
 
+  // Slash command hints
+  useEffect(() => {
+    setSlashHints(getSlashHints(message));
+  }, [message]);
+
   const handleSendMessage = async () => {
     const text = message.trim();
     if (!text || isProcessing) return;
 
     setMessage("");
-    onUserMessage?.(text);
+    setSlashHints([]);
 
-    // If connected to ElevenLabs, send via voice agent
     if (isConnected) {
+      onUserMessage?.(text);
       sendTextMessage(text);
     } else {
-      // Otherwise, call george-chat edge function directly
-      setIsProcessing(true);
-      try {
-        const response = await supabase.functions.invoke("george-chat", {
-          body: {
-            message: text,
-            conversation_id: conversationId || null,
-            memory_context: memoryContext || undefined,
-          },
-        });
-
-        if (response.error) throw response.error;
-        
-        const assistantMessage = response.data.message || "I'm here to help!";
-        const newConversationId = response.data.conversation_id;
-        
-        if (response.data.action_plan) {
-          onStructuredResponse?.(response.data, newConversationId);
-        } else {
-          onAssistantMessage?.(assistantMessage, newConversationId);
-        }
-      } catch (error) {
-        console.error("Chat error:", error);
-        toast.error("Failed to send message");
-      } finally {
-        setIsProcessing(false);
-      }
+      await sendChatMessage(text);
     }
   };
 
@@ -192,6 +155,12 @@ export function GeorgeAgentInput({
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleSlashSelect = (hint: SlashCommandHint) => {
+    setMessage(hint.command + " ");
+    setSlashHints([]);
+    textareaRef.current?.focus();
   };
 
   const toggleConnection = async () => {
@@ -214,13 +183,32 @@ export function GeorgeAgentInput({
     }
   };
 
-  // Determine voice button state
   const voiceDisabled = !canUseVoice || isConnecting || accessLoading;
   const showVoiceLock = !hasVoiceAccess;
 
   return (
     <div className="border-t border-border bg-background p-4">
       <div className="max-w-3xl mx-auto">
+        {/* Slash command autocomplete */}
+        {slashHints.length > 0 && (
+          <div className="mb-2 bg-popover border border-border rounded-xl shadow-lg overflow-hidden">
+            {slashHints.map((hint) => (
+              <button
+                key={hint.command}
+                onClick={() => handleSlashSelect(hint)}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+              >
+                <Slash className="h-4 w-4 text-primary shrink-0" />
+                <div>
+                  <span className="text-sm font-medium">{hint.command}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{hint.label}</span>
+                  <p className="text-xs text-muted-foreground/70">{hint.example}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="relative flex items-end gap-2 bg-muted rounded-2xl p-2">
           {/* Voice Connection Toggle */}
           <TooltipProvider>
@@ -284,7 +272,7 @@ export function GeorgeAgentInput({
             placeholder={
               isConnected
                 ? "Type or speak to Foreman AI..."
-                : "Type a message..."
+                : "Type a message or / for commands..."
             }
             className="flex-1 min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 py-3"
             rows={1}
@@ -315,9 +303,11 @@ export function GeorgeAgentInput({
                 : `Listening... ${Math.round(remainingMinutes)} mins remaining`
               : isProcessing
                 ? "Processing..."
-                : hasVoiceAccess
-                  ? `Type a message or click the phone button for voice (${Math.round(remainingMinutes)} mins remaining)`
-                  : "Type a message (voice requires Foreman AI Voice add-on)"}
+                : lastError
+                  ? lastError
+                  : hasVoiceAccess
+                    ? `Type a message or click the phone button for voice (${Math.round(remainingMinutes)} mins remaining)`
+                    : "Type a message or use / commands (voice requires Foreman AI Voice add-on)"}
         </p>
       </div>
     </div>
