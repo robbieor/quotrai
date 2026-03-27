@@ -7,7 +7,7 @@ interface SEOHeadProps {
   ogImage?: string;
 }
 
-const BASE_URL = "https://quotrai.lovable.app";
+const BASE_URL = "https://foreman.world";
 const DEFAULT_OG = "/og-image.png";
 
 export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }: SEOHeadProps) {
