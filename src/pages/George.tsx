@@ -130,9 +130,12 @@ export default function George() {
 
   const handleUserMessage = useCallback((message: string) => {
     addMessage("user", message);
+    setStreamingText("");
+    setLastChatError(null);
   }, [addMessage]);
 
   const handleAssistantMessage = useCallback((message: string, conversationId?: string) => {
+    setStreamingText("");
     addMessage("assistant", message);
     if (conversationId && !activeConversationId) {
       setActiveConversationId(conversationId);
@@ -142,6 +145,10 @@ export default function George() {
       queryClient.invalidateQueries({ queryKey: ["george-messages", conversationId || activeConversationId] });
     }
   }, [addMessage, activeConversationId, queryClient]);
+
+  const handleStreamingUpdate = useCallback((text: string) => {
+    setStreamingText(text);
+  }, []);
 
   const { startTask: globalStartTask, completeTask: globalCompleteTask } = useAgentTask();
 
