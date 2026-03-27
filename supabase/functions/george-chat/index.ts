@@ -328,7 +328,7 @@ serve(async (req) => {
     });
 
     // ─── PARALLEL: Auth + Profile ───────────────────────────────
-    const { message, conversation_id, memory_context }: ChatRequest = await req.json();
+    const { message, conversation_id, memory_context, stream: streamRequested }: ChatRequest = await req.json();
 
     if (!message) {
       return new Response(
