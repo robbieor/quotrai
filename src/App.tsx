@@ -119,7 +119,7 @@ const App = () => {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/request-access" element={<RequestAccess />} />
-                <Route path="/app-store-assets" element={<AppStoreAssets />} />
+                {/* App store assets — internal only, moved to protected */}
                 <Route path="/industries" element={<Industries />} />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
 
@@ -153,6 +153,7 @@ const App = () => {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/time-tracking" element={<TimeTracking />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/app-store-assets" element={<RoleGuard><AppStoreAssets /></RoleGuard>} />
 
                 {/* Connect+ seat required */}
                 <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />

@@ -66,7 +66,7 @@ export function FloatingTomButton() {
 
   // Hide on Foreman AI page (the page has its own controls)
   // Keep showing on other pages even during calls for quick end-call access
-  if (location.pathname === "/george") {
+  if (location.pathname === "/foreman-ai") {
     return null;
   }
 
