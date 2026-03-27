@@ -42,7 +42,7 @@ const quickActions = [
 
 function DashboardContent() {
   const { data, isLoading } = useDashboardAnalytics();
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useOnboarding();
+  const { isOnboardingComplete, savedStep, isLoading: onboardingLoading } = useOnboarding();
   const { user, loading: authLoading } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
@@ -204,7 +204,7 @@ function DashboardContent() {
 
       {/* Onboarding Modal */}
       {showOnboarding && (
-        <OnboardingModal open={true} onComplete={handleOnboardingComplete} />
+        <OnboardingModal open={true} onComplete={handleOnboardingComplete} initialStep={savedStep} />
       )}
     </DashboardLayout>
   );

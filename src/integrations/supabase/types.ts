@@ -3339,6 +3339,7 @@ export type Database = {
           hourly_rate: number | null
           id: string
           onboarding_completed: boolean
+          onboarding_step: number | null
           phone: string | null
           referral_code: string | null
           team_id: string | null
@@ -3375,6 +3376,7 @@ export type Database = {
           hourly_rate?: number | null
           id: string
           onboarding_completed?: boolean
+          onboarding_step?: number | null
           phone?: string | null
           referral_code?: string | null
           team_id?: string | null
@@ -3411,6 +3413,7 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           onboarding_completed?: boolean
+          onboarding_step?: number | null
           phone?: string | null
           referral_code?: string | null
           team_id?: string | null
