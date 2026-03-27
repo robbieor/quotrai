@@ -14,7 +14,7 @@ import {
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
-const LOGO_URL = 'https://quotrai.lovable.app/foreman-logo.png'
+const LOGO_URL = 'https://foreman.world/foreman-logo.png'
 
 interface ReauthenticationEmailProps {
   token: string

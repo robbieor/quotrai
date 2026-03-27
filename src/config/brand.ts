@@ -12,7 +12,7 @@ export const BRAND = {
   domain: "foreman.ie",
   /** Public-facing URLs */
   urls: {
-    landing: "https://quotrai.lovable.app",
+    landing: "https://foreman.world",
     privacy: "/privacy",
     terms: "/terms",
   },

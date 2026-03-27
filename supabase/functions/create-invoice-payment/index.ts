@@ -84,7 +84,7 @@ serve(async (req) => {
     const platformFeePercent = team.platform_fee_percent || 2.5;
     const applicationFee = Math.round(totalInCents * (platformFeePercent / 100));
 
-    const origin = req.headers.get("origin") || "https://quotrai.lovable.app";
+    const origin = req.headers.get("origin") || "https://foreman.world";
     const returnUrl = `${origin}/portal/invoice?token=${portal_token}`;
 
     const session = await stripe.checkout.sessions.create({
