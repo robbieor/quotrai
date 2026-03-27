@@ -12,7 +12,7 @@ export function useOnboarding() {
       
       const { data, error } = await supabase
         .from("profiles")
-        .select("onboarding_completed")
+        .select("onboarding_completed, onboarding_step")
         .eq("id", user.id)
         .single();
 
@@ -24,11 +24,12 @@ export function useOnboarding() {
       return data;
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   return {
     isOnboardingComplete: onboardingStatus?.onboarding_completed ?? false,
+    savedStep: (onboardingStatus as any)?.onboarding_step ?? 1,
     isLoading,
     refetch,
   };
