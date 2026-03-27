@@ -119,7 +119,7 @@ const App = () => {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/request-access" element={<RequestAccess />} />
-                <Route path="/app-store-assets" element={<AppStoreAssets />} />
+                {/* App store assets — internal only, moved to protected */}
                 <Route path="/industries" element={<Industries />} />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
 
@@ -153,10 +153,12 @@ const App = () => {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/time-tracking" element={<TimeTracking />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/app-store-assets" element={<RoleGuard><AppStoreAssets /></RoleGuard>} />
 
                 {/* Connect+ seat required */}
                 <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />
-                <Route path="/george" element={<SeatGuard requiredSeat="connect"><George /></SeatGuard>} />
+                <Route path="/foreman-ai" element={<SeatGuard requiredSeat="connect"><George /></SeatGuard>} />
+                <Route path="/george" element={<Navigate to="/foreman-ai" replace />} />
                 <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
                 <Route path="/reports" element={<RoleGuard><SeatGuard requiredSeat="connect"><Reports /></SeatGuard></RoleGuard>} />
                 <Route path="/documents" element={<RoleGuard><SeatGuard requiredSeat="connect"><Documents /></SeatGuard></RoleGuard>} />

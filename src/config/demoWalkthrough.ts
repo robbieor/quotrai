@@ -59,7 +59,7 @@ export const demoSteps: DemoStep[] = [
   },
   {
     id: "george",
-    route: "/george",
+    route: "/foreman-ai",
     narration:
       "And this is Foreman AI — George. Your AI-powered assistant that can create jobs, generate quotes, look up customers, and manage your diary — all by voice or text. It's like having a foreman who never sleeps.",
     pauseAfter: 2000,

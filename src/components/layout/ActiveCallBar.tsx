@@ -51,7 +51,7 @@ export function ActiveCallBar() {
 
       {/* Center: Navigation hint */}
       <button
-        onClick={() => navigate("/george")}
+        onClick={() => navigate("/foreman-ai")}
         className="text-sm opacity-80 hover:opacity-100 transition-opacity underline underline-offset-2"
       >
         Open Foreman AI Chat

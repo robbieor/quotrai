@@ -107,7 +107,7 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
             </Button>
           )}
           {showAI && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/george")}>
+            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/foreman-ai")}>
               <Sparkles className="h-3 w-3" /> Ask AI
             </Button>
           )}
