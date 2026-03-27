@@ -6,7 +6,7 @@
 export const BRAND = {
   name: "Foreman",
   fullName: "Foreman AI",
-  tagline: "Job Management & AI for Trade Businesses",
+  tagline: "The AI Operating System for Field Service",
   legalEntity: "Foreman Ltd",
   supportEmail: "support@foreman.ie",
   domain: "foreman.ie",

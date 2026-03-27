@@ -18,22 +18,22 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
             </div>
 
             <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-4 leading-tight">
-              Just tell it{" "}
+              It already knows{" "}
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
                 what you need.
               </span>
             </h2>
 
             <p className="text-base sm:text-lg text-muted-foreground mb-6 leading-relaxed">
-              Create quotes, send invoices, and follow up — using voice or text.
-              Foreman AI handles it while you stay on the tools.
+              Foreman AI doesn't wait for instructions. It monitors your operations,
+              identifies risks, and takes action — while you stay on the tools.
             </p>
 
             <ul className="space-y-3">
               {[
-                "Works in noisy environments",
-                "Understands trade terminology",
-                "Confirms before executing",
+                "Detects risks before you notice them",
+                "Chases payments without being told",
+                "Briefs you every morning on what matters",
                 "Voice or text — your choice",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2.5 text-sm">
