@@ -83,7 +83,7 @@ export function FloatingTomButton() {
 
   const handleStartCall = async () => {
     if (!hasVoiceAccess || !canUseVoice) {
-      navigate("/george");
+      navigate("/foreman-ai");
       return;
     }
     
@@ -109,7 +109,7 @@ export function FloatingTomButton() {
     }
 
     // Navigate to Foreman AI page with the quick action
-    navigate("/george");
+    navigate("/foreman-ai");
     
     // Dispatch event for the Foreman AI page to handle
     setTimeout(() => {
@@ -121,7 +121,7 @@ export function FloatingTomButton() {
 
   const handleOpenChat = () => {
     setIsExpanded(false);
-    navigate("/george");
+    navigate("/foreman-ai");
   };
 
   return (
