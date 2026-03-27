@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCcw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
@@ -16,9 +17,12 @@ interface Message {
 interface GeorgeMessageListProps {
   messages: Message[];
   isProcessing?: boolean;
+  streamingText?: string;
+  lastError?: string | null;
+  onRetry?: () => void;
 }
 
-export function GeorgeMessageList({ messages, isProcessing }: GeorgeMessageListProps) {
+export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry }: GeorgeMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -26,7 +30,7 @@ export function GeorgeMessageList({ messages, isProcessing }: GeorgeMessageListP
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isProcessing]);
+  }, [messages, isProcessing, streamingText]);
 
   // Mobile: Clean ChatGPT-style messages
   if (isMobile) {
@@ -36,6 +40,18 @@ export function GeorgeMessageList({ messages, isProcessing }: GeorgeMessageListP
           {messages.map((message) => (
             <MobileMessageBubble key={message.id} message={message} />
           ))}
+
+          {/* Streaming text — progressive render */}
+          {streamingText && !isProcessing && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-white border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+                <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamingText}</p>
+              </div>
+            </div>
+          )}
 
           {isProcessing && (
             <div className="flex items-start gap-3">
@@ -48,19 +64,49 @@ export function GeorgeMessageList({ messages, isProcessing }: GeorgeMessageListP
             </div>
           )}
 
+          {/* Inline error with retry */}
+          {lastError && !isProcessing && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center shrink-0">
+                <span className="text-destructive text-xs font-bold">!</span>
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="text-sm text-destructive">{lastError}</p>
+                {onRetry && (
+                  <Button variant="outline" size="sm" onClick={onRetry} className="mt-2 h-7 text-xs">
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Retry
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div ref={scrollRef} />
         </div>
       </ScrollArea>
     );
   }
 
-  // Desktop: Original bubble style
+  // Desktop: Bubble style with timestamps
   return (
     <ScrollArea className="flex-1">
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {messages.map((message) => (
           <DesktopMessageBubble key={message.id} message={message} />
         ))}
+
+        {/* Streaming text — progressive render */}
+        {streamingText && !isProcessing && (
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+              <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
+            </div>
+            <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{streamingText}</p>
+            </div>
+          </div>
+        )}
 
         {isProcessing && (
           <div className="flex gap-3">
@@ -72,6 +118,24 @@ export function GeorgeMessageList({ messages, isProcessing }: GeorgeMessageListP
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Thinking...</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inline error with retry */}
+        {lastError && !isProcessing && (
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <span className="text-destructive text-xs font-bold">!</span>
+            </div>
+            <div className="bg-destructive/5 border border-destructive/20 rounded-2xl rounded-tl-md px-4 py-3">
+              <p className="text-sm text-destructive">{lastError}</p>
+              {onRetry && (
+                <Button variant="outline" size="sm" onClick={onRetry} className="mt-2 h-7 text-xs">
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Retry
+                </Button>
+              )}
             </div>
           </div>
         )}

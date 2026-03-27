@@ -27,31 +27,31 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: "WORK",
+    label: "OPERATIONS",
     items: [
-      { id: "dashboard", title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { id: "dashboard", title: "Operations", url: "/dashboard", icon: LayoutDashboard },
       { id: "calendar", title: "Calendar", url: "/calendar", icon: CalendarDays },
-      { id: "jobs", title: "Jobs", url: "/jobs", icon: Briefcase },
-      { id: "time-tracking", title: "Time Tracking", url: "/time-tracking", icon: Clock },
+      { id: "jobs", title: "Job Intelligence", url: "/jobs", icon: Briefcase },
+      { id: "time-tracking", title: "Workforce", url: "/time-tracking", icon: Clock },
     ],
   },
   {
-    label: "MONEY",
+    label: "REVENUE",
     items: [
-      { id: "quotes", title: "Quotes", url: "/quotes", icon: FileText },
-      { id: "invoices", title: "Invoices", url: "/invoices", icon: Receipt },
-      { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
+      { id: "quotes", title: "Quote Pipeline", url: "/quotes", icon: FileText },
+      { id: "invoices", title: "Revenue", url: "/invoices", icon: Receipt },
+      { id: "expenses", title: "Cost Control", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
     ],
   },
   {
-    label: "PEOPLE",
+    label: "INTELLIGENCE",
     items: [
-      { id: "customers", title: "Customers", url: "/customers", icon: Users },
+      { id: "customers", title: "Client Intelligence", url: "/customers", icon: Users },
       { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
     ],
   },
   {
-    label: "INSIGHTS",
+    label: "AI",
     items: [
       { id: "tom", title: "Foreman AI", url: "/george", icon: Bot, requiredSeat: "connect" },
       { id: "ai-activity", title: "AI Activity", url: "/ai-audit", icon: Clock, requiredSeat: "connect" },
