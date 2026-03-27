@@ -4,6 +4,7 @@ const painPoints = [
   "Chasing payments manually — texts, calls, awkward conversations",
   "Switching between 4+ apps just to run a simple job",
   "Losing track of work, cash, and follow-ups",
+  "Using 'AI tools' that answer questions but don't do the work",
 ];
 
 export function ProblemSection() {

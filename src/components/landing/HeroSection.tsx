@@ -29,20 +29,19 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
             </h1>
 
             <p className="text-base sm:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Run quotes, jobs, invoices, and payments — using voice or text.
-              Foreman handles the admin so you get paid faster and stay in control.
+              Foreman runs your quotes, jobs, invoices, and payments — so you don't have to.
             </p>
 
             <p className="text-sm sm:text-base font-semibold text-foreground mb-6 sm:mb-8">
-              Built for field service pros — not accountants.
+              Not another app. An operating system for your trade business.
             </p>
 
             {/* Value bullets */}
             <ul className="space-y-2.5 mb-8 sm:mb-10 text-left max-w-md mx-auto lg:mx-0">
               {[
-                "Create quotes and invoices in seconds",
-                "Track jobs and payments in one place",
-                "Let AI handle follow-ups and admin",
+                "Quotes created and sent — without lifting a finger",
+                "Overdue invoices chased automatically",
+                "Your next best action — surfaced every morning",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />

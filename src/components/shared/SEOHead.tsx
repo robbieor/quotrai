@@ -12,7 +12,7 @@ const DEFAULT_OG = "/og-image.png";
 
 export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }: SEOHeadProps) {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title.includes("Foreman") ? title : `${title} | Foreman`;
+  const fullTitle = title.includes("Foreman") ? title : `${title} | Foreman — AI Operating System for Field Service`;
 
   return (
     <Helmet>
