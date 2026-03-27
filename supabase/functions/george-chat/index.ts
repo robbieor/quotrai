@@ -783,46 +783,48 @@ IMPORTANT RULES:
         }
       }
 
-      // Follow-up AI call with tool results
-      const toolResultMessages = toolResults.map((tr, idx) => ({
-        role: "tool" as const,
-        tool_call_id: toolCalls[idx].id,
-        content: JSON.stringify(tr.result),
-      }));
+      // For deferred (confirmation-gated) actions, skip the expensive second AI call
+      if (deferredExecution) {
+        finalMessage = "I've prepared everything — please review and confirm below to save.";
+      } else {
+        // Follow-up AI call with tool results for executed actions
+        const toolResultMessages = toolResults.map((tr, idx) => ({
+          role: "tool" as const,
+          tool_call_id: toolCalls[idx].id,
+          content: JSON.stringify(tr.result),
+        }));
 
-      const followUpMessages = [
-        ...aiMessages,
-        choice.message,
-        ...toolResultMessages,
-      ];
+        const followUpMessages = [
+          ...aiMessages,
+          choice.message,
+          ...toolResultMessages,
+        ];
 
-      try {
-        const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${lovableApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3-flash-preview",
-            messages: followUpMessages,
-            temperature: 0.7,
-            max_tokens: 500,
-          }),
-        });
+        try {
+          const followUpResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${lovableApiKey}`,
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: followUpMessages,
+              temperature: 0.7,
+              max_tokens: 500,
+            }),
+          });
 
-        if (followUpResponse.ok) {
-          const followUpData = await followUpResponse.json();
-          finalMessage = followUpData.choices?.[0]?.message?.content ||
-            toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
-          if (deferredExecution) {
-            finalMessage = "I've prepared everything — please review and confirm below to save.";
+          if (followUpResponse.ok) {
+            const followUpData = await followUpResponse.json();
+            finalMessage = followUpData.choices?.[0]?.message?.content ||
+              toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
+          } else {
+            finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
           }
-        } else {
+        } catch {
           finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
         }
-      } catch {
-        finalMessage = toolResults.map((tr) => tr.result.message || `Completed ${tr.name}`).join("\n\n");
       }
     } else {
       finalMessage = choice?.message?.content || "I'm here to help you manage your business. What would you like to do?";
