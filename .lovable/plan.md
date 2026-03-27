@@ -1,37 +1,64 @@
 
 
-## Voice Agent — Sub-3s Connection Speed
+## Positioning Sharpening — "AI Operating System" vs "AI Assistant"
 
-### Root Cause Analysis
+CoreNav is an AI assistant that answers technical questions. Foreman is an AI operating system that runs the business. The copy needs to make this distinction unmistakable.
 
-From the session replay, connection took **~15 seconds**: user tapped at 805s, "Retrying (1/2)" appeared at 809s, finally connected at 820s. Three compounding problems:
+### The Differentiation
 
-1. **Redundant data fetching** — `FloatingTomButton` already loads `teamId` and `userId` on mount, but `startConversation` fetches them again via `Promise.allSettled` (2 extra DB round-trips)
-2. **No token pre-warming** — The ElevenLabs conversation token is only fetched after the user taps "Call". This token request goes: client → edge function → auth check → ElevenLabs API (~1-2s)
-3. **First attempt failing + retry delay** — Attempt 1 consistently fails, triggering a 1s backoff + second attempt. This suggests a race condition or cold-start issue
+```text
+CoreNav:  "Stuck on the job? Ask CoreNav." → Answers questions
+Foreman:  "Your business runs itself."     → Runs operations
+```
 
-### Solution: Pre-warm + Eliminate Redundancy
-
-**Strategy**: Fetch the token the moment the user expands the FAB (shows intent to call), and pass already-loaded context instead of re-fetching it.
+CoreNav helps a tech diagnose a cracked heat exchanger. Foreman creates the quote, schedules the job, invoices the client, chases the payment, and tells you your profit margin — without being asked.
 
 ### Changes
 
+**1. Brand tagline update** (`src/config/brand.ts`)
+- Current: "Job Management & AI for Trade Businesses"
+- New: "The AI Operating System for Field Service"
+
+**2. Page title & meta** (`index.html`)
+- Title: "Foreman — The AI Operating System for Field Service"
+- Description: Emphasize "runs your operations" not "manages jobs"
+- JSON-LD description updated
+
+**3. Hero copy sharpening** (`src/components/landing/HeroSection.tsx`)
+- Current subtitle: "Run quotes, jobs, invoices, and payments — using voice or text."
+- New subtitle: "Foreman runs your quotes, jobs, invoices, and payments — so you don't have to."
+- Current tagline: "Built for field service pros — not accountants."
+- New tagline: "Not another app. An operating system for your trade business."
+- Update bullets from feature-list to outcome-list:
+  - "Quotes created and sent — without lifting a finger"
+  - "Overdue invoices chased automatically"
+  - "Your next best action — surfaced every morning"
+
+**4. Problem section sharpening** (`src/components/landing/ProblemSection.tsx`)
+- Add a fourth pain point: "Using 'AI tools' that answer questions but don't do the work"
+
+**5. Foreman AI section** (`src/components/landing/ForemanAISection.tsx`)
+- Current heading: "Just tell it what you need."
+- New heading: "It already knows what you need."
+- Shift bullets from capabilities to autonomy:
+  - "Detects risks before you notice them"
+  - "Chases payments without being told"
+  - "Briefs you every morning on what matters"
+  - "Voice or text — your choice"
+
+**6. SEO meta** (`src/components/shared/SEOHead.tsx`)
+- Update default description to match the OS positioning
+
+### Files Modified
+
 | File | Change |
 |------|--------|
-| `src/contexts/VoiceAgentContext.tsx` | Add `preWarmToken()` method that fetches + caches a conversation token. Accept pre-loaded context in `startConversation` to skip the 2 redundant DB calls. Remove `supabase.rpc("get_user_team_id")` and `supabase.auth.getUser()` from the connection flow — use the context passed in |
-| `src/components/layout/FloatingTomButton.tsx` | Call `preWarmToken()` when FAB expands (`isExpanded` becomes true). Pass the already-loaded `profile.id`, `profile.team_id`, `profile.full_name` directly to `startConversation` instead of letting it re-fetch |
-| `src/hooks/useVoiceConnectionReliability.ts` | Remove unused `runPreflightCheck` method (dead code). Reduce `INITIAL_RETRY_DELAY` from 1000ms to 500ms for faster recovery |
+| `src/config/brand.ts` | Tagline → "The AI Operating System for Field Service" |
+| `index.html` | Title, meta description, OG tags, JSON-LD |
+| `src/components/landing/HeroSection.tsx` | Hero copy, bullets, tagline |
+| `src/components/landing/ProblemSection.tsx` | Add 4th pain point |
+| `src/components/landing/ForemanAISection.tsx` | Heading + bullets rewrite |
+| `src/components/shared/SEOHead.tsx` | Default description update |
 
-### Expected Result
-
-```text
-Current flow (15s):
-  Click → [fetch mic + token + teamId + user] → attempt 1 fails → 1s wait → attempt 2 → connected
-
-New flow (<3s):
-  FAB opens → [pre-fetch token in background]
-  Click → [mic only, context already loaded, token cached] → connect → done
-```
-
-### No database or edge function changes required.
+### No database changes. No structural changes. Copy and positioning only.
 
