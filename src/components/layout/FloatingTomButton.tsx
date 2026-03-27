@@ -34,7 +34,8 @@ export function FloatingTomButton() {
     startConversation, 
     stopConversation,
     callWebhook,
-    setContext 
+    setContext,
+    preWarmToken,
   } = useGlobalVoiceAgent();
 
   const isConnected = status === "connected";
@@ -63,6 +64,13 @@ export function FloatingTomButton() {
     
     loadContext();
   }, [profile, setContext]);
+
+  // Pre-warm token when FAB expands (user shows intent to call)
+  useEffect(() => {
+    if (isExpanded && hasVoiceAccess && canUseVoice) {
+      preWarmToken();
+    }
+  }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
   // Hide on Foreman AI page (the page has its own controls)
   // Keep showing on other pages even during calls for quick end-call access
