@@ -1,114 +1,78 @@
 
 
-## Foreman AI — Performance, Reliability & Intelligence Upgrade
+## Codebase Launch Readiness Audit
 
-### Problems Identified
+### Critical Issues (will cause credibility problems)
 
-1. **Text chat is not streaming** — `george-chat` returns a full JSON response (non-streaming). User stares at a spinner for 3-8 seconds. The `foreman-chat` edge function streams SSE but is unused. The main `george-chat` makes TWO sequential AI calls (tool call → follow-up summary), doubling latency.
+**1. "14-day free trial" still in SEO / index.html**
+- `index.html` line 18: meta description says "14-day free trial"
+- `index.html` line 27: OG description says "Free 14-day trial"
+- `index.html` line 58: JSON-LD says "14-day free trial, no credit card required"
+- The rest of the app correctly says 30-day. This is the public-facing SEO that Google, social shares, and link previews will show.
 
-2. **Error handling is toast-only** — failures show a generic "Failed to send message" toast with no retry, no inline error state, no recovery path.
+**2. Canonical URL points to `quotrai.lovable.app`**
+- `index.html` line 21: `<link rel="canonical" href="https://quotrai.lovable.app/">`
+- `src/config/brand.ts`: landing URL is `https://quotrai.lovable.app`
+- `src/components/shared/SEOHead.tsx`: BASE_URL is `https://quotrai.lovable.app`
+- All email templates in edge functions hardcode `quotrai.lovable.app` for logo URLs and CTAs (about 22 files)
+- If you plan to use `foreman.ie`, all of these need updating. If `quotrai.lovable.app` IS your production domain, this is fine.
 
-3. **Redundant input components** — Three separate input components (`GeorgeInputArea`, `GeorgeAgentInput`, `GeorgeMobileInput`) with duplicated logic for sending messages, calling webhooks, and managing voice. Each has slightly different behavior and bugs independently.
+**3. OG image URL uses legacy `gpt-engineer-file-uploads` path**
+- `index.html` lines 28 and 37: OG image points to `storage.googleapis.com/gpt-engineer-file-uploads/...quotr appicon.png`
+- This URL contains spaces (will break on some platforms) and references the old "Quotr" brand name
+- Should be replaced with a self-hosted image at `/og-image.png`
 
-4. **No streaming text render** — Messages appear all at once after full completion. No typewriter/progressive rendering.
+**4. `capacitor.config.ts` still points to live preview URL**
+- The `server.url` is set to `https://9b11f743-...lovableproject.com` — any native build will load the Lovable preview instead of the bundled app. Must be commented out for production.
 
-5. **Sidebar navigation uses passive SaaS language** — "Dashboard", "Jobs", "Quotes", "Invoices", "Expenses" instead of the product knowledge terminology.
+### Moderate Issues (professional polish)
 
-6. **Welcome screen is generic** — "What would you like to do?" with 4-6 basic quick actions. No operational context, no proactive suggestions based on current business state.
+**5. Internal route naming inconsistency: `/george`**
+- The AI agent is called "Foreman AI" everywhere in the UI but the route is `/george`
+- Sidebar, floating button, and active call bar all navigate to `/george`
+- Should be `/foreman-ai` or `/assistant` for consistency if a user ever sees the URL
 
-7. **No slash command support** — Despite the product spec defining `/quote`, `/invoice`, `/client` commands, none are implemented. Every message goes through the LLM.
+**6. No auth protection on several routes**
+- Routes like `/jobs`, `/calendar`, `/notifications`, `/time-tracking`, `/settings` don't have `RoleGuard`
+- However, they DO use `DashboardLayout` which wraps `ProtectedRoute`, so auth IS enforced. The `RoleGuard` (team seat restriction) is missing for those routes — meaning team members can access Settings, Calendar, etc. which may or may not be intentional.
 
----
+**7. `AppStoreAssets` page is publicly accessible**
+- Contains internal Lovable project IDs and build checklists
+- Route `/app-store-assets` has no auth guard and is in the public routes section
 
-### Implementation Plan
+**8. Twitter handle is `@quotr` (old brand)**
+- `index.html` line 34: `<meta name="twitter:site" content="@quotr" />`
 
-#### Phase 1: Streaming Chat Response (biggest perceived speed improvement)
+### Low Priority (cleanup)
 
-**`supabase/functions/george-chat/index.ts`**
-- For pure chat responses (no tool calls), stream the AI response using SSE instead of waiting for full completion
-- For tool-call responses, keep current JSON flow but add a preliminary SSE "thinking" event so the UI shows immediate feedback
-- Eliminate the second AI call for deferred (confirmation-gated) actions — the message is always "I've prepared everything — please review below" so hardcode it
+**9. Email templates reference `quotrai.lovable.app` for logos**
+- 22 edge function files hardcode `https://quotrai.lovable.app/foreman-logo.png`
+- If domain changes, all customer emails will have broken logos
 
-**`src/components/george/GeorgeAgentInput.tsx`**
-- Switch from `supabase.functions.invoke` to `fetch()` with SSE parsing for streaming responses
-- Progressive text rendering: append chunks to message as they arrive
-- Show typing indicator immediately on send (before first chunk arrives)
-
-**`src/components/george/GeorgeMobileInput.tsx`**
-- Same streaming fetch logic
-
-#### Phase 2: Consolidate Input Logic
-
-**New: `src/hooks/useForemanChat.ts`**
-- Extract all chat-sending logic into one hook: `sendMessage(text)`, `isProcessing`, `streamingText`
-- Handles: conversation creation, message persistence, SSE stream parsing, action plan routing, error recovery with retry
-- Both `GeorgeAgentInput` and `GeorgeMobileInput` call this hook instead of duplicating logic
-
-#### Phase 3: Slash Command Parser (deterministic speed)
-
-**New: `src/utils/slashCommandParser.ts`**
-- Parse `/quote`, `/invoice`, `/expense`, `/client`, `/job` commands
-- If command parses cleanly with all required fields → bypass LLM entirely, call `george-webhook` directly
-- If missing fields → send to LLM with pre-filled intent hint for faster resolution
-- Examples:
-  - `/quote "Mary O'Brien" EV charger install €1200` → direct tool call
-  - `/expense €45 Screwfix materials` → direct tool call
-  - `/quote` (no args) → LLM with intent hint
-
-**`src/components/george/GeorgeAgentInput.tsx` + `GeorgeMobileInput.tsx`**
-- Detect `/` prefix in input → show inline command autocomplete dropdown
-- Parse on send → route to slash handler or LLM
-
-#### Phase 4: Intelligent Welcome Screen
-
-**`src/components/george/GeorgeWelcome.tsx`**
-- Replace static quick actions with context-aware suggestions based on real data:
-  - If overdue invoices exist: "Chase €X in overdue invoices" (action button)
-  - If jobs scheduled today: "Review today's X jobs" (action button)
-  - If draft quotes exist: "X draft quotes ready to send" (action button)
-  - If no issues: "Operations running smoothly. What would you like to do?"
-- Fetch summary data via a lightweight RPC or existing dashboard hooks
-- Keep static fallback actions below the dynamic ones
-
-#### Phase 5: Navigation Rebrand
-
-**`src/components/layout/AppSidebar.tsx`**
-- Rename nav items per product knowledge:
-
-| Current | New |
-|---------|-----|
-| Dashboard | Operations |
-| Jobs | Job Intelligence |
-| Quotes | Quote Pipeline |
-| Invoices | Revenue |
-| Expenses | Cost Control |
-| Customers | Client Intelligence |
-| Time Tracking | Workforce |
-| Foreman AI | Foreman AI (keep) |
-
-- Update group labels: "WORK" → "OPERATIONS", "MONEY" → "REVENUE", "PEOPLE" → "INTELLIGENCE"
-
-#### Phase 6: Error Recovery & Retry
-
-**`src/hooks/useForemanChat.ts`** (from Phase 2)
-- On failure: show inline error message in chat with "Retry" button (not just toast)
-- Auto-retry once after 1s for network errors
-- If AI service unavailable (429/500): show "Foreman AI is temporarily busy — your message has been saved and will be processed shortly"
+**10. `TrialBanner` references `foreman.ie` for native app CTA**
+- Line 9: `const WEB_BILLING_URL = "https://foreman.ie/settings?tab=team-billing"`
+- This domain may not be set up yet
 
 ---
 
-### Files Changed
+### Recommended Plan (what to fix before launch)
 
-| File | Change |
-|------|--------|
-| `supabase/functions/george-chat/index.ts` | Add SSE streaming for chat responses, eliminate redundant second AI call for deferred actions |
-| `src/hooks/useForemanChat.ts` | **New** — consolidated chat logic with streaming, retry, slash command routing |
-| `src/utils/slashCommandParser.ts` | **New** — `/quote`, `/invoice`, `/expense`, `/client`, `/job` parser |
-| `src/components/george/GeorgeAgentInput.tsx` | Use `useForemanChat` hook, add slash command autocomplete |
-| `src/components/george/GeorgeMobileInput.tsx` | Use `useForemanChat` hook, add slash command support |
-| `src/components/george/GeorgeWelcome.tsx` | Context-aware dynamic suggestions from real business data |
-| `src/components/george/GeorgeMessageList.tsx` | Support streaming text (progressive render) |
-| `src/components/layout/AppSidebar.tsx` | Rebrand nav labels and group names |
+| Priority | Fix | Files |
+|----------|-----|-------|
+| P0 | Change "14-day" → "30-day" in all meta tags and JSON-LD | `index.html` |
+| P0 | Fix OG image: self-host as `/og-image.png`, remove space in filename | `index.html`, add `public/og-image.png` |
+| P0 | Fix Twitter handle `@quotr` → correct handle | `index.html` |
+| P0 | Comment out Capacitor `server` block for production | `capacitor.config.ts` |
+| P1 | Rename `/george` route → `/foreman-ai` (update all references) | `App.tsx`, `AppSidebar.tsx`, `FloatingTomButton.tsx`, `ActiveCallBar.tsx`, `George.tsx` |
+| P1 | Remove `/app-store-assets` from public routes or add auth | `App.tsx` |
+| P1 | Centralise domain constant so email templates use `brand.ts` | `src/config/brand.ts` + edge functions |
+| P2 | Update canonical/BASE_URL if using custom domain | `index.html`, `SEOHead.tsx`, `brand.ts` |
 
-### No database changes required.
+### About the "Lovable redirect"
+The Lovable badge is already hidden. The published site is public. The only Lovable-visible references are:
+- The `quotrai.lovable.app` domain itself (this IS your published URL — if you want `foreman.ie` you need a custom domain setup)
+- The Capacitor config pointing to `lovableproject.com` (for native builds only)
+- Internal `gpt-engineer-file-uploads` in the OG image URL
+
+If you mean you want to stop using the `lovable.app` subdomain entirely, that requires connecting a custom domain in Project Settings → Domains.
 
