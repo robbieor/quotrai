@@ -96,16 +96,6 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
               <Receipt className="h-3 w-3" /> Chase
             </Button>
           )}
-          {data.quotesNeedFollowUp > 0 && (
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate("/quotes?status=sent")}>
-              <FileText className="h-3 w-3" /> Quotes
-            </Button>
-          )}
-          {data.stuckJobs > 0 && (
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate("/jobs?status=in_progress")}>
-              <Briefcase className="h-3 w-3" /> Jobs
-            </Button>
-          )}
           {showAI && (
             <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/foreman-ai")}>
               <Sparkles className="h-3 w-3" /> Ask AI
