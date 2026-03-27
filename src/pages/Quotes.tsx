@@ -26,6 +26,8 @@ import { SortableHeader } from "@/components/shared/table/SortableHeader";
 import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useTableSelection } from "@/hooks/useTableSelection";
+import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
+import { useQuoteInsights } from "@/hooks/usePageInsights";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +85,7 @@ export default function Quotes() {
 
   const { sortedData, handleSort, getSortDirection } = useTableSort(filteredQuotes);
   const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
+  const quoteInsights = useQuoteInsights(quotes);
 
   const statusCounts = useMemo(() => {
     if (!quotes) return { all: 0, draft: 0, sent: 0, accepted: 0, declined: 0 };
@@ -167,6 +170,8 @@ export default function Quotes() {
             New Quote
           </Button>
         </div>
+
+        <InsightAlerts insights={quoteInsights} />
 
         {/* KPI Strip */}
         <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">

@@ -40,6 +40,8 @@ import { SortableHeader } from "@/components/shared/table/SortableHeader";
 import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useTableSelection } from "@/hooks/useTableSelection";
+import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
+import { useJobInsights } from "@/hooks/usePageInsights";
 
 const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
@@ -87,6 +89,7 @@ export default function Jobs() {
 
   const { sortedData, handleSort, getSortDirection } = useTableSort(filteredJobs);
   const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
+  const jobInsights = useJobInsights(jobs);
 
   // Stats
   const stats = useMemo(() => {
@@ -182,6 +185,8 @@ export default function Jobs() {
             New Job
           </Button>
         </div>
+
+        <InsightAlerts insights={jobInsights} />
 
         {/* KPI Strip */}
         <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
