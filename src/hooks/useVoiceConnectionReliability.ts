@@ -1,9 +1,7 @@
-import { useRef, useCallback, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useRef, useCallback } from "react";
 
 const MAX_RETRIES = 2;
-const INITIAL_RETRY_DELAY = 1000;
-const CONNECTION_TIMEOUT = 8000;
+const INITIAL_RETRY_DELAY = 500;
 
 interface RetryState {
   attempts: number;
@@ -12,56 +10,6 @@ interface RetryState {
 
 export function useVoiceConnectionReliability() {
   const retryStateRef = useRef<RetryState>({ attempts: 0, lastAttempt: 0 });
-
-  /**
-   * Pre-flight check: Test if ElevenLabs API is reachable before attempting connection
-   */
-  const runPreflightCheck = useCallback(async (): Promise<{
-    success: boolean;
-    signedUrl?: string;
-    usePublicAgent?: boolean;
-    error?: string;
-  }> => {
-    console.log("[VoiceReliability] 🔍 Running pre-flight check...");
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
-
-      const { data, error } = await supabase.functions.invoke(
-        "elevenlabs-agent-token",
-        { body: {} }
-      );
-
-      clearTimeout(timeoutId);
-
-      if (error) {
-        console.warn("[VoiceReliability] Pre-flight token error:", error);
-        return { success: true, usePublicAgent: true };
-      }
-
-      if (data?.signedUrl) {
-        console.log("[VoiceReliability] ✅ Pre-flight: Signed URL available");
-        return { success: true, signedUrl: data.signedUrl };
-      }
-
-      if (data?.usePublicAgent || data?.agentId) {
-        console.log("[VoiceReliability] ✅ Pre-flight: Public agent available");
-        return { success: true, usePublicAgent: true };
-      }
-
-      return { success: true, usePublicAgent: true };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("[VoiceReliability] ❌ Pre-flight failed:", errorMessage);
-
-      if (errorMessage.includes("abort") || errorMessage.includes("timeout")) {
-        return { success: false, error: "Connection timeout - please check your network" };
-      }
-
-      return { success: false, error: errorMessage };
-    }
-  }, []);
 
   /**
    * Execute a function with automatic retry and exponential backoff
@@ -121,7 +69,6 @@ export function useVoiceConnectionReliability() {
   }, []);
 
   return {
-    runPreflightCheck,
     withRetry,
     resetRetryState,
     MAX_RETRIES,
