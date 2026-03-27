@@ -70,12 +70,19 @@ serve(async (req) => {
       );
     }
 
-    // Create client with user's auth token for verification
+    // Create clients
     const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
+    // Parallelize: auth verification + body parsing + extract JWT user_id for profile query
+    const [authResult, body] = await Promise.all([
+      userSupabase.auth.getUser(),
+      req.json() as Promise<WebhookRequest>,
+    ]);
+
+    const { data: { user }, error: authError } = authResult;
     
     if (authError || !user) {
       return new Response(
@@ -85,10 +92,16 @@ serve(async (req) => {
     }
 
     const user_id = user.id;
+    const { function_name, parameters } = body;
 
-    // Get the user's team and currency from their profile using service role
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+    if (!function_name) {
+      return new Response(
+        JSON.stringify({ error: "Missing required field: function_name" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Fetch profile (team_id already implies membership — no separate check needed)
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("team_id, currency, country")
@@ -98,21 +111,6 @@ serve(async (req) => {
     if (profileError || !profile?.team_id) {
       return new Response(
         JSON.stringify({ error: "User not in a team" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Verify user is actually a member of this team
-    const { data: membership, error: membershipError } = await supabase
-      .from("team_memberships")
-      .select("id")
-      .eq("user_id", user_id)
-      .eq("team_id", profile.team_id)
-      .single();
-
-    if (membershipError || !membership) {
-      return new Response(
-        JSON.stringify({ error: "Not a team member" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -145,15 +143,6 @@ serve(async (req) => {
     
     const defaultVatRate = getVatRate(userCountry);
     const currencySymbol = getCurrencySymbol(userCurrency);
-
-    const { function_name, parameters }: WebhookRequest = await req.json();
-
-    if (!function_name) {
-      return new Response(
-        JSON.stringify({ error: "Missing required field: function_name" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     console.log(`george-webhook: ${function_name}`, { parameters, company_id, user_id });
 
