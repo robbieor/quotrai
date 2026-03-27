@@ -12,8 +12,8 @@ export function AgentTaskPanel() {
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  // Don't render on /george — it has its own LiveActionFeed
-  if (location.pathname === "/george") return null;
+  // Don't render on /foreman-ai — it has its own LiveActionFeed
+  if (location.pathname === "/foreman-ai") return null;
   if (!activeTask) return null;
 
   const isDone = activeTask.status === "success" || activeTask.status === "error" || activeTask.status === "cancelled";

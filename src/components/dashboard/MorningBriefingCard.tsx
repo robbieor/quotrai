@@ -120,7 +120,7 @@ export function MorningBriefingCard() {
               size="sm"
               variant="ghost"
               className="gap-1.5 text-xs text-primary"
-              onClick={() => navigate("/george")}
+              onClick={() => navigate("/foreman-ai")}
             >
               <Sparkles className="h-3.5 w-3.5" />
               Ask Foreman AI
