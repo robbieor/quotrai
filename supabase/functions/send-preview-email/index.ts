@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
     const htmlBody = `
       <div style="font-family: 'Manrope', -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #0f172a; padding: 30px 25px; text-align: center; border-radius: 12px 12px 0 0;">
-          <img src="https://quotrai.lovable.app/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+          <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
           <h2 style="color: #ffffff; margin: 10px 0 0; font-size: 20px; font-weight: 600;">Document Preview</h2>
         </div>
         <div style="padding: 30px 25px;">
