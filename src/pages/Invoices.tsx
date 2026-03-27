@@ -30,6 +30,8 @@ import { SortableHeader } from "@/components/shared/table/SortableHeader";
 import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useTableSelection } from "@/hooks/useTableSelection";
+import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
+import { useInvoiceInsights } from "@/hooks/usePageInsights";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,6 +104,7 @@ export default function Invoices() {
 
   const { sortedData, handleSort, getSortDirection } = useTableSort(filteredInvoices);
   const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
+  const invoiceInsights = useInvoiceInsights(invoices);
 
   const statusCounts = useMemo(() => {
     if (!invoices) return { all: 0, draft: 0, pending: 0, paid: 0, overdue: 0 };
@@ -197,6 +200,8 @@ export default function Invoices() {
             </Button>
           </div>
         </div>
+
+        <InsightAlerts insights={invoiceInsights} />
 
         {/* KPI Strip */}
         <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
