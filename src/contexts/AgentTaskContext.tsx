@@ -101,6 +101,14 @@ export function AgentTaskProvider({ children }: { children: ReactNode }) {
 
         if (data && data.length > 0) {
           const row = data[0];
+
+          // Staleness check — if not updated in 5 min, cancel silently
+          const ageMs = Date.now() - new Date(row.updated_at || row.created_at!).getTime();
+          if (ageMs > 5 * 60 * 1000) {
+            await supabase.from("agent_tasks").update({ status: "cancelled" }).eq("id", row.id);
+            return;
+          }
+
           dbTaskId.current = row.id;
 
           // Check if it has task_steps (backend-driven)
@@ -405,6 +413,10 @@ export function AgentTaskProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cancelTask = useCallback(() => {
+    const taskId = dbTaskId.current || activeTask?.id;
+    if (taskId) {
+      supabase.from("agent_tasks").update({ status: "cancelled" }).eq("id", taskId).then(() => {});
+    }
     if (activeTask) {
       setTaskHistory((prev) => [...prev, { ...activeTask, status: "cancelled" as TaskStatus }]);
     }
@@ -433,6 +445,10 @@ export function AgentTaskProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissTask = useCallback(() => {
+    const taskId = dbTaskId.current || activeTask?.id;
+    if (taskId && activeTask?.status !== "success") {
+      supabase.from("agent_tasks").update({ status: "cancelled" }).eq("id", taskId).then(() => {});
+    }
     if (activeTask) {
       setTaskHistory((prev) => [...prev, activeTask]);
     }
