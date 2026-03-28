@@ -1,69 +1,40 @@
 
 
-## Onboarding Flow Redesign — "Finish Later" + Save Fix + Mobile Polish
+## Fix: Quick Action Buttons Not Triggering
 
-### Problems Found
+### Root Cause
 
-1. **No "finish later" option** — The modal blocks interaction with `onInteractOutside={(e) => e.preventDefault()}` and `onEscapeKeyDown={(e) => e.preventDefault()}`. The close button is hidden via `[&>button]:hidden`. Users are trapped.
+Two distinct problems:
 
-2. **Save doesn't trigger** — Profile data only saves at the step 4→5 transition (`saveProfileIfNeeded` on line 198). If a user fills steps 1-3 and wants to leave, nothing is persisted. The `handleComplete` also calls `saveProfileIfNeeded` but it short-circuits if `profileSaved` is already true, and comms prefs only save on final "Get Started" click.
+**Problem 1 — `action: null` buttons do nothing visible.** When "Create quote", "Create invoice", "Week ahead" etc. are tapped, `handleQuickAction` in `George.tsx` dispatches a `foremanai-quick-action` event with `{ message, autoSend: true }`. But `GeorgeMobileInput`'s event listener ignores `autoSend` — it only populates the text field without sending. The user sees their message appear as a bubble but nothing else happens because the input field gets filled silently (and on mobile, the keyboard may not even open).
 
-3. **Mobile padding/layout issues** — The dialog uses `max-w-2xl` and `p-6` with no mobile-specific padding. The step progress bar with 6 labels cramps on 402px viewport. Card headers add redundant icon + title + description on every step, eating vertical space on mobile.
+**Problem 2 — Double handling.** `George.tsx` already calls `addMessage("user", message)` before dispatching the event. Then `GeorgeMobileInput` puts the message in the input field. If the user manually hits send, `sendChatMessage` would fire — but now `onUserMessage` adds a SECOND user bubble. The message appears twice.
 
-4. **Step 5 (Prices) breaks if profile not saved** — `teamId` is only set after `saveProfileIfNeeded` runs. If user skips to step 5 without triggering save, `teamId` is null and the templates step renders nothing (guarded by `step === 5 && teamId`).
+### Fix
 
-### Solution
+**In `George.tsx` `handleQuickAction`**: For `action: null` cases, call `sendChatMessage` directly instead of dispatching an event. This requires extracting the chat-sending logic or passing a callback.
 
-**A. Add "Finish Later" with progressive save**
+The simplest fix: instead of the event dispatch, route `action: null` messages through the same `sendChatMessage` from `useForemanChat` hook, used directly in `George.tsx`.
 
-- Add a "Finish Later" link in the modal header (all steps)
-- When clicked: save whatever data has been entered so far to the profile (partial save), set `onboarding_completed = false` (already the default), close modal
-- Store `onboarding_step` in the profile so when they return, they resume where they left off
-- On next login, the dashboard detects incomplete onboarding and re-opens the modal at the saved step
-
-**B. Fix save triggers**
-
-- Save profile data on every "Continue" click (not just step 4→5). Use a debounced/batched approach — update profile with whatever fields have values
-- Remove the `profileSaved` short-circuit flag; always upsert current data
-- Save `teamId` eagerly on component mount by reading from profile (it's created during signup)
-
-**C. Mobile layout fixes**
-
-- Reduce dialog padding from `p-6` to `p-4 sm:p-6`
-- Collapse step labels to dots-only on mobile (show labels on sm+)
-- Remove redundant Card wrappers inside the dialog (the dialog IS the card)
-- Ensure buttons are full-width on mobile
-- Add `pb-safe` for iOS safe area
-
-**D. Database migration**
-
-Add `onboarding_step` column to profiles table to track resume position:
-```sql
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_step integer DEFAULT 1;
-```
-
-### Files Modified
+### Changes
 
 | File | Change |
 |------|--------|
-| `src/components/onboarding/OnboardingModal.tsx` | Add "Finish Later" button, save on every Continue, load teamId on mount, resume from saved step, mobile padding fixes, simplify card wrappers |
-| `src/pages/Dashboard.tsx` | Pass saved step to OnboardingModal |
-| `src/hooks/useOnboarding.ts` | Return `onboarding_step` alongside `onboarding_completed` |
-| Migration | Add `onboarding_step` column to profiles |
+| `src/pages/George.tsx` | Add `useForemanChat` hook at page level for quick actions. In `handleQuickAction`, when `action` is null, call `sendChatMessage(message)` directly instead of dispatching an event. Remove the event dispatch path. |
+| `src/components/george/GeorgeMobileInput.tsx` | Update `foremanai-quick-action` handler to check `autoSend` flag — if true, call `sendChatMessage(actionMessage)` instead of just populating the field. This handles events from `FloatingTomButton` too. |
+| `src/components/george/GeorgeAgentInput.tsx` | Same `autoSend` handling for desktop input. |
 
-### Detailed Changes to OnboardingModal.tsx
+### Detailed Logic
 
-1. **Header area**: Replace trapped modal with dismissible one. Add "Finish later" ghost button top-right. Remove `onInteractOutside` and `onEscapeKeyDown` prevention.
+```text
+Current flow (broken):
+  Button tap → addMessage("user") → dispatch event → setMessage(text) → nothing sent
 
-2. **Mount**: Fetch `teamId` from profile immediately (it exists from signup). Remove dependency on `saveProfileIfNeeded` for `teamId`.
+Fixed flow:
+  Button tap → addMessage("user") → sendChatMessage(text) → AI responds → addMessage("assistant")
+```
 
-3. **handleNext**: Save profile fields on every step transition (not just step 4). This is a single `.update()` call with current form state.
+For the `action` path (webhook calls), keep as-is but ensure `setContext` has already been called during component mount (it is, via `GeorgeMobileInput`'s `useEffect`), so remove the redundant `setContext` call in `handleQuickAction`.
 
-4. **handleFinishLater**: New function — saves current data + `onboarding_step` to profile, closes modal without marking `onboarding_completed = true`.
-
-5. **Step progress bar**: On mobile (< sm), show only colored dots. Show text labels on sm+.
-
-6. **Padding**: `p-4 sm:p-6` on dialog content. Step cards use `px-0` already (good). Button row gets `gap-2 flex-col sm:flex-row` on mobile.
-
-7. **Step 5 guard**: Remove `teamId &&` guard since teamId is loaded on mount. Show loading state if teamId is still being fetched.
+### No database changes required.
 
