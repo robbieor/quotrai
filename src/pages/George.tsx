@@ -176,33 +176,26 @@ export default function George() {
   }, [addActionPlan, queryClient, globalStartTask]);
 
   const handleQuickAction = useCallback(async (action: string | null, message: string) => {
-    addMessage("user", message);
-    setIsProcessing(true);
-
-    try {
-      if (action) {
-        // Direct webhook call for actions like get_todays_jobs
-        const { data: teamId } = await supabase.rpc("get_user_team_id");
-        const { data: userData } = await supabase.auth.getUser();
-        setContext({ userId: userData.user?.id, teamId: teamId || undefined });
+    if (action) {
+      // Direct webhook call for actions like get_todays_jobs
+      addMessage("user", message);
+      setIsProcessing(true);
+      try {
         const result = await callWebhook(action);
         addMessage("assistant", result);
-      } else {
-        // No action — route through george-chat as a normal message
-        // The input components handle this, but for quick actions without action we dispatch an event
-        window.dispatchEvent(new CustomEvent("foremanai-quick-action", {
-          detail: { message, autoSend: true },
-        }));
+      } catch (error) {
+        console.error("Quick action error:", error);
+        addMessage("assistant", "Sorry, something went wrong. Please try again.");
+      } finally {
         setIsProcessing(false);
-        return;
       }
-    } catch (error) {
-      console.error("Quick action error:", error);
-      addMessage("assistant", "Sorry, something went wrong. Please try again.");
-    } finally {
-      setIsProcessing(false);
+    } else {
+      // No action — route through george-chat via the input component's sendChatMessage
+      window.dispatchEvent(new CustomEvent("foremanai-quick-action", {
+        detail: { message, autoSend: true },
+      }));
     }
-  }, [addMessage, callWebhook, setContext]);
+  }, [addMessage, callWebhook]);
 
   const handleNewChat = useCallback(() => {
     setActiveConversationId(null);

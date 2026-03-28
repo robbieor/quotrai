@@ -85,9 +85,9 @@ export function GeorgeMobileInput({
 
   useEffect(() => {
     const handleQuickAction = async (
-      e: CustomEvent<{ message: string; action?: string }>
+      e: CustomEvent<{ message: string; action?: string; autoSend?: boolean }>
     ) => {
-      const { message: actionMessage, action } = e.detail;
+      const { message: actionMessage, action, autoSend } = e.detail;
 
       if (action) {
         onUserMessage?.(actionMessage);
@@ -98,6 +98,8 @@ export function GeorgeMobileInput({
           console.error("Quick action error:", error);
           toast.error("Failed to process action");
         }
+      } else if (autoSend) {
+        await sendChatMessage(actionMessage);
       } else {
         setMessage(actionMessage);
         inputRef.current?.focus();
@@ -114,7 +116,7 @@ export function GeorgeMobileInput({
         handleQuickAction as EventListener
       );
     };
-  }, [callWebhook, onUserMessage, onAssistantMessage]);
+  }, [callWebhook, onUserMessage, onAssistantMessage, sendChatMessage]);
 
   // Slash command hints
   useEffect(() => {
