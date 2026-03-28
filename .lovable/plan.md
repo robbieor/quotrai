@@ -1,40 +1,45 @@
 
 
-## Fix: Quick Action Buttons Not Triggering
+## Fix: Agent Task Panel Appearing Randomly on App Open
 
 ### Root Cause
 
-Two distinct problems:
-
-**Problem 1 — `action: null` buttons do nothing visible.** When "Create quote", "Create invoice", "Week ahead" etc. are tapped, `handleQuickAction` in `George.tsx` dispatches a `foremanai-quick-action` event with `{ message, autoSend: true }`. But `GeorgeMobileInput`'s event listener ignores `autoSend` — it only populates the text field without sending. The user sees their message appear as a bubble but nothing else happens because the input field gets filled silently (and on mobile, the keyboard may not even open).
-
-**Problem 2 — Double handling.** `George.tsx` already calls `addMessage("user", message)` before dispatching the event. Then `GeorgeMobileInput` puts the message in the input field. If the user manually hits send, `sendChatMessage` would fire — but now `onUserMessage` adds a SECOND user bubble. The message appears twice.
+`AgentTaskContext` line 88-151: on mount, it queries `agent_tasks` for any row with `status = 'running'` and restores it as the active task. If a previous task crashed or the user closed the app mid-task, that row stays "running" forever — so it reappears on every app open.
 
 ### Fix
 
-**In `George.tsx` `handleQuickAction`**: For `action: null` cases, call `sendChatMessage` directly instead of dispatching an event. This requires extracting the chat-sending logic or passing a callback.
+**1. Add a staleness check** — If the "running" task is older than 5 minutes, auto-mark it as `cancelled` in the DB and don't show it.
 
-The simplest fix: instead of the event dispatch, route `action: null` messages through the same `sendChatMessage` from `useForemanChat` hook, used directly in `George.tsx`.
+**2. Add dismiss-on-close** — When the user dismisses or closes the panel, update the DB row status to `cancelled` so it doesn't resurrect.
 
 ### Changes
 
 | File | Change |
 |------|--------|
-| `src/pages/George.tsx` | Add `useForemanChat` hook at page level for quick actions. In `handleQuickAction`, when `action` is null, call `sendChatMessage(message)` directly instead of dispatching an event. Remove the event dispatch path. |
-| `src/components/george/GeorgeMobileInput.tsx` | Update `foremanai-quick-action` handler to check `autoSend` flag — if true, call `sendChatMessage(actionMessage)` instead of just populating the field. This handles events from `FloatingTomButton` too. |
-| `src/components/george/GeorgeAgentInput.tsx` | Same `autoSend` handling for desktop input. |
+| `src/contexts/AgentTaskContext.tsx` | In `loadRunningTasks`: check `updated_at` age. If > 5 min old, update DB status to `cancelled` and skip showing it. In `dismissTask`: also update DB row to `cancelled`. In `cancelTask`: same DB update. |
 
 ### Detailed Logic
 
-```text
-Current flow (broken):
-  Button tap → addMessage("user") → dispatch event → setMessage(text) → nothing sent
-
-Fixed flow:
-  Button tap → addMessage("user") → sendChatMessage(text) → AI responds → addMessage("assistant")
+```typescript
+// In loadRunningTasks, after fetching the row:
+const updatedAt = new Date(row.updated_at);
+const ageMs = Date.now() - updatedAt.getTime();
+if (ageMs > 5 * 60 * 1000) {
+  // Stale — cancel it silently
+  await supabase.from("agent_tasks").update({ status: "cancelled" }).eq("id", row.id);
+  return; // don't show
+}
 ```
 
-For the `action` path (webhook calls), keep as-is but ensure `setContext` has already been called during component mount (it is, via `GeorgeMobileInput`'s `useEffect`), so remove the redundant `setContext` call in `handleQuickAction`.
+```typescript
+// In dismissTask and cancelTask:
+if (dbTaskId.current || activeTask?.id) {
+  supabase.from("agent_tasks")
+    .update({ status: "cancelled" })
+    .eq("id", dbTaskId.current || activeTask.id)
+    .then(() => {});
+}
+```
 
-### No database changes required.
+### No database migration needed — uses existing columns.
 
