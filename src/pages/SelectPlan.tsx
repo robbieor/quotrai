@@ -49,19 +49,16 @@ export default function SelectPlan() {
 
   const proMonthly = PRICING.BASE_SEAT;
   const proAnnualTotal = PRICING.ANNUAL_SEAT;
-  const proAnnualMonthly = Math.round(proAnnualTotal / 12);
   const proSavings = proMonthly * 12 - proAnnualTotal;
 
-
-  const handleStartTrial = async () => {
+  const handleChoosePlan = async (seatCode: string) => {
     try {
       setIsCheckingOut(true);
-      track("trial_started", { interval: billingInterval });
+      track("plan_chosen", { plan: seatCode, interval: billingInterval });
 
-      // Route through Stripe checkout with 30-day trial, defaulting to 1 Connect seat
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
-          seatCounts: { connect: 1 },
+          seatCounts: { [seatCode]: 1 },
           interval: billingInterval === "annual" ? "year" : "month",
         },
       });
@@ -76,7 +73,7 @@ export default function SelectPlan() {
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      toast.error("Failed to start trial. Please try again.");
+      toast.error("Failed to start checkout. Please try again.");
     } finally {
       setIsCheckingOut(false);
     }
@@ -205,30 +202,32 @@ export default function SelectPlan() {
 
 function BillingToggle({ interval, onChange }: { interval: string; onChange: (v: "monthly" | "annual") => void }) {
   return (
-    <div className="flex items-center justify-center gap-3 mb-8">
-      <button
-        onClick={() => onChange("monthly")}
-        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-          interval === "monthly" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        Monthly
-      </button>
-      <button
-        onClick={() => onChange("annual")}
-        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-          interval === "annual" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        Annual
-        <Badge className="absolute -top-2 -right-4 bg-green-600 text-[10px] px-1.5 py-0">-15%</Badge>
-      </button>
+    <div className="sticky top-0 z-10 bg-background py-3 flex justify-center mb-6">
+      <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1">
+        <button
+          onClick={() => onChange("monthly")}
+          className={`min-h-[44px] px-6 rounded-full text-sm font-semibold transition-all ${
+            interval === "monthly" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => onChange("annual")}
+          className={`min-h-[44px] px-6 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+            interval === "annual" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Annual
+          <span className="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">-15%</span>
+        </button>
+      </div>
     </div>
   );
 }
 
 function PlanCard({
-  details, monthlyPrice, annualPrice, billingInterval, formatCurrency, subtitle, highlighted, savings,
+  details, monthlyPrice, annualPrice, billingInterval, formatCurrency, subtitle, highlighted, savings, seatCode, onChoose, isLoading,
 }: {
   details: { name: string; features: string[] };
   monthlyPrice: number;
@@ -238,6 +237,9 @@ function PlanCard({
   subtitle: string;
   highlighted?: boolean;
   savings?: number;
+  seatCode: string;
+  onChoose: (code: string) => void;
+  isLoading: boolean;
 }) {
   const annualMonthly = Math.round(annualPrice / 12);
   return (
@@ -270,6 +272,15 @@ function PlanCard({
             </li>
           ))}
         </ul>
+        <Button
+          className="w-full gap-2"
+          variant={highlighted ? "default" : "outline"}
+          onClick={() => onChoose(seatCode)}
+          disabled={isLoading}
+        >
+          {isLoading ? "Processing..." : `Choose ${details.name}`}
+          {!isLoading && <ArrowRight className="h-4 w-4" />}
+        </Button>
       </CardContent>
     </Card>
   );
