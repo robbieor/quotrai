@@ -52,7 +52,6 @@ export default function SelectPlan() {
   const proAnnualMonthly = Math.round(proAnnualTotal / 12);
   const proSavings = proMonthly * 12 - proAnnualTotal;
 
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleStartTrial = async () => {
     try {
@@ -162,10 +161,10 @@ export default function SelectPlan() {
             <Button
               size="lg"
               onClick={handleStartTrial}
-              disabled={isStartingTrial}
+              disabled={isCheckingOut}
               className="gap-2"
             >
-              {isStartingTrial ? "Starting..." : "Start Free Trial"}
+              {isCheckingOut ? "Starting..." : "Start Free Trial"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>
