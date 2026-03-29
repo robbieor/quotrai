@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -14,9 +14,7 @@ serve(async (req) => {
 
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      throw new Error("Stripe secret key not configured");
-    }
+    if (!stripeKey) throw new Error("Stripe secret key not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -24,49 +22,39 @@ serve(async (req) => {
 
     // Get auth user
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
+    if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    if (authError || !user) {
-      throw new Error("Unauthorized");
-    }
+    if (authError || !user) throw new Error("Unauthorized");
 
-    // Get user's team
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("team_id")
-      .eq("id", user.id)
+    // Get user's org via v2 tables
+    const { data: orgMember } = await supabaseClient
+      .from("org_members_v2")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
       .single();
 
-    if (!profile?.team_id) {
-      throw new Error("User not in a team");
-    }
+    if (!orgMember?.org_id) throw new Error("User not in an organization");
 
-    // Get subscription with customer ID
+    // Get subscription with customer ID from v2
     const { data: subscription } = await supabaseClient
-      .from("subscriptions")
+      .from("subscriptions_v2")
       .select("stripe_customer_id")
-      .eq("team_id", profile.team_id)
+      .eq("org_id", orgMember.org_id)
       .single();
 
     if (!subscription?.stripe_customer_id) {
       throw new Error("No Stripe customer found. Please subscribe first.");
     }
 
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: "2023-10-16",
-    });
-
-    // Get the origin for redirect URLs
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
-    // Create customer portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${origin}/settings`,
+      return_url: `${origin}/settings?tab=billing`,
     });
 
     return new Response(

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
 import { track } from "@/utils/analytics";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SelectPlan() {
   const navigate = useNavigate();
@@ -51,14 +52,34 @@ export default function SelectPlan() {
   const proAnnualMonthly = Math.round(proAnnualTotal / 12);
   const proSavings = proMonthly * 12 - proAnnualTotal;
 
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
   const handleStartTrial = async () => {
     try {
+      setIsCheckingOut(true);
       track("trial_started", { interval: billingInterval });
-      await startTrial();
-      toast.success("Your 30-day free trial has started!");
-      navigate("/dashboard");
+
+      // Route through Stripe checkout with 30-day trial, defaulting to 1 Connect seat
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          seatCounts: { connect: 1 },
+          interval: billingInterval === "annual" ? "year" : "month",
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error) {
+      console.error("Checkout error:", error);
       toast.error("Failed to start trial. Please try again.");
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
