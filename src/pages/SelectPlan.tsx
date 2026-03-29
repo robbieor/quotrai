@@ -156,7 +156,7 @@ export default function SelectPlan() {
           <CardContent className="py-8 text-center space-y-4">
             <h2 className="text-2xl font-bold">Start your 30-day free trial</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              No credit card required. Full Pro access including Foreman AI Voice.
+              30 days free, then billed automatically. Cancel anytime during trial.
             </p>
             <Button
               size="lg"
