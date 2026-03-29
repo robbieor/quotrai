@@ -1,45 +1,36 @@
 
 
-## Fix: Agent Task Panel Appearing Randomly on App Open
+## Launch-Critical Integration Audit & Fix Plan
 
-### Root Cause
+### Current Status
 
-`AgentTaskContext` line 88-151: on mount, it queries `agent_tasks` for any row with `status = 'running'` and restores it as the active task. If a previous task crashed or the user closed the app mid-task, that row stays "running" forever — so it reappears on every app open.
+| Integration | Status | Issue |
+|---|---|---|
+| **George AI Chat** | ✅ Working | `LOVABLE_API_KEY` set, `george-chat` edge function uses Lovable AI gateway correctly, SSE streaming implemented |
+| **ElevenLabs Voice** | ✅ Wired | `ELEVENLABS_API_KEY` set via connector, agent ID hardcoded, token endpoint exists — needs live test only |
+| **Google Maps** | ✅ Not needed | Address autocomplete uses Nominatim (free, no API key required). `GOOGLE_MAPS_API_KEY` is set but unused. No code references it for address lookup. Safe to keep as-is. |
+| **Google OAuth** | ✅ Working | Lovable Cloud manages Google OAuth automatically. `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set. `useAuth.ts` calls `signInWithOAuth({ provider: "google" })` correctly. Should work out of the box. |
 
-### Fix
+### Verdict: No code changes needed
 
-**1. Add a staleness check** — If the "running" task is older than 5 minutes, auto-mark it as `cancelled` in the DB and don't show it.
+All four integrations are either fully functional or correctly scaffolded:
 
-**2. Add dismiss-on-close** — When the user dismisses or closes the panel, update the DB row status to `cancelled` so it doesn't resurrect.
+1. **George AI Chat** — The `george-chat` edge function calls `ai.gateway.lovable.dev` with `LOVABLE_API_KEY`. The frontend streams via SSE. This is wired end-to-end.
 
-### Changes
+2. **ElevenLabs Voice** — The connector-managed `ELEVENLABS_API_KEY` is configured. The `elevenlabs-agent-token` function fetches conversation tokens. The `useElevenLabsAgent` hook uses `@elevenlabs/react` with WebRTC. This needs a live test (tap the voice button) but the code path is complete.
 
-| File | Change |
-|------|--------|
-| `src/contexts/AgentTaskContext.tsx` | In `loadRunningTasks`: check `updated_at` age. If > 5 min old, update DB status to `cancelled` and skip showing it. In `dismissTask`: also update DB row to `cancelled`. In `cancelTask`: same DB update. |
+3. **Google Maps** — Not actually used. All address autocomplete goes through Nominatim (free, open-source). The `GOOGLE_MAPS_API_KEY` secret exists but nothing calls it for addresses. No cost, no breakage.
 
-### Detailed Logic
+4. **Google OAuth** — Lovable Cloud provides managed Google OAuth. The `signInWithGoogle` function in `useAuth.ts` is standard Supabase OAuth. The secrets are set. This should work on the published domain.
 
-```typescript
-// In loadRunningTasks, after fetching the row:
-const updatedAt = new Date(row.updated_at);
-const ageMs = Date.now() - updatedAt.getTime();
-if (ageMs > 5 * 60 * 1000) {
-  // Stale — cancel it silently
-  await supabase.from("agent_tasks").update({ status: "cancelled" }).eq("id", row.id);
-  return; // don't show
-}
-```
+### Recommended Next Step
 
-```typescript
-// In dismissTask and cancelTask:
-if (dbTaskId.current || activeTask?.id) {
-  supabase.from("agent_tasks")
-    .update({ status: "cancelled" })
-    .eq("id", dbTaskId.current || activeTask.id)
-    .then(() => {});
-}
-```
+Instead of code changes, these need **live testing**:
 
-### No database migration needed — uses existing columns.
+1. Open the app → Login page → tap "Sign in with Google" → verify redirect works
+2. Open George AI → type a message → verify streaming response appears
+3. Open George AI → tap the voice/mic button → verify ElevenLabs connects and responds
+4. Create a customer → type an address → verify Nominatim suggestions appear
+
+All four are test-and-verify tasks, not build tasks.
 
