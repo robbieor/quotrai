@@ -67,6 +67,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const contextRef = useRef<AgentContext>({});
   const queryClient = useQueryClient();
+  const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
   const cachedTokenRef = useRef<{ token?: string; usePublicAgent?: boolean; fetchedAt: number } | null>(null);
   const TOKEN_TTL_MS = 45_000; // tokens valid ~60s, use within 45s
@@ -151,12 +152,28 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     onConnect: () => {
       console.log("[VoiceAgent] ✅ Connected to Foreman AI");
       debouncedToast('success', "Connected to Foreman AI", { duration: 2000 });
+
+      // Send immediate activity signal so agent knows user is present
+      // (mobile mic can take 1-2s to start flowing audio)
+      try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
+
+      // Start keep-alive interval to prevent silence-based disconnection
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      keepAliveRef.current = setInterval(() => {
+        try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
+      }, 15_000);
     },
     onDisconnect: () => {
       console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
       debouncedToast('info', "Call ended", { duration: 2000 });
       conversationIdRef.current = null;
       setCurrentConversationId(null);
+
+      // Clear keep-alive interval
+      if (keepAliveRef.current) {
+        clearInterval(keepAliveRef.current);
+        keepAliveRef.current = null;
+      }
     },
     onMessage: (message: any) => {
       // Save user transcripts
@@ -517,6 +534,18 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
         setIsConnecting(false);
         return;
       }
+      // Resume AudioContext on mobile (browsers often start it suspended)
+      const micStream = micResult.value;
+      try {
+        const audioCtx = new AudioContext();
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume();
+          console.log("[VoiceAgent] ✅ AudioContext resumed for mobile");
+        }
+        audioCtx.close(); // We only needed to unblock the global audio policy
+      } catch (_) { /* best-effort */ }
+      // Stop the mic stream we requested (ElevenLabs SDK will request its own)
+      micStream.getTracks().forEach(t => t.stop());
       console.log("[VoiceAgent] ✅ Microphone permission granted");
 
       // Use cached token or freshly fetched one
@@ -636,6 +665,13 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
 
   const resetVoiceAvailability = useCallback(() => {
     setVoiceUnavailable(false);
+  }, []);
+
+  // Cleanup keep-alive on unmount
+  useEffect(() => {
+    return () => {
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+    };
   }, []);
 
   return (
