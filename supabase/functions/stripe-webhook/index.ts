@@ -41,49 +41,7 @@ async function resolveOrgId(
   return null;
 }
 
-/** Map Stripe price IDs back to seat types */
-const PRICE_TO_SEAT: Record<string, string> = {
-  price_1TEa4dDQETj2awNErpoa1vHM: "lite",
-  price_1TEa57DQETj2awNEESev15XR: "lite",
-  price_1TEa5SDQETj2awNE4qhL4fa7: "connect",
-  price_1TEa5tDQETj2awNE2zfrsMkY: "connect",
-  price_1TEa6HDQETj2awNEycXwPCfc: "grow",
-  price_1TEa6oDQETj2awNEHSl42OYl: "grow",
-};
-
-function derivePlanTier(subscription: Stripe.Subscription): string {
-  // Use highest-tier seat in the subscription
-  const tiers = ["grow", "connect", "lite"];
-  for (const item of subscription.items.data) {
-    const seat = PRICE_TO_SEAT[item.price.id];
-    if (seat) {
-      const idx = tiers.indexOf(seat);
-      if (idx === 0) return "grow";
-    }
-  }
-  // Check for connect
-  for (const item of subscription.items.data) {
-    if (PRICE_TO_SEAT[item.price.id] === "connect") return "connect";
-  }
-  return "lite";
-}
-
 async function upsertSubscription(
-  supabase: any,
-  orgId: string,
-  subscription: Stripe.Subscription,
-  customerId: string
-) {
-  const totalSeats = subscription.items.data.reduce(
-    (sum, item) => sum + (item.quantity || 0),
-    0
-  );
-
-  const trialEnd = subscription.trial_end
-    ? new Date(subscription.trial_end * 1000).toISOString()
-    : null;
-
-  const planTier = derivePlanTier(subscription);
 
   await supabase.from("subscriptions_v2").upsert(
     {
