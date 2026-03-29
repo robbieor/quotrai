@@ -4,6 +4,7 @@ import { UserMenu } from "./UserMenu";
 import { NotificationCenter } from "./NotificationCenter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TrialBanner } from "@/components/billing/TrialBanner";
+import { ReadOnlyBanner } from "@/components/billing/ReadOnlyBanner";
 import { TrialCountdownPopup } from "@/components/billing/TrialCountdownPopup";
 import { FloatingTomButton } from "./FloatingTomButton";
 import { AgentTaskPanel } from "@/components/shared/AgentTaskPanel";
@@ -30,6 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         )}>
           <AppSidebar />
           <div className="flex-1 flex flex-col min-w-0">
+            <ReadOnlyBanner />
             <TrialBanner />
             <header className="h-12 md:h-14 border-b border-border text-muted-foreground items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-primary-foreground sticky top-0 z-20">
               <SidebarTrigger className="mr-2 md:mr-4" />

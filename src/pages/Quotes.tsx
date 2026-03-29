@@ -28,6 +28,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useQuoteInsights } from "@/hooks/usePageInsights";
+import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -165,10 +166,12 @@ export default function Quotes() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Quotes</h1>
             <p className="text-sm md:text-base text-muted-foreground">Create and manage quotes for your customers</p>
           </div>
-          <Button onClick={handleNewQuote} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Quote
-          </Button>
+          <ReadOnlyGuard>
+            <Button onClick={handleNewQuote} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              New Quote
+            </Button>
+          </ReadOnlyGuard>
         </div>
 
         <InsightAlerts insights={quoteInsights} />
