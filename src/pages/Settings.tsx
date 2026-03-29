@@ -389,8 +389,9 @@ export default function Settings() {
                   Connect your accounting and business tools.
                 </p>
               </div>
-              <XeroConnectionCard />
-              <QuickBooksConnectionCard />
+              {/* Xero & QuickBooks hidden pre-launch — re-enable when ready */}
+              {/* <XeroConnectionCard /> */}
+              {/* <QuickBooksConnectionCard /> */}
             </TabsContent>
           )}
 
