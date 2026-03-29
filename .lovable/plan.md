@@ -1,36 +1,93 @@
 
 
-## Launch-Critical Integration Audit & Fix Plan
+## Getting Foreman to the App Stores
 
-### Current Status
+You already have most of the infrastructure in place. Here's what's done and what's left.
 
-| Integration | Status | Issue |
-|---|---|---|
-| **George AI Chat** | ✅ Working | `LOVABLE_API_KEY` set, `george-chat` edge function uses Lovable AI gateway correctly, SSE streaming implemented |
-| **ElevenLabs Voice** | ✅ Wired | `ELEVENLABS_API_KEY` set via connector, agent ID hardcoded, token endpoint exists — needs live test only |
-| **Google Maps** | ✅ Not needed | Address autocomplete uses Nominatim (free, no API key required). `GOOGLE_MAPS_API_KEY` is set but unused. No code references it for address lookup. Safe to keep as-is. |
-| **Google OAuth** | ✅ Working | Lovable Cloud manages Google OAuth automatically. `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set. `useAuth.ts` calls `signInWithOAuth({ provider: "google" })` correctly. Should work out of the box. |
+### What's Already Built
 
-### Verdict: No code changes needed
+| Component | Status |
+|---|---|
+| Capacitor config | ✅ Ready (`capacitor.config.ts`) |
+| Android CI/CD workflow | ✅ GitHub Actions (`android-build.yml`) |
+| iOS CI/CD workflow | ✅ GitHub Actions (`ios-build.yml`) |
+| Play Store listing copy | ✅ Written (`docs/play-store-listing.md`) |
+| App Store listing copy | ✅ Written (`docs/app-store-listing.md`) |
+| Native billing guard (`useIsNative`) | ✅ Reader app model — no in-app purchases |
+| PWA manifest & icons | ✅ Configured |
+| App Store Assets page (`/app-store-assets`) | ✅ Exists for generating screenshots |
 
-All four integrations are either fully functional or correctly scaffolded:
+### What You Need To Do (Manual Steps)
 
-1. **George AI Chat** — The `george-chat` edge function calls `ai.gateway.lovable.dev` with `LOVABLE_API_KEY`. The frontend streams via SSE. This is wired end-to-end.
+These are things Lovable cannot do for you — they require developer accounts and local tools.
 
-2. **ElevenLabs Voice** — The connector-managed `ELEVENLABS_API_KEY` is configured. The `elevenlabs-agent-token` function fetches conversation tokens. The `useElevenLabsAgent` hook uses `@elevenlabs/react` with WebRTC. This needs a live test (tap the voice button) but the code path is complete.
+**1. Developer Accounts**
+- **Apple Developer Program** — $99/year at [developer.apple.com](https://developer.apple.com)
+- **Google Play Console** — $25 one-time at [play.google.com/console](https://play.google.com/console)
 
-3. **Google Maps** — Not actually used. All address autocomplete goes through Nominatim (free, open-source). The `GOOGLE_MAPS_API_KEY` secret exists but nothing calls it for addresses. No cost, no breakage.
+**2. Export to GitHub**
+- Click **Export to GitHub** in Lovable (top-right menu)
+- Clone the repo locally
 
-4. **Google OAuth** — Lovable Cloud provides managed Google OAuth. The `signInWithGoogle` function in `useAuth.ts` is standard Supabase OAuth. The secrets are set. This should work on the published domain.
+**3. Local Build Setup**
+```text
+git clone <your-repo>
+cd foreman
+npm install
+npm run build
+npx cap add ios        # Mac only — requires Xcode
+npx cap add android    # Requires Android Studio
+npx cap sync
+```
 
-### Recommended Next Step
+**4. iOS (Mac Required)**
+- Open in Xcode: `npx cap open ios`
+- Set bundle ID to `ie.foreman.app` (per your existing config)
+- Add your 1024x1024 app icon (no alpha, no rounded corners)
+- Add Info.plist permission strings (microphone, location, camera — already documented)
+- Create signing certificate + provisioning profile in Apple Developer Portal
+- Archive → Upload to App Store Connect → Submit for review
 
-Instead of code changes, these need **live testing**:
+**5. Android**
+- Open in Android Studio: `npx cap open android`
+- Generate a release keystore: `keytool -genkey -v -keystore quotr-release.keystore -alias foreman -keyalg RSA -keysize 2048 -validity 10000`
+- Build AAB: `./gradlew bundleRelease`
+- Create app listing in Google Play Console
+- Upload AAB to internal testing track → promote to production
 
-1. Open the app → Login page → tap "Sign in with Google" → verify redirect works
-2. Open George AI → type a message → verify streaming response appears
-3. Open George AI → tap the voice/mic button → verify ElevenLabs connects and responds
-4. Create a customer → type an address → verify Nominatim suggestions appear
+**6. GitHub Actions (Automated Builds)**
+Your CI/CD workflows are ready but need these GitHub Secrets configured:
 
-All four are test-and-verify tasks, not build tasks.
+**Android secrets:**
+- `ANDROID_KEYSTORE_BASE64` — base64-encoded keystore file
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` — for auto-upload
+
+**iOS secrets:**
+- `BUILD_CERTIFICATE_BASE64` — Apple distribution certificate
+- `P12_PASSWORD`
+- `BUILD_PROVISION_PROFILE_BASE64`
+- `KEYCHAIN_PASSWORD`
+- `APPLE_TEAM_ID`
+- `APP_STORE_CONNECT_API_KEY_ID` / `ISSUER_ID` / `API_KEY`
+
+### Critical Reminder
+
+Before building for stores, ensure `capacitor.config.ts` has the `server` block **commented out** (it already is) so the app loads from the bundled `dist/` folder, not the live preview URL.
+
+### Recommended Order
+
+1. Start with **Android** — faster review process (hours vs days)
+2. Use **internal testing** track first to verify everything works
+3. Then submit **iOS** — longer review, stricter guidelines
+4. Use the `/app-store-assets` page to generate screenshots
+
+### What I Can Help With From Here
+
+- Generate store screenshots using the existing `/app-store-assets` route
+- Update store listing copy in the docs
+- Fix any native-specific UI issues (safe areas, status bar, etc.)
+- Ensure the reader app model passes store review guidelines
 
