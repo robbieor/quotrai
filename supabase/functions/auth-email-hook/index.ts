@@ -284,6 +284,80 @@ async function handleWebhook(req: Request): Promise<Response> {
 
   console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
 
+  // Send admin notification for new signups
+  if (emailType === 'signup') {
+    try {
+      const now = new Date().toISOString()
+      const fullName = payload.data.user_meta_data?.full_name || 'Not provided'
+      const refCode = payload.data.user_meta_data?.referral_code || 'None'
+
+      const adminHtml = `
+        <div style="font-family: 'Manrope', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #0f172a; padding: 20px 25px; border-radius: 12px 12px 0 0; text-align: center;">
+            <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="120" />
+          </div>
+          <div style="padding: 24px;">
+            <h2 style="color: #0f172a; font-size: 18px; margin: 0 0 16px;">🎉 New Account Created</h2>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 8px; color: #64748b; font-weight: 600; width: 40%;">Email</td>
+                <td style="padding: 10px 8px; color: #0f172a;">${payload.data.email}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Full Name</td>
+                <td style="padding: 10px 8px; color: #0f172a;">${fullName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Signup Time</td>
+                <td style="padding: 10px 8px; color: #0f172a;">${now}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Referral Code</td>
+                <td style="padding: 10px 8px; color: #0f172a;">${refCode}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Plan</td>
+                <td style="padding: 10px 8px; color: #0f172a;">Pro Trial (30 days)</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Trial Ends</td>
+                <td style="padding: 10px 8px; color: #0f172a;">${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IE')}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      `
+
+      const adminMessageId = crypto.randomUUID()
+      await supabase.from('email_send_log').insert({
+        message_id: adminMessageId,
+        template_name: 'admin_signup_notification',
+        recipient_email: 'support@foreman.ie',
+        status: 'pending',
+      })
+
+      await supabase.rpc('enqueue_email', {
+        queue_name: 'transactional_emails',
+        payload: {
+          run_id,
+          message_id: adminMessageId,
+          to: 'support@foreman.ie',
+          from: `Foreman System <support@${FROM_DOMAIN}>`,
+          sender_domain: SENDER_DOMAIN,
+          subject: `New Signup: ${payload.data.email}`,
+          html: adminHtml,
+          text: `New signup: ${payload.data.email} | Name: ${fullName} | Time: ${now} | Ref: ${refCode} | Plan: Pro Trial`,
+          purpose: 'transactional',
+          label: 'admin_signup_notification',
+          queued_at: now,
+        },
+      })
+      console.log('Admin signup notification enqueued', { email: payload.data.email })
+    } catch (adminErr) {
+      console.error('Failed to enqueue admin notification (non-fatal)', { error: adminErr })
+    }
+  }
+
   return new Response(
     JSON.stringify({ success: true, queued: true }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

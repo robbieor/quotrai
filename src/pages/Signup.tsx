@@ -53,14 +53,14 @@ export default function Signup() {
       setSubmitting(false);
     } else {
       track("signup_completed", { method: "email" });
-      toast.success("Account created! Let's set up your profile.");
+      toast.success("Account created! Check your email to verify.");
       // Check for pending team invite
       const pendingToken = sessionStorage.getItem("pending_invite_token");
       if (pendingToken) {
         sessionStorage.removeItem("pending_invite_token");
         navigate(`/accept-invite?token=${pendingToken}`);
       } else {
-        navigate("/dashboard");
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     }
   };
