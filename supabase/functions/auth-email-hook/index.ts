@@ -337,9 +337,8 @@ async function handleWebhook(req: Request): Promise<Response> {
       })
 
       await supabase.rpc('enqueue_email', {
-        queue_name: 'auth_emails',
+        queue_name: 'transactional_emails',
         payload: {
-          run_id,
           message_id: adminMessageId,
           to: 'support@foreman.ie',
           from: `Foreman System <support@${FROM_DOMAIN}>`,
