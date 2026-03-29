@@ -178,7 +178,7 @@ export default function SelectPlan() {
             />
             <FaqCard
               q="What's included in the free trial?"
-              a={`Full Pro access for 30 days — including ${PRICING.VOICE_MINUTES_PER_SEAT} minutes of Foreman AI voice per seat, GPS tracking, and reports. No credit card needed.`}
+              a={`Full Pro access for 30 days — including ${PRICING.VOICE_MINUTES_PER_SEAT} minutes of Foreman AI voice per seat, GPS tracking, and reports. Card is collected to ensure seamless transition after your 30-day trial. Cancel anytime — you won't be charged until the trial ends.`}
             />
             <FaqCard
               q="Do you offer bulk discounts?"

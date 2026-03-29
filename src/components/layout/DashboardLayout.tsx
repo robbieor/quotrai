@@ -4,6 +4,7 @@ import { UserMenu } from "./UserMenu";
 import { NotificationCenter } from "./NotificationCenter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { TrialBanner } from "@/components/billing/TrialBanner";
+import { TrialCountdownPopup } from "@/components/billing/TrialCountdownPopup";
 import { FloatingTomButton } from "./FloatingTomButton";
 import { AgentTaskPanel } from "@/components/shared/AgentTaskPanel";
 import { DemoOverlay } from "@/components/demo/DemoOverlay";
@@ -44,6 +45,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           <FloatingTomButton />
           <AgentTaskPanel />
+          <TrialCountdownPopup />
           <DemoOverlay
             currentStep={demo.currentStep}
             currentStepIndex={demo.currentStepIndex}
