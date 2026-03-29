@@ -65,35 +65,37 @@ export function SubscriptionPricing() {
 
   return (
     <div className="space-y-6">
-      {/* Billing Toggle */}
-      <div className="flex items-center justify-center gap-3">
-        <button
-          onClick={() => setBillingInterval("monthly")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            billingInterval === "monthly"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Monthly
-        </button>
-        <button
-          onClick={() => setBillingInterval("annual")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-            billingInterval === "annual"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Annual
-          <Badge className="absolute -top-2 -right-4 bg-green-600 text-[10px] px-1.5 py-0">
-            -15%
-          </Badge>
-        </button>
+      {/* Billing Toggle - sticky on mobile */}
+      <div className="sticky top-0 z-10 bg-background py-3 flex justify-center">
+        <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1">
+          <button
+            onClick={() => setBillingInterval("monthly")}
+            className={`min-h-[44px] px-6 rounded-full text-sm font-semibold transition-all ${
+              billingInterval === "monthly"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingInterval("annual")}
+            className={`min-h-[44px] px-6 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+              billingInterval === "annual"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Annual
+            <span className="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              -15%
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* 3-tier Plan Cards */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {ALL_PLANS.map((plan) => {
           const monthlyPrice = billingInterval === "monthly"
             ? plan.price
