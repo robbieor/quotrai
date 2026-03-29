@@ -340,6 +340,7 @@ async function handleWebhook(req: Request): Promise<Response> {
         queue_name: 'transactional_emails',
         payload: {
           message_id: adminMessageId,
+          idempotency_key: `admin-signup-${adminMessageId}`,
           to: 'support@foreman.ie',
           from: `Foreman System <support@${FROM_DOMAIN}>`,
           sender_domain: SENDER_DOMAIN,
