@@ -54,7 +54,7 @@ export default function SelectPlan() {
   const handleChoosePlan = async (seatCode: string) => {
     try {
       setIsCheckingOut(true);
-      track("plan_chosen", { plan: seatCode, interval: billingInterval });
+      track("checkout_started", { plan: seatCode, interval: billingInterval });
 
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
@@ -100,7 +100,7 @@ export default function SelectPlan() {
         <BillingToggle interval={billingInterval} onChange={setBillingInterval} />
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <PlanCard
             details={STARTER_SEAT_DETAILS}
             monthlyPrice={PRICING.STARTER_SEAT}
@@ -108,6 +108,9 @@ export default function SelectPlan() {
             billingInterval={billingInterval}
             formatCurrency={formatCurrency}
             subtitle="For solo operators"
+            seatCode="lite"
+            onChoose={handleChoosePlan}
+            isLoading={isCheckingOut}
           />
 
           <PlanCard
@@ -119,6 +122,9 @@ export default function SelectPlan() {
             subtitle="Most popular"
             highlighted
             savings={billingInterval === "annual" ? proSavings : undefined}
+            seatCode="connect"
+            onChoose={handleChoosePlan}
+            isLoading={isCheckingOut}
           />
 
           <Card className="relative border-muted">
@@ -153,17 +159,8 @@ export default function SelectPlan() {
           <CardContent className="py-8 text-center space-y-4">
             <h2 className="text-2xl font-bold">Start your 30-day free trial</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              30 days free, then billed automatically. Cancel anytime during trial.
+              Choose a plan above to start your 30-day free trial. Cancel anytime.
             </p>
-            <Button
-              size="lg"
-              onClick={handleStartTrial}
-              disabled={isCheckingOut}
-              className="gap-2"
-            >
-              {isCheckingOut ? "Starting..." : "Start Free Trial"}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
           </CardContent>
         </Card>
 
