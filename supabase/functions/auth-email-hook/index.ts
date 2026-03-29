@@ -337,7 +337,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       })
 
       await supabase.rpc('enqueue_email', {
-        queue_name: 'transactional_emails',
+        queue_name: 'auth_emails',
         payload: {
           run_id,
           message_id: adminMessageId,
