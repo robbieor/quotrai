@@ -534,6 +534,18 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
         setIsConnecting(false);
         return;
       }
+      // Resume AudioContext on mobile (browsers often start it suspended)
+      const micStream = micResult.value;
+      try {
+        const audioCtx = new AudioContext();
+        if (audioCtx.state === "suspended") {
+          await audioCtx.resume();
+          console.log("[VoiceAgent] ✅ AudioContext resumed for mobile");
+        }
+        audioCtx.close(); // We only needed to unblock the global audio policy
+      } catch (_) { /* best-effort */ }
+      // Stop the mic stream we requested (ElevenLabs SDK will request its own)
+      micStream.getTracks().forEach(t => t.stop());
       console.log("[VoiceAgent] ✅ Microphone permission granted");
 
       // Use cached token or freshly fetched one
