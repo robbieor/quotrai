@@ -152,12 +152,28 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     onConnect: () => {
       console.log("[VoiceAgent] ✅ Connected to Foreman AI");
       debouncedToast('success', "Connected to Foreman AI", { duration: 2000 });
+
+      // Send immediate activity signal so agent knows user is present
+      // (mobile mic can take 1-2s to start flowing audio)
+      try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
+
+      // Start keep-alive interval to prevent silence-based disconnection
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      keepAliveRef.current = setInterval(() => {
+        try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
+      }, 15_000);
     },
     onDisconnect: () => {
       console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
       debouncedToast('info', "Call ended", { duration: 2000 });
       conversationIdRef.current = null;
       setCurrentConversationId(null);
+
+      // Clear keep-alive interval
+      if (keepAliveRef.current) {
+        clearInterval(keepAliveRef.current);
+        keepAliveRef.current = null;
+      }
     },
     onMessage: (message: any) => {
       // Save user transcripts
