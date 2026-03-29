@@ -667,6 +667,13 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     setVoiceUnavailable(false);
   }, []);
 
+  // Cleanup keep-alive on unmount
+  useEffect(() => {
+    return () => {
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+    };
+  }, []);
+
   return (
     <VoiceAgentContext.Provider
       value={{
