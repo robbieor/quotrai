@@ -1,68 +1,80 @@
 
 
-## Market-Ready Trial & Subscription Flow
+## Read-Only Enforcement + Multi-Seat Plan Selection Flow
 
-### Problems identified
+### Problem
 
-1. **Trial banner only shows at 3 days remaining** — users have no countdown during the first 27 days of their 30-day trial
-2. **No dismissible countdown popup** — competitors show a persistent-but-closable trial counter
-3. **Trial in `create-checkout-session` is hardcoded to 14 days** instead of 30 days (contradicts marketing and the `handle_new_user` trigger which sets 30 days)
-4. **No branded confirmation/welcome emails on subscription** — when someone subscribes via Stripe, no Foreman-branded email is sent to the customer or to support@foreman.ie
-5. **No repeat-trial prevention at checkout level** — the `burned_accounts` table exists but `create-checkout-session` doesn't check it before granting a trial
-6. **FAQ says "No credit card needed"** — contradicts the trial-with-card strategy
+1. **`useReadOnly` hook exists but is never consumed** — no component checks it, so expired-trial users can still create/edit/delete freely
+2. **SelectPlan only allows 1 seat per plan** — no way to add seats for team members at checkout
+3. **No full-screen read-only gate** — when trial expires, users should see their data but be blocked from mutations with a clear "Subscribe to continue" overlay on action buttons
 
-### Plan (6 changes)
+### Plan (4 changes)
 
-#### 1. Dismissible trial countdown popup (shows at 10 days remaining)
-**File:** New `src/components/billing/TrialCountdownPopup.tsx`
+#### 1. Create `ReadOnlyBanner` — full-width persistent banner for expired accounts
+**File:** `src/components/billing/ReadOnlyBanner.tsx`
 
-- A dialog/modal that shows when `trialDaysRemaining <= 10` and trial is active
-- Dismissible via X button — stores `trial_popup_dismissed_{date}` in localStorage so it only shows once per day
-- Shows countdown ring/number, plan name, "Subscribe Now" CTA button
-- Branded with Foreman colors (navy header, primary CTA)
-- Rendered in `DashboardLayout.tsx` alongside `TrialBanner`
+- Uses `useReadOnly()` — only renders when `true`
+- Full-width destructive banner pinned above content: "Your trial has ended. Your data is safe but you're in read-only mode. Subscribe to regain full access."
+- Contains "Choose Plan" CTA button linking to `/select-plan`
+- Cannot be dismissed (unlike trial countdown)
 
-#### 2. Update TrialBanner to always show during trial
-**File:** `src/components/billing/TrialBanner.tsx`
+#### 2. Create `ReadOnlyGuard` wrapper component
+**File:** `src/components/auth/ReadOnlyGuard.tsx`
 
-- Remove the `trialDaysRemaining <= 3` gate — show a subtle info banner for the entire trial period with days remaining
-- Keep the destructive banner for expired trials unchanged
-- Show amber warning style when <= 3 days, neutral info style otherwise
+- Wraps any create/edit/delete button or form dialog
+- When `useReadOnly()` returns `true`: shows a tooltip "Subscribe to unlock" and disables the action (pointer-events-none + opacity)
+- When `false`: renders children normally
+- Apply this guard to the key mutation entry points:
+  - `QuoteFormDialog` open trigger
+  - `InvoiceFormDialog` open trigger
+  - `JobFormDialog` open trigger
+  - `CustomerFormDialog` open trigger
+  - Dashboard quick-action buttons (New Quote, New Invoice, New Job)
 
-#### 3. Fix trial_period_days to 30 in checkout
-**File:** `supabase/functions/create-checkout-session/index.ts`
-
-- Change `trial_period_days: isUpgrade ? 0 : 14` → `trial_period_days: isUpgrade ? 0 : 30`
-- Add check against `burned_accounts` table: before creating a trial checkout, query `burned_accounts` for a SHA-256 hash of the user's email. If found, set `trial_period_days: 0` (no trial, immediate charge)
-
-#### 4. Send branded emails on subscription events
-**File:** `supabase/functions/stripe-webhook/index.ts`
-
-- On `checkout.session.completed` with `mode === "subscription"`:
-  - Send a branded welcome/subscription confirmation email to the customer via the `enqueue_email` RPC (transactional queue)
-  - Send an admin notification to support@foreman.ie with subscription details (plan, amount, customer email) using the same branded HTML template pattern as the signup admin notification
-- On `customer.subscription.deleted`:
-  - Send a branded cancellation confirmation to the customer
-
-#### 5. Fix FAQ copy to match trial-with-card strategy
+#### 3. Add multi-seat quantity selector to `SelectPlan`
 **File:** `src/pages/SelectPlan.tsx`
 
-- Change FAQ "No credit card needed" → "Card is collected to ensure seamless transition after your 30-day trial. Cancel anytime — you won't be charged until the trial ends."
+- Add a seat quantity stepper (min 1, max 50) per plan card
+- Pass `seatCounts: { [seatCode]: quantity }` to `create-checkout-session`
+- Show per-seat price × quantity = total line beneath the price
+- Label: "Add seats for your team — you can change seat types later in Settings"
 
-#### 6. Cancel-before-trial-ends flow
-Already supported by Stripe's billing portal (`create-customer-portal-session`). Ensure the trial banner and popup both include a "Manage Subscription" link that opens the portal, so users can cancel before the trial ends.
+#### 4. Wire `ReadOnlyBanner` into `DashboardLayout` + guard key pages
+**Files:** `src/components/layout/DashboardLayout.tsx`, `src/pages/Dashboard.tsx`, `src/pages/Quotes.tsx`, `src/pages/Invoices.tsx`, `src/pages/Jobs.tsx`, `src/pages/Customers.tsx`
+
+- Add `<ReadOnlyBanner />` to `DashboardLayout` (renders above `TrialBanner` when expired)
+- Wrap the "New Quote", "New Invoice", "New Job", "New Customer" buttons with `<ReadOnlyGuard>`
+- The guard component handles all the UX — pages just wrap their CTA buttons
 
 ### Files changed
 
 | File | Change |
 |------|--------|
-| `src/components/billing/TrialCountdownPopup.tsx` | New dismissible popup component |
-| `src/components/billing/TrialBanner.tsx` | Show banner for entire trial, not just last 3 days |
-| `src/components/layout/DashboardLayout.tsx` | Add `TrialCountdownPopup` |
-| `supabase/functions/create-checkout-session/index.ts` | Fix to 30-day trial, add burned_accounts check |
-| `supabase/functions/stripe-webhook/index.ts` | Add branded customer + admin emails on subscription events |
-| `src/pages/SelectPlan.tsx` | Fix FAQ copy |
+| `src/components/billing/ReadOnlyBanner.tsx` | New — persistent subscribe banner for expired accounts |
+| `src/components/auth/ReadOnlyGuard.tsx` | New — wrapper that disables mutations when read-only |
+| `src/pages/SelectPlan.tsx` | Add seat quantity stepper per plan card |
+| `src/components/layout/DashboardLayout.tsx` | Add `ReadOnlyBanner` |
+| `src/pages/Dashboard.tsx` | Wrap quick-action buttons with `ReadOnlyGuard` |
+| `src/pages/Quotes.tsx` | Wrap "New Quote" with `ReadOnlyGuard` |
+| `src/pages/Invoices.tsx` | Wrap "New Invoice" with `ReadOnlyGuard` |
+| `src/pages/Jobs.tsx` | Wrap "New Job" with `ReadOnlyGuard` |
+| `src/pages/Customers.tsx` | Wrap "New Customer" with `ReadOnlyGuard` |
 
-### Deployment
-- Redeploy `create-checkout-session` and `stripe-webhook` edge functions after changes
+### How it works end-to-end
+
+```text
+Trial expires
+  → useReadOnly() returns true
+  → ReadOnlyBanner shows: "Trial ended — subscribe to continue"
+  → All create/edit buttons disabled via ReadOnlyGuard
+  → User clicks "Choose Plan"
+  → SelectPlan page: pick plan + seat count (min 1)
+  → Stripe Checkout with correct line items
+  → Webhook updates subscriptions_v2 → status = "active"
+  → useReadOnly() returns false
+  → Full access restored
+```
+
+### No backend changes needed
+The `create-checkout-session` edge function already supports `seatCounts: { lite: 2, connect: 3 }` — the frontend just needs to pass quantities > 1.
 
