@@ -99,7 +99,6 @@ async function upsertSubscription(
       ).toISOString(),
       seat_count: totalSeats,
       trial_ends_at: trialEnd,
-      plan_tier: planTier,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "org_id" }
