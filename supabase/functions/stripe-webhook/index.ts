@@ -161,6 +161,24 @@ serve(async (req) => {
             .update({ status: "canceled", updated_at: new Date().toISOString() })
             .eq("org_id", orgId);
           logStep("subscriptions_v2 set to canceled", { orgId });
+
+          // Send cancellation email to customer
+          const customer = await stripe.customers.retrieve(customerId);
+          if (!customer.deleted && (customer as Stripe.Customer).email) {
+            const email = (customer as Stripe.Customer).email!;
+            await sendBrandedEmail(
+              supabase,
+              email,
+              "Your Foreman subscription has been cancelled",
+              brandedEmailHtml("Subscription Cancelled", [
+                "Your Foreman subscription has been cancelled.",
+                "Your access will continue until the end of your current billing period.",
+                "If this was a mistake or you'd like to resubscribe, you can do so anytime from your Settings page.",
+                "Thanks for being part of Foreman. We'd love to have you back."
+              ]),
+              `sub-cancelled-${subscription.id}`
+            );
+          }
         }
         break;
       }
@@ -265,6 +283,39 @@ serve(async (req) => {
           if (orgId) {
             await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
+
+            // Send branded welcome email to customer
+            const customer = await stripe.customers.retrieve(customerId);
+            const customerEmail = !customer.deleted ? (customer as Stripe.Customer).email : session.customer_email;
+            if (customerEmail) {
+              const amount = session.amount_total ? `€${(session.amount_total / 100).toFixed(2)}` : "your selected plan";
+              await sendBrandedEmail(
+                supabase,
+                customerEmail,
+                "Welcome to Foreman — subscription confirmed",
+                brandedEmailHtml("Welcome to Foreman! 🎉", [
+                  "Your subscription is now active. You have full access to all Foreman features.",
+                  `<strong>Amount:</strong> ${amount}`,
+                  "You can manage your subscription, change plans, or cancel anytime from Settings → Billing.",
+                  "Need help getting started? Reply to this email or reach out at support@foreman.ie."
+                ]),
+                `sub-welcome-${session.id}`
+              );
+
+              // Admin notification to support@foreman.ie
+              await sendBrandedEmail(
+                supabase,
+                "support@foreman.ie",
+                `New subscription: ${customerEmail}`,
+                brandedEmailHtml("New Subscription 💰", [
+                  `<strong>Customer:</strong> ${customerEmail}`,
+                  `<strong>Amount:</strong> ${amount}`,
+                  `<strong>Stripe Customer:</strong> ${customerId}`,
+                  `<strong>Subscription ID:</strong> ${stripeSubId}`,
+                ]),
+                `sub-admin-${session.id}`
+              );
+            }
           } else {
             logStep("WARNING: No org_id found for checkout", { stripeSubId, customerId });
           }
