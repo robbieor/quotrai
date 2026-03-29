@@ -42,6 +42,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useJobInsights } from "@/hooks/usePageInsights";
+import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 
 const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
@@ -180,10 +181,12 @@ export default function Jobs() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Jobs</h1>
             <p className="text-sm md:text-base text-muted-foreground">Manage and track all your jobs</p>
           </div>
-          <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Job
-          </Button>
+          <ReadOnlyGuard>
+            <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              New Job
+            </Button>
+          </ReadOnlyGuard>
         </div>
 
         <InsightAlerts insights={jobInsights} />

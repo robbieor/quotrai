@@ -32,6 +32,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useInvoiceInsights } from "@/hooks/usePageInsights";
+import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -193,11 +194,13 @@ export default function Invoices() {
               <span className="hidden sm:inline">From Quote</span>
               <span className="sm:hidden">Quote</span>
             </Button>
-            <Button onClick={handleNewInvoice} className="flex-1 sm:flex-none text-xs sm:text-sm">
-              <Plus className="mr-1 sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">New Invoice</span>
-              <span className="sm:hidden">New</span>
-            </Button>
+            <ReadOnlyGuard>
+              <Button onClick={handleNewInvoice} className="flex-1 sm:flex-none text-xs sm:text-sm">
+                <Plus className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">New Invoice</span>
+                <span className="sm:hidden">New</span>
+              </Button>
+            </ReadOnlyGuard>
           </div>
         </div>
 

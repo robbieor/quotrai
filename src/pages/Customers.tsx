@@ -10,6 +10,7 @@ import { DeleteCustomerDialog } from "@/components/customers/DeleteCustomerDialo
 import { CustomersTable } from "@/components/customers/CustomersTable";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Users } from "lucide-react";
+import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import {
   useCustomers,
   useCreateCustomer,
@@ -84,10 +85,12 @@ export default function Customers() {
               Manage your customer relationships
             </p>
           </div>
-          <Button onClick={() => setFormDialogOpen(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Customer
-          </Button>
+          <ReadOnlyGuard>
+            <Button onClick={() => setFormDialogOpen(true)} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
+          </ReadOnlyGuard>
         </div>
 
         <div className="relative">

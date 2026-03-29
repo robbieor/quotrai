@@ -31,6 +31,7 @@ import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
+import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import { useEffect } from "react";
 import { EndOfDaySummary } from "@/components/dashboard/EndOfDaySummary";
 
@@ -110,17 +111,18 @@ function DashboardContent() {
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {quickActions.map((action) => (
-              <Button
-                key={action.label}
-                size="sm"
-                variant="outline"
-                onClick={() => navigate(action.route)}
-                className="gap-1 text-xs h-7"
-              >
-                <action.icon className="h-3 w-3" />
-                <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
-                <Plus className="h-2.5 w-2.5" />
-              </Button>
+              <ReadOnlyGuard key={action.label}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate(action.route)}
+                  className="gap-1 text-xs h-7"
+                >
+                  <action.icon className="h-3 w-3" />
+                  <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
+                  <Plus className="h-2.5 w-2.5" />
+                </Button>
+              </ReadOnlyGuard>
             ))}
           </div>
         </div>
