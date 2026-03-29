@@ -13,18 +13,15 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${d}`);
 };
 
-/** Resolve org_id from subscription metadata, customer metadata, or DB lookup */
 async function resolveOrgId(
   stripe: Stripe,
   supabase: any,
   subscription: Stripe.Subscription
 ): Promise<string | null> {
-  // 1. Subscription metadata (set during checkout via subscription_data.metadata)
   if (subscription.metadata?.org_id) return subscription.metadata.org_id;
 
   const customerId = subscription.customer as string;
 
-  // 2. DB lookup by stripe_customer_id
   const { data: subV2 } = await supabase
     .from("subscriptions_v2")
     .select("org_id")
@@ -32,7 +29,6 @@ async function resolveOrgId(
     .maybeSingle();
   if (subV2?.org_id) return subV2.org_id;
 
-  // 3. Stripe customer metadata
   const customer = await stripe.customers.retrieve(customerId);
   if (!customer.deleted && (customer as Stripe.Customer).metadata?.org_id) {
     return (customer as Stripe.Customer).metadata.org_id;
@@ -42,6 +38,19 @@ async function resolveOrgId(
 }
 
 async function upsertSubscription(
+  supabase: any,
+  orgId: string,
+  subscription: Stripe.Subscription,
+  customerId: string
+) {
+  const totalSeats = subscription.items.data.reduce(
+    (sum, item) => sum + (item.quantity || 0),
+    0
+  );
+
+  const trialEnd = subscription.trial_end
+    ? new Date(subscription.trial_end * 1000).toISOString()
+    : null;
 
   await supabase.from("subscriptions_v2").upsert(
     {
@@ -49,12 +58,8 @@ async function upsertSubscription(
       status: subscription.status,
       stripe_subscription_id: subscription.id,
       stripe_customer_id: customerId,
-      current_period_start: new Date(
-        subscription.current_period_start * 1000
-      ).toISOString(),
-      current_period_end: new Date(
-        subscription.current_period_end * 1000
-      ).toISOString(),
+      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       seat_count: totalSeats,
       trial_ends_at: trialEnd,
       updated_at: new Date().toISOString(),
@@ -62,12 +67,7 @@ async function upsertSubscription(
     { onConflict: "org_id" }
   );
 
-  logStep("subscriptions_v2 upserted", {
-    orgId,
-    status: subscription.status,
-    seats: totalSeats,
-    planTier,
-  });
+  logStep("subscriptions_v2 upserted", { orgId, status: subscription.status, seats: totalSeats });
 }
 
 serve(async (req) => {
@@ -87,11 +87,7 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
     if (!signature) throw new Error("Missing stripe-signature header");
 
-    const event = await stripe.webhooks.constructEventAsync(
-      body,
-      signature,
-      webhookSecret
-    );
+    const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     logStep("Event received", { type: event.type, id: event.id });
 
     const supabase = createClient(
@@ -101,16 +97,11 @@ serve(async (req) => {
     );
 
     switch (event.type) {
-      // ── Subscription lifecycle ──
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
-        logStep("Subscription update", {
-          id: subscription.id,
-          status: subscription.status,
-          customer: customerId,
-        });
+        logStep("Subscription update", { id: subscription.id, status: subscription.status, customer: customerId });
 
         const orgId = await resolveOrgId(stripe, supabase, subscription);
         if (orgId) {
@@ -130,26 +121,20 @@ serve(async (req) => {
         if (orgId) {
           await supabase
             .from("subscriptions_v2")
-            .update({
-              status: "canceled",
-              updated_at: new Date().toISOString(),
-            })
+            .update({ status: "canceled", updated_at: new Date().toISOString() })
             .eq("org_id", orgId);
           logStep("subscriptions_v2 set to canceled", { orgId });
         }
         break;
       }
 
-      // ── Invoice events (trial→active transitions, payment failures) ──
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        const subId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : invoice.subscription?.id;
+        const subId = typeof invoice.subscription === "string"
+          ? invoice.subscription
+          : invoice.subscription?.id;
 
         if (subId && invoice.billing_reason === "subscription_cycle") {
-          // Renewal succeeded — ensure status is active
           const { data: subV2 } = await supabase
             .from("subscriptions_v2")
             .select("org_id")
@@ -159,14 +144,9 @@ serve(async (req) => {
           if (subV2?.org_id) {
             await supabase
               .from("subscriptions_v2")
-              .update({
-                status: "active",
-                updated_at: new Date().toISOString(),
-              })
+              .update({ status: "active", updated_at: new Date().toISOString() })
               .eq("org_id", subV2.org_id);
-            logStep("Renewal payment succeeded, marked active", {
-              orgId: subV2.org_id,
-            });
+            logStep("Renewal succeeded, marked active", { orgId: subV2.org_id });
           }
         }
         break;
@@ -174,10 +154,9 @@ serve(async (req) => {
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        const subId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : invoice.subscription?.id;
+        const subId = typeof invoice.subscription === "string"
+          ? invoice.subscription
+          : invoice.subscription?.id;
 
         if (subId) {
           const { data: subV2 } = await supabase
@@ -189,25 +168,18 @@ serve(async (req) => {
           if (subV2?.org_id) {
             await supabase
               .from("subscriptions_v2")
-              .update({
-                status: "past_due",
-                updated_at: new Date().toISOString(),
-              })
+              .update({ status: "past_due", updated_at: new Date().toISOString() })
               .eq("org_id", subV2.org_id);
-            logStep("Payment failed, marked past_due", {
-              orgId: subV2.org_id,
-            });
+            logStep("Payment failed, marked past_due", { orgId: subV2.org_id });
           }
         }
         break;
       }
 
-      // ── Checkout completed ──
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         logStep("Checkout completed", { id: session.id, mode: session.mode });
 
-        // Handle customer-facing invoice payments
         if (session.metadata?.type === "invoice_payment") {
           const invoiceId = session.metadata.invoice_id;
           const amount = (session.amount_total || 0) / 100;
@@ -215,10 +187,7 @@ serve(async (req) => {
           if (invoiceId) {
             await supabase
               .from("invoices")
-              .update({
-                status: "paid",
-                updated_at: new Date().toISOString(),
-              })
+              .update({ status: "paid", updated_at: new Date().toISOString() })
               .eq("id", invoiceId);
 
             const { data: inv } = await supabase
@@ -240,51 +209,27 @@ serve(async (req) => {
           }
         }
 
-        // Handle subscription checkout — activate v2 record
         if (session.mode === "subscription" && session.subscription) {
           const customerId = session.customer as string;
-          const stripeSubId =
-            typeof session.subscription === "string"
-              ? session.subscription
-              : session.subscription;
+          const stripeSubId = typeof session.subscription === "string"
+            ? session.subscription
+            : session.subscription;
 
-          const stripeSub = await stripe.subscriptions.retrieve(
-            stripeSubId as string
-          );
-          // org_id is in subscription_data.metadata (set by create-checkout-session)
-          const orgId =
-            stripeSub.metadata?.org_id || session.metadata?.org_id;
+          const stripeSub = await stripe.subscriptions.retrieve(stripeSubId as string);
+          let orgId = stripeSub.metadata?.org_id || session.metadata?.org_id;
+
+          if (!orgId) {
+            const customer = await stripe.customers.retrieve(customerId);
+            if (!customer.deleted) {
+              orgId = (customer as Stripe.Customer).metadata?.org_id;
+            }
+          }
 
           if (orgId) {
-            await upsertSubscription(
-              supabase,
-              orgId,
-              stripeSub,
-              customerId
-            );
+            await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
           } else {
-            // Fallback: look up by customer metadata
-            const customer = await stripe.customers.retrieve(customerId);
-            const fallbackOrgId =
-              !customer.deleted &&
-              (customer as Stripe.Customer).metadata?.org_id;
-            if (fallbackOrgId) {
-              await upsertSubscription(
-                supabase,
-                fallbackOrgId,
-                stripeSub,
-                customerId
-              );
-              logStep("Subscription activated via customer metadata", {
-                orgId: fallbackOrgId,
-              });
-            } else {
-              logStep("WARNING: No org_id found for checkout", {
-                stripeSubId,
-                customerId,
-              });
-            }
+            logStep("WARNING: No org_id found for checkout", { stripeSubId, customerId });
           }
         }
         break;
