@@ -10,12 +10,13 @@ import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
 import { track } from "@/utils/analytics";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SelectPlan() {
   const navigate = useNavigate();
-  const { startTrial, isStartingTrial } = useSubscriptionTier();
   const { formatCurrency } = useCurrency();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const isNative = useIsNative();
 
   if (isNative) {
@@ -51,14 +52,33 @@ export default function SelectPlan() {
   const proAnnualMonthly = Math.round(proAnnualTotal / 12);
   const proSavings = proMonthly * 12 - proAnnualTotal;
 
+
   const handleStartTrial = async () => {
     try {
+      setIsCheckingOut(true);
       track("trial_started", { interval: billingInterval });
-      await startTrial();
-      toast.success("Your 30-day free trial has started!");
-      navigate("/dashboard");
+
+      // Route through Stripe checkout with 30-day trial, defaulting to 1 Connect seat
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          seatCounts: { connect: 1 },
+          interval: billingInterval === "annual" ? "year" : "month",
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
     } catch (error) {
+      console.error("Checkout error:", error);
       toast.error("Failed to start trial. Please try again.");
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -136,15 +156,15 @@ export default function SelectPlan() {
           <CardContent className="py-8 text-center space-y-4">
             <h2 className="text-2xl font-bold">Start your 30-day free trial</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              No credit card required. Full Pro access including Foreman AI Voice.
+              30 days free, then billed automatically. Cancel anytime during trial.
             </p>
             <Button
               size="lg"
               onClick={handleStartTrial}
-              disabled={isStartingTrial}
+              disabled={isCheckingOut}
               className="gap-2"
             >
-              {isStartingTrial ? "Starting..." : "Start Free Trial"}
+              {isCheckingOut ? "Starting..." : "Start Free Trial"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>
