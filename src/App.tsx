@@ -54,6 +54,7 @@ const InvestorProduct = lazy(() => import("./pages/InvestorProduct"));
 const InvestorTeam = lazy(() => import("./pages/InvestorTeam"));
 const InvestorProjections = lazy(() => import("./pages/FounderProjections"));
 const InvestorForecast = lazy(() => import("./pages/InvestorForecast"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -122,6 +123,7 @@ const App = () => {
                 {/* App store assets — internal only, moved to protected */}
                 <Route path="/industries" element={<Industries />} />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
 
                 {/* Investor deck */}
                 <Route path="/investor/pitch" element={<InvestorPitch />} />
