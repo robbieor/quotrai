@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ArrowRight, MessageSquare, ExternalLink } from "lucide-react";
+import { Check, ArrowRight, MessageSquare, ExternalLink, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,14 +51,14 @@ export default function SelectPlan() {
   const proAnnualTotal = PRICING.ANNUAL_SEAT;
   const proSavings = proMonthly * 12 - proAnnualTotal;
 
-  const handleChoosePlan = async (seatCode: string) => {
+  const handleChoosePlan = async (seatCode: string, quantity: number) => {
     try {
       setIsCheckingOut(true);
-      track("checkout_started", { plan: seatCode, interval: billingInterval });
+      track("checkout_started", { plan: seatCode, interval: billingInterval, quantity });
 
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
-          seatCounts: { [seatCode]: 1 },
+          seatCounts: { [seatCode]: quantity },
           interval: billingInterval === "annual" ? "year" : "month",
         },
       });
@@ -235,10 +235,14 @@ function PlanCard({
   highlighted?: boolean;
   savings?: number;
   seatCode: string;
-  onChoose: (code: string) => void;
+  onChoose: (code: string, quantity: number) => void;
   isLoading: boolean;
 }) {
+  const [quantity, setQuantity] = useState(1);
   const annualMonthly = Math.round(annualPrice / 12);
+  const unitPrice = billingInterval === "monthly" ? monthlyPrice : annualMonthly;
+  const totalMonthly = unitPrice * quantity;
+
   return (
     <Card className={`relative ${highlighted ? "border-primary/50" : ""}`}>
       {highlighted && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">Most Popular</Badge>}
@@ -262,6 +266,29 @@ function PlanCard({
             </>
           )}
         </div>
+
+        {/* Seat quantity stepper */}
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+            disabled={quantity <= 1}
+          >
+            <Minus className="h-3 w-3" />
+          </button>
+          <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+          <button
+            onClick={() => setQuantity(Math.min(50, quantity + 1))}
+            className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+            disabled={quantity >= 50}
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+        </div>
+        <p className="text-xs text-center text-muted-foreground">
+          {quantity} {quantity === 1 ? "seat" : "seats"} × {formatCurrency(unitPrice)}/mo = <span className="font-semibold text-foreground">{formatCurrency(totalMonthly)}/mo</span>
+        </p>
+
         <ul className="space-y-2">
           {details.features.map((f, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
@@ -272,12 +299,15 @@ function PlanCard({
         <Button
           className="w-full gap-2"
           variant={highlighted ? "default" : "outline"}
-          onClick={() => onChoose(seatCode)}
+          onClick={() => onChoose(seatCode, quantity)}
           disabled={isLoading}
         >
           {isLoading ? "Processing..." : `Choose ${details.name}`}
           {!isLoading && <ArrowRight className="h-4 w-4" />}
         </Button>
+        {quantity > 1 && (
+          <p className="text-[11px] text-center text-muted-foreground">You can change seat types later in Settings</p>
+        )}
       </CardContent>
     </Card>
   );
