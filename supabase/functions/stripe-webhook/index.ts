@@ -13,6 +13,43 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${d}`);
 };
 
+function brandedEmailHtml(title: string, bodyLines: string[]): string {
+  const bodyHtml = bodyLines.map(l => `<p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6">${l}</p>`).join("");
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:'Manrope',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#0f1b2d;padding:24px 32px;text-align:center">
+<img src="https://quotrai.lovable.app/foreman-logo.png" alt="Foreman" width="40" height="40" style="border-radius:8px"/>
+<span style="color:#fff;font-size:20px;font-weight:700;margin-left:12px;vertical-align:middle">Foreman</span>
+</td></tr>
+<tr><td style="padding:32px">
+<h1 style="margin:0 0 16px;font-size:20px;color:#0f1b2d">${title}</h1>
+${bodyHtml}
+</td></tr>
+<tr><td style="padding:16px 32px;background:#f9fafb;text-align:center;font-size:12px;color:#999">
+© ${new Date().getFullYear()} Foreman · support@foreman.ie
+</td></tr></table></td></tr></table></body></html>`;
+}
+
+async function sendBrandedEmail(supabase: any, to: string, subject: string, html: string, idempotencyKey: string) {
+  try {
+    await supabase.rpc("enqueue_email", {
+      p_queue_name: "transactional_emails",
+      p_message: JSON.stringify({
+        to,
+        subject,
+        html,
+        from: "Foreman <support@foreman.ie>",
+        idempotency_key: idempotencyKey,
+        purpose: "transactional",
+      }),
+    });
+    logStep("Email enqueued", { to, subject });
+  } catch (e) {
+    logStep("Email enqueue failed (non-fatal)", { to, error: String(e) });
+  }
+}
+
 async function resolveOrgId(
   stripe: Stripe,
   supabase: any,
