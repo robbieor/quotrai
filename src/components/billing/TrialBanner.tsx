@@ -53,24 +53,30 @@ export function TrialBanner() {
     );
   }
 
-  if (trialDaysRemaining <= 3) {
-    return (
-      <Alert className="rounded-none border-x-0 border-t-0 border-amber-500/50 bg-amber-500/10">
-        <Clock className="h-4 w-4 text-amber-600" />
-        <AlertTitle className="text-amber-700 dark:text-amber-400">Trial ending soon</AlertTitle>
-        <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <span>
-            Your trial ends in {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}.{" "}
-            {isNative ? "Visit foreman.ie to subscribe." : "Subscribe to continue."}
-          </span>
-          <Button size="sm" variant="outline" onClick={handleCta} className="gap-1.5">
+  const isUrgent = trialDaysRemaining <= 3;
+
+  return (
+    <Alert className={`rounded-none border-x-0 border-t-0 ${
+      isUrgent
+        ? "border-amber-500/50 bg-amber-500/10"
+        : "border-border bg-muted/30"
+    }`}>
+      <Clock className={`h-4 w-4 ${isUrgent ? "text-amber-600" : "text-muted-foreground"}`} />
+      <AlertTitle className={isUrgent ? "text-amber-700 dark:text-amber-400" : ""}>
+        {isUrgent ? "Trial ending soon" : "Free trial active"}
+      </AlertTitle>
+      <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <span>
+          {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""} remaining on your trial.{" "}
+          {isNative ? "Visit foreman.ie to subscribe." : "Subscribe to keep full access."}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant={isUrgent ? "default" : "outline"} onClick={handleCta} className="gap-1.5">
             {isNative && <ExternalLink className="h-3.5 w-3.5" />}
             {isNative ? "Open foreman.ie" : "Subscribe Now"}
           </Button>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  return null;
+        </div>
+      </AlertDescription>
+    </Alert>
+  );
 }

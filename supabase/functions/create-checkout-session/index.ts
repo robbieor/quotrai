@@ -131,6 +131,29 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
+    // Check burned_accounts for repeat trial abuse
+    let trialDays = 30;
+    if (!isUpgrade && user.email) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(user.email.toLowerCase().trim());
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const emailHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+      const { data: burned } = await supabaseClient
+        .from("burned_accounts")
+        .select("id")
+        .or(`email.eq.${user.email.toLowerCase().trim()},email.eq.${emailHash}`)
+        .limit(1);
+
+      if (burned && burned.length > 0) {
+        trialDays = 0;
+        logStep("Burned account detected, no trial", { email: user.email });
+      }
+    }
+
+    const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
+
     // If upgrading with existing subscription, go to portal
     if (subscription?.stripe_subscription_id && isUpgrade) {
       const portalSession = await stripe.billingPortal.sessions.create({
@@ -151,7 +174,7 @@ serve(async (req) => {
       success_url: `${origin}/settings?tab=billing&success=true`,
       cancel_url: `${origin}/settings?tab=billing&cancelled=true`,
       subscription_data: {
-        trial_period_days: isUpgrade ? 0 : 14,
+        trial_period_days: isUpgrade ? 0 : trialDays,
         metadata: { org_id: orgMember.org_id },
       },
       billing_address_collection: "required",
