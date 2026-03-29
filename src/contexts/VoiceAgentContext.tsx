@@ -67,6 +67,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const contextRef = useRef<AgentContext>({});
   const queryClient = useQueryClient();
+  const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
   const cachedTokenRef = useRef<{ token?: string; usePublicAgent?: boolean; fetchedAt: number } | null>(null);
   const TOKEN_TTL_MS = 45_000; // tokens valid ~60s, use within 45s
