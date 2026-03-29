@@ -14,9 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function SelectPlan() {
   const navigate = useNavigate();
-  const { startTrial, isStartingTrial } = useSubscriptionTier();
   const { formatCurrency } = useCurrency();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const isNative = useIsNative();
 
   if (isNative) {
