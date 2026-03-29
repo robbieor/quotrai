@@ -329,6 +329,14 @@ async function handleWebhook(req: Request): Promise<Response> {
       `
 
       const adminMessageId = crypto.randomUUID()
+      const unsubToken = crypto.randomUUID()
+
+      // Ensure unsubscribe token exists for admin email
+      await supabase.from('email_unsubscribe_tokens').upsert(
+        { email: 'support@foreman.ie', token: unsubToken },
+        { onConflict: 'email' }
+      )
+
       await supabase.from('email_send_log').insert({
         message_id: adminMessageId,
         template_name: 'admin_signup_notification',
@@ -337,10 +345,10 @@ async function handleWebhook(req: Request): Promise<Response> {
       })
 
       await supabase.rpc('enqueue_email', {
-        queue_name: 'auth_emails',
+        queue_name: 'transactional_emails',
         payload: {
-          run_id,
           message_id: adminMessageId,
+          idempotency_key: `admin-signup-${adminMessageId}`,
           to: 'support@foreman.ie',
           from: `Foreman System <support@${FROM_DOMAIN}>`,
           sender_domain: SENDER_DOMAIN,
@@ -349,6 +357,7 @@ async function handleWebhook(req: Request): Promise<Response> {
           text: `New signup: ${payload.data.email} | Name: ${fullName} | Time: ${now} | Ref: ${refCode} | Plan: Pro Trial`,
           purpose: 'transactional',
           label: 'admin_signup_notification',
+          unsubscribe_token: unsubToken,
           queued_at: now,
         },
       })
