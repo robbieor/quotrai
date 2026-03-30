@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { GeorgeChatArea } from "@/components/george/GeorgeChatArea";
 import { GeorgeAgentInput } from "@/components/george/GeorgeAgentInput";
 import { GeorgeMobileInput } from "@/components/george/GeorgeMobileInput";
+import { GeorgeMobileHeader } from "@/components/george/GeorgeMobileHeader";
 import { GeorgeLoginDialog } from "@/components/george/GeorgeLoginDialog";
 import { GeorgeSidebar } from "@/components/george/GeorgeSidebar";
 import { GeorgeUsageWarning } from "@/components/george/GeorgeUsageWarning";
