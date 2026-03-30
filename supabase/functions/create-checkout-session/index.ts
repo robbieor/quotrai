@@ -29,6 +29,8 @@ serve(async (req) => {
   }
 
   try {
+    const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe secret key not configured");
 
@@ -139,7 +141,6 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
-    const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
 
     // Check burned_accounts for repeat trial abuse
     let trialDays = 7;
