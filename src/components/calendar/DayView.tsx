@@ -13,6 +13,7 @@ interface DayViewProps {
   onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
+  onSlotClick?: (date: Date, hour?: number) => void;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
@@ -24,6 +25,7 @@ export function DayView({
   onJobDrop,
   onJobDragStart,
   onJobDragEnd,
+  onSlotClick,
 }: DayViewProps) {
   const dayJobs = jobs.filter((job) => {
     if (!job.scheduled_date) return false;
@@ -146,6 +148,7 @@ export function DayView({
                 hasJobs={jobCount > 0}
                 jobCount={jobCount}
                 onJobDrop={onJobDrop}
+                onSlotClick={onSlotClick}
               >
                 {hourJobs.length > 0 && (
                   <div className="space-y-1">

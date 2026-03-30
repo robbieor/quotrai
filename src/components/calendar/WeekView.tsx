@@ -12,6 +12,7 @@ interface WeekViewProps {
   onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
+  onSlotClick?: (date: Date, hour?: number) => void;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
@@ -23,6 +24,7 @@ export function WeekView({
   onJobDrop,
   onJobDragStart,
   onJobDragEnd,
+  onSlotClick,
 }: WeekViewProps) {
   const days = useMemo(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
@@ -130,6 +132,7 @@ export function WeekView({
                   hasJobs={jobCount > 0}
                   jobCount={jobCount}
                   onJobDrop={onJobDrop}
+                  onSlotClick={onSlotClick}
                 >
                   {[...hourJobs, ...unscheduledJobs].map((job) => (
                     <DraggableJobCard

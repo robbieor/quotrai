@@ -76,6 +76,8 @@ interface JobFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   job?: Job | null;
+  defaultDate?: Date;
+  defaultTime?: string;
   onSubmit: (values: {
     title: string;
     description?: string;
@@ -93,6 +95,8 @@ export function JobFormDialog({
   open,
   onOpenChange,
   job,
+  defaultDate,
+  defaultTime,
   onSubmit,
   isLoading,
 }: JobFormDialogProps) {
@@ -160,9 +164,9 @@ export function JobFormDialog({
         title: "",
         description: "",
         customer_id: "",
-        status: "pending",
-        scheduled_date: null,
-        scheduled_time: "",
+        status: defaultDate ? "scheduled" : "pending",
+        scheduled_date: defaultDate || null,
+        scheduled_time: defaultTime || "",
         estimated_value: null,
       });
       setSiteAddress("");
@@ -171,7 +175,7 @@ export function JobFormDialog({
       setUseCustomAddress(false);
       setPoBoxWarning(false);
     }
-  }, [job, form]);
+  }, [job, form, defaultDate, defaultTime]);
 
   const handleAddressSelect = (geocoded: GeocodedAddress) => {
     setSiteAddress(geocoded.formattedAddress);

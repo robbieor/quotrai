@@ -22,6 +22,7 @@ interface MonthViewProps {
   onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
+  onSlotClick?: (date: Date, hour?: number) => void;
 }
 
 export function MonthView({
@@ -31,6 +32,7 @@ export function MonthView({
   onJobDrop,
   onJobDragStart,
   onJobDragEnd,
+  onSlotClick,
 }: MonthViewProps) {
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
@@ -70,6 +72,7 @@ export function MonthView({
               id={`month-${dateKey}`}
               date={day}
               onJobDrop={onJobDrop}
+              onSlotClick={onSlotClick}
               className={cn(
                 "min-h-[120px] p-1 border-b border-r",
                 index % 7 === 0 && "border-l-0",
