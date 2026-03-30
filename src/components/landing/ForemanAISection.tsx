@@ -1,5 +1,5 @@
 import { Bot, Mic, ArrowRight, CheckCircle2 } from "lucide-react";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface ForemanAISectionProps {
   formatPrice: (eur: number, decimals?: number) => string;
@@ -49,9 +49,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
               {/* Header */}
               <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-primary/30">
-                  <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-                </div>
+                <ForemanAvatar size="md" className="border-2 border-[#059669]/30" />
                 <div className="flex-1">
                   <p className="font-semibold text-sm text-foreground">Foreman AI</p>
                   <div className="flex items-center gap-1.5">
@@ -70,9 +68,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
                 </div>
 
                 <div className="flex gap-2.5">
-                  <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                    <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                  </div>
+                  <ForemanAvatar size="sm" className="mt-0.5" />
                   <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
                     <p className="text-sm text-foreground mb-1">✅ Quote <span className="font-semibold text-primary">Q-0048</span> created — {formatPrice(1300, 2)}</p>
                     <p className="text-xs text-muted-foreground">Sent to client. Ready for approval.</p>
@@ -86,9 +82,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
                 </div>
 
                 <div className="flex gap-2.5">
-                  <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                    <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                  </div>
+                  <ForemanAvatar size="sm" className="mt-0.5" />
                   <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5">
                     <p className="text-sm text-foreground">✅ Invoice sent. Reminder set for 7 days.</p>
                   </div>

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 // Pages where call bar should NOT appear
 const EXCLUDED_PATHS = ["/", "/login", "/signup", "/request-access", "/forgot-password", "/reset-password", "/portal", "/customer"];
@@ -33,9 +33,7 @@ export function ActiveCallBar() {
     >
       {/* Left: Avatar and status indicator */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/30">
-          <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-        </div>
+        <ForemanAvatar size="md" className="border-2 border-white/30" />
         <div className="flex items-center gap-2">
           <div
             className={cn(

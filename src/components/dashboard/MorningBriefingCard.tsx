@@ -5,7 +5,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Button } from "@/components/ui/button";
 import { X, Calendar, Receipt, FileText, Sparkles } from "lucide-react";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -60,9 +60,7 @@ export function MorningBriefingCard() {
 
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="hidden sm:block h-12 w-12 rounded-xl overflow-hidden border-2 border-primary/20 flex-shrink-0">
-          <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-        </div>
+        <ForemanAvatar size="lg" className="hidden sm:flex" />
 
         <div className="flex-1 min-w-0">
           {/* Header */}

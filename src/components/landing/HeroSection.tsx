@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mic, CheckCircle2, Play } from "lucide-react";
 import foremanLogo from "@/assets/foreman-logo.png";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface HeroSectionProps {
   formatPrice: (eur: number, decimals?: number) => string;
@@ -76,9 +76,7 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
               {/* Chat header */}
               <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-primary/30">
-                  <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-                </div>
+                <ForemanAvatar size="md" className="border-2 border-[#059669]/30" />
                 <div className="flex-1">
                   <p className="font-semibold text-sm text-foreground">Foreman AI</p>
                   <div className="flex items-center gap-1.5">
@@ -99,9 +97,7 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
 
                 {/* AI: quote created */}
                 <div className="flex gap-2.5">
-                  <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                    <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                  </div>
+                  <ForemanAvatar size="sm" className="mt-0.5" />
                   <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
                     <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> — {formatPrice(1300, 2)}</p>
                     <p className="text-xs text-muted-foreground">Send it to her email?</p>
@@ -117,9 +113,7 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
 
                 {/* AI: sent */}
                 <div className="flex gap-2.5">
-                  <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0 border border-border mt-0.5">
-                    <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-                  </div>
+                  <ForemanAvatar size="sm" className="mt-0.5" />
                   <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5">
                     <p className="text-sm text-foreground">✅ Sent. She can approve with one click.</p>
                   </div>

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, FileText, Briefcase, Sparkles, Receipt } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { ControlHeaderData } from "@/hooks/useDashboardAnalytics";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface ControlHeaderProps {
   data: ControlHeaderData | undefined;
@@ -73,9 +73,7 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3">
         {showAI && (
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="h-7 w-7 rounded-lg overflow-hidden border border-primary/20 shrink-0">
-              <img src={tomAvatar} alt="AI" className="w-full h-full object-cover" />
-            </div>
+            <ForemanAvatar size="sm" />
             <p className="text-sm text-muted-foreground line-clamp-2 sm:truncate">
               <span className="font-medium text-foreground">Foreman AI:</span> {data.aiRecommendation}
             </p>
