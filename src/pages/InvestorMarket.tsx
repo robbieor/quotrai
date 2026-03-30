@@ -212,7 +212,7 @@ export default function InvestorMarket() {
             <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
               Unlike pure SaaS competitors, Foreman earns revenue on both sides: predictable seat subscriptions <strong className="text-foreground">plus</strong> transaction-based 
               platform fees that grow as the customer's business grows. A plumber processing €10K/mo through Foreman generates €250/mo in platform fees alone — 
-              more than 8x the Starter seat price. This is why our blended ARPU compounds faster than any competitor.
+              more than 6x the Lite seat price. This is why our blended ARPU compounds faster than any competitor.
             </p>
           </CardContent>
         </Card>

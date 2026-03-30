@@ -119,7 +119,7 @@ export default function Pricing() {
       description: "Full visibility, accounting sync, and the data you need to grow profitably.",
       features: [
         "Everything in Connect",
-        "200 voice minutes/month",
+        "Unlimited voice minutes",
         "Revenue, P&L, and job profitability reports",
         "Xero & QuickBooks auto-sync",
         "Lead pipeline to close more work",

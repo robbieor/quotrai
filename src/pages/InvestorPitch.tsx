@@ -162,7 +162,7 @@ export default function InvestorPitch() {
               <BarChart3 className="h-6 w-6 text-primary mx-auto mb-2" />
               <p className="text-sm font-medium text-muted-foreground">Target Gross Margin</p>
               <p className="text-xl font-bold text-foreground">80%+</p>
-              <p className="text-xs text-muted-foreground mt-1">AI COGS ~€8/Pro seat, SaaS-standard margins</p>
+              <p className="text-xs text-muted-foreground mt-1">AI COGS ~€8/Connect seat, SaaS-standard margins</p>
             </CardContent>
           </Card>
         </div>

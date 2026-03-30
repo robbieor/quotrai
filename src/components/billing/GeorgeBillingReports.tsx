@@ -198,7 +198,7 @@ export function GeorgeBillingReports() {
                 const usagePercent = snapshot.minutes_limit > 0 
                   ? (snapshot.minutes_used / snapshot.minutes_limit) * 100 
                   : 0;
-                const cost = snapshot.george_voice_seats * TOM_VOICE_PRICE;
+                const cost = snapshot.george_voice_seats * DEFAULT_SEAT_PRICE;
 
                 return (
                   <TableRow key={snapshot.id}>
