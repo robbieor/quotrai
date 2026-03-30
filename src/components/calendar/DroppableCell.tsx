@@ -11,6 +11,7 @@ interface DroppableCellProps {
   hasJobs?: boolean;
   jobCount?: number;
   onJobDrop?: (payload: { jobId: string; date: Date; hour?: number }) => void;
+  onSlotClick?: (date: Date, hour?: number) => void;
 }
 
 export function DroppableCell({
