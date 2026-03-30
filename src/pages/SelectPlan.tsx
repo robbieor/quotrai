@@ -136,31 +136,18 @@ export default function SelectPlan() {
             isLoading={isCheckingOut}
           />
 
-          <Card className="relative border-muted">
-            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-muted-foreground text-background">Enterprise</Badge>
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-lg">{GROW_SEAT_DETAILS.name}</CardTitle>
-              <CardDescription>For 10+ staff firms</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <span className="text-4xl font-bold">Custom</span>
-                <p className="text-xs text-muted-foreground mt-1">Tailored to your team size</p>
-              </div>
-              <ul className="space-y-2">
-                {GROW_SEAT_DETAILS.features.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /><span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" className="w-full gap-2" asChild>
-                <a href="mailto:support@foreman.ie">
-                  <MessageSquare className="h-4 w-4" /> Contact Us
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
+          <PlanCard
+            details={GROW_SEAT_DETAILS}
+            monthlyPrice={PRICING.GROW_SEAT}
+            annualPrice={PRICING.ANNUAL_GROW_SEAT}
+            billingInterval={billingInterval}
+            formatCurrency={formatCurrency}
+            subtitle="For growing teams"
+            savings={billingInterval === "annual" ? (PRICING.GROW_SEAT * 12 - PRICING.ANNUAL_GROW_SEAT) : undefined}
+            seatCode="grow"
+            onChoose={handleChoosePlan}
+            isLoading={isCheckingOut}
+          />
         </div>
 
         {/* CTA Section */}
