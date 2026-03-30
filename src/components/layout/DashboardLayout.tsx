@@ -38,7 +38,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* Command Bar Trigger */}
               <button
                 onClick={() => commandBar.setOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-muted/50 text-muted-foreground text-xs hover:bg-muted transition-colors flex-1 max-w-xs"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-sidebar text-muted-foreground text-xs hover:bg-muted transition-colors flex-1 max-w-xs"
               >
                 <Search className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Search or command...</span>
