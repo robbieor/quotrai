@@ -27,7 +27,7 @@ const TRACTION = [
   { metric: "12", label: "Core features shipped & production-ready" },
   { metric: "3", label: "Revenue streams (seats + AI + platform fees)" },
   { metric: "20+", label: "Trade verticals with dedicated landing pages" },
-  { metric: "€12–€29", label: "Per-seat pricing validated against competitors" },
+  { metric: "€19–€69", label: "Per-seat pricing validated against competitors" },
 ];
 
 const USE_OF_FUNDS = [
