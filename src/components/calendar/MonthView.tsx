@@ -22,6 +22,7 @@ interface MonthViewProps {
   onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
+  onSlotClick?: (date: Date, hour?: number) => void;
 }
 
 export function MonthView({

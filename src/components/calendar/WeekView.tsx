@@ -12,6 +12,7 @@ interface WeekViewProps {
   onJobDrop: (payload: { jobId: string; date: Date; hour?: number }) => void;
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
+  onSlotClick?: (date: Date, hour?: number) => void;
 }
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
