@@ -7,10 +7,10 @@ import { ReadOnlyBanner } from "@/components/billing/ReadOnlyBanner";
 import { TrialCountdownPopup } from "@/components/billing/TrialCountdownPopup";
 import { FloatingTomButton } from "./FloatingTomButton";
 import { AgentTaskPanel } from "@/components/shared/AgentTaskPanel";
-import { DemoOverlay } from "@/components/demo/DemoOverlay";
+import { CommandBar, useCommandBar } from "@/components/command/CommandBar";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
-import { useDemoMode } from "@/hooks/useDemoMode";
 import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { status } = useGlobalVoiceAgent();
   const isCallActive = status === "connected";
-  const demo = useDemoMode();
+  const commandBar = useCommandBar();
 
   return (
     <ProtectedRoute>
@@ -34,6 +34,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             
             <header className="h-12 md:h-14 border-b border-border text-muted-foreground items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-primary-foreground sticky top-0 z-20">
               <SidebarTrigger className="mr-2 md:mr-4" />
+
+              {/* Command Bar Trigger */}
+              <button
+                onClick={() => commandBar.setOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-muted/50 text-muted-foreground text-xs hover:bg-muted transition-colors flex-1 max-w-xs"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Search or command...</span>
+                <span className="sm:hidden">Search...</span>
+                <kbd className="hidden md:inline-flex ml-auto text-[10px] bg-background border border-border rounded px-1.5 py-0.5 font-mono">
+                  ⌘K
+                </kbd>
+              </button>
+
               <div className="flex-1" />
               <NotificationCenter />
               <UserMenu />
@@ -47,16 +61,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <FloatingTomButton />
           <AgentTaskPanel />
           <TrialCountdownPopup />
-          <DemoOverlay
-            currentStep={demo.currentStep}
-            currentStepIndex={demo.currentStepIndex}
-            totalSteps={demo.totalSteps}
-            isNarrating={demo.isNarrating}
-            onNext={demo.nextStep}
-            onPrev={demo.prevStep}
-            onStop={demo.stopDemo}
-            onPlayAll={demo.playAll}
-          />
+          <CommandBar open={commandBar.open} onOpenChange={commandBar.setOpen} />
         </div>
       </SidebarProvider>
     </ProtectedRoute>

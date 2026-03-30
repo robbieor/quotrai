@@ -8,6 +8,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import foremanLogo from "@/assets/foreman-logo.png";
 import type { SeatType } from "@/hooks/useSubscriptionTier";
 
@@ -27,39 +28,23 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: "OPERATIONS",
+    label: "CORE",
     items: [
       { id: "dashboard", title: "Operations", url: "/dashboard", icon: LayoutDashboard },
-      { id: "calendar", title: "Calendar", url: "/calendar", icon: CalendarDays },
-      { id: "jobs", title: "Job Intelligence", url: "/jobs", icon: Briefcase },
-      { id: "time-tracking", title: "Workforce", url: "/time-tracking", icon: Clock },
-    ],
-  },
-  {
-    label: "REVENUE",
-    items: [
-      { id: "quotes", title: "Quote Pipeline", url: "/quotes", icon: FileText },
+      { id: "jobs", title: "Jobs", url: "/jobs", icon: Briefcase },
+      { id: "quotes", title: "Quotes", url: "/quotes", icon: FileText },
       { id: "invoices", title: "Revenue", url: "/invoices", icon: Receipt },
-      { id: "expenses", title: "Cost Control", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
-    ],
-  },
-  {
-    label: "INTELLIGENCE",
-    items: [
-      { id: "customers", title: "Client Intelligence", url: "/customers", icon: Users },
-      { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
-    ],
-  },
-  {
-    label: "AI",
-    items: [
+      { id: "customers", title: "Clients", url: "/customers", icon: Users },
       { id: "tom", title: "Foreman AI", url: "/foreman-ai", icon: Bot, requiredSeat: "connect" },
-      { id: "ai-activity", title: "AI Activity", url: "/ai-audit", icon: Clock, requiredSeat: "connect" },
     ],
   },
   {
     label: "MORE",
     items: [
+      { id: "calendar", title: "Calendar", url: "/calendar", icon: CalendarDays },
+      { id: "time-tracking", title: "Workforce", url: "/time-tracking", icon: Clock },
+      { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
+      { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
       { id: "templates", title: "Templates", url: "/templates", icon: FolderOpen },
       { id: "price-book", title: "Price Book", url: "/price-book", icon: Package },
     ],
@@ -74,6 +59,14 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { isTeamSeat } = useUserRole();
   const { canAccess } = useSeatAccess();
+  const badges = useSidebarBadges();
+
+  // Map item IDs to badge keys
+  const badgeMap: Record<string, string> = {
+    invoices: "invoices",
+    jobs: "jobs",
+    quotes: "quotes",
+  };
 
   const filteredGroups = useMemo(() => {
     return navGroups
@@ -110,7 +103,10 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-foreground font-semibold">{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map(item => (
+                {group.items.map(item => {
+                  const badgeKey = badgeMap[item.id];
+                  const badgeCount = badgeKey ? badges[badgeKey] : undefined;
+                  return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
                       <NavLink
@@ -120,11 +116,17 @@ export function AppSidebar() {
                         activeClassName="bg-primary/20 text-foreground font-medium border-primary [&>svg]:scale-110"
                       >
                         <item.icon className="h-5 w-5" />
-                        <span>{item.title}</span>
+                        <span className="flex-1">{item.title}</span>
+                        {badgeCount && badgeCount > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5">
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

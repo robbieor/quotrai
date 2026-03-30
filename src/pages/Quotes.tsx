@@ -162,10 +162,7 @@ export default function Quotes() {
         <UpgradePromptBanner />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Quotes</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Create and manage quotes for your customers</p>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Quotes</h1>
           <ReadOnlyGuard>
             <Button onClick={handleNewQuote} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
