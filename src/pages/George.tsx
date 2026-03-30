@@ -70,8 +70,12 @@ export default function George() {
 
   const { data: dbMessages = [] } = useGeorgeMessages(activeConversationId);
 
-  // Load messages from database when conversation changes
+  // Track whether user explicitly selected a conversation from sidebar
+  const [hydrateFromDb, setHydrateFromDb] = useState(false);
+
+  // Load messages from database ONLY when user picks an existing conversation from sidebar
   useEffect(() => {
+    if (!hydrateFromDb) return;
     if (dbMessages.length > 0) {
       const msgs = dbMessages.map(m => ({
         id: m.id,
@@ -81,12 +85,9 @@ export default function George() {
       }));
       setMessages(msgs);
       setDisplayItems(msgs.map(m => ({ type: "message" as const, data: m })));
-    } else if (!activeConversationId) {
-      setMessages([]);
-      setDisplayItems([]);
-      clearContext("all");
+      setHydrateFromDb(false); // done hydrating
     }
-  }, [dbMessages, activeConversationId]);
+  }, [dbMessages, hydrateFromDb]);
 
   useEffect(() => {
     if (!isMobile) setSidebarOpen(true);
