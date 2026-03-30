@@ -8,7 +8,10 @@ import { format } from "date-fns";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsNative } from "@/hooks/useIsNative";
 
-const TOM_VOICE_PRICE = 20;
+// Voice is included in seat price — cost shown per seat based on actual tier pricing
+// Lite: €19, Connect: €39, Grow: €69
+const SEAT_PRICES = { lite: 19, connect: 39, grow: 69 } as const;
+const DEFAULT_SEAT_PRICE = 39; // fallback to Connect pricing
 
 export function GeorgeBillingReports() {
   const { data: snapshots, isLoading } = useGeorgeUsageHistory();
