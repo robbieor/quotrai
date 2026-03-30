@@ -132,19 +132,12 @@ export function SubscriptionOverview() {
         <CardContent>
           <div className="text-center py-6 space-y-4">
             <div className="p-6 rounded-lg border border-dashed space-y-3">
-              <p className="text-lg font-semibold">Start your 30-day free trial</p>
+              <p className="text-lg font-semibold">Subscribe to restore full access</p>
               <p className="text-sm text-muted-foreground">
-                No credit card required. Full access to all features including Foreman AI.
+                Choose a plan to continue using Foreman and unlock all features.
               </p>
-              <Button onClick={handleStartSubscription} disabled={isLoading} size="lg">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Start Free Trial"
-                )}
+              <Button onClick={() => window.location.href = "/select-plan"} disabled={isLoading} size="lg">
+                Choose Plan
               </Button>
             </div>
           </div>
