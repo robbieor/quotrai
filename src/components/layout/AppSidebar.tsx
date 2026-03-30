@@ -61,6 +61,14 @@ export function AppSidebar() {
   const { isTeamSeat } = useUserRole();
   const { canAccess } = useSeatAccess();
   const badges = useSidebarBadges();
+  const { data: subscriptionV2 } = useSubscription();
+
+  // Compute trial days remaining from V2 subscription
+  const trialDaysRemaining = useMemo(() => {
+    if (subscriptionV2?.status !== "trialing" || !subscriptionV2.trial_ends_at) return null;
+    const days = Math.max(0, Math.ceil((new Date(subscriptionV2.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    return days;
+  }, [subscriptionV2]);
 
   // Map item IDs to badge keys
   const badgeMap: Record<string, string> = {
