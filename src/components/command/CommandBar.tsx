@@ -125,6 +125,8 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
               )}
             </div>
           )}
+
+          <CommandEmpty className="py-6 text-center">
             <button
               onClick={handleFreeformAI}
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
