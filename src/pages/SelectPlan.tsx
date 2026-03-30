@@ -166,10 +166,10 @@ export default function SelectPlan() {
           <div className="grid md:grid-cols-2 gap-4">
             <FaqCard
               q="What's the platform fee?"
-              a={`Foreman charges ${PRICING.PLATFORM_FEE}% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn. Enterprise customers get a reduced ${PRICING.ENTERPRISE_PLATFORM_FEE}% rate.`}
+              a={`Foreman charges ${PRICING.PLATFORM_FEE}% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn. Grow customers get a reduced ${PRICING.GROW_PLATFORM_FEE}% rate.`}
             />
             <FaqCard
-              q="Can I upgrade from Starter to Pro?"
+              q="Can I upgrade from Lite to Connect?"
               a="Yes! Upgrade anytime and your team instantly gets Foreman AI voice, GPS time-tracking, and advanced reports. You'll be charged pro-rata for the remainder of your billing period."
             />
             <FaqCard
