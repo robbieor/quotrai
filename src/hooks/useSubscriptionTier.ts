@@ -112,13 +112,6 @@ export const GROW_SEAT_DETAILS: PlanDetails = {
 
 export const ALL_PLANS: PlanDetails[] = [LITE_SEAT_DETAILS, CONNECT_SEAT_DETAILS, GROW_SEAT_DETAILS];
 
-// Legacy aliases for backward compatibility
-export const STARTER_SEAT_DETAILS = { ...LITE_SEAT_DETAILS, name: 'Starter' };
-export const PRO_SEAT_DETAILS = CONNECT_SEAT_DETAILS;
-export const ENTERPRISE_SEAT_DETAILS = GROW_SEAT_DETAILS;
-export const TEAM_SEAT_DETAILS = LITE_SEAT_DETAILS;
-export const VOICE_SEAT_DETAILS = CONNECT_SEAT_DETAILS;
-export const PLAN_DETAILS = CONNECT_SEAT_DETAILS;
 
 export function useSubscriptionTier() {
   const { user } = useAuth();
