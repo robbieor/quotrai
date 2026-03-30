@@ -401,6 +401,52 @@ serve(async (req) => {
       },
     };
 
+    // ─── DIRECT WEBHOOK SHORT-CIRCUITS (skip AI entirely) ──────
+    const directWebhookActions: Record<string, { function_name: string; parameters: Record<string, any>; intent: string; label: string }> = {
+      "What jobs do I have scheduled for today?": { function_name: "get_todays_jobs", parameters: {}, intent: "view_schedule", label: "Today's Schedule" },
+      "Which invoices are overdue?": { function_name: "get_overdue_invoices", parameters: {}, intent: "overdue", label: "Overdue Invoices" },
+    };
+
+    const directAction = directWebhookActions[message];
+    if (directAction) {
+      const actionId = crypto.randomUUID();
+      let activeConvId = conversation_id;
+      if (!activeConvId) {
+        const { data: newConv } = await serviceSupabase
+          .from("george_conversations")
+          .insert({ team_id: teamId, user_id: userId, title: message.slice(0, 50) })
+          .select("id")
+          .single();
+        if (newConv) activeConvId = newConv.id;
+      }
+
+      // Call webhook directly — no AI needed
+      const webhookRes = await fetch(`${supabaseUrl}/functions/v1/george-webhook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: authHeader },
+        body: JSON.stringify({ function_name: directAction.function_name, parameters: directAction.parameters }),
+      });
+      const webhookData = await webhookRes.json();
+      const responseMsg = webhookData.message || webhookData.error || "No data found.";
+
+      // Persist messages (fire and forget)
+      if (activeConvId) {
+        serviceSupabase.from("george_messages").insert([
+          { conversation_id: activeConvId, role: "user", content: message },
+          { conversation_id: activeConvId, role: "assistant", content: responseMsg },
+        ]);
+      }
+
+      return new Response(
+        JSON.stringify({
+          message: responseMsg,
+          conversation_id: activeConvId,
+          action_plan: null,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const shortCircuit = quickActionShortCircuits[message];
     if (shortCircuit) {
       const actionId = crypto.randomUUID();
