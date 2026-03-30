@@ -131,9 +131,9 @@ export default function FounderProjections() {
 
   const monthlyBillingFactor = 1 - (annualBillingPct / 100) * ANNUAL_DISCOUNT;
   const seatMRR = (
-    starterSeats * TIERS.starter.price +
-    proSeats * TIERS.pro.price +
-    enterpriseSeats * TIERS.enterprise.price
+    liteSeats * TIERS.lite.price +
+    connectSeats * TIERS.connect.price +
+    growSeats * TIERS.grow.price
   ) * monthlyBillingFactor;
 
   const platformFeeMRR = customers * avgInvoiceVolume * PLATFORM_FEE_RATE;
