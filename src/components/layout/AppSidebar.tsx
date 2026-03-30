@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { useSubscription } from "@/hooks/useSubscription";
 import foremanLogo from "@/assets/foreman-logo.png";
 import type { SeatType } from "@/hooks/useSubscriptionTier";
 
@@ -60,6 +61,14 @@ export function AppSidebar() {
   const { isTeamSeat } = useUserRole();
   const { canAccess } = useSeatAccess();
   const badges = useSidebarBadges();
+  const { data: subscriptionV2 } = useSubscription();
+
+  // Compute trial days remaining from V2 subscription
+  const trialDaysRemaining = useMemo(() => {
+    if (subscriptionV2?.status !== "trialing" || !subscriptionV2.trial_ends_at) return null;
+    const days = Math.max(0, Math.ceil((new Date(subscriptionV2.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    return days;
+  }, [subscriptionV2]);
 
   // Map item IDs to badge keys
   const badgeMap: Record<string, string> = {
@@ -93,7 +102,14 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-          <span className="text-xl font-bold tracking-tight bg-primary-foreground text-secondary">Foreman</span>
+          <div className="flex flex-col">
+            <span className="text-xl font-bold tracking-tight bg-primary-foreground text-secondary">Foreman</span>
+            {trialDaysRemaining !== null && (
+              <Link to="/settings?tab=billing" className="text-[10px] font-semibold text-amber-500 hover:text-amber-400 transition-colors">
+                Trial · {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""} left
+              </Link>
+            )}
+          </div>
         </div>
       </SidebarHeader>
 

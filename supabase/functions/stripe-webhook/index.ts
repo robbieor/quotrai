@@ -226,6 +226,29 @@ serve(async (req) => {
               .update({ status: "past_due", updated_at: new Date().toISOString() })
               .eq("org_id", subV2.org_id);
             logStep("Payment failed, marked past_due", { orgId: subV2.org_id });
+
+            // Send payment failure email to customer
+            const customerId = typeof invoice.customer === "string"
+              ? invoice.customer
+              : invoice.customer?.id;
+            if (customerId) {
+              const customer = await stripe.customers.retrieve(customerId);
+              if (!customer.deleted && (customer as Stripe.Customer).email) {
+                const email = (customer as Stripe.Customer).email!;
+                await sendBrandedEmail(
+                  supabase,
+                  email,
+                  "Action required — your Foreman payment failed",
+                  brandedEmailHtml("Payment Failed", [
+                    "We were unable to process your latest payment for Foreman.",
+                    "Please update your payment method to avoid any interruption to your service.",
+                    `<a href="https://quotrai.lovable.app/settings?tab=billing" style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>`,
+                    "If you believe this is an error, please contact us at support@foreman.ie.",
+                  ]),
+                  `payment-failed-${invoice.id}`
+                );
+              }
+            }
           }
         }
         break;
@@ -286,10 +309,10 @@ serve(async (req) => {
 
             // Build detailed plan info from line items
             const PRICE_TO_PLAN: Record<string, string> = {
-              "price_1TEa4dDQETj2awNErpoa1vHM": "Starter (Lite)",
-              "price_1TEa57DQETj2awNEESev15XR": "Starter (Lite) Annual",
-              "price_1TEa5SDQETj2awNE4qhL4fa7": "Pro (Connect)",
-              "price_1TEa5tDQETj2awNE2zfrsMkY": "Pro (Connect) Annual",
+              "price_1TEa4dDQETj2awNErpoa1vHM": "Lite",
+              "price_1TEa57DQETj2awNEESev15XR": "Lite Annual",
+              "price_1TEa5SDQETj2awNE4qhL4fa7": "Connect",
+              "price_1TEa5tDQETj2awNE2zfrsMkY": "Connect Annual",
               "price_1TEa6HDQETj2awNEycXwPCfc": "Grow",
               "price_1TEa6oDQETj2awNEHSl42OYl": "Grow Annual",
             };
