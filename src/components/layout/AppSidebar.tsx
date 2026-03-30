@@ -103,7 +103,10 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-foreground font-semibold">{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map(item => (
+                {group.items.map(item => {
+                  const badgeKey = badgeMap[item.id];
+                  const badgeCount = badgeKey ? badges[badgeKey] : undefined;
+                  return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
                       <NavLink
@@ -113,11 +116,17 @@ export function AppSidebar() {
                         activeClassName="bg-primary/20 text-foreground font-medium border-primary [&>svg]:scale-110"
                       >
                         <item.icon className="h-5 w-5" />
-                        <span>{item.title}</span>
+                        <span className="flex-1">{item.title}</span>
+                        {badgeCount && badgeCount > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5">
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
