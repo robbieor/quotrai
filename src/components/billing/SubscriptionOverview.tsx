@@ -41,9 +41,19 @@ export function SubscriptionOverview() {
     try {
       const { data, error } = await supabase.functions.invoke("create-customer-portal-session");
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-    } catch {
-      toast.error("Failed to open billing portal");
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No portal URL returned");
+      }
+    } catch (err: any) {
+      const msg = err?.message || "Failed to open billing portal";
+      if (msg.includes("No Stripe customer")) {
+        toast.error("No active subscription yet. Please choose a plan first.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setIsLoading(false);
     }
