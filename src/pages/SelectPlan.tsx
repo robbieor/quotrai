@@ -67,6 +67,7 @@ export default function SelectPlan() {
       if (data?.error) throw new Error(data.error);
 
       if (data?.url) {
+        toast.info("Redirecting to checkout...");
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");
