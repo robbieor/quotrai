@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,9 @@ import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { DayView } from "@/components/calendar/DayView";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
+import { ScheduleJobPicker } from "@/components/calendar/ScheduleJobPicker";
 import { useJobs, useUpdateJob, type Job, type JobStatus } from "@/hooks/useJobs";
+import { useCreateJobWithSite } from "@/hooks/useCreateJobWithSite";
 import { toast } from "sonner";
 
 interface DroppedJobData {
@@ -24,13 +26,25 @@ export default function JobCalendar() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
 
+  // Slot scheduling state
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [slotDate, setSlotDate] = useState<Date | null>(null);
+  const [slotHour, setSlotHour] = useState<number | undefined>(undefined);
+  const [createFromSlot, setCreateFromSlot] = useState(false);
+
   const { data: jobs, isLoading, error } = useJobs();
   const updateJob = useUpdateJob();
+  const createJob = useCreateJobWithSite();
 
   const scheduledJobs = jobs?.filter((job) => job.scheduled_date) || [];
+  const unscheduledJobs = useMemo(
+    () => jobs?.filter((job) => !job.scheduled_date && job.status !== "completed" && job.status !== "cancelled") || [],
+    [jobs]
+  );
 
   const handleJobClick = (job: Job) => {
     setSelectedJob(job);
+    setCreateFromSlot(false);
     setFormDialogOpen(true);
   };
 
@@ -51,6 +65,38 @@ export default function JobCalendar() {
         onSuccess: () => {
           setFormDialogOpen(false);
           setSelectedJob(null);
+        },
+      }
+    );
+  };
+
+  const handleCreateJob = (values: {
+    title: string;
+    description?: string;
+    customer_id: string;
+    status: JobStatus;
+    scheduled_date?: string | null;
+    scheduled_time?: string | null;
+    estimated_value?: number | null;
+    location?: any;
+  }) => {
+    const { location, ...jobData } = values;
+    createJob.mutate(
+      {
+        job: {
+          ...jobData,
+          scheduled_date: jobData.scheduled_date || null,
+          scheduled_time: jobData.scheduled_time || null,
+          estimated_value: jobData.estimated_value ?? null,
+        },
+        siteLocation: location,
+      },
+      {
+        onSuccess: () => {
+          setFormDialogOpen(false);
+          setCreateFromSlot(false);
+          setSlotDate(null);
+          setSlotHour(undefined);
         },
       }
     );
@@ -80,6 +126,45 @@ export default function JobCalendar() {
       }
     );
   };
+
+  const handleSlotClick = (date: Date, hour?: number) => {
+    setSlotDate(date);
+    setSlotHour(hour);
+    setPickerOpen(true);
+  };
+
+  const handlePickerCreateNew = () => {
+    setPickerOpen(false);
+    setSelectedJob(null);
+    setCreateFromSlot(true);
+    setFormDialogOpen(true);
+  };
+
+  const handlePickerSelectJob = (job: Job) => {
+    setPickerOpen(false);
+    if (!slotDate) return;
+
+    const newDate = format(slotDate, "yyyy-MM-dd");
+    const newTime = slotHour !== undefined ? `${String(slotHour).padStart(2, "0")}:00:00` : null;
+
+    updateJob.mutate(
+      {
+        id: job.id,
+        scheduled_date: newDate,
+        scheduled_time: newTime,
+        status: "scheduled" as JobStatus,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`"${job.title}" scheduled for ${format(slotDate, "MMM d")}${slotHour !== undefined ? ` at ${slotHour}:00` : ""}`);
+          setSlotDate(null);
+          setSlotHour(undefined);
+        },
+      }
+    );
+  };
+
+  const isCreating = createFromSlot && !selectedJob;
 
   return (
     <DashboardLayout>
@@ -118,6 +203,7 @@ export default function JobCalendar() {
                     onJobDrop={handleJobDrop}
                     onJobDragStart={setActiveJob}
                     onJobDragEnd={() => setActiveJob(null)}
+                    onSlotClick={handleSlotClick}
                   />
                 )}
                 {view === "week" && (
@@ -128,6 +214,7 @@ export default function JobCalendar() {
                     onJobDrop={handleJobDrop}
                     onJobDragStart={setActiveJob}
                     onJobDragEnd={() => setActiveJob(null)}
+                    onSlotClick={handleSlotClick}
                   />
                 )}
                 {view === "day" && (
@@ -138,6 +225,7 @@ export default function JobCalendar() {
                     onJobDrop={handleJobDrop}
                     onJobDragStart={setActiveJob}
                     onJobDragEnd={() => setActiveJob(null)}
+                    onSlotClick={handleSlotClick}
                   />
                 )}
               </>
@@ -146,13 +234,48 @@ export default function JobCalendar() {
         </Card>
       </div>
 
-      <JobFormDialog
-        open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
-        job={selectedJob}
-        onSubmit={handleUpdateJob}
-        isLoading={updateJob.isPending}
-      />
+      {/* Edit existing job */}
+      {!isCreating && (
+        <JobFormDialog
+          open={formDialogOpen}
+          onOpenChange={setFormDialogOpen}
+          job={selectedJob}
+          onSubmit={handleUpdateJob}
+          isLoading={updateJob.isPending}
+        />
+      )}
+
+      {/* Create new job from slot */}
+      {isCreating && slotDate && (
+        <JobFormDialog
+          open={formDialogOpen}
+          onOpenChange={(open) => {
+            setFormDialogOpen(open);
+            if (!open) {
+              setCreateFromSlot(false);
+              setSlotDate(null);
+              setSlotHour(undefined);
+            }
+          }}
+          defaultDate={slotDate}
+          defaultTime={slotHour !== undefined ? `${String(slotHour).padStart(2, "0")}:00` : undefined}
+          onSubmit={handleCreateJob}
+          isLoading={createJob.isPending}
+        />
+      )}
+
+      {/* Schedule picker */}
+      {slotDate && (
+        <ScheduleJobPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          date={slotDate}
+          hour={slotHour}
+          unscheduledJobs={unscheduledJobs}
+          onSelectJob={handlePickerSelectJob}
+          onCreateNew={handlePickerCreateNew}
+        />
+      )}
     </DashboardLayout>
   );
 }
