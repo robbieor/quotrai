@@ -169,7 +169,8 @@ export default function SelectPlan() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
@@ -195,6 +196,34 @@ export default function SelectPlan() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile: stacked cards per role */}
+            <div className="md:hidden space-y-3">
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <p className="text-sm font-semibold">Owner / Manager</p>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Lite</span>
+                    <span>Jobs, Quotes, Invoices, Scheduling</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Connect</span>
+                    <span>+ AI, Expenses, Reports</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Grow</span>
+                    <span>+ Leads, Integrations</span>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <p className="text-sm font-semibold">Team Member</p>
+                <p className="text-xs text-muted-foreground">
+                  Jobs, Calendar & Time Tracking only — same access on all seat types.
+                </p>
+              </div>
+            </div>
+
             <p className="text-xs text-muted-foreground mt-3">
               💡 Team Members have the same access regardless of seat type — assign Lite seats to save costs.
             </p>
