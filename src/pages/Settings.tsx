@@ -36,13 +36,30 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") || "profile";
   const { profile, updateProfile } = useProfile();
   const { user } = useAuth();
   const { isTeamSeat } = useUserRole();
   const { canAccessGeorge, canAccessIntegrations } = useSeatAccess();
   const isNative = useIsNative();
+
+  // Post-checkout success/cancel detection
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const cancelled = searchParams.get("cancelled");
+    if (success === "true") {
+      toast.success("Subscription confirmed! You now have full access to Foreman.");
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("success");
+      setSearchParams(newParams, { replace: true });
+    } else if (cancelled === "true") {
+      toast.info("Checkout cancelled. You can subscribe anytime.");
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("cancelled");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, []);
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("EUR");
