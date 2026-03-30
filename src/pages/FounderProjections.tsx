@@ -115,7 +115,7 @@ const GROWTH_LEVERS = [
 export default function FounderProjections() {
   const [customers, setCustomers] = useState(500);
   const [avgSeats, setAvgSeats] = useState(3);
-  const [tierMix, setTierMix] = useState({ starter: 40, pro: 45, enterprise: 15 }); // %
+  const [tierMix, setTierMix] = useState({ lite: 40, connect: 45, grow: 15 }); // %
   const [churnRate, setChurnRate] = useState(3);
   const [growthRate, setGrowthRate] = useState(12);
   const [stage, setStage] = useState("early");
