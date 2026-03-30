@@ -196,6 +196,7 @@ export default function George() {
     setMessages([]);
     setDisplayItems([]);
     setPhotoQuoteSuggestion(null);
+    setHydrateFromDb(false);
     clearContext("all");
   }, [clearContext]);
 

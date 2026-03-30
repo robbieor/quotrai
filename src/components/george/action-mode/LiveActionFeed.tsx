@@ -27,6 +27,8 @@ function ActionPlanCard({ plan, onConfirmation, onOutputAction }: ActionPlanCard
     plan.memory_context.current_quote ||
     plan.memory_context.current_invoice
   );
+  // Show text_response as a fallback when action completed but no output card
+  const showTextFallback = !showOutput && !showConfirmation && plan.status === "completed" && plan.text_response;
 
   return (
     <div className="space-y-2.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -51,6 +53,14 @@ function ActionPlanCard({ plan, onConfirmation, onOutputAction }: ActionPlanCard
           output={plan.output}
           onAction={(action) => onOutputAction?.(plan.action_id, action)}
         />
+      )}
+      {showTextFallback && (
+        <div className="flex gap-3">
+          <ForemanAvatar size="md" />
+          <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">{plan.text_response}</p>
+          </div>
+        </div>
       )}
       {showMemory && plan.memory_context && <ActionMemoryBar memory={plan.memory_context} />}
     </div>
