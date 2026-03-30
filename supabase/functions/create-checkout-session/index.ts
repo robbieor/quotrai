@@ -112,13 +112,21 @@ serve(async (req) => {
     if (subscription?.stripe_customer_id) {
       stripeCustomerId = subscription.stripe_customer_id;
     } else {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { org_id: orgMember.org_id, user_id: user.id },
-      });
-      stripeCustomerId = customer.id;
+      // Check Stripe for existing customer by email before creating a new one
+      const existingCustomers = await stripe.customers.list({ email: user.email!, limit: 1 });
+      if (existingCustomers.data.length > 0) {
+        stripeCustomerId = existingCustomers.data[0].id;
+        logStep("Reusing existing Stripe customer", { customerId: stripeCustomerId });
+      } else {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { org_id: orgMember.org_id, user_id: user.id },
+        });
+        stripeCustomerId = customer.id;
+        logStep("Created new Stripe customer", { customerId: stripeCustomerId });
+      }
 
-      // Upsert subscription record
+      // Upsert subscription record with customer ID
       await supabaseClient
         .from("subscriptions_v2")
         .upsert({
