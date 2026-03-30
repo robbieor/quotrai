@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { email, teamName, inviterName, inviteUrl }: InvitationRequest = await req.json();
+    const { email, teamName, inviterName, inviteUrl, role, seatType }: InvitationRequest = await req.json();
 
     if (!email || !teamName || !inviteUrl) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
