@@ -18,7 +18,7 @@ const PROBLEM_STATS = [
 
 const SOLUTION_PILLARS = [
   { title: "All-in-One Platform", desc: "Jobs, quotes, invoices, scheduling, expenses, time tracking — replaces 5+ tools", icon: Smartphone },
-  { title: "AI-First Approach", desc: "Foreman George handles calls, generates quotes from photos, automates admin hands-free", icon: Bot },
+  { title: "AI-First Approach", desc: "Foreman AI handles calls, generates quotes from photos, automates admin hands-free", icon: Bot },
   { title: "Built-In Payments", desc: "Stripe Connect with automated chasers — 2.5% platform fee turns every invoice into revenue", icon: DollarSign },
   { title: "Multi-Market Ready", desc: "20+ currencies, GDPR-compliant, launched for UK, Ireland, ANZ & North America", icon: Globe },
 ];
@@ -27,7 +27,7 @@ const TRACTION = [
   { metric: "12", label: "Core features shipped & production-ready" },
   { metric: "3", label: "Revenue streams (seats + AI + platform fees)" },
   { metric: "20+", label: "Trade verticals with dedicated landing pages" },
-  { metric: "€12–€29", label: "Per-seat pricing validated against competitors" },
+  { metric: "€19–€69", label: "Per-seat pricing validated against competitors" },
 ];
 
 const USE_OF_FUNDS = [
@@ -145,8 +145,8 @@ export default function InvestorPitch() {
             <CardContent className="p-5 text-center">
               <Users className="h-6 w-6 text-primary mx-auto mb-2" />
               <p className="text-sm font-medium text-muted-foreground">Seat Revenue</p>
-              <p className="text-xl font-bold text-foreground">€12–€29/seat/mo</p>
-              <p className="text-xs text-muted-foreground mt-1">2 tiers: Starter (€12) & Pro (€29)</p>
+              <p className="text-xl font-bold text-foreground">€19–€69/seat/mo</p>
+              <p className="text-xs text-muted-foreground mt-1">3 tiers: Lite (€19), Connect (€39) & Grow (€69)</p>
             </CardContent>
           </Card>
           <Card className="border-primary/20">
@@ -162,7 +162,7 @@ export default function InvestorPitch() {
               <BarChart3 className="h-6 w-6 text-primary mx-auto mb-2" />
               <p className="text-sm font-medium text-muted-foreground">Target Gross Margin</p>
               <p className="text-xl font-bold text-foreground">80%+</p>
-              <p className="text-xs text-muted-foreground mt-1">AI COGS ~€8/Pro seat, SaaS-standard margins</p>
+              <p className="text-xs text-muted-foreground mt-1">AI COGS ~€8/Connect seat, SaaS-standard margins</p>
             </CardContent>
           </Card>
         </div>

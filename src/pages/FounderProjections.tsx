@@ -19,11 +19,11 @@ const UK_TRADE_BUSINESSES = 300_000;
 const GLOBAL_TRADE_BUSINESSES = 5_000_000;
 const MARKET_CAGR = 0.18;
 
-// Updated 2-tier pricing + Enterprise (contact us)
+// 3-tier pricing: Lite, Connect, Grow
 const TIERS = {
-  starter: { price: 12, label: "Starter Seat", hasAI: false },
-  pro: { price: 29, label: "Pro Seat", hasAI: true },
-  enterprise: { price: 49, label: "Enterprise Seat", hasAI: true },
+  lite: { price: 19, label: "Lite Seat", hasAI: false },
+  connect: { price: 39, label: "Connect Seat", hasAI: true },
+  grow: { price: 69, label: "Grow Seat", hasAI: true },
 };
 const ANNUAL_DISCOUNT = 0.15;
 const PLATFORM_FEE_RATE = 0.025; // 2.5% on invoice payments
@@ -78,7 +78,7 @@ const LAUNCH_SCENARIO = {
   month2: { signups: 1400, trialToPaid: 15, paidCustomers: 210 },
   month3: { signups: 2200, trialToPaid: 18, paidCustomers: 396 },
   videoAssets: [
-    "Dashcam POV: tradesperson uses George AI to schedule jobs hands-free while driving",
+    "Dashcam POV: tradesperson uses Foreman AI to schedule jobs hands-free while driving",
     "On-site: snap photo of boiler → AI generates quote in 30 seconds → customer approves on portal",
     "End-of-day: GPS auto clock-out, invoices auto-sent, payment chasers running — zero admin",
     "Split-screen: pen & paper chaos vs Foreman — same job, 10x faster",
@@ -88,7 +88,7 @@ const LAUNCH_SCENARIO = {
 
 const FEATURES_SHIPPED = [
   { icon: FileText, label: "Quoting & Invoicing", detail: "Multi-currency, PDF generation, tax auto-detect" },
-  { icon: Bot, label: "Foreman AI (George)", detail: "Voice agent, chat, photo quoting, AI scheduling" },
+  { icon: Bot, label: "Foreman AI", detail: "Voice agent, chat, photo quoting, AI scheduling" },
   { icon: Globe, label: "Multi-Currency", detail: "20+ countries, auto-detect from customer country" },
   { icon: RefreshCcw, label: "Recurring Invoices", detail: "Weekly/monthly/quarterly auto-generation" },
   { icon: Mail, label: "Automated Payment Chasers", detail: "Escalating reminders for overdue invoices" },
@@ -115,7 +115,7 @@ const GROWTH_LEVERS = [
 export default function FounderProjections() {
   const [customers, setCustomers] = useState(500);
   const [avgSeats, setAvgSeats] = useState(3);
-  const [tierMix, setTierMix] = useState({ starter: 40, pro: 45, enterprise: 15 }); // %
+  const [tierMix, setTierMix] = useState({ lite: 40, connect: 45, grow: 15 }); // %
   const [churnRate, setChurnRate] = useState(3);
   const [growthRate, setGrowthRate] = useState(12);
   const [stage, setStage] = useState("early");
@@ -125,15 +125,15 @@ export default function FounderProjections() {
 
   // Revenue calculations
   const totalSeats = customers * avgSeats;
-  const starterSeats = Math.round(totalSeats * (tierMix.starter / 100));
-  const proSeats = Math.round(totalSeats * (tierMix.pro / 100));
-  const enterpriseSeats = Math.round(totalSeats * (tierMix.enterprise / 100));
+  const liteSeats = Math.round(totalSeats * (tierMix.lite / 100));
+  const connectSeats = Math.round(totalSeats * (tierMix.connect / 100));
+  const growSeats = Math.round(totalSeats * (tierMix.grow / 100));
 
   const monthlyBillingFactor = 1 - (annualBillingPct / 100) * ANNUAL_DISCOUNT;
   const seatMRR = (
-    starterSeats * TIERS.starter.price +
-    proSeats * TIERS.pro.price +
-    enterpriseSeats * TIERS.enterprise.price
+    liteSeats * TIERS.lite.price +
+    connectSeats * TIERS.connect.price +
+    growSeats * TIERS.grow.price
   ) * monthlyBillingFactor;
 
   const platformFeeMRR = customers * avgInvoiceVolume * PLATFORM_FEE_RATE;
@@ -141,7 +141,7 @@ export default function FounderProjections() {
   const totalARR = totalMRR * 12;
 
   // Costs
-  const aiSeats = proSeats + enterpriseSeats;
+  const aiSeats = connectSeats + growSeats;
   const voiceCOGS = aiSeats * VOICE_COST_PER_SEAT;
   const grossMargin = totalMRR > 0 ? ((totalMRR - voiceCOGS) / totalMRR) * 100 : 0;
 
@@ -153,9 +153,9 @@ export default function FounderProjections() {
     const custAtMonth = Math.round(customers * Math.pow(1 + growthRate / 100, month));
     const seatsAtMonth = custAtMonth * avgSeats;
     const seatRev = (
-      Math.round(seatsAtMonth * (tierMix.starter / 100)) * TIERS.starter.price +
-      Math.round(seatsAtMonth * (tierMix.pro / 100)) * TIERS.pro.price +
-      Math.round(seatsAtMonth * (tierMix.enterprise / 100)) * TIERS.enterprise.price
+      Math.round(seatsAtMonth * (tierMix.lite / 100)) * TIERS.lite.price +
+      Math.round(seatsAtMonth * (tierMix.connect / 100)) * TIERS.connect.price +
+      Math.round(seatsAtMonth * (tierMix.grow / 100)) * TIERS.grow.price
     ) * monthlyBillingFactor;
     const feeRev = custAtMonth * avgInvoiceVolume * PLATFORM_FEE_RATE;
     const mrr = seatRev + feeRev;
@@ -193,7 +193,7 @@ export default function FounderProjections() {
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We combine job management, quoting, invoicing, GPS time tracking, and AI-powered automation 
-              into a single platform — replacing 5+ disconnected tools. Our AI assistant "Foreman George" 
+              into a single platform — replacing 5+ disconnected tools. Our AI assistant Foreman AI 
               handles phone calls, generates quotes from photos, and automates admin. 
               <strong className="text-foreground"> Target: €10M ARR within 12 months</strong> across 
               UK, Ireland, Australia, and North America — requiring ~33,000 paid seats or significant invoice volume.
@@ -247,22 +247,22 @@ export default function FounderProjections() {
           <CardContent>
             <div className="grid sm:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl border border-border bg-muted/50">
-                <p className="font-semibold text-foreground">Starter Seat</p>
-                <p className="text-2xl font-bold text-foreground">€{TIERS.starter.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Jobs, quotes, invoices, calendar, reports. No AI.</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.starter}% of seats</Badge>
+                <p className="font-semibold text-foreground">Lite Seat</p>
+                <p className="text-2xl font-bold text-foreground">€{TIERS.lite.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Jobs, quotes, invoices, calendar, time tracking. No AI.</p>
+                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.lite}% of seats</Badge>
               </div>
               <div className="p-4 rounded-xl border-2 border-primary/30 bg-primary/5">
-                <p className="font-semibold text-primary">Pro Seat</p>
-                <p className="text-2xl font-bold text-primary">€{TIERS.pro.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                <p className="font-semibold text-primary">Connect Seat</p>
+                <p className="text-2xl font-bold text-primary">€{TIERS.connect.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
                 <p className="text-xs text-muted-foreground mt-1">Everything + Foreman AI voice agent & chat.</p>
-                <Badge className="mt-2 text-xs bg-primary">{tierMix.pro}% of seats</Badge>
+                <Badge className="mt-2 text-xs bg-primary">{tierMix.connect}% of seats</Badge>
               </div>
               <div className="p-4 rounded-xl border border-border bg-muted/50">
-                <p className="font-semibold text-foreground">Enterprise</p>
-                <p className="text-2xl font-bold text-foreground">€{TIERS.enterprise.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Priority support, higher AI limits, SSO.</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.enterprise}% of seats</Badge>
+                <p className="font-semibold text-foreground">Grow Seat</p>
+                <p className="text-2xl font-bold text-foreground">€{TIERS.grow.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Unlimited AI, advanced reports, accounting sync, priority support.</p>
+                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.grow}% of seats</Badge>
               </div>
               <div className="p-4 rounded-xl border border-border bg-accent/5">
                 <p className="font-semibold text-foreground">Platform Fee</p>
@@ -319,19 +319,19 @@ export default function FounderProjections() {
               <CardContent>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground">Starter Seats</p>
-                    <p className="text-xl font-bold text-foreground">{formatCurrency(starterSeats * TIERS.starter.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{starterSeats.toLocaleString()} × €{TIERS.starter.price}</p>
+                    <p className="text-sm text-muted-foreground">Lite Seats</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(liteSeats * TIERS.lite.price * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{liteSeats.toLocaleString()} × €{TIERS.lite.price}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                    <p className="text-sm text-muted-foreground">Pro Seats</p>
-                    <p className="text-xl font-bold text-primary">{formatCurrency(proSeats * TIERS.pro.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{proSeats.toLocaleString()} × €{TIERS.pro.price}</p>
+                    <p className="text-sm text-muted-foreground">Connect Seats</p>
+                    <p className="text-xl font-bold text-primary">{formatCurrency(connectSeats * TIERS.connect.price * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{connectSeats.toLocaleString()} × €{TIERS.connect.price}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground">Enterprise</p>
-                    <p className="text-xl font-bold text-foreground">{formatCurrency(enterpriseSeats * TIERS.enterprise.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{enterpriseSeats.toLocaleString()} × €{TIERS.enterprise.price}</p>
+                    <p className="text-sm text-muted-foreground">Grow Seats</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(growSeats * TIERS.grow.price * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{growSeats.toLocaleString()} × €{TIERS.grow.price}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                     <p className="text-sm text-muted-foreground">Platform Fees</p>
@@ -687,7 +687,7 @@ export default function FounderProjections() {
                       { label: "Month 2", data: LAUNCH_SCENARIO.month2, spend: LAUNCH_SCENARIO.adSpendMonth2 },
                       { label: "Month 3", data: LAUNCH_SCENARIO.month3, spend: LAUNCH_SCENARIO.adSpendMonth3 },
                     ].map((m) => {
-                      const avgSeatRev = (TIERS.starter.price * 0.4 + TIERS.pro.price * 0.45 + TIERS.enterprise.price * 0.15);
+                      const avgSeatRev = (TIERS.lite.price * 0.4 + TIERS.connect.price * 0.45 + TIERS.grow.price * 0.15);
                       const mrrAtMonth = m.data.paidCustomers * avgSeats * avgSeatRev;
                       const cac = m.spend / m.data.paidCustomers;
                       return (

@@ -8,7 +8,10 @@ import { format } from "date-fns";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsNative } from "@/hooks/useIsNative";
 
-const TOM_VOICE_PRICE = 20;
+// Voice is included in seat price — cost shown per seat based on actual tier pricing
+// Lite: €19, Connect: €39, Grow: €69
+const SEAT_PRICES = { lite: 19, connect: 39, grow: 69 } as const;
+const DEFAULT_SEAT_PRICE = 39; // fallback to Connect pricing
 
 export function GeorgeBillingReports() {
   const { data: snapshots, isLoading } = useGeorgeUsageHistory();
@@ -59,13 +62,13 @@ export function GeorgeBillingReports() {
   const chartData = [...snapshots].reverse().map((snapshot) => ({
     month: format(new Date(snapshot.period_end), "MMM yy"),
     minutes: Math.round(snapshot.minutes_used),
-    cost: snapshot.george_voice_seats * TOM_VOICE_PRICE,
+    cost: snapshot.george_voice_seats * DEFAULT_SEAT_PRICE,
     seats: snapshot.george_voice_seats,
   }));
 
   // Calculate totals
   const totalMinutes = snapshots.reduce((sum, s) => sum + s.minutes_used, 0);
-  const totalCost = snapshots.reduce((sum, s) => sum + (s.george_voice_seats * TOM_VOICE_PRICE), 0);
+  const totalCost = snapshots.reduce((sum, s) => sum + (s.george_voice_seats * DEFAULT_SEAT_PRICE), 0);
   const avgMonthlyMinutes = snapshots.length > 0 ? totalMinutes / snapshots.length : 0;
 
   return (
@@ -195,7 +198,7 @@ export function GeorgeBillingReports() {
                 const usagePercent = snapshot.minutes_limit > 0 
                   ? (snapshot.minutes_used / snapshot.minutes_limit) * 100 
                   : 0;
-                const cost = snapshot.george_voice_seats * TOM_VOICE_PRICE;
+                const cost = snapshot.george_voice_seats * DEFAULT_SEAT_PRICE;
 
                 return (
                   <TableRow key={snapshot.id}>

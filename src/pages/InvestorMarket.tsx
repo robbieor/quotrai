@@ -34,7 +34,7 @@ const TAM_SAM_SOM = [
 ];
 
 const TAM_BOTTOM_UP = [
-  { segment: "Sole traders (1 person)", businesses: "6,500,000", arpu: "€12/mo (1 Starter seat)", annual: "€936M", pct: 59 },
+  { segment: "Sole traders (1 person)", businesses: "6,500,000", arpu: "€19/mo (1 Lite seat)", annual: "€1.5B", pct: 59 },
   { segment: "Micro teams (2–5 people)", businesses: "3,200,000", arpu: "€87/mo (3 seats blended)", annual: "€3.3B", pct: 29 },
   { segment: "Small firms (6–20 people)", businesses: "1,100,000", arpu: "€290/mo (10 seats blended)", annual: "€3.8B", pct: 10 },
   { segment: "Mid-market (21–100)", businesses: "200,000", arpu: "€1,450/mo (50 seats)", annual: "€3.5B", pct: 2 },
@@ -212,7 +212,7 @@ export default function InvestorMarket() {
             <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
               Unlike pure SaaS competitors, Foreman earns revenue on both sides: predictable seat subscriptions <strong className="text-foreground">plus</strong> transaction-based 
               platform fees that grow as the customer's business grows. A plumber processing €10K/mo through Foreman generates €250/mo in platform fees alone — 
-              more than 8x the Starter seat price. This is why our blended ARPU compounds faster than any competitor.
+              more than 6x the Lite seat price. This is why our blended ARPU compounds faster than any competitor.
             </p>
           </CardContent>
         </Card>

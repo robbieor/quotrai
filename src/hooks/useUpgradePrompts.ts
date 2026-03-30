@@ -75,8 +75,8 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
         type: "voice_limit",
         title: `Only ${remainingVoiceMinutes} AI voice minutes left`,
         message: isNative
-          ? "Visit foreman.ie to upgrade to Pro for more minutes."
-          : "Upgrade to Pro to keep using Foreman AI, or contact us about Enterprise for unlimited minutes.",
+          ? "Visit foreman.ie to upgrade to Connect for more minutes."
+          : "Upgrade to Connect to keep using Foreman AI, or upgrade to Grow for unlimited minutes.",
         cta: isNative ? nativeCta : "Get More Minutes",
         urgency: "medium",
         route,

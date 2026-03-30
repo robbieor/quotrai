@@ -24,11 +24,11 @@ const faqs = [
   },
   {
     q: "What's the difference between seat types?",
-    a: "Lite seats are for field crew who need job access, time tracking, and basic quoting. Connect seats add Foreman AI with 60 voice minutes/month. Grow seats include 200 minutes, advanced reporting, and accounting sync.",
+    a: "Lite seats are for field crew who need job access, time tracking, and basic quoting. Connect seats add Foreman AI with 60 voice minutes/month. Grow seats include unlimited voice minutes, advanced reporting, and accounting sync.",
   },
   {
     q: "Can I mix seat types on one team?",
-    a: "Absolutely. Give your office manager a Voice Seat and your apprentices Team Seats — you only pay for what each person needs.",
+    a: "Absolutely. Give your office manager a Connect seat and your apprentices Lite seats — you only pay for what each person needs.",
   },
   {
     q: "How does annual billing work?",
@@ -119,7 +119,7 @@ export default function Pricing() {
       description: "Full visibility, accounting sync, and the data you need to grow profitably.",
       features: [
         "Everything in Connect",
-        "200 voice minutes/month",
+        "Unlimited voice minutes",
         "Revenue, P&L, and job profitability reports",
         "Xero & QuickBooks auto-sync",
         "Lead pipeline to close more work",
