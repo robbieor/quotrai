@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useAgentTask } from "@/contexts/AgentTaskContext";
 import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { GeorgeChatArea } from "@/components/george/GeorgeChatArea";
 import { GeorgeAgentInput } from "@/components/george/GeorgeAgentInput";
 import { GeorgeMobileInput } from "@/components/george/GeorgeMobileInput";
