@@ -28,14 +28,14 @@ export function MorningBriefingCard() {
   };
 
   // Expose re-show method via custom event
-  useState(() => {
+  useEffect(() => {
     const handler = () => {
       localStorage.removeItem(todayKey);
       setDismissed(false);
     };
     window.addEventListener("foreman-show-briefing", handler);
     return () => window.removeEventListener("foreman-show-briefing", handler);
-  });
+  }, [todayKey]);
 
   if (dismissed || isLoading) return null;
 
