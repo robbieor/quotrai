@@ -19,7 +19,7 @@ function brandedEmailHtml(title: string, bodyLines: string[]): string {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
 <tr><td style="background:#0f1b2d;padding:24px 32px;text-align:center">
-<img src="https://quotrai.lovable.app/foreman-logo.png" alt="Foreman" width="40" height="40" style="border-radius:8px"/>
+<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="40" height="40" style="border-radius:8px"/>
 <span style="color:#fff;font-size:20px;font-weight:700;margin-left:12px;vertical-align:middle">Foreman</span>
 </td></tr>
 <tr><td style="padding:32px">
@@ -242,7 +242,7 @@ serve(async (req) => {
                   brandedEmailHtml("Payment Failed", [
                     "We were unable to process your latest payment for Foreman.",
                     "Please update your payment method to avoid any interruption to your service.",
-                    `<a href="https://quotrai.lovable.app/settings?tab=billing" style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>`,
+                    '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>',
                     "If you believe this is an error, please contact us at support@foreman.ie.",
                   ]),
                   `payment-failed-${invoice.id}`
