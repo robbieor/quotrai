@@ -19,7 +19,7 @@ function brandedEmailHtml(title: string, bodyLines: string[]): string {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
 <tr><td style="background:#0f1b2d;padding:24px 32px;text-align:center">
-<img src="https://quotrai.lovable.app/foreman-logo.png" alt="Foreman" width="40" height="40" style="border-radius:8px"/>
+<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="40" height="40" style="border-radius:8px"/>
 <span style="color:#fff;font-size:20px;font-weight:700;margin-left:12px;vertical-align:middle">Foreman</span>
 </td></tr>
 <tr><td style="padding:32px">
