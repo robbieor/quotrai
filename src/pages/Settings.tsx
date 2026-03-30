@@ -392,10 +392,7 @@ export default function Settings() {
             <SubscriptionOverview />
             <TeamManagement />
             <SeatManagementTable />
-            <SubscriptionPricing />
             <StripeConnectSetup />
-            <GeorgeVoiceOverview />
-            <GeorgeBillingReports />
           </TabsContent>
 
           {canAccessIntegrations && (
