@@ -95,6 +95,9 @@ function ExplainerCard() {
           <p className="sm:col-span-2 text-xs text-muted-foreground">
             A member's access is the <strong>intersection</strong> of their role and seat type. Team Members only see Jobs/Calendar/Time Tracking regardless of seat.
           </p>
+          <p className="sm:col-span-2 text-xs font-medium text-green-600">
+            💰 Teams with 5+ seats get 10% off every seat, every month — applied automatically at checkout.
+          </p>
         </div>
       </CollapsibleContent>
     </Collapsible>

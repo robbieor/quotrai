@@ -311,7 +311,9 @@ function PlanCard({
   const [quantity, setQuantity] = useState(1);
   const annualMonthly = Math.round(annualPrice / 12);
   const unitPrice = billingInterval === "monthly" ? monthlyPrice : annualMonthly;
-  const totalMonthly = unitPrice * quantity;
+  const hasBulkDiscount = quantity >= PRICING.BULK_DISCOUNT_THRESHOLD;
+  const discountedUnitPrice = hasBulkDiscount ? Math.round(unitPrice * (1 - PRICING.BULK_DISCOUNT)) : unitPrice;
+  const totalMonthly = discountedUnitPrice * quantity;
 
   return (
     <Card className={`relative ${highlighted ? "border-primary/50" : ""}`}>
@@ -324,16 +326,27 @@ function PlanCard({
         <div className="text-center">
           {billingInterval === "monthly" ? (
             <>
-              <span className="text-4xl font-bold">{formatCurrency(monthlyPrice)}</span>
+              {hasBulkDiscount && (
+                <span className="text-lg text-muted-foreground line-through mr-2">{formatCurrency(monthlyPrice)}</span>
+              )}
+              <span className="text-4xl font-bold">{formatCurrency(hasBulkDiscount ? discountedUnitPrice : monthlyPrice)}</span>
               <span className="text-muted-foreground">/seat/mo</span>
             </>
           ) : (
             <>
-              <span className="text-4xl font-bold">{formatCurrency(annualMonthly)}</span>
+              {hasBulkDiscount && (
+                <span className="text-lg text-muted-foreground line-through mr-2">{formatCurrency(annualMonthly)}</span>
+              )}
+              <span className="text-4xl font-bold">{formatCurrency(hasBulkDiscount ? discountedUnitPrice : annualMonthly)}</span>
               <span className="text-muted-foreground">/seat/mo</span>
               <p className="text-xs text-muted-foreground mt-1">{formatCurrency(annualPrice)}/yr billed annually</p>
               {savings && <p className="text-xs font-medium text-green-600">Save {formatCurrency(savings)}/seat/yr</p>}
             </>
+          )}
+          {hasBulkDiscount && (
+            <Badge className="mt-2 bg-green-600 text-white text-[10px]">
+              10% bulk discount applied
+            </Badge>
           )}
         </div>
 
@@ -356,7 +369,8 @@ function PlanCard({
           </button>
         </div>
         <p className="text-xs text-center text-muted-foreground">
-          {quantity} {quantity === 1 ? "seat" : "seats"} × {formatCurrency(unitPrice)}/mo = <span className="font-semibold text-foreground">{formatCurrency(totalMonthly)}/mo</span>
+          {quantity} {quantity === 1 ? "seat" : "seats"} × {formatCurrency(discountedUnitPrice)}/mo = <span className="font-semibold text-foreground">{formatCurrency(totalMonthly)}/mo</span>
+          {hasBulkDiscount && <span className="text-green-600 ml-1">(10% off)</span>}
         </p>
 
         <ul className="space-y-2">
