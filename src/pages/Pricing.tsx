@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "What's the difference between seat types?",
-    a: "Lite seats are for field crew who need job access, time tracking, and basic quoting. Connect seats add Foreman AI with 60 voice minutes/month. Grow seats include 200 minutes, advanced reporting, and accounting sync.",
+    a: "Lite seats are for field crew who need job access, time tracking, and basic quoting. Connect seats add Foreman AI with 60 voice minutes/month. Grow seats include unlimited voice minutes, advanced reporting, and accounting sync.",
   },
   {
     q: "Can I mix seat types on one team?",
