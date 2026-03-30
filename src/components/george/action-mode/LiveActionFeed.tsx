@@ -144,6 +144,23 @@ export function LiveActionFeed({ items, isProcessing, lastError, onConfirmation,
           </div>
         )}
 
+        {lastError && !isProcessing && (
+          <div className="flex gap-3">
+            <ForemanAvatar size="md" />
+            <div className="bg-destructive/10 border border-destructive/20 rounded-2xl rounded-tl-md px-4 py-3">
+              <p className="text-sm text-destructive font-medium">{lastError}</p>
+              {onRetry && (
+                <button
+                  onClick={onRetry}
+                  className="text-xs text-primary font-medium mt-1 hover:underline"
+                >
+                  Tap to retry
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div ref={scrollRef} />
       </div>
     </ScrollArea>
