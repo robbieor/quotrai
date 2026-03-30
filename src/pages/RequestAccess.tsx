@@ -147,7 +147,7 @@ export default function RequestAccess() {
               <h3 className="font-semibold text-foreground mb-3">What you get:</h3>
               <ul className="space-y-3">
                 {[
-                  "30-day free trial — no credit card required",
+                  "7-day free trial",
                   "Direct access to the product team",
                   "Priority feature requests",
                   "Free onboarding & setup support",

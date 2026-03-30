@@ -106,7 +106,7 @@ export function SubscriptionOverview() {
     ? Math.max(0, differenceInDays(new Date(subscription.trial_ends_at), new Date()))
     : 0;
   const trialProgress = isTrialing && subscription?.trial_ends_at
-    ? Math.max(0, ((14 - trialDaysRemaining) / 14) * 100)
+    ? Math.max(0, ((7 - trialDaysRemaining) / 7) * 100)
     : 0;
 
   const getStatusBadge = () => {

@@ -108,7 +108,7 @@ Same set, landscape or portrait.
 ---
 
 ## App Review Notes
-This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://quotr.work/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 30-day free trial for new users.
+This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://quotr.work/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 7-day free trial for new users.
 
 ## Info.plist Permission Strings
 - `NSMicrophoneUsageDescription`: "Quotr uses the microphone for Foreman AI voice commands"

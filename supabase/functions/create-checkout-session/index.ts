@@ -142,7 +142,7 @@ serve(async (req) => {
     const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
 
     // Check burned_accounts for repeat trial abuse
-    let trialDays = 30;
+    let trialDays = 7;
     if (!isUpgrade && user.email) {
       const encoder = new TextEncoder();
       const data = encoder.encode(user.email.toLowerCase().trim());

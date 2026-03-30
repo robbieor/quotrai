@@ -104,7 +104,7 @@ export default function TradeLanding() {
             </Link>
           </div>
           <p className="text-sm text-muted-foreground">
-            30-day free trial · No credit card required · Cancel anytime
+            7-day free trial · Cancel anytime
           </p>
         </div>
       </section>
@@ -187,7 +187,7 @@ export default function TradeLanding() {
             Ready to run your {config.name.toLowerCase()} business smarter?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            30-day free trial, no credit card required. Cancel anytime.
+            7-day free trial. Cancel anytime.
           </p>
           <Link to="/signup">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">

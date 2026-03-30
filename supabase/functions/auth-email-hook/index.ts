@@ -317,11 +317,11 @@ async function handleWebhook(req: Request): Promise<Response> {
               </tr>
               <tr style="border-bottom: 1px solid #e2e8f0;">
                 <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Plan</td>
-                <td style="padding: 10px 8px; color: #0f172a;">Pro Trial (30 days)</td>
+                <td style="padding: 10px 8px; color: #0f172a;">Pro Trial (7 days)</td>
               </tr>
               <tr>
                 <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Trial Ends</td>
-                <td style="padding: 10px 8px; color: #0f172a;">${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IE')}</td>
+                <td style="padding: 10px 8px; color: #0f172a;">${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IE')}</td>
               </tr>
             </table>
           </div>
