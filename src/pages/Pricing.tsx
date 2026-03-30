@@ -137,7 +137,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Pricing — Simple Per-Seat Plans"
-        description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 30-day free trial, no credit card required."
+        description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 7-day free trial."
         path="/pricing"
       />
       {/* Nav */}
@@ -172,7 +172,7 @@ export default function Pricing() {
             One platform, one price per seat.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            30-day free trial on every plan. No credit card required. Cancel anytime.
+            7-day free trial on every plan. Cancel anytime.
           </p>
 
           {/* Billing toggle */}

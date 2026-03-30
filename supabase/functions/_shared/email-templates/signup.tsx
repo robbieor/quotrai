@@ -44,7 +44,7 @@ export const SignupEmail = ({
           <Heading style={h1}>Welcome to Foreman 🎉</Heading>
           <Text style={text}>
             You're one step away from running your trade business smarter. Verify your email to unlock your{' '}
-            <strong>30-day Pro trial</strong> — no credit card needed.
+            <strong>7-day Pro trial</strong>.
           </Text>
           <Button style={button} href={confirmationUrl}>
             Verify & Get Started
@@ -70,7 +70,7 @@ export const SignupEmail = ({
           <Hr style={divider} />
 
           <Text style={trustText}>
-            ✅ 30-day full Pro trial &nbsp;·&nbsp; ✅ No credit card required &nbsp;·&nbsp; ✅ Cancel anytime
+            ✅ 7-day full Pro trial &nbsp;·&nbsp; ✅ Cancel anytime
           </Text>
 
           <Text style={footer}>
