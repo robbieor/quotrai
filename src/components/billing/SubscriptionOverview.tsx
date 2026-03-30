@@ -248,25 +248,33 @@ export function SubscriptionOverview() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm font-medium">
-              {isPastDue ? "Update payment method" : "Manage your subscription"}
+              {isPastDue ? "Update payment method" : isTrialing ? "Choose a plan" : "Manage your subscription"}
             </p>
             <p className="text-xs text-muted-foreground">
               {isPastDue
                 ? "Update your card to restore full access"
+                : isTrialing
+                ? "Select a plan to continue after your trial"
                 : "Change plan, update payment, or view invoices"
               }
             </p>
           </div>
-          <Button variant="outline" onClick={handleManageBilling} disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                {isPastDue ? "Update Payment" : "Manage Billing"}
-              </>
-            )}
-          </Button>
+          {isTrialing ? (
+            <Button variant="default" onClick={() => window.location.href = "/select-plan"}>
+              Choose Plan
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={handleManageBilling} disabled={isLoading}>
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  {isPastDue ? "Update Payment" : "Manage Billing"}
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
