@@ -72,6 +72,7 @@ export function SubscriptionOverview() {
   const [cancelDetail, setCancelDetail] = useState("");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const isNative = useIsNative();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user } = useAuth();
