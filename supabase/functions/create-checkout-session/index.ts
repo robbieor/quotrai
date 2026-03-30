@@ -194,12 +194,17 @@ serve(async (req) => {
     }
 
     // Create checkout session with multi-line items
+    // Determine the primary seat code for the success page
+    const primarySeatCode = seatCounts
+      ? Object.entries(seatCounts).find(([, qty]) => Number(qty) > 0)?.[0] || "connect"
+      : "connect";
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/settings?tab=billing&success=true`,
-      cancel_url: `${origin}/settings?tab=billing&cancelled=true`,
+      success_url: `${origin}/subscription-confirmed?plan=${primarySeatCode}&interval=${billingInterval}`,
+      cancel_url: `${origin}/select-plan`,
       subscription_data: subscriptionData,
       billing_address_collection: "required",
       payment_method_collection: "always",

@@ -209,6 +209,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_reasons: {
+        Row: {
+          created_at: string | null
+          detail: string | null
+          id: string
+          org_id: string
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          detail?: string | null
+          id?: string
+          org_id: string
+          reason: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          detail?: string | null
+          id?: string
+          org_id?: string
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           certificate_data: Json | null

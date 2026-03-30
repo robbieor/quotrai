@@ -55,6 +55,7 @@ const InvestorTeam = lazy(() => import("./pages/InvestorTeam"));
 const InvestorProjections = lazy(() => import("./pages/FounderProjections"));
 const InvestorForecast = lazy(() => import("./pages/InvestorForecast"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const SubscriptionConfirmed = lazy(() => import("./pages/SubscriptionConfirmed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -142,6 +143,7 @@ const App = () => {
                 {/* Onboarding */}
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/select-plan" element={<SelectPlan />} />
+                <Route path="/subscription-confirmed" element={<SubscriptionConfirmed />} />
 
                 {/* Protected dashboard pages — all seats */}
                 <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />

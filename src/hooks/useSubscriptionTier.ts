@@ -48,16 +48,6 @@ export const PRICING = {
   GROW_PLATFORM_FEE: 1.5,
   BULK_DISCOUNT_THRESHOLD: 5,
   BULK_DISCOUNT: 0.10,
-  // Legacy aliases
-  BASE_SEAT: 39,
-  STARTER_SEAT: 19,
-  ENTERPRISE_SEAT: 69,
-  ANNUAL_SEAT: 397.80,
-  ANNUAL_STARTER_SEAT: 193.80,
-  ANNUAL_ENTERPRISE_SEAT: 703.80,
-  ENTERPRISE_PLATFORM_FEE: 1.5,
-  TEAM_SEAT: 19,
-  ANNUAL_TEAM_SEAT: 193.80,
 } as const;
 
 export interface PlanDetails {
@@ -122,13 +112,6 @@ export const GROW_SEAT_DETAILS: PlanDetails = {
 
 export const ALL_PLANS: PlanDetails[] = [LITE_SEAT_DETAILS, CONNECT_SEAT_DETAILS, GROW_SEAT_DETAILS];
 
-// Legacy aliases for backward compatibility
-export const STARTER_SEAT_DETAILS = { ...LITE_SEAT_DETAILS, name: 'Starter' };
-export const PRO_SEAT_DETAILS = CONNECT_SEAT_DETAILS;
-export const ENTERPRISE_SEAT_DETAILS = GROW_SEAT_DETAILS;
-export const TEAM_SEAT_DETAILS = LITE_SEAT_DETAILS;
-export const VOICE_SEAT_DETAILS = CONNECT_SEAT_DETAILS;
-export const PLAN_DETAILS = CONNECT_SEAT_DETAILS;
 
 export function useSubscriptionTier() {
   const { user } = useAuth();
@@ -204,6 +187,6 @@ export function useSubscriptionTier() {
     trialDaysRemaining,
     startTrial: startTrialMutation.mutateAsync,
     isStartingTrial: startTrialMutation.isPending,
-    currentPlan: PLAN_DETAILS,
+    currentPlan: CONNECT_SEAT_DETAILS,
   };
 }
