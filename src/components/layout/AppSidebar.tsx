@@ -27,39 +27,23 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: "OPERATIONS",
+    label: "CORE",
     items: [
       { id: "dashboard", title: "Operations", url: "/dashboard", icon: LayoutDashboard },
-      { id: "calendar", title: "Calendar", url: "/calendar", icon: CalendarDays },
-      { id: "jobs", title: "Job Intelligence", url: "/jobs", icon: Briefcase },
-      { id: "time-tracking", title: "Workforce", url: "/time-tracking", icon: Clock },
-    ],
-  },
-  {
-    label: "REVENUE",
-    items: [
-      { id: "quotes", title: "Quote Pipeline", url: "/quotes", icon: FileText },
+      { id: "jobs", title: "Jobs", url: "/jobs", icon: Briefcase },
+      { id: "quotes", title: "Quotes", url: "/quotes", icon: FileText },
       { id: "invoices", title: "Revenue", url: "/invoices", icon: Receipt },
-      { id: "expenses", title: "Cost Control", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
-    ],
-  },
-  {
-    label: "INTELLIGENCE",
-    items: [
-      { id: "customers", title: "Client Intelligence", url: "/customers", icon: Users },
-      { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
-    ],
-  },
-  {
-    label: "AI",
-    items: [
+      { id: "customers", title: "Clients", url: "/customers", icon: Users },
       { id: "tom", title: "Foreman AI", url: "/foreman-ai", icon: Bot, requiredSeat: "connect" },
-      { id: "ai-activity", title: "AI Activity", url: "/ai-audit", icon: Clock, requiredSeat: "connect" },
     ],
   },
   {
     label: "MORE",
     items: [
+      { id: "calendar", title: "Calendar", url: "/calendar", icon: CalendarDays },
+      { id: "time-tracking", title: "Workforce", url: "/time-tracking", icon: Clock },
+      { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
+      { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
       { id: "templates", title: "Templates", url: "/templates", icon: FolderOpen },
       { id: "price-book", title: "Price Book", url: "/price-book", icon: Package },
     ],

@@ -177,10 +177,7 @@ export default function Jobs() {
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Jobs</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Manage and track all your jobs</p>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Jobs</h1>
           <ReadOnlyGuard>
             <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }} className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />

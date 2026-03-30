@@ -184,10 +184,7 @@ export default function Invoices() {
         <UpgradePromptBanner />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Invoices</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Track payments and manage invoices</p>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Invoices</h1>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setFromQuoteOpen(true)} className="flex-1 sm:flex-none text-xs sm:text-sm">
               <FileText className="mr-1 sm:mr-2 h-4 w-4" />
