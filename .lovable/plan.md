@@ -1,58 +1,67 @@
 
 
-# Mobile vs Desktop Audit — Billing & Access Control Components
+# Bulk Discount Implementation + Landing Page Pricing Overhaul
 
-## Issues Found
+## Problem 1: Bulk Discount is Fake
 
-### 1. SeatManagementTable — Mobile is broken
-- On mobile (`grid-cols-1`), all fields stack vertically but with **no labels**. Role badge, seat dropdown, and cost just appear in a column with no context.
-- Access preview column is `hidden md:block` — mobile users never see what access a member has.
-- The desktop 12-column grid header row is hidden on mobile but nothing replaces it — fields appear unlabelled.
+The 10% discount for 5+ seats exists **only as FAQ text** and a constant in `useSubscriptionTier.ts`. It is never applied anywhere:
 
-**Fix**: On mobile, render each member as a **card layout** with labelled fields (Name, Role, Seat, Cost) instead of a flat grid row. Show access preview on mobile too.
+- `create-checkout-session` edge function does not check seat count or apply a coupon
+- No Stripe coupon or discount exists for this
+- The `SelectPlan` PlanCard quantity stepper doesn't show discounted pricing when seats >= 5
+- The `SeatManagementTable` info card mentions nothing about it
 
-### 2. TeamManagement invite form — cramped on mobile
-- Role and seat selectors use `grid-cols-2` with no responsive breakpoint. At 402px viewport, two `Select` components side by side are very tight.
-- The `SelectItem` descriptions ("Team Member — Jobs, calendar, time tracking") get truncated on small screens.
+**Two options:** Either implement it properly in Stripe, or remove the claim. Given you want it, we implement it.
 
-**Fix**: Stack role and seat selectors vertically on mobile (`grid-cols-1 sm:grid-cols-2`). Shorten mobile select labels.
+## Problem 2: Landing Page Pricing is Thin
 
-### 3. SelectPlan — Role × Seat table unreadable on mobile
-- The comparison table uses 4 columns (`Role | Lite | Connect | Grow`). On a 402px screen this wraps badly even with `overflow-x-auto`.
-- Plan cards use `grid-cols-1 md:grid-cols-3` — this is correct, but the seat quantity stepper buttons are small (32px) and below the 44px touch target minimum.
-
-**Fix**: Replace the table with a stacked card layout on mobile (one card per role showing what each seat unlocks). Increase stepper touch targets to 44px on mobile.
-
-### 4. SubscriptionOverview — mostly fine, minor issues
-- Billing history table uses standard `<Table>` which doesn't wrap well on mobile. Date + Amount + Status + PDF link in 4 columns is tight.
-- Cancel dialog works but radio buttons could use larger touch targets on mobile.
-
-**Fix**: On mobile, convert billing history to a card list (Date, Amount, Status, PDF link stacked). Increase radio touch targets.
-
-### 5. SubscriptionConfirmed — fine
-- Already uses `max-w-md w-full` centered layout with `p-6` padding. Works on both.
+The current `PricingPreviewSection` on the landing page shows 3 cards with 3 bullet points each and a "View full pricing" link. No annual toggle, no feature comparison, no bulk discount callout, no FAQ. Users have to click through to `/pricing` to understand what they're buying.
 
 ---
 
 ## Implementation Plan
 
-### File 1: `src/components/billing/SeatManagementTable.tsx`
-- Import `useIsMobile`
-- On mobile: render each member as a bordered card with labelled rows (Name/email, Role badge, Seat selector, Access list, Cost)
-- On desktop: keep existing 12-column grid
-- Show access preview on mobile (currently hidden)
+### 1. Create Stripe Coupon for Bulk Discount
 
-### File 2: `src/components/settings/TeamManagement.tsx`
-- Change invite selectors grid from `grid-cols-2` to `grid-cols-1 sm:grid-cols-2`
-- Add shorter labels for mobile select items
+Use the Stripe MCP tool to create a 10% coupon that can be applied during checkout when total seats >= 5.
 
-### File 3: `src/pages/SelectPlan.tsx`
-- Replace Role × Seat `<table>` with responsive layout: table on desktop, stacked cards on mobile
-- Increase stepper button size to `h-10 w-10` on mobile (44px touch target)
+### 2. Apply Discount in `create-checkout-session`
 
-### File 4: `src/components/billing/SubscriptionOverview.tsx`
-- On mobile: render billing history as stacked cards instead of table rows
-- Add `min-h-[44px]` to cancel reason radio labels for touch targets
+Edit `supabase/functions/create-checkout-session/index.ts`:
+- Count total seats from `seatCounts` object
+- If total >= 5, attach the Stripe coupon ID to the checkout session via `discounts: [{ coupon: 'BULK_5_SEATS' }]`
+- This is a one-line addition to the session config
+
+### 3. Show Discount in SelectPlan UI
+
+Edit `src/pages/SelectPlan.tsx`:
+- In `PlanCard`, when quantity >= `PRICING.BULK_DISCOUNT_THRESHOLD`, show a crossed-out original price + discounted price
+- Add a visible banner/badge near the quantity stepper: "10% off applied — 5+ seats"
+- Move the bulk discount from a hidden FAQ answer to a prominent callout card above the FAQ section
+
+### 4. Show Discount in SeatManagementTable
+
+Edit `src/components/billing/SeatManagementTable.tsx`:
+- In the explainer card, add a line: "Teams with 5+ seats get 10% off every seat, every month."
+
+### 5. Overhaul Landing Page Pricing Section
+
+Replace `src/components/landing/PricingPreviewSection.tsx` with a full pricing section that includes:
+- Monthly/Annual billing toggle (same pill style as `/pricing` page)
+- 3 plan cards with actual prices, 5-6 feature bullets each (pulled from the same data as `/pricing`)
+- Annual savings badge on each card
+- Bulk discount callout: "Teams of 5+? Save an extra 10%."
+- "Start Free Trial" CTA on each card (links to `/signup`)
+- Still keep a "Compare all features" link to `/pricing` for the full FAQ
+- Mobile: cards stack vertically, toggle uses 44px touch targets (existing pattern)
+
+### 6. Landing Page — Add Feature Comparison Table
+
+Below the pricing cards in the landing page, add a compact feature comparison grid:
+- Rows: Key features (Quotes & Invoices, AI Assistant, Voice Minutes, Expenses, Reports, Integrations, Leads, Platform Fee)
+- Columns: Lite / Connect / Grow
+- Check marks, "60 min" / "200 min", "2.5%" / "1.5%" etc.
+- Desktop: standard table. Mobile: horizontally scrollable with sticky first column
 
 ---
 
@@ -60,10 +69,11 @@
 
 | Action | File |
 |--------|------|
-| Edit | `src/components/billing/SeatManagementTable.tsx` — mobile card layout per member |
-| Edit | `src/components/settings/TeamManagement.tsx` — stack invite selectors on mobile |
-| Edit | `src/pages/SelectPlan.tsx` — responsive role×seat explainer, larger touch targets |
-| Edit | `src/components/billing/SubscriptionOverview.tsx` — mobile billing history cards, touch targets |
+| Stripe | Create `BULK_5_SEATS` coupon (10%, repeating, metadata: threshold=5) |
+| Edit | `supabase/functions/create-checkout-session/index.ts` — apply coupon when seats >= 5 |
+| Edit | `src/pages/SelectPlan.tsx` — show discounted price at 5+ seats, prominent callout |
+| Edit | `src/components/billing/SeatManagementTable.tsx` — mention bulk discount in explainer |
+| Rewrite | `src/components/landing/PricingPreviewSection.tsx` — full pricing section with toggle, comparison, bulk callout |
 
-No new files. No database changes. Pure responsive layout fixes.
+One Stripe coupon creation. One edge function edit. Three UI edits.
 
