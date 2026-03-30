@@ -89,7 +89,7 @@ interface LiveActionFeedProps {
   onRetry?: () => void;
 }
 
-export function LiveActionFeed({ items, isProcessing, onConfirmation, onOutputAction }: LiveActionFeedProps) {
+export function LiveActionFeed({ items, isProcessing, lastError, onConfirmation, onOutputAction, onRetry }: LiveActionFeedProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
