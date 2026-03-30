@@ -330,11 +330,11 @@ export default function George() {
     />
   );
 
-  // Mobile layout
+  // Mobile layout — full-screen, no DashboardLayout (avoids double header)
   if (isMobile) {
     return (
-      <DashboardLayout>
-        <div className="flex flex-col bg-background -m-3 h-[100dvh] max-h-[100dvh] overflow-hidden">
+      <ProtectedRoute>
+        <div className="flex flex-col bg-background h-[100dvh] max-h-[100dvh] overflow-hidden">
           <GeorgeSidebar
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
@@ -344,10 +344,10 @@ export default function George() {
             isMobile={true}
           />
 
+          <GeorgeMobileHeader onMenuClick={() => setSidebarOpen(true)} />
+
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="px-4 pt-2">
-              <GeorgeUsageWarning />
-            </div>
+            <GeorgeUsageWarning />
             <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
 
             {memoryPanel}
@@ -366,7 +366,6 @@ export default function George() {
                 streamingText={streamingText}
                 lastError={lastChatError}
                 onQuickAction={handleQuickAction}
-                onMenuClick={() => setSidebarOpen(true)}
               />
             )}
 
@@ -394,7 +393,7 @@ export default function George() {
           </div>
         </div>
         <GeorgeLoginDialog open={showLoginDialog} />
-      </DashboardLayout>
+      </ProtectedRoute>
     );
   }
 
