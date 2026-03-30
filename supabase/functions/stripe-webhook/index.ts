@@ -242,7 +242,7 @@ serve(async (req) => {
                   brandedEmailHtml("Payment Failed", [
                     "We were unable to process your latest payment for Foreman.",
                     "Please update your payment method to avoid any interruption to your service.",
-                    `<a `<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>`, style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>`,
+                    '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>',
                     "If you believe this is an error, please contact us at support@foreman.ie.",
                   ]),
                   `payment-failed-${invoice.id}`
