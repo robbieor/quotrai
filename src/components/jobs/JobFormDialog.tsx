@@ -175,7 +175,7 @@ export function JobFormDialog({
       setUseCustomAddress(false);
       setPoBoxWarning(false);
     }
-  }, [job, form]);
+  }, [job, form, defaultDate, defaultTime]);
 
   const handleAddressSelect = (geocoded: GeocodedAddress) => {
     setSiteAddress(geocoded.formattedAddress);
