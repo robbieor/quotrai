@@ -78,7 +78,7 @@ const LAUNCH_SCENARIO = {
   month2: { signups: 1400, trialToPaid: 15, paidCustomers: 210 },
   month3: { signups: 2200, trialToPaid: 18, paidCustomers: 396 },
   videoAssets: [
-    "Dashcam POV: tradesperson uses George AI to schedule jobs hands-free while driving",
+    "Dashcam POV: tradesperson uses Foreman AI to schedule jobs hands-free while driving",
     "On-site: snap photo of boiler → AI generates quote in 30 seconds → customer approves on portal",
     "End-of-day: GPS auto clock-out, invoices auto-sent, payment chasers running — zero admin",
     "Split-screen: pen & paper chaos vs Foreman — same job, 10x faster",
