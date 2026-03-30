@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDashboardMetrics } from "@/hooks/useDashboardData";
 import { useProfile } from "@/hooks/useProfile";
@@ -15,11 +15,27 @@ function getGreeting(): string {
 }
 
 export function MorningBriefingCard() {
-  const [dismissed, setDismissed] = useState(false);
+  const todayKey = `foreman-briefing-dismissed-${new Date().toISOString().slice(0, 10)}`;
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(todayKey) === "true");
   const { data: metrics, isLoading } = useDashboardMetrics();
   const { profile } = useProfile();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem(todayKey, "true");
+  };
+
+  // Expose re-show method via custom event
+  useEffect(() => {
+    const handler = () => {
+      localStorage.removeItem(todayKey);
+      setDismissed(false);
+    };
+    window.addEventListener("foreman-show-briefing", handler);
+    return () => window.removeEventListener("foreman-show-briefing", handler);
+  }, [todayKey]);
 
   if (dismissed || isLoading) return null;
 
@@ -51,7 +67,7 @@ export function MorningBriefingCard() {
     <div className="relative rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card p-5 sm:p-6 animate-fade-up">
       {/* Dismiss */}
       <button
-        onClick={() => setDismissed(true)}
+        onClick={handleDismiss}
         className="absolute top-3 right-3 p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
         aria-label="Dismiss"
       >

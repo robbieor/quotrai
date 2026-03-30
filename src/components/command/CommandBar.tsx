@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Search, FileText, Receipt, Briefcase, DollarSign, Users, CalendarDays, Clock, Settings, Bot, BarChart3, Package, UserPlus, FolderOpen, Zap } from "lucide-react";
+import { Search, FileText, Receipt, Briefcase, DollarSign, Users, CalendarDays, Clock, Settings, Bot, BarChart3, Package, UserPlus, FolderOpen, Zap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isSlashCommand, getSlashHints, SLASH_COMMANDS } from "@/utils/slashCommandParser";
+import { CommandResult } from "./CommandResult";
+import { supabase } from "@/integrations/supabase/client";
 
 const NAV_ITEMS = [
   { label: "Operations", url: "/dashboard", icon: BarChart3, keywords: ["dashboard", "home", "overview"] },
@@ -38,6 +40,8 @@ interface CommandBarProps {
 export function CommandBar({ open, onOpenChange }: CommandBarProps) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [result, setResult] = useState<{ title: string; items: { label: string; value: string }[]; link?: string; linkLabel?: string } | null>(null);
+  const [resultLoading, setResultLoading] = useState(false);
 
   const handleSelect = useCallback((callback: () => void) => {
     onOpenChange(false);
@@ -65,9 +69,30 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
     handleAIAction(query.trim());
   }, [query, handleAIAction]);
 
+  const handleInlineQuery = useCallback(async (message: string, title: string, link: string) => {
+    setResultLoading(true);
+    try {
+      const { data } = await supabase.functions.invoke("george-chat", {
+        body: { message, conversationId: null, mode: "quick" },
+      });
+      const text = data?.reply || data?.message || "";
+      const lines = text.split("\n").filter((l: string) => l.trim());
+      setResult({
+        title,
+        items: lines.slice(0, 8).map((l: string, i: number) => ({ label: `${i + 1}`, value: l.replace(/^[-•*]\s*/, "") })),
+        link,
+        linkLabel: "View All",
+      });
+    } catch {
+      setResult({ title, items: [{ label: "Error", value: "Could not fetch data" }], link });
+    } finally {
+      setResultLoading(false);
+    }
+  }, []);
+
   // Reset query on close
   useEffect(() => {
-    if (!open) setQuery("");
+    if (!open) { setQuery(""); setResult(null); }
   }, [open]);
 
   return (
@@ -80,6 +105,27 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
           className="text-base"
         />
         <CommandList className="max-h-[60vh]">
+          {/* Inline result display */}
+          {(result || resultLoading) && (
+            <div className="border-b border-border">
+              {resultLoading ? (
+                <div className="flex items-center justify-center gap-2 py-6">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Fetching...</span>
+                </div>
+              ) : result && (
+                <CommandResult
+                  title={result.title}
+                  items={result.items}
+                  link={result.link}
+                  linkLabel={result.linkLabel}
+                  onClear={() => setResult(null)}
+                  onNavigate={(url) => { onOpenChange(false); navigate(url); }}
+                />
+              )}
+            </div>
+          )}
+
           <CommandEmpty className="py-6 text-center">
             <button
               onClick={handleFreeformAI}
@@ -125,7 +171,15 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
               <CommandItem
                 key={action.action}
                 value={action.label}
-                onSelect={() => handleAIAction(action.message)}
+                onSelect={() => {
+                  if (action.action === "todays_jobs") {
+                    handleInlineQuery(action.message, "Today's Jobs", "/jobs");
+                  } else if (action.action === "overdue") {
+                    handleInlineQuery(action.message, "Overdue Invoices", "/invoices?status=overdue");
+                  } else {
+                    handleAIAction(action.message);
+                  }
+                }}
                 className="gap-3"
               >
                 <action.icon className="h-4 w-4 text-muted-foreground" />

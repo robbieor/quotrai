@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, TrendingUp, TrendingDown, Package, Clock, Receipt, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Job, JobStatus } from "@/hooks/useJobs";
+import { JobSuggestion } from "@/components/shared/ForemanSuggestion";
 
 interface JobDetailSheetProps {
   open: boolean;
@@ -136,6 +137,15 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
               <p className="text-sm text-muted-foreground mb-1">Description</p>
               <p className="text-sm">{job.description}</p>
             </div>
+          )}
+
+          {/* AI Suggestion */}
+          {!pnlLoading && (
+            <JobSuggestion
+              status={job.status}
+              hasTimeEntries={(pnl?.timeEntries?.length || 0) > 0}
+              margin={margin}
+            />
           )}
 
           <Separator />

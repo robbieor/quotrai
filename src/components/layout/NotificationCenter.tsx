@@ -1,4 +1,4 @@
-import { Bell, Check, CheckCheck, FileText, CreditCard, Send, Briefcase, AlertTriangle, Clock } from "lucide-react";
+import { Bell, Check, CheckCheck, FileText, CreditCard, Send, Briefcase, AlertTriangle, Clock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -135,6 +135,43 @@ export function NotificationCenter() {
                         addSuffix: true,
                       })}
                     </p>
+                    {/* Smart inline actions */}
+                    {notification.type === "invoice_overdue" && (
+                      <button
+                        className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-destructive hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!notification.is_read) markAsRead.mutate(notification.id);
+                          navigate("/invoices?status=overdue");
+                        }}
+                      >
+                        <Send className="h-2.5 w-2.5" /> Send Reminder
+                      </button>
+                    )}
+                    {notification.type === "quote_declined" && (
+                      <button
+                        className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!notification.is_read) markAsRead.mutate(notification.id);
+                          navigate("/quotes");
+                        }}
+                      >
+                        <FileText className="h-2.5 w-2.5" /> Follow Up
+                      </button>
+                    )}
+                    {notification.type === "lead_follow_up" && (
+                      <button
+                        className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!notification.is_read) markAsRead.mutate(notification.id);
+                          navigate("/leads");
+                        }}
+                      >
+                        <Clock className="h-2.5 w-2.5" /> Follow Up
+                      </button>
+                    )}
                   </div>
                 </DropdownMenuItem>
               );

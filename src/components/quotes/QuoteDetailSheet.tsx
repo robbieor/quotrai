@@ -6,6 +6,7 @@ import { Download, Mail, Pencil, Link2, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
+import { QuoteSuggestion } from "@/components/shared/ForemanSuggestion";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
 
 const statusColors = {
@@ -75,6 +76,14 @@ export function QuoteDetailSheet({
               </span>
             )}
           </div>
+
+          {/* AI Suggestion */}
+          <QuoteSuggestion
+            status={quote.status}
+            createdAt={quote.created_at}
+            onSend={() => onSendEmail(quote)}
+            onEmail={() => onSendEmail(quote)}
+          />
 
           {/* Actions */}
           <div className="flex gap-2 flex-wrap">
