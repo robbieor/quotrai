@@ -149,7 +149,16 @@ export function useForemanChat({
               // Check for structured response (action plan)
               if (parsed.action_plan || parsed.type === "structured") {
                 receivedConversationId = parsed.conversation_id;
-                onStructuredResponse?.(parsed, receivedConversationId);
+                const plan = parsed.action_plan;
+                // If purely conversational (no confirmation gate, no pending tool calls),
+                // treat as a regular text message instead of an action plan card
+                const isConversational = plan && !plan.confirmation_gate && (!plan.pending_tool_calls || plan.pending_tool_calls.length === 0);
+                if (isConversational) {
+                  const msg = parsed.message || plan.text_response || "";
+                  if (msg) fullText = msg;
+                } else {
+                  onStructuredResponse?.(parsed, receivedConversationId);
+                }
                 streamDone = true;
                 break;
               }
@@ -207,7 +216,16 @@ export function useForemanChat({
         const data = await resp.json();
         const newConversationId = data.conversation_id;
         if (data.action_plan) {
-          onStructuredResponse?.(data, newConversationId);
+          const plan = data.action_plan;
+          // If purely conversational (no confirmation gate, no pending tool calls),
+          // render as a regular chat message instead of an action plan card
+          const isConversational = !plan.confirmation_gate && (!plan.pending_tool_calls || plan.pending_tool_calls.length === 0);
+          if (isConversational) {
+            const msg = data.message || plan.text_response || "I'm here to help!";
+            onAssistantMessage?.(msg, newConversationId);
+          } else {
+            onStructuredResponse?.(data, newConversationId);
+          }
         } else {
           const msg = data.message || "I'm here to help!";
           onAssistantMessage?.(msg, newConversationId);
