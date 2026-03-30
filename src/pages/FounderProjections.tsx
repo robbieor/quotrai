@@ -19,11 +19,11 @@ const UK_TRADE_BUSINESSES = 300_000;
 const GLOBAL_TRADE_BUSINESSES = 5_000_000;
 const MARKET_CAGR = 0.18;
 
-// Updated 2-tier pricing + Enterprise (contact us)
+// 3-tier pricing: Lite, Connect, Grow
 const TIERS = {
-  starter: { price: 12, label: "Starter Seat", hasAI: false },
-  pro: { price: 29, label: "Pro Seat", hasAI: true },
-  enterprise: { price: 49, label: "Enterprise Seat", hasAI: true },
+  lite: { price: 19, label: "Lite Seat", hasAI: false },
+  connect: { price: 39, label: "Connect Seat", hasAI: true },
+  grow: { price: 69, label: "Grow Seat", hasAI: true },
 };
 const ANNUAL_DISCOUNT = 0.15;
 const PLATFORM_FEE_RATE = 0.025; // 2.5% on invoice payments
