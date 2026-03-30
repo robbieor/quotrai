@@ -34,6 +34,8 @@ import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import { useEffect } from "react";
 import { EndOfDaySummary } from "@/components/dashboard/EndOfDaySummary";
+import { WeekPlanningStrip } from "@/components/dashboard/WeekPlanningStrip";
+import { MorningBriefingCard } from "@/components/dashboard/MorningBriefingCard";
 
 const quickActions = [
   { label: "New Quote", icon: FileText, route: "/quotes" },
@@ -127,8 +129,18 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* 1. Control Header — operational summary */}
+        {/* Morning Briefing */}
         <AnimatedSection delay={0}>
+          <MorningBriefingCard />
+        </AnimatedSection>
+
+        {/* Weekly Planning Strip */}
+        <AnimatedSection delay={20}>
+          <WeekPlanningStrip />
+        </AnimatedSection>
+
+        {/* 1. Control Header — operational summary */}
+        <AnimatedSection delay={40}>
           <ControlHeader data={data?.controlHeader} isLoading={isLoading} showAI={canAccessGeorge} />
         </AnimatedSection>
 

@@ -6,6 +6,7 @@ import { Download, Mail, Pencil, Link2, Receipt, DollarSign } from "lucide-react
 import { format, isPast, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Invoice } from "@/hooks/useInvoices";
+import { InvoiceSuggestion } from "@/components/shared/ForemanSuggestion";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
 
 const statusColors = {
@@ -87,6 +88,15 @@ export function InvoiceDetailSheet({
               Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
             </span>
           </div>
+
+          {/* AI Suggestion */}
+          <InvoiceSuggestion
+            status={displayStatus}
+            dueDate={invoice.due_date}
+            total={Number(invoice.total)}
+            formatAmount={(v) => formatCurrencyValue(v, currency)}
+            onChase={() => onSendEmail(invoice)}
+          />
 
           {/* Actions */}
           <div className="flex gap-2 flex-wrap">
