@@ -1,89 +1,58 @@
 
 
-# Access Control Audit — What's Working, What's Missing, What Users Need to Understand
+# Mobile vs Desktop Audit — Billing & Access Control Components
 
-## Current State: Two Systems, Both Functional but Unexplained
+## Issues Found
 
-You have **two parallel access control dimensions** that both work at the code level but are never explained to users:
+### 1. SeatManagementTable — Mobile is broken
+- On mobile (`grid-cols-1`), all fields stack vertically but with **no labels**. Role badge, seat dropdown, and cost just appear in a column with no context.
+- Access preview column is `hidden md:block` — mobile users never see what access a member has.
+- The desktop 12-column grid header row is hidden on mobile but nothing replaces it — fields appear unlabelled.
 
-### Dimension 1: Role (who you are in the company)
-| Role | Code value | What they see |
-|------|-----------|---------------|
-| CEO/Owner | `ceo` / `owner` | Everything — all nav, all pages, all billing |
-| Manager | `manager` | Everything except billing management |
-| Member | `member` | Jobs, Calendar, Time Tracking only |
+**Fix**: On mobile, render each member as a **card layout** with labelled fields (Name, Role, Seat, Cost) instead of a flat grid row. Show access preview on mobile too.
 
-**How it works:**
-- `useUserRole()` → calls `get_user_team_role()` RPC
-- `RoleGuard` in `App.tsx` → redirects members away from forbidden pages
-- `AppSidebar` → filters nav items via `MEMBER_ALLOWED_IDS`
-- This is working correctly at the code level
+### 2. TeamManagement invite form — cramped on mobile
+- Role and seat selectors use `grid-cols-2` with no responsive breakpoint. At 402px viewport, two `Select` components side by side are very tight.
+- The `SelectItem` descriptions ("Team Member — Jobs, calendar, time tracking") get truncated on small screens.
 
-### Dimension 2: Seat Type (what plan each person is on)
-| Seat | Price | What it unlocks |
-|------|-------|----------------|
-| Lite (€19) | Core tools — no AI, no expenses, no reports |
-| Connect (€39) | AI, expenses, documents, reports, recurring invoices |
-| Grow (€69) | Leads, integrations, advanced reporting, API |
+**Fix**: Stack role and seat selectors vertically on mobile (`grid-cols-1 sm:grid-cols-2`). Shorten mobile select labels.
 
-**How it works:**
-- `useSeatAccess()` → calls `get_user_seat_type()` RPC
-- `SeatGuard` wraps routes in `App.tsx` (Connect: expenses, AI, reports, docs; Grow: leads)
-- `PlanGate` wraps dashboard widgets (Grow: profitability scatter, aging chart)
-- Owners/managers bypass seat checks via `canAccess()` override
-- Server-side: edge functions (`george-chat`, `xero-sync`) validate seat type via `get_user_seat_type_for` RPC
+### 3. SelectPlan — Role × Seat table unreadable on mobile
+- The comparison table uses 4 columns (`Role | Lite | Connect | Grow`). On a 402px screen this wraps badly even with `overflow-x-auto`.
+- Plan cards use `grid-cols-1 md:grid-cols-3` — this is correct, but the seat quantity stepper buttons are small (32px) and below the 44px touch target minimum.
 
-### What's Actually Broken / Missing
+**Fix**: Replace the table with a stacked card layout on mobile (one card per role showing what each seat unlocks). Increase stepper touch targets to 44px on mobile.
 
-1. **No user-facing explanation of roles or seats anywhere.** The `SeatManagementTable` shows role badges and seat dropdowns but never explains what "Lite" vs "Connect" means in terms of access. Users are assigning seats without understanding what they're paying for.
+### 4. SubscriptionOverview — mostly fine, minor issues
+- Billing history table uses standard `<Table>` which doesn't wrap well on mobile. Date + Amount + Status + PDF link in 4 columns is tight.
+- Cancel dialog works but radio buttons could use larger touch targets on mobile.
 
-2. **Team invitation flow doesn't let you pick seat type.** When an owner invites someone via `TeamManagement`, they enter an email and hit send. The seat type defaults to `lite` (via the sync trigger). The owner has to go to the *separate* `SeatManagementTable` after to change it. This is a disconnected flow.
+**Fix**: On mobile, convert billing history to a card list (Date, Amount, Status, PDF link stacked). Increase radio touch targets.
 
-3. **Role assignment is invisible.** There's no UI to change a member's role (owner/manager/member). Roles come from `team_memberships.role` set at invite time, but the invite form has no role picker.
-
-4. **The two concepts (role vs seat) are confusing together.** A "member" role on a "Connect" seat can access AI but not invoices. A "manager" role on a "Lite" seat can see everything because managers bypass seat checks. This is counterintuitive and never explained.
-
-5. **SelectPlan page explains plan features but not role restrictions.** Users see what Lite/Connect/Grow include but have no idea that "member" role users can only see Jobs/Calendar/Time Tracking regardless of seat.
+### 5. SubscriptionConfirmed — fine
+- Already uses `max-w-md w-full` centered layout with `p-6` padding. Works on both.
 
 ---
 
-## Plan: Make Access Control Understandable
+## Implementation Plan
 
-### 1. Add a "What's Included" tooltip/panel to SeatManagementTable
+### File 1: `src/components/billing/SeatManagementTable.tsx`
+- Import `useIsMobile`
+- On mobile: render each member as a bordered card with labelled rows (Name/email, Role badge, Seat selector, Access list, Cost)
+- On desktop: keep existing 12-column grid
+- Show access preview on mobile (currently hidden)
 
-In `SeatManagementTable.tsx`, add a collapsible section or info card above the member list:
+### File 2: `src/components/settings/TeamManagement.tsx`
+- Change invite selectors grid from `grid-cols-2` to `grid-cols-1 sm:grid-cols-2`
+- Add shorter labels for mobile select items
 
-```text
-┌──────────────────────────────────────────────────┐
-│  Understanding Seats & Roles                      │
-│                                                    │
-│  SEAT TYPE controls which features are available:  │
-│  • Lite — Jobs, quotes, invoices, scheduling       │
-│  • Connect — + AI assistant, expenses, reports     │
-│  • Grow — + leads pipeline, integrations, API      │
-│                                                    │
-│  ROLE controls what data they can see:             │
-│  • Owner — Full access, billing, team management   │
-│  • Manager — Full access, no billing               │  
-│  • Team Member — Jobs, calendar, time tracking     │
-└──────────────────────────────────────────────────┘
-```
+### File 3: `src/pages/SelectPlan.tsx`
+- Replace Role × Seat `<table>` with responsive layout: table on desktop, stacked cards on mobile
+- Increase stepper button size to `h-10 w-10` on mobile (44px touch target)
 
-### 2. Add role picker to TeamManagement invite flow
-
-Edit `TeamManagement.tsx` — add a `Select` for role (Owner/Manager/Member) next to the email input when inviting. Pass the selected role to `send-team-invitation`.
-
-### 3. Add seat type picker to TeamManagement invite flow
-
-Same invite form — add a seat type selector (Lite/Connect/Grow) so the owner sets both role AND seat at invite time, not after.
-
-### 4. Add feature access column to SeatManagementTable
-
-Next to each member's seat dropdown, show a compact list of what they can access based on their role + seat combination. E.g., a member on Connect sees "Jobs, Calendar, Time Tracking" (role-limited), not the full Connect feature set.
-
-### 5. Add "What each seat includes" section to SelectPlan
-
-Below the pricing cards on `/select-plan`, add a comparison table showing the intersection of role × seat — so owners understand that buying a Connect seat for a "member" role user won't give them reports access (role blocks it).
+### File 4: `src/components/billing/SubscriptionOverview.tsx`
+- On mobile: render billing history as stacked cards instead of table rows
+- Add `min-h-[44px]` to cancel reason radio labels for touch targets
 
 ---
 
@@ -91,10 +60,10 @@ Below the pricing cards on `/select-plan`, add a comparison table showing the in
 
 | Action | File |
 |--------|------|
-| Edit | `src/components/billing/SeatManagementTable.tsx` — add explainer card + access preview column |
-| Edit | `src/components/settings/TeamManagement.tsx` — add role + seat pickers to invite flow |
-| Edit | `src/pages/SelectPlan.tsx` — add role × seat explanation section |
-| Edit | `supabase/functions/send-team-invitation/index.ts` — accept role + seat_type params |
+| Edit | `src/components/billing/SeatManagementTable.tsx` — mobile card layout per member |
+| Edit | `src/components/settings/TeamManagement.tsx` — stack invite selectors on mobile |
+| Edit | `src/pages/SelectPlan.tsx` — responsive role×seat explainer, larger touch targets |
+| Edit | `src/components/billing/SubscriptionOverview.tsx` — mobile billing history cards, touch targets |
 
-No database migrations needed — `team_memberships.role` and `org_members_v2.seat_type` already exist.
+No new files. No database changes. Pure responsive layout fixes.
 
