@@ -160,6 +160,47 @@ export default function SelectPlan() {
           </CardContent>
         </Card>
 
+        {/* Role × Seat Explainer */}
+        <Card className="mb-12">
+          <CardHeader>
+            <CardTitle className="text-lg">How Roles & Seats Work Together</CardTitle>
+            <CardDescription>
+              Each team member has a <strong>role</strong> (what data they can see) and a <strong>seat type</strong> (which features they can use). Access is the intersection of both.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Role</th>
+                    <th className="text-left py-2 px-4 font-medium text-muted-foreground">Lite Seat</th>
+                    <th className="text-left py-2 px-4 font-medium text-muted-foreground">Connect Seat</th>
+                    <th className="text-left py-2 px-4 font-medium text-muted-foreground">Grow Seat</th>
+                  </tr>
+                </thead>
+                <tbody className="text-xs">
+                  <tr className="border-b">
+                    <td className="py-3 pr-4 font-medium">Owner / Manager</td>
+                    <td className="py-3 px-4">Jobs, Quotes, Invoices, Scheduling</td>
+                    <td className="py-3 px-4">+ AI, Expenses, Reports, Documents</td>
+                    <td className="py-3 px-4">+ Leads, Integrations, Advanced Reports</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 pr-4 font-medium">Team Member</td>
+                    <td className="py-3 px-4 text-muted-foreground">Jobs, Calendar, Time Tracking</td>
+                    <td className="py-3 px-4 text-muted-foreground">Jobs, Calendar, Time Tracking</td>
+                    <td className="py-3 px-4 text-muted-foreground">Jobs, Calendar, Time Tracking</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              💡 Team Members have the same access regardless of seat type — assign Lite seats to save costs.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* FAQ Section */}
         <div className="space-y-6">
           <h3 className="text-xl font-semibold text-center">Frequently Asked Questions</h3>
@@ -174,11 +215,15 @@ export default function SelectPlan() {
             />
             <FaqCard
               q="What's included in the free trial?"
-              a={`Full Pro access for 7 days — including ${PRICING.VOICE_MINUTES_PER_SEAT} minutes of Foreman AI voice per seat, GPS tracking, and reports. Card is collected to ensure seamless transition after your 7-day trial. Cancel anytime — you won't be charged until the trial ends.`}
+              a={`Full Connect access for 7 days — including ${PRICING.VOICE_MINUTES_PER_SEAT} minutes of Foreman AI voice per seat, GPS tracking, and reports. Card is collected to ensure seamless transition after your 7-day trial. Cancel anytime — you won't be charged until the trial ends.`}
             />
             <FaqCard
               q="Do you offer bulk discounts?"
               a={`Yes — ${PRICING.BULK_DISCOUNT * 100}% off automatically applied for ${PRICING.BULK_DISCOUNT_THRESHOLD}+ seats on any plan.`}
+            />
+            <FaqCard
+              q="What's the difference between roles and seats?"
+              a="Roles control data visibility (Owner sees everything, Team Members see jobs/calendar only). Seat types control features (Lite = core tools, Connect = + AI & reports, Grow = + integrations & leads). Team Members only access Jobs, Calendar & Time Tracking regardless of seat — use Lite seats for them."
             />
           </div>
         </div>

@@ -115,7 +115,7 @@ export function useSendInvitation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, baseUrl }: { email: string; baseUrl: string }) => {
+    mutationFn: async ({ email, baseUrl, role, seatType }: { email: string; baseUrl: string; role?: string; seatType?: string }) => {
       // Get team info
       const { data: teamId } = await supabase.rpc("get_user_team_id");
       if (!teamId) throw new Error("No team found");
@@ -159,6 +159,8 @@ export function useSendInvitation() {
           teamName: team?.name || "Your Team",
           inviterName: profile?.full_name || "A team member",
           inviteUrl,
+          role: role || "member",
+          seatType: seatType || "lite",
         },
       });
 

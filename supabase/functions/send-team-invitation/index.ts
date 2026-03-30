@@ -13,6 +13,8 @@ interface InvitationRequest {
   teamName: string;
   inviterName: string;
   inviteUrl: string;
+  role?: string;
+  seatType?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -50,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { email, teamName, inviterName, inviteUrl }: InvitationRequest = await req.json();
+    const { email, teamName, inviterName, inviteUrl, role, seatType }: InvitationRequest = await req.json();
 
     if (!email || !teamName || !inviteUrl) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -78,6 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>Hi there,</p>
             <p><strong>${inviterName || "A team member"}</strong> has invited you to join:</p>
             <div style="font-size: 28px; font-weight: 700; text-align: center; margin: 15px 0; color: #00B386;">${teamName}</div>
+            ${role || seatType ? `<p style="text-align: center; color: #64748b; font-size: 14px;">Role: <strong>${role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : 'Team Member'}</strong> · Seat: <strong>${seatType === 'grow' ? 'Grow' : seatType === 'connect' ? 'Connect' : 'Lite'}</strong></p>` : ''}
             <p style="text-align: center; color: #64748b;">Join the team to collaborate on jobs, quotes, invoices, and more.</p>
             <div style="text-align: center;">
               <a href="${inviteUrl}" style="display: inline-block; background: #00E6A0; color: #0f172a; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0;">Accept Invitation</a>
