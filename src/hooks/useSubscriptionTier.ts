@@ -187,6 +187,6 @@ export function useSubscriptionTier() {
     trialDaysRemaining,
     startTrial: startTrialMutation.mutateAsync,
     isStartingTrial: startTrialMutation.isPending,
-    currentPlan: PLAN_DETAILS,
+    currentPlan: CONNECT_SEAT_DETAILS,
   };
 }

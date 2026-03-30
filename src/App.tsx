@@ -143,6 +143,7 @@ const App = () => {
                 {/* Onboarding */}
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/select-plan" element={<SelectPlan />} />
+                <Route path="/subscription-confirmed" element={<SubscriptionConfirmed />} />
 
                 {/* Protected dashboard pages — all seats */}
                 <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
