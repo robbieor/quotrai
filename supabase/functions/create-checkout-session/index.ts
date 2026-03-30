@@ -163,10 +163,22 @@ serve(async (req) => {
       }
     }
 
-    // Skip trial if user already had one (pre-card signups)
-    if (trialDays > 0 && subscription?.trial_ends_at) {
-      trialDays = 0;
-      logStep("User already had a trial, skipping", { trial_ends_at: subscription.trial_ends_at });
+    const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
+      metadata: { org_id: orgMember.org_id },
+    };
+
+    // Preserve any remaining in-app trial for pre-card signups instead of sending Stripe an invalid 0-day trial
+    if (!isUpgrade && subscription?.trial_ends_at) {
+      const trialEnd = new Date(subscription.trial_ends_at);
+      if (!Number.isNaN(trialEnd.getTime()) && trialEnd.getTime() > Date.now()) {
+        subscriptionData.trial_end = Math.floor(trialEnd.getTime() / 1000);
+        logStep("Preserving existing trial", { trial_ends_at: subscription.trial_ends_at });
+      } else {
+        trialDays = 0;
+        logStep("Previous trial already expired", { trial_ends_at: subscription.trial_ends_at });
+      }
+    } else if (!isUpgrade && trialDays > 0) {
+      subscriptionData.trial_period_days = trialDays;
     }
 
     // If upgrading with existing subscription, go to portal
@@ -188,10 +200,7 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/settings?tab=billing&success=true`,
       cancel_url: `${origin}/settings?tab=billing&cancelled=true`,
-      subscription_data: {
-        trial_period_days: isUpgrade ? 0 : trialDays,
-        metadata: { org_id: orgMember.org_id },
-      },
+      subscription_data: subscriptionData,
       billing_address_collection: "required",
       payment_method_collection: "always",
     });
