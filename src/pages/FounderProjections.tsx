@@ -153,9 +153,9 @@ export default function FounderProjections() {
     const custAtMonth = Math.round(customers * Math.pow(1 + growthRate / 100, month));
     const seatsAtMonth = custAtMonth * avgSeats;
     const seatRev = (
-      Math.round(seatsAtMonth * (tierMix.starter / 100)) * TIERS.starter.price +
-      Math.round(seatsAtMonth * (tierMix.pro / 100)) * TIERS.pro.price +
-      Math.round(seatsAtMonth * (tierMix.enterprise / 100)) * TIERS.enterprise.price
+      Math.round(seatsAtMonth * (tierMix.lite / 100)) * TIERS.lite.price +
+      Math.round(seatsAtMonth * (tierMix.connect / 100)) * TIERS.connect.price +
+      Math.round(seatsAtMonth * (tierMix.grow / 100)) * TIERS.grow.price
     ) * monthlyBillingFactor;
     const feeRev = custAtMonth * avgInvoiceVolume * PLATFORM_FEE_RATE;
     const mrr = seatRev + feeRev;
