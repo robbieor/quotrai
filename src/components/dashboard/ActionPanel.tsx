@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, AlertCircle, TrendingUp, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, AlertCircle, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { ActionAlert } from "@/hooks/useDashboardAnalytics";
-import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 
 interface ActionPanelProps {
@@ -39,7 +38,6 @@ const severityConfig = {
 
 export function ActionPanel({ alerts }: ActionPanelProps) {
   const navigate = useNavigate();
-  const { segment } = useDashboardFilters();
   const { formatCurrency } = useCurrency();
   const { canAccessGeorge } = useSeatAccess();
 
