@@ -687,7 +687,7 @@ export default function FounderProjections() {
                       { label: "Month 2", data: LAUNCH_SCENARIO.month2, spend: LAUNCH_SCENARIO.adSpendMonth2 },
                       { label: "Month 3", data: LAUNCH_SCENARIO.month3, spend: LAUNCH_SCENARIO.adSpendMonth3 },
                     ].map((m) => {
-                      const avgSeatRev = (TIERS.starter.price * 0.4 + TIERS.pro.price * 0.45 + TIERS.enterprise.price * 0.15);
+                      const avgSeatRev = (TIERS.lite.price * 0.4 + TIERS.connect.price * 0.45 + TIERS.grow.price * 0.15);
                       const mrrAtMonth = m.data.paidCustomers * avgSeats * avgSeatRev;
                       const cac = m.spend / m.data.paidCustomers;
                       return (

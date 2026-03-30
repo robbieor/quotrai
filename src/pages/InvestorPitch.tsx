@@ -145,8 +145,8 @@ export default function InvestorPitch() {
             <CardContent className="p-5 text-center">
               <Users className="h-6 w-6 text-primary mx-auto mb-2" />
               <p className="text-sm font-medium text-muted-foreground">Seat Revenue</p>
-              <p className="text-xl font-bold text-foreground">€12–€29/seat/mo</p>
-              <p className="text-xs text-muted-foreground mt-1">2 tiers: Starter (€12) & Pro (€29)</p>
+              <p className="text-xl font-bold text-foreground">€19–€69/seat/mo</p>
+              <p className="text-xs text-muted-foreground mt-1">3 tiers: Lite (€19), Connect (€39) & Grow (€69)</p>
             </CardContent>
           </Card>
           <Card className="border-primary/20">
