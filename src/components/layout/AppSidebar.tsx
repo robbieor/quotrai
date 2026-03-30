@@ -8,6 +8,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
+import { useSidebarBadges } from "@/hooks/useSidebarBadges";
 import foremanLogo from "@/assets/foreman-logo.png";
 import type { SeatType } from "@/hooks/useSubscriptionTier";
 
