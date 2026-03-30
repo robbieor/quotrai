@@ -88,7 +88,7 @@ const LAUNCH_SCENARIO = {
 
 const FEATURES_SHIPPED = [
   { icon: FileText, label: "Quoting & Invoicing", detail: "Multi-currency, PDF generation, tax auto-detect" },
-  { icon: Bot, label: "Foreman AI (George)", detail: "Voice agent, chat, photo quoting, AI scheduling" },
+  { icon: Bot, label: "Foreman AI", detail: "Voice agent, chat, photo quoting, AI scheduling" },
   { icon: Globe, label: "Multi-Currency", detail: "20+ countries, auto-detect from customer country" },
   { icon: RefreshCcw, label: "Recurring Invoices", detail: "Weekly/monthly/quarterly auto-generation" },
   { icon: Mail, label: "Automated Payment Chasers", detail: "Escalating reminders for overdue invoices" },
