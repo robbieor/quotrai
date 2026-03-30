@@ -125,9 +125,9 @@ export default function FounderProjections() {
 
   // Revenue calculations
   const totalSeats = customers * avgSeats;
-  const starterSeats = Math.round(totalSeats * (tierMix.starter / 100));
-  const proSeats = Math.round(totalSeats * (tierMix.pro / 100));
-  const enterpriseSeats = Math.round(totalSeats * (tierMix.enterprise / 100));
+  const liteSeats = Math.round(totalSeats * (tierMix.lite / 100));
+  const connectSeats = Math.round(totalSeats * (tierMix.connect / 100));
+  const growSeats = Math.round(totalSeats * (tierMix.grow / 100));
 
   const monthlyBillingFactor = 1 - (annualBillingPct / 100) * ANNUAL_DISCOUNT;
   const seatMRR = (
