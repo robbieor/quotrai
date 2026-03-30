@@ -145,9 +145,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
   if (isAssistant) {
     return (
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-white border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-          <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-        </div>
+        <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         </div>
@@ -171,9 +169,7 @@ function DesktopMessageBubble({ message }: { message: Message }) {
   return (
     <div className={cn("flex gap-3", isAssistant ? "justify-start" : "justify-end")}>
       {isAssistant && (
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-          <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-        </div>
+        <ForemanAvatar size="md" />
       )}
 
       <div
