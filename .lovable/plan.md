@@ -1,80 +1,23 @@
 
 
-## Read-Only Enforcement + Multi-Seat Plan Selection Flow
+## Fix: Remove Stuck Trial Banner + Fix Manage Billing Spinner
 
-### Problem
+### Issue 1: Trial Banner stuck at top, redundant
+The `TrialBanner` in `DashboardLayout` duplicates the trial countdown already shown in `SubscriptionOverview` on the Settings page. It cannot be dismissed and takes up permanent screen space. The `TrialCountdownPopup` (dismissible dialog) already handles trial reminders.
 
-1. **`useReadOnly` hook exists but is never consumed** — no component checks it, so expired-trial users can still create/edit/delete freely
-2. **SelectPlan only allows 1 seat per plan** — no way to add seats for team members at checkout
-3. **No full-screen read-only gate** — when trial expires, users should see their data but be blocked from mutations with a clear "Subscribe to continue" overlay on action buttons
+**Fix:** Remove `<TrialBanner />` from `DashboardLayout.tsx` entirely. The dismissible `TrialCountdownPopup` and the `SubscriptionOverview` card handle trial messaging.
 
-### Plan (4 changes)
+### Issue 2: "Manage Billing" button spins forever
+For trial users, there is no `stripe_customer_id` in `subscriptions_v2` yet (they haven't completed Stripe Checkout). The `create-customer-portal-session` edge function throws `"No Stripe customer found"` which returns a 400. However the button stays in a loading state because `supabase.functions.invoke` may not throw on non-2xx responses — it returns `{ data: { error: "..." }, error: null }`, so the catch block never fires and `data?.url` is undefined, meaning `window.location.href` is never set and the `finally` block may not behave as expected.
 
-#### 1. Create `ReadOnlyBanner` — full-width persistent banner for expired accounts
-**File:** `src/components/billing/ReadOnlyBanner.tsx`
-
-- Uses `useReadOnly()` — only renders when `true`
-- Full-width destructive banner pinned above content: "Your trial has ended. Your data is safe but you're in read-only mode. Subscribe to regain full access."
-- Contains "Choose Plan" CTA button linking to `/select-plan`
-- Cannot be dismissed (unlike trial countdown)
-
-#### 2. Create `ReadOnlyGuard` wrapper component
-**File:** `src/components/auth/ReadOnlyGuard.tsx`
-
-- Wraps any create/edit/delete button or form dialog
-- When `useReadOnly()` returns `true`: shows a tooltip "Subscribe to unlock" and disables the action (pointer-events-none + opacity)
-- When `false`: renders children normally
-- Apply this guard to the key mutation entry points:
-  - `QuoteFormDialog` open trigger
-  - `InvoiceFormDialog` open trigger
-  - `JobFormDialog` open trigger
-  - `CustomerFormDialog` open trigger
-  - Dashboard quick-action buttons (New Quote, New Invoice, New Job)
-
-#### 3. Add multi-seat quantity selector to `SelectPlan`
-**File:** `src/pages/SelectPlan.tsx`
-
-- Add a seat quantity stepper (min 1, max 50) per plan card
-- Pass `seatCounts: { [seatCode]: quantity }` to `create-checkout-session`
-- Show per-seat price × quantity = total line beneath the price
-- Label: "Add seats for your team — you can change seat types later in Settings"
-
-#### 4. Wire `ReadOnlyBanner` into `DashboardLayout` + guard key pages
-**Files:** `src/components/layout/DashboardLayout.tsx`, `src/pages/Dashboard.tsx`, `src/pages/Quotes.tsx`, `src/pages/Invoices.tsx`, `src/pages/Jobs.tsx`, `src/pages/Customers.tsx`
-
-- Add `<ReadOnlyBanner />` to `DashboardLayout` (renders above `TrialBanner` when expired)
-- Wrap the "New Quote", "New Invoice", "New Job", "New Customer" buttons with `<ReadOnlyGuard>`
-- The guard component handles all the UX — pages just wrap their CTA buttons
+**Fix:** In `SubscriptionOverview.tsx`:
+- Check `data?.error` explicitly after invoke and throw
+- For trial users without `stripe_customer_id`, change the button to "Choose a Plan" linking to `/select-plan` instead of trying to open a nonexistent Stripe portal
 
 ### Files changed
 
 | File | Change |
 |------|--------|
-| `src/components/billing/ReadOnlyBanner.tsx` | New — persistent subscribe banner for expired accounts |
-| `src/components/auth/ReadOnlyGuard.tsx` | New — wrapper that disables mutations when read-only |
-| `src/pages/SelectPlan.tsx` | Add seat quantity stepper per plan card |
-| `src/components/layout/DashboardLayout.tsx` | Add `ReadOnlyBanner` |
-| `src/pages/Dashboard.tsx` | Wrap quick-action buttons with `ReadOnlyGuard` |
-| `src/pages/Quotes.tsx` | Wrap "New Quote" with `ReadOnlyGuard` |
-| `src/pages/Invoices.tsx` | Wrap "New Invoice" with `ReadOnlyGuard` |
-| `src/pages/Jobs.tsx` | Wrap "New Job" with `ReadOnlyGuard` |
-| `src/pages/Customers.tsx` | Wrap "New Customer" with `ReadOnlyGuard` |
-
-### How it works end-to-end
-
-```text
-Trial expires
-  → useReadOnly() returns true
-  → ReadOnlyBanner shows: "Trial ended — subscribe to continue"
-  → All create/edit buttons disabled via ReadOnlyGuard
-  → User clicks "Choose Plan"
-  → SelectPlan page: pick plan + seat count (min 1)
-  → Stripe Checkout with correct line items
-  → Webhook updates subscriptions_v2 → status = "active"
-  → useReadOnly() returns false
-  → Full access restored
-```
-
-### No backend changes needed
-The `create-checkout-session` edge function already supports `seatCounts: { lite: 2, connect: 3 }` — the frontend just needs to pass quantities > 1.
+| `src/components/layout/DashboardLayout.tsx` | Remove `TrialBanner` import and usage |
+| `src/components/billing/SubscriptionOverview.tsx` | Fix `handleManageBilling` to handle `data.error` response; show "Choose Plan" button for trial users without Stripe customer |
 
