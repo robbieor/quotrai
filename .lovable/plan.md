@@ -1,81 +1,103 @@
 
 
-# Dead Code & False Claims Audit — Findings & Fix Plan
+# Foreman AI Mobile & Desktop UX Overhaul
 
-## Issues Found
+## Problems Identified
 
-### 1. CRITICAL: Grow tier voice minutes contradiction
-- **`useSubscriptionTier.ts`** says Grow = "Unlimited voice minutes" (`GROW_VOICE_MINUTES: -1`)
-- **`Pricing.tsx`** says Grow = "200 voice minutes/month"
-- **Landing page** (`PricingPreviewSection.tsx`) says "Unlimited voice minutes"
-- **Pricing FAQ** says "Grow seats include 200 minutes"
-- **Decision needed**: Is Grow unlimited or 200? The constants say unlimited. Fix Pricing.tsx to match.
+### 1. Quick Action Tiles Do Nothing (Critical Bug)
+The tiles fire a `foremanai-quick-action` custom event with `autoSend: true`. The listener in `GeorgeMobileInput` catches this and calls `sendChatMessage()`. However, the flow has a **silent failure path**: if the user isn't fully authenticated or the edge function returns an error, the message gets added to the UI via `onUserMessage` but the response either fails silently or the error message isn't visible because the chat area immediately switches from `GeorgeChatArea` (welcome tiles) to `LiveActionFeed` based on `displayItems.length > 0`.
 
-### 2. Legacy tier names in Investor & Projections pages
-- **`InvestorPitch.tsx`** (lines 148-149): "€12–€29/seat/mo", "2 tiers: Starter (€12) & Pro (€29)" — completely wrong, actual pricing is Lite €19, Connect €39, Grow €69
-- **`InvestorMarket.tsx`** (line 37): "€12/mo (1 Starter seat)" — stale pricing
-- **`FounderProjections.tsx`** (lines 22-26): `TIERS = { starter: €12, pro: €29, enterprise: €49 }` — entirely wrong tier names and prices
-- **`FounderProjections.tsx`** (line 196): References "Foreman George" — the AI is called "Foreman AI" now
-- **`InvestorPitch.tsx`** (line 21): References "Foreman George" in solution pillars
-- **Traction data** (line 30): "€12–€29 per-seat pricing validated" — wrong range
+**Root cause**: When `sendChatMessage` is called, `onUserMessage` fires first (adding a message to `messages`), but `GeorgeChatArea` is only shown when `hasDisplayItems` is false — which checks `displayItems`, not `messages`. So the user bubble appears in `GeorgeChatArea` but `hasDisplayItems` stays false, so the welcome screen stays shown. The user never sees their message or the response because the welcome view covers them.
 
-### 3. Pricing FAQ uses dead terminology
-- **`Pricing.tsx`** (line 31): "Give your office manager a **Voice Seat** and your apprentices **Team Seats**" — these names don't exist. Should be Connect and Lite.
-- **`Pricing.tsx`** (line 27): Grow FAQ says "200 minutes" but should say "unlimited"
+Wait — actually `addMessage` (line 94-103) pushes to BOTH `messages` and `displayItems`. So `hasDisplayItems` becomes true, and the view switches to `LiveActionFeed`. But `LiveActionFeed` renders `DisplayItem[]` — and a message item just shows a chat bubble. The switch from welcome → chat should work. Let me re-examine.
 
-### 4. `useUpgradePrompts.ts` uses dead tier names
-- Line 78-79: "Upgrade to **Pro** for more minutes" and "contact us about **Enterprise** for unlimited minutes" — Pro and Enterprise don't exist. Should reference Connect and Grow.
+Actually the real issue is simpler: `displayItems` gets a new item from `addMessage`, so `hasDisplayItems` becomes true, the welcome tiles disappear, and `LiveActionFeed` renders. This should visually work. The user says "clicking on any of the tiles do nothing" — this could mean either:
+- They aren't logged in (login dialog blocks interaction but maybe isn't visible)
+- The API call fails and nothing visible happens
+- The UI switches but returns to welcome state because of some state reset
 
-### 5. `GeorgeBillingReports.tsx` — `TOM_VOICE_PRICE = 20`
-- This constant is a hardcoded legacy price (€20) that doesn't match any current pricing. Voice minutes aren't sold separately at €20. This is used to calculate cost in billing reports — it's producing false numbers.
+Looking more carefully: `isProcessing` is not passed to `GeorgeWelcome` from `George.tsx` — wait, it IS passed via `GeorgeChatArea` props. So tiles should not be disabled.
 
-### 6. Investor pages use completely stale data model
-- All investor pages (`InvestorPitch`, `InvestorMarket`, `InvestorProduct`, `InvestorTeam`, `FounderProjections`, `InvestorForecast`) reference the old 2-tier model. These are public routes accessible to anyone.
+The most likely culprit: the `DashboardLayout` wrapper. The George mobile page has `h-[100dvh]` inside the DashboardLayout's `main > div` which has its own padding and scroll. The `overflow-hidden` on the George container might clip content, and the `-m-3` negative margin is trying to break out of the padding but may not work perfectly.
+
+### 2. Double Header on Mobile (UX Issue)
+The `DashboardLayout` renders a sticky 48px header with sidebar trigger, search, notifications, and avatar. Then `GeorgeMobileHeader` renders a SECOND bar with hamburger, "Foreman AI" pill, and scan icon. This wastes ~100px of vertical space on a 636px viewport — 16% of the screen is headers.
+
+### 3. Input Bar Squashed at Bottom
+The input bar (`GeorgeMobileInput`) has `px-3 pt-2 pb-3` with `safe-area-pb`. Inside `DashboardLayout`, the main content has its own padding. The combination means the input is cramped at the very bottom with minimal breathing room. The screenshot shows it barely visible.
+
+### 4. Layout Conflict
+`George.tsx` mobile layout uses `h-[100dvh]` and `-m-3` to try to fill the full viewport inside `DashboardLayout`. But `DashboardLayout` adds its own header (48px), sidebar, and content padding. The result is the George page is either taller than available space (causing double scrollbars) or clipped.
 
 ---
 
 ## Fix Plan
 
-### File 1: `src/pages/Pricing.tsx`
-- FAQ line 27: Change "200 minutes" → "unlimited voice minutes"
-- FAQ line 31: Change "Voice Seat" → "Connect seat", "Team Seats" → "Lite seats"
+### Fix 1: George Mobile — Remove DashboardLayout Wrapper
+On mobile, the George page should be a **full-screen experience** that doesn't use `DashboardLayout`. Instead, render a minimal custom header that combines the app nav (sidebar trigger, avatar) with the Foreman AI identity — removing the double header.
 
-### File 2: `src/hooks/useUpgradePrompts.ts`
-- Lines 78-79: Replace "Pro" → "Connect", "Enterprise" → "Grow"
+**File: `src/pages/George.tsx`**
+- On mobile, do NOT wrap in `DashboardLayout`
+- Wrap in `ProtectedRoute` directly (for auth)
+- Remove the `-m-3` and `h-[100dvh]` hacks
+- Use a clean full-viewport flex column layout
 
-### File 3: `src/components/billing/GeorgeBillingReports.tsx`
-- Remove or recalculate `TOM_VOICE_PRICE`. Voice is included in seat price, not billed separately. The cost column should reflect the per-seat price of the user's actual seat type, not a fake €20.
+### Fix 2: New Combined Mobile Header
+Replace the separate `DashboardLayout` header + `GeorgeMobileHeader` with a single compact header that has:
+- Left: sidebar trigger (hamburger)
+- Center: "Foreman AI" identity pill
+- Right: notification bell + avatar (from UserMenu)
 
-### File 4: `src/pages/InvestorPitch.tsx`
-- Update pricing card: "€19–€69/seat/mo", "3 tiers: Lite (€19), Connect (€39) & Grow (€69)"
-- Fix "Foreman George" → "Foreman AI"
-- Fix traction data pricing range
+**File: `src/components/george/GeorgeMobileHeader.tsx`**
+- Accept `onMenuClick` prop (opens app sidebar)
+- Add notification + avatar components
+- Remove the scan icon (unused functionality)
+- Single row, 48px height
 
-### File 5: `src/pages/InvestorMarket.tsx`
-- Update TAM table ARPU figures to use current Lite/Connect/Grow pricing
-- Fix "Starter seat price" reference
+### Fix 3: Redesign Mobile Input Bar
+The current input bar is functional but cramped. Improvements:
+- Increase padding: `px-4 pt-3 pb-4` 
+- Make the input field taller: `min-h-[44px]` (touch target compliance)
+- Give the rounded input pill more horizontal space
+- Move voice button to a more prominent position when no text entered
+- Photo button stays left of input
 
-### File 6: `src/pages/FounderProjections.tsx`
-- Replace entire `TIERS` object with current pricing: `{ lite: 19, connect: 39, grow: 69 }`
-- Replace all "Starter"/"Pro"/"Enterprise" labels with "Lite"/"Connect"/"Grow"
-- Fix "Foreman George" → "Foreman AI"
-- Update tier mix defaults and all downstream calculations
+**File: `src/components/george/GeorgeMobileInput.tsx`**
+- Increase touch targets to 44px
+- Better padding and spacing
+- Cleaner visual hierarchy
 
-### File 7: `src/pages/InvestorPitch.tsx` (line 21)
-- Fix solution pillar: "Foreman George" → "Foreman AI"
+### Fix 4: Welcome Screen — Better Tile Layout
+The current 2-column grid with small tiles looks cramped. Improvements:
+- Larger tile hit areas (min 48px height)
+- Better spacing between tiles
+- Move the ForemanAvatar + status text higher to give tiles more room
+- Reduce vertical centering whitespace (currently `justify-center` on `min-h-full` wastes space)
+
+**File: `src/components/george/GeorgeWelcome.tsx`**
+- Reduce top spacing, push tiles closer to center
+- Increase tile padding for touch targets
+- Better visual contrast on tiles
+
+### Fix 5: Desktop Layout — Clean Up
+The desktop layout is functional but could be tighter:
+- Remove the search bar from the George-specific view (command bar is already global)
+- Keep the resizable sidebar
+- Ensure the chat input (`GeorgeAgentInput`) has consistent spacing
+
+**File: `src/pages/George.tsx`** (desktop section)
+- Minor spacing adjustments only
 
 ---
 
-### Summary
+## File Summary
 
-| Action | File | Issue |
-|--------|------|-------|
-| Edit | `src/pages/Pricing.tsx` | Dead "Voice Seat"/"Team Seat" names, wrong Grow minutes |
-| Edit | `src/hooks/useUpgradePrompts.ts` | "Pro"/"Enterprise" references |
-| Edit | `src/components/billing/GeorgeBillingReports.tsx` | Fake €20 voice price |
-| Edit | `src/pages/InvestorPitch.tsx` | Stale pricing, "George" name |
-| Edit | `src/pages/InvestorMarket.tsx` | Stale ARPU & tier names |
-| Edit | `src/pages/FounderProjections.tsx` | Entirely wrong tier model |
+| Action | File | Change |
+|--------|------|--------|
+| Edit | `src/pages/George.tsx` | Mobile: remove DashboardLayout, use ProtectedRoute directly, clean layout |
+| Edit | `src/components/george/GeorgeMobileHeader.tsx` | Combined header with sidebar trigger + avatar + notifications |
+| Edit | `src/components/george/GeorgeMobileInput.tsx` | Larger touch targets, better padding, visual improvements |
+| Edit | `src/components/george/GeorgeWelcome.tsx` | Better tile sizing, reduced dead space, improved mobile layout |
 
-No database changes. No new files. All find-and-replace corrections to align every page with the actual Lite/Connect/Grow pricing model at €19/€39/€69.
+No database changes. No new files. Four component edits to fix the mobile agent experience.
 
