@@ -8,7 +8,7 @@ import { ActionConfirmationGate } from "./ActionConfirmationGate";
 import { ActionMemoryBar } from "./ActionMemoryBar";
 import type { AIActionPlan } from "@/types/foreman-actions";
 import { Loader2 } from "lucide-react";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface ActionPlanCardProps {
   plan: AIActionPlan;
@@ -112,9 +112,7 @@ export function LiveActionFeed({ items, isProcessing, onConfirmation, onOutputAc
 
           return (
             <div key={msg.id} className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-              </div>
+              <ForemanAvatar size="md" />
               <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
               </div>
@@ -124,9 +122,7 @@ export function LiveActionFeed({ items, isProcessing, onConfirmation, onOutputAc
 
         {isProcessing && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-              <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-            </div>
+            <ForemanAvatar size="md" />
             <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />

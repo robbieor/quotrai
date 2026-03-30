@@ -3,7 +3,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface GeorgeWelcomeProps {
   onQuickAction?: (action: string | null, message: string) => void;
@@ -122,9 +122,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
     return (
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col items-center justify-center min-h-full px-5 py-6 bg-background">
-          <div className="w-16 h-16 rounded-2xl bg-white shadow-md flex items-center justify-center mb-4 border border-border overflow-hidden">
-            <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-          </div>
+          <ForemanAvatar size="xl" className="shadow-md border border-border" />
 
           <p className="text-center text-muted-foreground text-sm leading-relaxed max-w-xs mb-5">
             {statusMessage}
@@ -155,9 +153,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 overflow-y-auto">
       <div className="flex flex-col items-center mb-8">
-        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 overflow-hidden shadow-md">
-          <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-        </div>
+          <ForemanAvatar size="xl" className="shadow-md w-20 h-20" />
         <h1 className="text-xl font-semibold mb-1">Foreman AI</h1>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
           Your AI Operating System

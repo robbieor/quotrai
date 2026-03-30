@@ -15,7 +15,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import foremanLogo from "@/assets/foreman-logo.png";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 import { track } from "@/utils/analytics";
 
 import { TRADES } from "@/components/landing/trade/TradeConfig";
@@ -163,9 +163,7 @@ export default function TradeLanding() {
               </ul>
             </div>
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-2xl overflow-hidden shadow-xl border-4 border-primary/20">
-                <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-              </div>
+              <ForemanAvatar size="xl" className="w-32 h-32 rounded-2xl shadow-xl border-4 border-[#059669]/20" />
             </div>
           </div>
         </div>
