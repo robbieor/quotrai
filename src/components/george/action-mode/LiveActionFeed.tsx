@@ -83,8 +83,10 @@ export type DisplayItem =
 interface LiveActionFeedProps {
   items: DisplayItem[];
   isProcessing?: boolean;
+  lastError?: string | null;
   onConfirmation?: (planId: string, action: "confirm" | "review" | "cancel") => void;
   onOutputAction?: (planId: string, action: string) => void;
+  onRetry?: () => void;
 }
 
 export function LiveActionFeed({ items, isProcessing, onConfirmation, onOutputAction }: LiveActionFeedProps) {
