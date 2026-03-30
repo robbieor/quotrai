@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "cmdk";
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { Search, FileText, Receipt, Briefcase, DollarSign, Users, CalendarDays, Clock, Settings, Bot, BarChart3, Package, UserPlus, FolderOpen, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isSlashCommand, getSlashHints, SLASH_COMMANDS } from "@/utils/slashCommandParser";
