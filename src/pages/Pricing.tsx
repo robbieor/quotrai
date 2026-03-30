@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "Can I mix seat types on one team?",
-    a: "Absolutely. Give your office manager a Voice Seat and your apprentices Team Seats — you only pay for what each person needs.",
+    a: "Absolutely. Give your office manager a Connect seat and your apprentices Lite seats — you only pay for what each person needs.",
   },
   {
     q: "How does annual billing work?",
