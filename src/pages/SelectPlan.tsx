@@ -341,7 +341,7 @@ function PlanCard({
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+            className="h-10 w-10 sm:h-8 sm:w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
             disabled={quantity <= 1}
           >
             <Minus className="h-3 w-3" />
@@ -349,7 +349,7 @@ function PlanCard({
           <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
           <button
             onClick={() => setQuantity(Math.min(50, quantity + 1))}
-            className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+            className="h-10 w-10 sm:h-8 sm:w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
             disabled={quantity >= 50}
           >
             <Plus className="h-3 w-3" />
