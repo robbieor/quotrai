@@ -139,6 +139,12 @@ export default function George() {
 
   const handleAssistantMessage = useCallback((message: string, conversationId?: string) => {
     setStreamingText("");
+    // Detect error messages from chat hook and surface as lastChatError
+    if (message.startsWith("❌") || message.startsWith("⏳") || message.startsWith("💳")) {
+      setLastChatError(message);
+    } else {
+      setLastChatError(null);
+    }
     addMessage("assistant", message);
     if (conversationId && !activeConversationId) {
       setActiveConversationId(conversationId);
