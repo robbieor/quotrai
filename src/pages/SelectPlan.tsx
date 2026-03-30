@@ -101,7 +101,7 @@ export default function SelectPlan() {
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Start at {formatCurrency(PRICING.STARTER_SEAT)}/seat. Add AI when you're ready. We earn {PRICING.PLATFORM_FEE}% only when you get paid.
+            Start at {formatCurrency(PRICING.LITE_SEAT)}/seat. Add AI when you're ready. We earn {PRICING.PLATFORM_FEE}% only when you get paid.
           </p>
         </div>
 
