@@ -25,6 +25,7 @@ export function DayView({
   onJobDrop,
   onJobDragStart,
   onJobDragEnd,
+  onSlotClick,
 }: DayViewProps) {
   const dayJobs = jobs.filter((job) => {
     if (!job.scheduled_date) return false;
@@ -147,6 +148,7 @@ export function DayView({
                 hasJobs={jobCount > 0}
                 jobCount={jobCount}
                 onJobDrop={onJobDrop}
+                onSlotClick={onSlotClick}
               >
                 {hourJobs.length > 0 && (
                   <div className="space-y-1">
