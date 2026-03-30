@@ -105,7 +105,26 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
           className="text-base"
         />
         <CommandList className="max-h-[60vh]">
-          <CommandEmpty className="py-6 text-center">
+          {/* Inline result display */}
+          {(result || resultLoading) && (
+            <div className="border-b border-border">
+              {resultLoading ? (
+                <div className="flex items-center justify-center gap-2 py-6">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Fetching...</span>
+                </div>
+              ) : result && (
+                <CommandResult
+                  title={result.title}
+                  items={result.items}
+                  link={result.link}
+                  linkLabel={result.linkLabel}
+                  onClear={() => setResult(null)}
+                  onNavigate={(url) => { onOpenChange(false); navigate(url); }}
+                />
+              )}
+            </div>
+          )}
             <button
               onClick={handleFreeformAI}
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
