@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { useSidebarBadges } from "@/hooks/useSidebarBadges";
+import { useSubscription } from "@/hooks/useSubscription";
 import foremanLogo from "@/assets/foreman-logo.png";
 import type { SeatType } from "@/hooks/useSubscriptionTier";
 

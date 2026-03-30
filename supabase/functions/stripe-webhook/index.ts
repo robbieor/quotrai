@@ -309,10 +309,10 @@ serve(async (req) => {
 
             // Build detailed plan info from line items
             const PRICE_TO_PLAN: Record<string, string> = {
-              "price_1TEa4dDQETj2awNErpoa1vHM": "Starter (Lite)",
-              "price_1TEa57DQETj2awNEESev15XR": "Starter (Lite) Annual",
-              "price_1TEa5SDQETj2awNE4qhL4fa7": "Pro (Connect)",
-              "price_1TEa5tDQETj2awNE2zfrsMkY": "Pro (Connect) Annual",
+              "price_1TEa4dDQETj2awNErpoa1vHM": "Lite",
+              "price_1TEa57DQETj2awNEESev15XR": "Lite Annual",
+              "price_1TEa5SDQETj2awNE4qhL4fa7": "Connect",
+              "price_1TEa5tDQETj2awNE2zfrsMkY": "Connect Annual",
               "price_1TEa6HDQETj2awNEycXwPCfc": "Grow",
               "price_1TEa6oDQETj2awNEHSl42OYl": "Grow Annual",
             };

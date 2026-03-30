@@ -1,10 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -14,66 +15,61 @@ serve(async (req) => {
 
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      throw new Error("Stripe secret key not configured");
-    }
+    if (!stripeKey) throw new Error("Stripe secret key not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+    });
 
     // Get auth user
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
+    if (!authHeader) throw new Error("No authorization header");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    if (authError || !user) {
-      throw new Error("Unauthorized");
-    }
+    if (authError || !user) throw new Error("Unauthorized");
 
-    // Get user's team
+    // Get user's org via RPC
+    const { data: orgId } = await supabaseClient.rpc("get_user_org_id_v2");
+    if (!orgId) throw new Error("User not in an organisation");
+
+    // Verify user is an owner of their team
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("team_id")
       .eq("id", user.id)
       .single();
 
-    if (!profile?.team_id) {
-      throw new Error("User not in a team");
+    if (profile?.team_id) {
+      const { data: membership } = await supabaseClient
+        .from("team_memberships")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("team_id", profile.team_id)
+        .single();
+
+      if (!membership || !["owner", "ceo"].includes(membership.role)) {
+        return new Response(
+          JSON.stringify({ error: "Only team owners can add subscription seats" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
-    // Verify user is an owner of the team
-    const { data: membership, error: membershipError } = await supabaseClient
-      .from("team_memberships")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("team_id", profile.team_id)
-      .single();
-
-    if (membershipError || !membership || membership.role !== "owner") {
-      return new Response(
-        JSON.stringify({ error: "Only team owners can add subscription seats" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get subscription
+    // Get subscription from subscriptions_v2
     const { data: subscription } = await supabaseClient
-      .from("subscriptions")
+      .from("subscriptions_v2")
       .select("*")
-      .eq("team_id", profile.team_id)
+      .eq("org_id", orgId)
       .single();
 
     if (!subscription?.stripe_subscription_id) {
       throw new Error("No active subscription found. Please subscribe first.");
     }
 
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: "2023-10-16",
-    });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
 
     // Get current subscription from Stripe
     const stripeSubscription = await stripe.subscriptions.retrieve(
@@ -94,12 +90,12 @@ serve(async (req) => {
 
     // Update local subscription record
     await supabaseClient
-      .from("subscriptions")
-      .update({ 
+      .from("subscriptions_v2")
+      .update({
         seat_count: newQuantity,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", subscription.id);
+      .eq("org_id", orgId);
 
     return new Response(
       JSON.stringify({ success: true, new_seat_count: newQuantity }),
