@@ -24,7 +24,7 @@ export function TrialCountdownPopup() {
 
   const hasActiveSub = subscriptionV2?.status === "active";
   const isOnTrial = teamSubscription?.is_trial && !isTrialExpired && !hasActiveSub;
-  const shouldShow = isOnTrial && trialDaysRemaining <= 10;
+  const shouldShow = isOnTrial && trialDaysRemaining <= 5;
 
   useEffect(() => {
     if (!shouldShow) return;

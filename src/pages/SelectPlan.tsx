@@ -158,9 +158,9 @@ export default function SelectPlan() {
         {/* CTA Section */}
         <Card className="bg-primary/5 border-primary/20 mb-12">
           <CardContent className="py-8 text-center space-y-4">
-            <h2 className="text-2xl font-bold">Start your 30-day free trial</h2>
+            <h2 className="text-2xl font-bold">Start your 7-day free trial</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Choose a plan above to start your 30-day free trial. Cancel anytime.
+              Choose a plan above to start your 7-day free trial. Cancel anytime.
             </p>
           </CardContent>
         </Card>
@@ -179,7 +179,7 @@ export default function SelectPlan() {
             />
             <FaqCard
               q="What's included in the free trial?"
-              a={`Full Pro access for 30 days — including ${PRICING.VOICE_MINUTES_PER_SEAT} minutes of Foreman AI voice per seat, GPS tracking, and reports. Card is collected to ensure seamless transition after your 30-day trial. Cancel anytime — you won't be charged until the trial ends.`}
+              a={`Full Pro access for 7 days — including ${PRICING.VOICE_MINUTES_PER_SEAT} minutes of Foreman AI voice per seat, GPS tracking, and reports. Card is collected to ensure seamless transition after your 7-day trial. Cancel anytime — you won't be charged until the trial ends.`}
             />
             <FaqCard
               q="Do you offer bulk discounts?"
@@ -189,7 +189,7 @@ export default function SelectPlan() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          All plans include 30-day free trial · Cancel anytime · VAT may apply
+          All plans include 7-day free trial · Cancel anytime · VAT may apply
         </p>
       </div>
     </div>
