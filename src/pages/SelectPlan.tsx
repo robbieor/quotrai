@@ -4,7 +4,7 @@ import { Check, ArrowRight, MessageSquare, ExternalLink, Minus, Plus } from "luc
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useSubscriptionTier, PRICING, STARTER_SEAT_DETAILS, PRO_SEAT_DETAILS, ENTERPRISE_SEAT_DETAILS } from "@/hooks/useSubscriptionTier";
+import { useSubscriptionTier, PRICING, LITE_SEAT_DETAILS, CONNECT_SEAT_DETAILS, GROW_SEAT_DETAILS } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
@@ -47,9 +47,7 @@ export default function SelectPlan() {
     );
   }
 
-  const proMonthly = PRICING.BASE_SEAT;
-  const proAnnualTotal = PRICING.ANNUAL_SEAT;
-  const proSavings = proMonthly * 12 - proAnnualTotal;
+  const proSavings = PRICING.CONNECT_SEAT * 12 - PRICING.ANNUAL_CONNECT_SEAT;
 
   const handleChoosePlan = async (seatCode: string, quantity: number) => {
     try {
@@ -113,9 +111,9 @@ export default function SelectPlan() {
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <PlanCard
-            details={STARTER_SEAT_DETAILS}
-            monthlyPrice={PRICING.STARTER_SEAT}
-            annualPrice={PRICING.ANNUAL_STARTER_SEAT}
+            details={LITE_SEAT_DETAILS}
+            monthlyPrice={PRICING.LITE_SEAT}
+            annualPrice={PRICING.ANNUAL_LITE_SEAT}
             billingInterval={billingInterval}
             formatCurrency={formatCurrency}
             subtitle="For solo operators"
@@ -125,14 +123,14 @@ export default function SelectPlan() {
           />
 
           <PlanCard
-            details={PRO_SEAT_DETAILS}
-            monthlyPrice={proMonthly}
-            annualPrice={proAnnualTotal}
+            details={CONNECT_SEAT_DETAILS}
+            monthlyPrice={PRICING.CONNECT_SEAT}
+            annualPrice={PRICING.ANNUAL_CONNECT_SEAT}
             billingInterval={billingInterval}
             formatCurrency={formatCurrency}
             subtitle="Most popular"
             highlighted
-            savings={billingInterval === "annual" ? proSavings : undefined}
+            savings={billingInterval === "annual" ? (PRICING.CONNECT_SEAT * 12 - PRICING.ANNUAL_CONNECT_SEAT) : undefined}
             seatCode="connect"
             onChoose={handleChoosePlan}
             isLoading={isCheckingOut}
@@ -141,7 +139,7 @@ export default function SelectPlan() {
           <Card className="relative border-muted">
             <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-muted-foreground text-background">Enterprise</Badge>
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-lg">{ENTERPRISE_SEAT_DETAILS.name}</CardTitle>
+              <CardTitle className="text-lg">{GROW_SEAT_DETAILS.name}</CardTitle>
               <CardDescription>For 10+ staff firms</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -150,7 +148,7 @@ export default function SelectPlan() {
                 <p className="text-xs text-muted-foreground mt-1">Tailored to your team size</p>
               </div>
               <ul className="space-y-2">
-                {ENTERPRISE_SEAT_DETAILS.features.map((f, i) => (
+                {GROW_SEAT_DETAILS.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
                     <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" /><span>{f}</span>
                   </li>
