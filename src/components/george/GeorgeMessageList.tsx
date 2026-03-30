@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
-import tomAvatar from "@/assets/tom-avatar.png";
+import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface Message {
   id: string;
@@ -44,9 +44,7 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
           {/* Streaming text — progressive render */}
           {streamingText && !isProcessing && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-white border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-                <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-              </div>
+              <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
               <div className="flex-1 pt-1">
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamingText}</p>
               </div>
@@ -55,9 +53,7 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
 
           {isProcessing && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-white border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-                <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-              </div>
+              <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
               <div className="flex items-center gap-2 pt-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
@@ -99,9 +95,7 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
         {/* Streaming text — progressive render */}
         {streamingText && !isProcessing && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-              <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-            </div>
+            <ForemanAvatar size="md" />
             <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
               <p className="text-sm whitespace-pre-wrap leading-relaxed">{streamingText}</p>
             </div>
@@ -110,9 +104,7 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
 
         {isProcessing && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-              <img src={tomAvatar} alt="Foreman AI" className="w-full h-full object-cover" />
-            </div>
+            <ForemanAvatar size="md" />
             <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
