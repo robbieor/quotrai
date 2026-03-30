@@ -131,6 +131,8 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
+    const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
+
     // Check burned_accounts for repeat trial abuse
     let trialDays = 30;
     if (!isUpgrade && user.email) {
@@ -157,8 +159,6 @@ serve(async (req) => {
       trialDays = 0;
       logStep("User already had a trial, skipping", { trial_ends_at: subscription.trial_ends_at });
     }
-
-    const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
 
     // If upgrading with existing subscription, go to portal
     if (subscription?.stripe_subscription_id && isUpgrade) {
