@@ -384,14 +384,14 @@ export function SubscriptionOverview() {
                             </AlertDialogHeader>
                             <div className="space-y-3 py-2">
                               {CANCEL_REASONS.map((reason) => (
-                                <label key={reason} className="flex items-center gap-3 cursor-pointer">
+                                <label key={reason} className="flex items-center gap-3 cursor-pointer min-h-[44px] py-1">
                                   <input
                                     type="radio"
                                     name="cancel-reason"
                                     value={reason}
                                     checked={cancelReason === reason}
                                     onChange={(e) => setCancelReason(e.target.value)}
-                                    className="h-4 w-4 text-primary"
+                                    className="h-5 w-5 text-primary"
                                   />
                                   <span className="text-sm">{reason}</span>
                                 </label>
