@@ -59,6 +59,14 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { isTeamSeat } = useUserRole();
   const { canAccess } = useSeatAccess();
+  const badges = useSidebarBadges();
+
+  // Map item IDs to badge keys
+  const badgeMap: Record<string, string> = {
+    invoices: "invoices",
+    jobs: "jobs",
+    quotes: "quotes",
+  };
 
   const filteredGroups = useMemo(() => {
     return navGroups
