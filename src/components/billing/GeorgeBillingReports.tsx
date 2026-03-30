@@ -68,7 +68,7 @@ export function GeorgeBillingReports() {
 
   // Calculate totals
   const totalMinutes = snapshots.reduce((sum, s) => sum + s.minutes_used, 0);
-  const totalCost = snapshots.reduce((sum, s) => sum + (s.george_voice_seats * TOM_VOICE_PRICE), 0);
+  const totalCost = snapshots.reduce((sum, s) => sum + (s.george_voice_seats * DEFAULT_SEAT_PRICE), 0);
   const avgMonthlyMinutes = snapshots.length > 0 ? totalMinutes / snapshots.length : 0;
 
   return (
