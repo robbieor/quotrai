@@ -176,26 +176,12 @@ export default function George() {
   }, [addActionPlan, queryClient, globalStartTask]);
 
   const handleQuickAction = useCallback(async (action: string | null, message: string) => {
-    if (action) {
-      // Direct webhook call for actions like get_todays_jobs
-      addMessage("user", message);
-      setIsProcessing(true);
-      try {
-        const result = await callWebhook(action);
-        addMessage("assistant", result);
-      } catch (error) {
-        console.error("Quick action error:", error);
-        addMessage("assistant", "Sorry, something went wrong. Please try again.");
-      } finally {
-        setIsProcessing(false);
-      }
-    } else {
-      // No action — route through george-chat via the input component's sendChatMessage
-      window.dispatchEvent(new CustomEvent("foremanai-quick-action", {
-        detail: { message, autoSend: true },
-      }));
-    }
-  }, [addMessage, callWebhook]);
+    // Always route through george-chat text endpoint — voice webhook is unreliable
+    // when voice call isn't active. The george-chat edge function handles all intents.
+    window.dispatchEvent(new CustomEvent("foremanai-quick-action", {
+      detail: { message, autoSend: true },
+    }));
+  }, []);
 
   const handleNewChat = useCallback(() => {
     setActiveConversationId(null);
