@@ -159,6 +159,8 @@ export function useSendInvitation() {
           teamName: team?.name || "Your Team",
           inviterName: profile?.full_name || "A team member",
           inviteUrl,
+          role: role || "member",
+          seatType: seatType || "lite",
         },
       });
 

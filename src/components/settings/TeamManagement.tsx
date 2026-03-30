@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +32,14 @@ import {
 import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
+import type { SeatType } from "@/hooks/useSubscriptionTier";
+
+type InviteRole = "member" | "manager" | "owner";
 
 export function TeamManagement() {
   const [email, setEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<InviteRole>("member");
+  const [inviteSeat, setInviteSeat] = useState<SeatType>("lite");
   
   const { user } = useAuth();
   const { data: team, isLoading: teamLoading } = useTeam();
@@ -57,8 +63,12 @@ export function TeamManagement() {
     await sendInvitation.mutateAsync({
       email: email.trim(),
       baseUrl: window.location.origin,
+      role: inviteRole,
+      seatType: inviteSeat,
     });
     setEmail("");
+    setInviteRole("member");
+    setInviteSeat("lite");
   };
 
   const getInitials = (name: string | null, email: string | null) => {
@@ -122,6 +132,41 @@ export function TeamManagement() {
                   </Button>
                 </div>
               </div>
+
+              {/* Role & Seat selectors */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Role</Label>
+                  <Select value={inviteRole} onValueChange={(v: InviteRole) => setInviteRole(v)}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Team Member — Jobs, calendar, time tracking</SelectItem>
+                      <SelectItem value="manager">Manager — Full access, no billing</SelectItem>
+                      <SelectItem value="owner">Owner — Full access including billing</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Seat Type</Label>
+                  <Select value={inviteSeat} onValueChange={(v: SeatType) => setInviteSeat(v)}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lite">Lite — €19/mo</SelectItem>
+                      <SelectItem value="connect">Connect — €39/mo</SelectItem>
+                      <SelectItem value="grow">Grow — €69/mo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {inviteRole === "member" && inviteSeat !== "lite" && (
+                <p className="text-xs text-muted-foreground">
+                  💡 Team Members only access Jobs, Calendar & Time Tracking regardless of seat type. Consider a Lite seat to save costs.
+                </p>
+              )}
             </form>
           )}
 
