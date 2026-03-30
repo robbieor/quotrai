@@ -405,6 +405,8 @@ serve(async (req) => {
     const directWebhookActions: Record<string, { function_name: string; parameters: Record<string, any>; intent: string; label: string }> = {
       "What jobs do I have scheduled for today?": { function_name: "get_todays_jobs", parameters: {}, intent: "view_schedule", label: "Today's Schedule" },
       "Which invoices are overdue?": { function_name: "get_overdue_invoices", parameters: {}, intent: "overdue", label: "Overdue Invoices" },
+      "Give me a summary of my week ahead": { function_name: "get_week_ahead_summary", parameters: {}, intent: "briefing", label: "Week Ahead" },
+      "Show me my draft quotes that need to be sent.": { function_name: "get_todays_jobs", parameters: {}, intent: "view_schedule", label: "Draft Quotes" },
     };
 
     const directAction = directWebhookActions[message];

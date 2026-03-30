@@ -70,8 +70,12 @@ export default function George() {
 
   const { data: dbMessages = [] } = useGeorgeMessages(activeConversationId);
 
-  // Load messages from database when conversation changes
+  // Track whether user explicitly selected a conversation from sidebar
+  const [hydrateFromDb, setHydrateFromDb] = useState(false);
+
+  // Load messages from database ONLY when user picks an existing conversation from sidebar
   useEffect(() => {
+    if (!hydrateFromDb) return;
     if (dbMessages.length > 0) {
       const msgs = dbMessages.map(m => ({
         id: m.id,
@@ -81,12 +85,9 @@ export default function George() {
       }));
       setMessages(msgs);
       setDisplayItems(msgs.map(m => ({ type: "message" as const, data: m })));
-    } else if (!activeConversationId) {
-      setMessages([]);
-      setDisplayItems([]);
-      clearContext("all");
+      setHydrateFromDb(false); // done hydrating
     }
-  }, [dbMessages, activeConversationId]);
+  }, [dbMessages, hydrateFromDb]);
 
   useEffect(() => {
     if (!isMobile) setSidebarOpen(true);
@@ -138,6 +139,12 @@ export default function George() {
 
   const handleAssistantMessage = useCallback((message: string, conversationId?: string) => {
     setStreamingText("");
+    // Detect error messages from chat hook and surface as lastChatError
+    if (message.startsWith("❌") || message.startsWith("⏳") || message.startsWith("💳")) {
+      setLastChatError(message);
+    } else {
+      setLastChatError(null);
+    }
     addMessage("assistant", message);
     if (conversationId && !activeConversationId) {
       setActiveConversationId(conversationId);
@@ -156,6 +163,11 @@ export default function George() {
 
   /** Enhanced handler that processes structured action plans */
   const handleStructuredResponse = useCallback((responseData: any, conversationId?: string) => {
+    // Persist conversation ID so state doesn't get wiped
+    if (conversationId && !activeConversationId) {
+      setActiveConversationId(conversationId);
+    }
+
     // If action_plan is null/undefined, the backend signalled a pure chat response — skip action plan rendering
     if (responseData.action_plan) {
       addActionPlan(responseData.action_plan);
@@ -175,7 +187,7 @@ export default function George() {
     queryClient.invalidateQueries({ queryKey: ["jobs"] });
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
     queryClient.invalidateQueries({ queryKey: ["customers"] });
-  }, [addActionPlan, queryClient, globalStartTask]);
+  }, [addActionPlan, queryClient, globalStartTask, activeConversationId]);
 
   const handleQuickAction = useCallback(async (action: string | null, message: string) => {
     // Always route through george-chat text endpoint — voice webhook is unreliable
@@ -190,6 +202,7 @@ export default function George() {
     setMessages([]);
     setDisplayItems([]);
     setPhotoQuoteSuggestion(null);
+    setHydrateFromDb(false);
     clearContext("all");
   }, [clearContext]);
 
@@ -197,6 +210,12 @@ export default function George() {
     setActiveConversationId(conversationId);
     setPhotoQuoteSuggestion(null);
     clearContext("all");
+    if (conversationId) {
+      setHydrateFromDb(true); // trigger DB hydration for sidebar-selected conversations
+    } else {
+      setMessages([]);
+      setDisplayItems([]);
+    }
   }, [clearContext]);
 
   const handlePhotoQuote = useCallback((suggestion: PhotoQuoteSuggestion) => {
@@ -357,6 +376,7 @@ export default function George() {
               <LiveActionFeed
                 items={displayItems}
                 isProcessing={isProcessing}
+                lastError={lastChatError}
                 onConfirmation={handleConfirmation}
                 onOutputAction={handleOutputAction}
               />
@@ -438,6 +458,7 @@ export default function George() {
                 <LiveActionFeed
                   items={displayItems}
                   isProcessing={isProcessing}
+                  lastError={lastChatError}
                   onConfirmation={handleConfirmation}
                   onOutputAction={handleOutputAction}
                 />
