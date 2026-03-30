@@ -480,7 +480,34 @@ export function SubscriptionOverview() {
             <p className="text-sm text-muted-foreground text-center py-4">
               No invoices yet. Your first invoice will appear here after your trial ends.
             </p>
+          ) : isMobile ? (
+            /* Mobile: stacked cards */
+            <div className="space-y-3">
+              {invoicesData.map((inv: any) => (
+                <div key={inv.id} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {inv.date ? format(new Date(inv.date), "MMM d, yyyy") : "—"}
+                    </span>
+                    <Badge variant={inv.status === "paid" ? "default" : "secondary"} className="text-xs">
+                      {inv.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold">{formatCurrency(inv.amount)}</span>
+                    {inv.pdf_url && (
+                      <Button variant="outline" size="sm" asChild className="gap-1.5 h-9">
+                        <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-3.5 w-3.5" /> PDF
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
+            /* Desktop: table */
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
