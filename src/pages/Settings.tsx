@@ -9,7 +9,6 @@ import { TeamManagement } from "@/components/settings/TeamManagement";
 import { SubscriptionOverview } from "@/components/billing/SubscriptionOverview";
 import { SeatManagementTable } from "@/components/billing/SeatManagementTable";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
-import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { DataImportSection } from "@/components/settings/DataImportSection";
 import { DataExportSection } from "@/components/settings/DataExportSection";
 import { ExpenseEmailForwarding } from "@/components/settings/ExpenseEmailForwarding";
