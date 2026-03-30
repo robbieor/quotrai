@@ -13,6 +13,8 @@ interface InvitationRequest {
   teamName: string;
   inviterName: string;
   inviteUrl: string;
+  role?: string;
+  seatType?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
