@@ -157,6 +157,11 @@ export default function George() {
 
   /** Enhanced handler that processes structured action plans */
   const handleStructuredResponse = useCallback((responseData: any, conversationId?: string) => {
+    // Persist conversation ID so state doesn't get wiped
+    if (conversationId && !activeConversationId) {
+      setActiveConversationId(conversationId);
+    }
+
     // If action_plan is null/undefined, the backend signalled a pure chat response — skip action plan rendering
     if (responseData.action_plan) {
       addActionPlan(responseData.action_plan);
@@ -176,7 +181,7 @@ export default function George() {
     queryClient.invalidateQueries({ queryKey: ["jobs"] });
     queryClient.invalidateQueries({ queryKey: ["expenses"] });
     queryClient.invalidateQueries({ queryKey: ["customers"] });
-  }, [addActionPlan, queryClient, globalStartTask]);
+  }, [addActionPlan, queryClient, globalStartTask, activeConversationId]);
 
   const handleQuickAction = useCallback(async (action: string | null, message: string) => {
     // Always route through george-chat text endpoint — voice webhook is unreliable
