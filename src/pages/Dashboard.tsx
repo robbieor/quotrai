@@ -141,7 +141,7 @@ function DashboardContent() {
 
         {/* 1. Control Header — operational summary */}
         <AnimatedSection delay={40}>
-          <ControlHeader data={data?.controlHeader} isLoading={isLoading} showAI={canAccessGeorge} />
+          <ControlHeader data={data?.controlHeader} isLoading={isLoading} />
         </AnimatedSection>
 
         {/* 2. KPI Strip — 5 key metrics */}

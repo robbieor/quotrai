@@ -1,20 +1,13 @@
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, FileText, Briefcase, Sparkles, Receipt } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { ControlHeaderData } from "@/hooks/useDashboardAnalytics";
-import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface ControlHeaderProps {
   data: ControlHeaderData | undefined;
   isLoading?: boolean;
-  /** Whether to show AI recommendation and Ask AI button (Connect+ only) */
-  showAI?: boolean;
 }
 
-export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderProps) {
-  const navigate = useNavigate();
+export function ControlHeader({ data, isLoading }: ControlHeaderProps) {
   const { formatCurrency } = useCurrency();
 
   if (isLoading) {
@@ -37,8 +30,7 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
 
   return (
     <div className="rounded-lg border border-border bg-card">
-      {/* Stats strip */}
-      <div className="flex overflow-x-auto scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-4 divide-x divide-border border-b border-border">
+      <div className="flex overflow-x-auto scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-4 divide-x divide-border">
         <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p>
           <p className={`text-lg font-bold tabular-nums ${data.overdueCount > 0 ? "text-destructive" : "text-foreground"}`}>
@@ -66,39 +58,6 @@ export function ControlHeader({ data, isLoading, showAI = true }: ControlHeaderP
             {hasIssues ? "Needs Action" : "On Track"}
           </p>
           <p className="text-[10px] text-muted-foreground">{hasIssues ? "Issues found" : "All clear"}</p>
-        </div>
-      </div>
-
-      {/* AI Recommendation + Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3">
-        {showAI && (
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <ForemanAvatar size="sm" />
-            <p className="text-sm text-muted-foreground line-clamp-2 sm:truncate">
-              <span className="font-medium text-foreground">Foreman AI:</span> {data.aiRecommendation}
-            </p>
-          </div>
-        )}
-        {!showAI && (
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-muted-foreground">
-              {data.overdueCount > 0 || data.quotesNeedFollowUp > 0 || data.stuckJobs > 0
-                ? "Action required — review items below."
-                : "All clear — no outstanding issues."}
-            </p>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
-          {data.overdueCount > 0 && (
-            <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => navigate("/invoices?status=overdue")}>
-              <Receipt className="h-3 w-3" /> Chase
-            </Button>
-          )}
-          {showAI && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-primary" onClick={() => navigate("/foreman-ai")}>
-              <Sparkles className="h-3 w-3" /> Ask AI
-            </Button>
-          )}
         </div>
       </div>
     </div>

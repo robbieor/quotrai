@@ -49,16 +49,7 @@ export function ActionPanel({ alerts }: ActionPanelProps) {
   );
 
   if (!visibleAlerts || visibleAlerts.length === 0) {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/5 px-4 py-2.5">
-        <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-        <p className="text-xs text-foreground">
-          {segment !== "all"
-            ? `No alerts for this focus — try switching to "All Data" for the full picture.`
-            : "All clear — no critical issues, warnings, or opportunities right now."}
-        </p>
-      </div>
-    );
+    return null;
   }
 
   // Sort: critical first, then warning, then opportunity
