@@ -141,7 +141,7 @@ export default function FounderProjections() {
   const totalARR = totalMRR * 12;
 
   // Costs
-  const aiSeats = proSeats + enterpriseSeats;
+  const aiSeats = connectSeats + growSeats;
   const voiceCOGS = aiSeats * VOICE_COST_PER_SEAT;
   const grossMargin = totalMRR > 0 ? ((totalMRR - voiceCOGS) / totalMRR) * 100 : 0;
 
