@@ -370,6 +370,7 @@ export default function George() {
               <LiveActionFeed
                 items={displayItems}
                 isProcessing={isProcessing}
+                lastError={lastChatError}
                 onConfirmation={handleConfirmation}
                 onOutputAction={handleOutputAction}
               />
