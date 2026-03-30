@@ -193,7 +193,7 @@ export default function FounderProjections() {
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We combine job management, quoting, invoicing, GPS time tracking, and AI-powered automation 
-              into a single platform — replacing 5+ disconnected tools. Our AI assistant "Foreman George" 
+              into a single platform — replacing 5+ disconnected tools. Our AI assistant Foreman AI 
               handles phone calls, generates quotes from photos, and automates admin. 
               <strong className="text-foreground"> Target: €10M ARR within 12 months</strong> across 
               UK, Ireland, Australia, and North America — requiring ~33,000 paid seats or significant invoice volume.
