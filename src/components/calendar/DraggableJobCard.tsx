@@ -49,6 +49,7 @@ export function DraggableJobCard({
 
   return (
     <div
+      data-job-card
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
