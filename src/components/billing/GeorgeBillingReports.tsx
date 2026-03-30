@@ -62,7 +62,7 @@ export function GeorgeBillingReports() {
   const chartData = [...snapshots].reverse().map((snapshot) => ({
     month: format(new Date(snapshot.period_end), "MMM yy"),
     minutes: Math.round(snapshot.minutes_used),
-    cost: snapshot.george_voice_seats * TOM_VOICE_PRICE,
+    cost: snapshot.george_voice_seats * DEFAULT_SEAT_PRICE,
     seats: snapshot.george_voice_seats,
   }));
 
