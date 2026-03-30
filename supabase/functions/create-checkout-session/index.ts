@@ -105,7 +105,7 @@ serve(async (req) => {
     let stripeCustomerId: string;
     const { data: subscription } = await supabaseClient
       .from("subscriptions_v2")
-      .select("stripe_customer_id, stripe_subscription_id")
+      .select("stripe_customer_id, stripe_subscription_id, trial_ends_at")
       .eq("org_id", orgMember.org_id)
       .maybeSingle();
 
@@ -150,6 +150,12 @@ serve(async (req) => {
         trialDays = 0;
         logStep("Burned account detected, no trial", { email: user.email });
       }
+    }
+
+    // Skip trial if user already had one (pre-card signups)
+    if (trialDays > 0 && subscription?.trial_ends_at) {
+      trialDays = 0;
+      logStep("User already had a trial, skipping", { trial_ends_at: subscription.trial_ends_at });
     }
 
     const logStep = (s: string, d?: any) => console.log(`[CHECKOUT] ${s}`, d || "");
