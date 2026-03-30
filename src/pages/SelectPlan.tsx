@@ -47,9 +47,7 @@ export default function SelectPlan() {
     );
   }
 
-  const proMonthly = PRICING.BASE_SEAT;
-  const proAnnualTotal = PRICING.ANNUAL_SEAT;
-  const proSavings = proMonthly * 12 - proAnnualTotal;
+  const proSavings = PRICING.CONNECT_SEAT * 12 - PRICING.ANNUAL_CONNECT_SEAT;
 
   const handleChoosePlan = async (seatCode: string, quantity: number) => {
     try {
