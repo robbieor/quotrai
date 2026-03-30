@@ -67,7 +67,7 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
             </div>
 
             <p className="text-xs sm:text-sm text-muted-foreground">
-              30-day free trial · No credit card · Cancel anytime
+              {"\n"}
             </p>
           </div>
 
