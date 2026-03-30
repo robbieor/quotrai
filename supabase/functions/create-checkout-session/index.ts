@@ -199,6 +199,14 @@ serve(async (req) => {
       ? Object.entries(seatCounts).find(([, qty]) => Number(qty) > 0)?.[0] || "connect"
       : "connect";
 
+    // Apply bulk discount coupon for 5+ seats
+    const totalSeats = lineItems.reduce((sum, li) => sum + (li.quantity || 1), 0);
+    const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
+    if (totalSeats >= 5) {
+      discounts.push({ coupon: "wuUUykGN" }); // BULK_5_SEATS 10% off
+      logStep("Bulk discount applied", { totalSeats });
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: lineItems,
@@ -208,6 +216,7 @@ serve(async (req) => {
       subscription_data: subscriptionData,
       billing_address_collection: "required",
       payment_method_collection: "always",
+      ...(discounts.length > 0 ? { discounts } : {}),
     });
 
     return new Response(
