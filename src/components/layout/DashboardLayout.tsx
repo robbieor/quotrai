@@ -3,7 +3,6 @@ import { AppSidebar } from "./AppSidebar";
 import { UserMenu } from "./UserMenu";
 import { NotificationCenter } from "./NotificationCenter";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { TrialBanner } from "@/components/billing/TrialBanner";
 import { ReadOnlyBanner } from "@/components/billing/ReadOnlyBanner";
 import { TrialCountdownPopup } from "@/components/billing/TrialCountdownPopup";
 import { FloatingTomButton } from "./FloatingTomButton";
