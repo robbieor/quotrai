@@ -203,6 +203,12 @@ export default function George() {
     setActiveConversationId(conversationId);
     setPhotoQuoteSuggestion(null);
     clearContext("all");
+    if (conversationId) {
+      setHydrateFromDb(true); // trigger DB hydration for sidebar-selected conversations
+    } else {
+      setMessages([]);
+      setDisplayItems([]);
+    }
   }, [clearContext]);
 
   const handlePhotoQuote = useCallback((suggestion: PhotoQuoteSuggestion) => {
