@@ -6,11 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamManagement } from "@/components/settings/TeamManagement";
-import { SubscriptionPricing } from "@/components/billing/SubscriptionPricing";
 import { SubscriptionOverview } from "@/components/billing/SubscriptionOverview";
 import { SeatManagementTable } from "@/components/billing/SeatManagementTable";
-import { GeorgeVoiceOverview } from "@/components/settings/GeorgeVoiceOverview";
-import { GeorgeBillingReports } from "@/components/billing/GeorgeBillingReports";
 import { BrandingSettings } from "@/components/settings/BrandingSettings";
 import { DataImportSection } from "@/components/settings/DataImportSection";
 import { DataExportSection } from "@/components/settings/DataExportSection";
@@ -392,10 +389,7 @@ export default function Settings() {
             <SubscriptionOverview />
             <TeamManagement />
             <SeatManagementTable />
-            <SubscriptionPricing />
             <StripeConnectSetup />
-            <GeorgeVoiceOverview />
-            <GeorgeBillingReports />
           </TabsContent>
 
           {canAccessIntegrations && (

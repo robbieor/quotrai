@@ -4,6 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   CreditCard,
   ExternalLink,
   Loader2,
@@ -11,15 +22,18 @@ import {
   XCircle,
   AlertTriangle,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 import { useSubscription, useOrgMembers } from "@/hooks/useSubscription";
-import { PRICING, type SeatType } from "@/hooks/useSubscriptionTier";
+import { PRICING, type SeatType, LITE_SEAT_DETAILS, CONNECT_SEAT_DETAILS, GROW_SEAT_DETAILS } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { useState } from "react";
 import { useIsNative } from "@/hooks/useIsNative";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const SEAT_PRICES: Record<SeatType, number> = {
   lite: PRICING.LITE_SEAT,
@@ -27,12 +41,21 @@ const SEAT_PRICES: Record<SeatType, number> = {
   grow: PRICING.GROW_SEAT,
 };
 
+const SEAT_DISPLAY_NAMES: Record<SeatType, string> = {
+  lite: LITE_SEAT_DETAILS.name,
+  connect: CONNECT_SEAT_DETAILS.name,
+  grow: GROW_SEAT_DETAILS.name,
+};
+
 export function SubscriptionOverview() {
   const { data: subscription, isLoading: subLoading } = useSubscription();
   const { data: members } = useOrgMembers();
   const { formatCurrency } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const isNative = useIsNative();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   if (isNative) return null;
 
@@ -59,18 +82,21 @@ export function SubscriptionOverview() {
     }
   };
 
-  const handleStartSubscription = async () => {
-    setIsLoading(true);
+  const handleCancelOrResume = async (cancel: boolean) => {
+    setIsCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { interval: "month" },
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { cancel },
       });
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-    } catch {
-      toast.error("Failed to start checkout");
+      if (data?.error) throw new Error(data.error);
+
+      queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
+      toast.success(cancel ? "Subscription will cancel at period end" : "Subscription resumed successfully");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update subscription");
     } finally {
-      setIsLoading(false);
+      setIsCancelling(false);
     }
   };
 
@@ -136,7 +162,7 @@ export function SubscriptionOverview() {
               <p className="text-sm text-muted-foreground">
                 Choose a plan to continue using Foreman and unlock all features.
               </p>
-              <Button onClick={() => window.location.href = "/select-plan"} disabled={isLoading} size="lg">
+              <Button onClick={() => navigate("/select-plan")} size="lg">
                 Choose Plan
               </Button>
             </div>
@@ -163,6 +189,14 @@ export function SubscriptionOverview() {
               }
             </CardDescription>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1 text-xs text-muted-foreground"
+            onClick={() => navigate("/select-plan")}
+          >
+            View Plans <ArrowRight className="h-3 w-3" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -214,7 +248,7 @@ export function SubscriptionOverview() {
             {(["lite", "connect", "grow"] as SeatType[]).map((type) => (
               seatCounts[type] > 0 && (
                 <div key={type} className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <p className="text-xs text-muted-foreground capitalize">{type} Seats</p>
+                  <p className="text-xs text-muted-foreground">{SEAT_DISPLAY_NAMES[type]} Seats</p>
                   <p className="text-lg font-bold">{seatCounts[type]}</p>
                   <p className="text-xs text-muted-foreground">
                     × {formatCurrency(SEAT_PRICES[type])}/mo
@@ -227,18 +261,16 @@ export function SubscriptionOverview() {
 
         {/* Total cost */}
         {(isActive || isTrialing) && totalMonthly > 0 && (
-          <>
-            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5">
-              <span className="text-sm font-medium">Total Monthly</span>
-              <span className="text-lg font-bold text-primary">{formatCurrency(totalMonthly)}</span>
-            </div>
-          </>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5">
+            <span className="text-sm font-medium">Total Monthly</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(totalMonthly)}</span>
+          </div>
         )}
 
         <Separator />
 
         {/* Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <p className="text-sm font-medium">
               {isPastDue ? "Update payment method" : isTrialing ? "Choose a plan" : "Manage your subscription"}
@@ -252,22 +284,71 @@ export function SubscriptionOverview() {
               }
             </p>
           </div>
-          {isTrialing ? (
-            <Button variant="default" onClick={() => window.location.href = "/select-plan"}>
-              Choose Plan
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={handleManageBilling} disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  {isPastDue ? "Update Payment" : "Manage Billing"}
-                </>
-              )}
-            </Button>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {isTrialing ? (
+              <Button variant="default" onClick={() => navigate("/select-plan")}>
+                Choose Plan
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={handleManageBilling} disabled={isLoading}>
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      {isPastDue ? "Update Payment" : "Manage Billing"}
+                    </>
+                  )}
+                </Button>
+
+                {/* Cancel / Resume buttons */}
+                {(isActive || isTrialing) && !isCancelled && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        Cancel Subscription
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          You'll keep full access until{" "}
+                          {subscription?.current_period_end
+                            ? format(new Date(subscription.current_period_end), "MMMM d, yyyy")
+                            : "the end of your billing period"
+                          }. After that, your account will be downgraded. You can resume anytime before then.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => handleCancelOrResume(true)}
+                          disabled={isCancelling}
+                        >
+                          {isCancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Cancel"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+
+                {isCancelled && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleCancelOrResume(false)}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Resume Subscription
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

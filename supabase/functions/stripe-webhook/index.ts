@@ -284,18 +284,47 @@ serve(async (req) => {
             await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
 
+            // Build detailed plan info from line items
+            const PRICE_TO_PLAN: Record<string, string> = {
+              "price_1TEa4dDQETj2awNErpoa1vHM": "Starter (Lite)",
+              "price_1TEa57DQETj2awNEESev15XR": "Starter (Lite) Annual",
+              "price_1TEa5SDQETj2awNE4qhL4fa7": "Pro (Connect)",
+              "price_1TEa5tDQETj2awNE2zfrsMkY": "Pro (Connect) Annual",
+              "price_1TEa6HDQETj2awNEycXwPCfc": "Grow",
+              "price_1TEa6oDQETj2awNEHSl42OYl": "Grow Annual",
+            };
+
+            const planLines: string[] = [];
+            let totalSeats = 0;
+            for (const item of stripeSub.items.data) {
+              const priceId = item.price.id;
+              const planName = PRICE_TO_PLAN[priceId] || item.price.nickname || "Foreman";
+              const qty = item.quantity || 1;
+              totalSeats += qty;
+              const unitAmount = item.price.unit_amount ? `€${(item.price.unit_amount / 100).toFixed(2)}` : "";
+              planLines.push(`<strong>${planName}</strong> × ${qty} seat${qty !== 1 ? "s" : ""} — ${unitAmount}/${item.price.recurring?.interval || "mo"}`);
+            }
+
+            const billingInterval = stripeSub.items.data[0]?.price.recurring?.interval === "year" ? "annual" : "monthly";
+            const nextBilling = new Date(stripeSub.current_period_end * 1000).toLocaleDateString("en-IE", {
+              year: "numeric", month: "long", day: "numeric"
+            });
+            const totalAmount = session.amount_total ? `€${(session.amount_total / 100).toFixed(2)}` : "";
+
             // Send branded welcome email to customer
             const customer = await stripe.customers.retrieve(customerId);
             const customerEmail = !customer.deleted ? (customer as Stripe.Customer).email : session.customer_email;
             if (customerEmail) {
-              const amount = session.amount_total ? `€${(session.amount_total / 100).toFixed(2)}` : "your selected plan";
               await sendBrandedEmail(
                 supabase,
                 customerEmail,
                 "Welcome to Foreman — subscription confirmed",
                 brandedEmailHtml("Welcome to Foreman! 🎉", [
                   "Your subscription is now active. You have full access to all Foreman features.",
-                  `<strong>Amount:</strong> ${amount}`,
+                  ...planLines,
+                  `<strong>Total:</strong> ${totalAmount} (${billingInterval})`,
+                  `<strong>Next billing date:</strong> ${nextBilling}`,
+                  `<strong>Seats:</strong> ${totalSeats}`,
                   "You can manage your subscription, change plans, or cancel anytime from Settings → Billing.",
                   "Need help getting started? Reply to this email or reach out at support@foreman.ie."
                 ]),
@@ -309,7 +338,8 @@ serve(async (req) => {
                 `New subscription: ${customerEmail}`,
                 brandedEmailHtml("New Subscription 💰", [
                   `<strong>Customer:</strong> ${customerEmail}`,
-                  `<strong>Amount:</strong> ${amount}`,
+                  ...planLines,
+                  `<strong>Total:</strong> ${totalAmount} (${billingInterval})`,
                   `<strong>Stripe Customer:</strong> ${customerId}`,
                   `<strong>Subscription ID:</strong> ${stripeSubId}`,
                 ]),

@@ -83,6 +83,16 @@ export default function SelectPlan() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-4xl py-12 px-4">
+        {/* Back to Settings */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-6 gap-1 text-muted-foreground"
+          onClick={() => navigate("/settings?tab=team-billing")}
+        >
+          ← Back to Settings
+        </Button>
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-6">
