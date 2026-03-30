@@ -45,12 +45,10 @@ export function GeorgeChatArea({
     }
   };
 
-  // Mobile layout
+  // Mobile layout — header is now rendered by George.tsx, not here
   if (isMobile) {
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {onMenuClick && <GeorgeMobileHeader onMenuClick={onMenuClick} />}
-
         {messages.length === 0 ? (
           <GeorgeWelcome onQuickAction={handleQuickAction} isProcessing={isProcessing} />
         ) : (

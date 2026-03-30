@@ -1,6 +1,8 @@
-import { Menu, Scan } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
+import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { UserMenu } from "@/components/layout/UserMenu";
 
 interface GeorgeMobileHeaderProps {
   onMenuClick: () => void;
@@ -8,8 +10,8 @@ interface GeorgeMobileHeaderProps {
 
 export function GeorgeMobileHeader({ onMenuClick }: GeorgeMobileHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-3 py-2 safe-area-pt bg-background border-b border-border">
-      {/* Left side - Menu button and title pill */}
+    <div className="flex items-center justify-between px-3 py-2 safe-area-pt bg-background border-b border-border flex-shrink-0">
+      {/* Left — sidebar trigger + AI identity */}
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -19,22 +21,17 @@ export function GeorgeMobileHeader({ onMenuClick }: GeorgeMobileHeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        
-        <div className="flex items-center gap-2 bg-white border border-border rounded-full px-3 py-1.5 shadow-sm">
+
+        <div className="flex items-center gap-2 bg-muted border border-border rounded-full px-3 py-1.5">
           <ForemanAvatar size="xs" />
           <span className="font-medium text-sm">Foreman AI</span>
         </div>
       </div>
 
-      {/* Right side - Action icons */}
+      {/* Right — notifications + avatar */}
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full hover:bg-muted"
-        >
-          <Scan className="h-5 w-5" />
-        </Button>
+        <NotificationCenter />
+        <UserMenu />
       </div>
     </div>
   );

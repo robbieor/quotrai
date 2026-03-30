@@ -121,25 +121,25 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
   if (isMobile) {
     return (
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col items-center justify-center min-h-full px-5 py-6 bg-background">
-          <ForemanAvatar size="xl" className="shadow-md border border-border" />
+        <div className="flex flex-col items-center px-5 pt-8 pb-6 bg-background">
+          <ForemanAvatar size="xl" className="shadow-md border border-border mb-3" />
 
-          <p className="text-center text-muted-foreground text-sm leading-relaxed max-w-xs mb-5">
+          <p className="text-center text-muted-foreground text-sm leading-relaxed max-w-xs mb-6">
             {statusMessage}
           </p>
 
-          <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
+          <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
             {displayActions.map((qa) => (
               <button
                 key={qa.label}
                 onClick={() => onQuickAction?.(qa.action, qa.message)}
                 disabled={isProcessing}
-                className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/50 active:scale-[0.97] transition-all border border-transparent active:border-border disabled:opacity-50"
+                className="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 active:scale-[0.97] transition-all border border-border/50 active:border-primary/30 disabled:opacity-50 min-h-[56px]"
               >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <qa.icon className="h-4 w-4 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <qa.icon className="h-5 w-5 text-primary" />
                 </div>
-                <span className="text-xs font-medium text-left leading-tight">
+                <span className="text-sm font-medium text-left leading-tight">
                   {qa.label}
                 </span>
               </button>

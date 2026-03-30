@@ -168,12 +168,12 @@ export function GeorgeMobileInput({
   const showVoiceLock = !hasVoiceAccess;
 
   return (
-    <div className="px-3 pt-2 pb-3 safe-area-pb bg-background border-t border-border">
+    <div className="px-4 pt-3 pb-4 safe-area-pb bg-background border-t border-border">
       {/* Connecting status bar */}
       {isConnecting && !isConnected && (
-        <div className="flex items-center justify-center gap-2 mb-3 py-2 px-3 bg-primary/10 rounded-full border border-primary/20 animate-pulse">
+        <div className="flex items-center justify-center gap-2 mb-3 py-2.5 px-4 bg-primary/10 rounded-full border border-primary/20 animate-pulse">
           <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-          <span className="text-xs font-medium text-primary">
+          <span className="text-sm font-medium text-primary">
             Connecting to Foreman AI...
           </span>
         </div>
@@ -181,14 +181,14 @@ export function GeorgeMobileInput({
 
       {/* Voice status bar */}
       {isConnected && (
-        <div className="flex items-center justify-center gap-2 mb-3 py-2 px-3 bg-primary/10 rounded-full border border-primary/20">
+        <div className="flex items-center justify-center gap-2 mb-3 py-2.5 px-4 bg-primary/10 rounded-full border border-primary/20">
           <div
             className={cn(
               "w-2 h-2 rounded-full",
               isSpeaking ? "bg-primary animate-pulse" : "bg-muted-foreground/50"
             )}
           />
-          <span className="text-xs font-medium text-primary">
+          <span className="text-sm font-medium text-primary">
             {isSpeaking ? "Foreman AI is speaking..." : "Listening..."}
           </span>
           <span className="text-xs text-muted-foreground ml-auto">
@@ -204,7 +204,7 @@ export function GeorgeMobileInput({
             <button
               key={hint.command}
               onClick={() => handleSlashSelect(hint)}
-              className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-muted transition-colors text-left min-h-[44px]"
             >
               <Slash className="h-4 w-4 text-primary shrink-0" />
               <div>
@@ -217,7 +217,7 @@ export function GeorgeMobileInput({
       )}
 
       {/* Input bar */}
-      <div className="flex items-center gap-2 bg-white border border-border rounded-full px-2 py-1.5 shadow-sm">
+      <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-2xl px-3 py-2 shadow-sm">
         {/* Photo Quote Button */}
         <PhotoQuoteButton
           onQuoteSuggestion={(suggestion) => onPhotoQuote?.(suggestion)}
@@ -236,8 +236,8 @@ export function GeorgeMobileInput({
               handleSendMessage();
             }
           }}
-          placeholder="Ask anything or type /"
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground min-w-0 py-2"
+          placeholder="Ask Foreman anything..."
+          className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground min-w-0 py-1.5 min-h-[44px]"
           disabled={isProcessing}
         />
 
@@ -245,14 +245,14 @@ export function GeorgeMobileInput({
         {message.trim() ? (
           <Button
             size="icon"
-            className="h-9 w-9 shrink-0 rounded-full"
+            className="h-11 w-11 shrink-0 rounded-full"
             onClick={handleSendMessage}
             disabled={isProcessing}
           >
             {isProcessing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             )}
           </Button>
         ) : (
@@ -260,9 +260,9 @@ export function GeorgeMobileInput({
             variant={isConnected ? "default" : "ghost"}
             size="icon"
             className={cn(
-              "h-10 w-10 rounded-full shrink-0",
+              "h-11 w-11 rounded-full shrink-0",
               isConnected 
-                ? "bg-red-500 hover:bg-red-600 text-white" 
+                ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" 
                 : "bg-primary hover:bg-primary/90 text-primary-foreground"
             )}
             onClick={toggleConnection}
@@ -271,7 +271,7 @@ export function GeorgeMobileInput({
             {isConnecting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : showVoiceLock ? (
-              <Lock className="h-4 w-4" />
+              <Lock className="h-5 w-5" />
             ) : isConnected ? (
               <PhoneOff className="h-5 w-5" />
             ) : (
