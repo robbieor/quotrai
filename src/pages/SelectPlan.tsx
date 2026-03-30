@@ -169,7 +169,8 @@ export default function SelectPlan() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
@@ -195,6 +196,34 @@ export default function SelectPlan() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile: stacked cards per role */}
+            <div className="md:hidden space-y-3">
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <p className="text-sm font-semibold">Owner / Manager</p>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Lite</span>
+                    <span>Jobs, Quotes, Invoices, Scheduling</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Connect</span>
+                    <span>+ AI, Expenses, Reports</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Grow</span>
+                    <span>+ Leads, Integrations</span>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <p className="text-sm font-semibold">Team Member</p>
+                <p className="text-xs text-muted-foreground">
+                  Jobs, Calendar & Time Tracking only — same access on all seat types.
+                </p>
+              </div>
+            </div>
+
             <p className="text-xs text-muted-foreground mt-3">
               💡 Team Members have the same access regardless of seat type — assign Lite seats to save costs.
             </p>
@@ -312,7 +341,7 @@ function PlanCard({
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+            className="h-10 w-10 sm:h-8 sm:w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
             disabled={quantity <= 1}
           >
             <Minus className="h-3 w-3" />
@@ -320,7 +349,7 @@ function PlanCard({
           <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
           <button
             onClick={() => setQuantity(Math.min(50, quantity + 1))}
-            className="h-8 w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+            className="h-10 w-10 sm:h-8 sm:w-8 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
             disabled={quantity >= 50}
           >
             <Plus className="h-3 w-3" />

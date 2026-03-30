@@ -39,6 +39,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const SEAT_PRICES: Record<SeatType, number> = {
   lite: PRICING.LITE_SEAT,
@@ -71,6 +72,7 @@ export function SubscriptionOverview() {
   const [cancelDetail, setCancelDetail] = useState("");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const isNative = useIsNative();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -382,14 +384,14 @@ export function SubscriptionOverview() {
                             </AlertDialogHeader>
                             <div className="space-y-3 py-2">
                               {CANCEL_REASONS.map((reason) => (
-                                <label key={reason} className="flex items-center gap-3 cursor-pointer">
+                                <label key={reason} className="flex items-center gap-3 cursor-pointer min-h-[44px] py-1">
                                   <input
                                     type="radio"
                                     name="cancel-reason"
                                     value={reason}
                                     checked={cancelReason === reason}
                                     onChange={(e) => setCancelReason(e.target.value)}
-                                    className="h-4 w-4 text-primary"
+                                    className="h-5 w-5 text-primary"
                                   />
                                   <span className="text-sm">{reason}</span>
                                 </label>
@@ -478,7 +480,34 @@ export function SubscriptionOverview() {
             <p className="text-sm text-muted-foreground text-center py-4">
               No invoices yet. Your first invoice will appear here after your trial ends.
             </p>
+          ) : isMobile ? (
+            /* Mobile: stacked cards */
+            <div className="space-y-3">
+              {invoicesData.map((inv: any) => (
+                <div key={inv.id} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {inv.date ? format(new Date(inv.date), "MMM d, yyyy") : "—"}
+                    </span>
+                    <Badge variant={inv.status === "paid" ? "default" : "secondary"} className="text-xs">
+                      {inv.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold">{formatCurrency(inv.amount)}</span>
+                    {inv.pdf_url && (
+                      <Button variant="outline" size="sm" asChild className="gap-1.5 h-9">
+                        <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-3.5 w-3.5" /> PDF
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
+            /* Desktop: table */
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>

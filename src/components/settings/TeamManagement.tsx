@@ -134,24 +134,27 @@ export function TeamManagement() {
               </div>
 
               {/* Role & Seat selectors */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Role</Label>
                   <Select value={inviteRole} onValueChange={(v: InviteRole) => setInviteRole(v)}>
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-10 sm:h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="member">Team Member — Jobs, calendar, time tracking</SelectItem>
-                      <SelectItem value="manager">Manager — Full access, no billing</SelectItem>
-                      <SelectItem value="owner">Owner — Full access including billing</SelectItem>
+                      <SelectItem value="member">Team Member</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="owner">Owner</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-[11px] text-muted-foreground hidden sm:block">
+                    {inviteRole === "member" ? "Jobs, calendar, time tracking" : inviteRole === "manager" ? "Full access, no billing" : "Full access including billing"}
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Seat Type</Label>
                   <Select value={inviteSeat} onValueChange={(v: SeatType) => setInviteSeat(v)}>
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-10 sm:h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
