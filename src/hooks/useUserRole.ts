@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-export type TeamRole = "owner" | "manager" | "member";
+export type TeamRole = "ceo" | "owner" | "manager" | "member";
 
 export function useUserRole() {
   const { user } = useAuth();
@@ -25,10 +25,10 @@ export function useUserRole() {
   return {
     ...query,
     role,
-    isOwner: role === "owner",
+    isOwner: role === "owner" || role === "ceo",
     isManager: role === "manager",
     isMember: role === "member",
-    isOwnerOrManager: role === "owner" || role === "manager",
+    isOwnerOrManager: role === "owner" || role === "ceo" || role === "manager",
     /** Team Seat users (members) can only access Jobs, Calendar, Time Tracking */
     isTeamSeat: role === "member",
   };
