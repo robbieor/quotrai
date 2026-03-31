@@ -31,6 +31,8 @@ interface QuoteDetailSheetProps {
   onDownloadPdf: (quote: Quote) => void;
   onSendEmail: (quote: Quote) => void;
   onCopyPortalLink: (quote: Quote) => void;
+  onConvertToJob?: (quote: Quote) => void;
+  onConvertToInvoice?: (quote: Quote) => void;
 }
 
 export function QuoteDetailSheet({
@@ -41,6 +43,8 @@ export function QuoteDetailSheet({
   onDownloadPdf,
   onSendEmail,
   onCopyPortalLink,
+  onConvertToJob,
+  onConvertToInvoice,
 }: QuoteDetailSheetProps) {
   if (!quote) return null;
 
