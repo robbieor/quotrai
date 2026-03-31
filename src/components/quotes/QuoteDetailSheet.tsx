@@ -87,7 +87,25 @@ export function QuoteDetailSheet({
             createdAt={quote.created_at}
             onSend={() => onSendEmail(quote)}
             onEmail={() => onSendEmail(quote)}
+            onConvertToJob={onConvertToJob ? () => { onConvertToJob(quote); onOpenChange(false); } : undefined}
+            onConvertToInvoice={onConvertToInvoice ? () => { onConvertToInvoice(quote); onOpenChange(false); } : undefined}
           />
+
+          {/* Convert actions for accepted quotes */}
+          {quote.status === "accepted" && (onConvertToJob || onConvertToInvoice) && (
+            <div className="flex gap-2 flex-wrap">
+              {onConvertToJob && (
+                <Button size="sm" onClick={() => { onConvertToJob(quote); onOpenChange(false); }}>
+                  <Briefcase className="mr-1.5 h-3.5 w-3.5" /> Convert to Job
+                </Button>
+              )}
+              {onConvertToInvoice && (
+                <Button size="sm" variant="secondary" onClick={() => { onConvertToInvoice(quote); onOpenChange(false); }}>
+                  <Receipt className="mr-1.5 h-3.5 w-3.5" /> Convert to Invoice
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2 flex-wrap">

@@ -373,7 +373,11 @@ export default function Quotes() {
         onDownloadPdf={handleDownloadPdf}
         onSendEmail={handleSendEmail}
         onCopyPortalLink={handleCopyPortalLink}
+        onConvertToJob={handleConvertToJob}
+        onConvertToInvoice={handleConvertToInvoice}
       />
+      <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} />
+      <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} />
     </DashboardLayout>
   );
 }
