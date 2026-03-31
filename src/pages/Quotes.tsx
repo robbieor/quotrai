@@ -378,7 +378,11 @@ export default function Quotes() {
         onConvertToInvoice={handleConvertToInvoice}
       />
       <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} />
-      <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} />
+      <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} onSubmit={(values) => {
+        createJob.mutate(values);
+        setConvertToJobOpen(false);
+        toast.success("Job created from quote");
+      }} />
     </DashboardLayout>
   );
 }
