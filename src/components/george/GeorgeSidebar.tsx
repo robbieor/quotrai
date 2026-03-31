@@ -207,7 +207,7 @@ export function GeorgeSidebar({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="px-3 pb-3 space-y-4">
+            <div className="px-3 pb-3 space-y-3">
               {/* Empty state */}
               {conversations.length === 0 && !isSearchActive && (
                 <p className="text-sm text-muted-foreground text-center py-8">
