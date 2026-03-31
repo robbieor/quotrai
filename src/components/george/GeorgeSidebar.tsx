@@ -232,7 +232,7 @@ export function GeorgeSidebar({
                       <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2">
                         {group.label}
                       </h3>
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {group.conversations.map((conv) => (
                           <ConversationItem
                             key={conv.id}
