@@ -541,7 +541,7 @@ function ConversationItem({
     <div className="space-y-0.5">
       <div
         className={cn(
-          "group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors",
+          "group flex items-center gap-2 px-3 rounded-xl cursor-pointer transition-colors min-h-[48px]",
           isSelected
             ? "bg-accent text-accent-foreground"
             : "hover:bg-accent/50"
