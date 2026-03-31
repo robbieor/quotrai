@@ -475,7 +475,7 @@ function ConversationItem({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  
   const inputRef = useRef<HTMLInputElement>(null);
 
   const displayTitle =
