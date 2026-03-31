@@ -38,7 +38,7 @@ serve(async (req) => {
       // Fetch profile for trade context
       if (serviceKey) {
         const svc = createClient(supabaseUrl, serviceKey);
-        const { data: profile } = await svc.from("profiles").select("trade_type, full_name").eq("id", data.user.id).maybeSingle();
+        const { data: profile } = await svc.from("profiles").select("trade_type, full_name, currency").eq("id", data.user.id).maybeSingle();
         if (profile) {
           userTradeType = profile.trade_type;
           userName = profile.full_name || "there";
