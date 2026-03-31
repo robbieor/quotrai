@@ -483,7 +483,7 @@ function ConversationItem({
     conversation.first_message?.slice(0, 30) ||
     "New conversation";
 
-  const hasDescription = !!conversation.first_message && conversation.first_message.length > 0;
+  
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
