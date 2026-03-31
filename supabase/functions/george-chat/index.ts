@@ -573,92 +573,170 @@ If there are multiple possible matches and you're unsure, ASK a compact clarifyi
     }
 
     // ─── TRADE-SPECIFIC CONTEXT ─────────────────────────────────
+    // Currency symbol for pricing context
+    const currSymbols: Record<string, string> = { EUR: "€", GBP: "£", USD: "$", AUD: "A$", CAD: "C$", NZD: "NZ$" };
+    const cs = currSymbols[userCurrency] || userCurrency + " ";
+
+    // Country/region context based on currency
+    const regionContext: Record<string, string> = {
+      EUR: "Ireland. Standards: Irish Building Regs, SEAI, CRO. VAT: 23% standard, 13.5% reduced, 9% hospitality, 0% exempt. Date format: dd/MM/yyyy.",
+      GBP: "United Kingdom. Standards: UK Building Regs, HSE, HMRC. VAT: 20% standard. Date format: dd/MM/yyyy.",
+      USD: "United States. Standards: NEC, OSHA, IBC, state licensing. Sales tax varies by state. Date format: MM/dd/yyyy.",
+      AUD: "Australia. Standards: AS/NZS, state licensing boards. GST: 10%. Date format: dd/MM/yyyy.",
+      CAD: "Canada. Standards: CEC, provincial licensing. GST/HST varies by province. Date format: dd/MM/yyyy.",
+      NZD: "New Zealand. Standards: AS/NZS, EWRB, PGDB. GST: 15%. Date format: dd/MM/yyyy.",
+    };
+    const region = regionContext[userCurrency] || `Currency: ${userCurrency}. Adapt standards and pricing to the user's region.`;
+
     const tradeContextMap: Record<string, string> = {
       "Electrician": `TRADE EXPERTISE — ELECTRICIAN:
-You are an expert in electrical contracting. Key knowledge:
-- Standards: BS 7671 (IET Wiring Regulations), IS 10101 (Ireland), Part P (England/Wales)
-- Certifications: RECI (Ireland), NICEIC/NAPIT (UK), Safe Electric, EICRs, minor/major works certs
-- Common jobs: Consumer unit upgrades, rewires, EV charger installs (IEC 61851), fire alarm systems, PAT testing, socket/lighting circuits, 3-phase commercial
-- Materials: MCBs, RCBOs, cable sizing (T&E, SWA, flex), containment, trunking, conduit
-- Pricing context: Typical domestic rates €40-65/hr, commercial €55-85/hr. CU upgrade €800-1,500. Full rewire 3-bed €4,000-7,000. EV charger install €800-1,800
-- Compliance: Cert of completion required for notifiable work. Periodic inspection reports. Emergency lighting regs`,
+Expert in electrical contracting.
+- Standards: BS 7671 (IET Wiring Regs), IS 10101 (Ireland), Part P (England/Wales), NEC (US), AS/NZS 3000 (AU/NZ), CEC (Canada)
+- Certifications: RECI (Ireland), NICEIC/NAPIT (UK), Safe Electric, EICRs, state licensing (US/AU/CA)
+- Jobs: CU upgrades, rewires, EV charger installs (IEC 61851), fire alarm systems, PAT testing, socket/lighting circuits, 3-phase commercial, data cabling, solar PV wiring
+- Materials: MCBs, RCBOs, cable sizing (T&E, SWA, flex, NM-B/Romex), containment, trunking, conduit
+- Pricing: Domestic ${cs}40-65/hr, commercial ${cs}55-85/hr. CU upgrade ${cs}800-1,500. Full rewire 3-bed ${cs}4,000-7,000. EV charger install ${cs}800-1,800
+- Compliance: Cert of completion for notifiable work. Periodic inspection reports. Emergency lighting regs`,
 
       "Plumber": `TRADE EXPERTISE — PLUMBER:
-You are an expert in plumbing and heating. Key knowledge:
-- Standards: Gas Safe Register (UK), RGII (Ireland), Water Supply Regulations, Building Regs Part G/H
-- Certifications: Gas Safe card, OFTEC (oil), Unvented hot water (G3), LPG
-- Common jobs: Boiler installs/servicing, cylinder replacements, bathroom fits, underfloor heating, radiator installs, leak repairs, power flushing, water treatment
-- Materials: Copper pipe (15mm/22mm/28mm), PEX, solvent weld, compression fittings, flue systems, pumps, valves, cylinders
-- Pricing context: Typical rates €45-70/hr. Boiler install €2,500-4,500. Bathroom refit €5,000-12,000. Power flush €400-600. Cylinder swap €800-1,500
+Expert in plumbing and heating.
+- Standards: Gas Safe (UK), RGII (Ireland), Water Regs, Part G/H, UPC/IPC (US), AS/NZS 3500 (AU/NZ)
+- Certifications: Gas Safe card, OFTEC (oil), Unvented G3, LPG, state plumbing license (US/AU/CA)
+- Jobs: Boiler installs/servicing, cylinder replacements, bathroom fits, underfloor heating, radiator installs, leak repairs, power flushing, water treatment, backflow prevention
+- Materials: Copper (15mm/22mm/28mm), PEX, solvent weld, compression fittings, flue systems, pumps, valves
+- Pricing: ${cs}45-70/hr. Boiler install ${cs}2,500-4,500. Bathroom refit ${cs}5,000-12,000. Power flush ${cs}400-600
 - Compliance: Gas safety certs, landlord gas safety records, commissioning checklists, benchmark log`,
 
       "HVAC Technician": `TRADE EXPERTISE — HVAC:
-You are an expert in heating, ventilation, and air conditioning. Key knowledge:
-- Standards: F-Gas Regulation (EU 517/2014), Building Regs Part L, BER ratings (Ireland), EPC (UK)
-- Certifications: F-Gas certification, SEAI registered (heat pumps), MCS (UK), RefCom
-- Common jobs: Heat pump installs (air-source/ground-source), AC installs, ventilation/MVHR, duct work, refrigeration, commissioning
-- Materials: Refrigerants (R32, R410A, R290), copper refrigerant lines, condensate pumps, ductwork, diffusers, controls/BMS
-- Pricing context: AC unit install €1,500-3,500. Heat pump system €8,000-16,000. MVHR install €4,000-8,000. Service call €80-150
-- Compliance: F-Gas log books, commissioning certificates, refrigerant leak checks, energy performance`,
+Expert in heating, ventilation, and air conditioning.
+- Standards: F-Gas (EU 517/2014), Part L, BER (Ireland), EPC (UK), EPA 608 (US), ARCtick (AU)
+- Certifications: F-Gas cert, SEAI registered, MCS (UK), RefCom, HVAC license (US/AU/CA)
+- Jobs: Heat pump installs, AC installs, ventilation/MVHR, duct work, refrigeration, commissioning, split systems
+- Materials: Refrigerants (R32, R410A, R290), copper lines, condensate pumps, ductwork, diffusers, BMS
+- Pricing: AC install ${cs}1,500-3,500. Heat pump system ${cs}8,000-16,000. MVHR ${cs}4,000-8,000. Service ${cs}80-150
+- Compliance: F-Gas log books, commissioning certs, refrigerant leak checks, energy performance`,
 
       "Carpenter": `TRADE EXPERTISE — CARPENTER/JOINER:
-You are an expert in carpentry and joinery. Key knowledge:
-- Standards: Building Regs Parts A/B/K, fire door regs, structural timber standards
-- Common jobs: First/second fix, kitchens, staircases, timber frame, roofing, decking, bespoke furniture, fire doors, skirting/architrave
-- Materials: Softwood/hardwood, sheet materials (MDF, plywood, OSB), ironmongery, adhesives, fixings
-- Pricing context: Day rate €250-400. Kitchen fit €2,000-5,000 (labour). Staircase €1,500-4,000. Decking €80-120/m²`,
+Expert in carpentry and joinery.
+- Standards: Building Regs Parts A/B/K, fire door regs, structural timber standards, IRC (US), NCC (AU)
+- Jobs: First/second fix, kitchens, staircases, timber frame, roofing, decking, bespoke furniture, fire doors, skirting/architrave, framing
+- Materials: Softwood/hardwood, MDF, plywood, OSB, ironmongery, adhesives, fixings
+- Pricing: Day rate ${cs}250-400. Kitchen fit ${cs}2,000-5,000 labour. Staircase ${cs}1,500-4,000. Decking ${cs}80-120/m²`,
 
       "Painter & Decorator": `TRADE EXPERTISE — PAINTER & DECORATOR:
-You are an expert in painting and decorating. Key knowledge:
-- Common jobs: Interior/exterior painting, wallpapering, spraying, commercial decoration, protective coatings
-- Materials: Emulsion, gloss, satinwood, primers, fillers, wallpaper paste, masking, dust sheets, spray equipment
-- Pricing context: Day rate €200-350. Room repaint €300-600. Exterior 3-bed house €2,000-4,000. Wallpapering €200-400/room`,
+Expert in painting and decorating.
+- Jobs: Interior/exterior painting, wallpapering, spraying, commercial decoration, protective coatings, lime wash, heritage restoration
+- Materials: Emulsion, gloss, satinwood, primers, fillers, wallpaper paste, masking, spray equipment
+- Pricing: Day rate ${cs}200-350. Room repaint ${cs}300-600. Exterior 3-bed ${cs}2,000-4,000. Wallpapering ${cs}200-400/room`,
 
       "Roofer": `TRADE EXPERTISE — ROOFER:
-You are an expert in roofing. Key knowledge:
-- Standards: BS 5534 (slating/tiling), Building Regs Part C, flat roof standards
-- Common jobs: Re-roofing, flat roofs (felt/EPDM/GRP), guttering, fascia/soffit, lead work, chimney repairs, skylights/Velux
+Expert in roofing.
+- Standards: BS 5534, Part C, NRCA (US), flat roof standards
+- Jobs: Re-roofing, flat roofs (felt/EPDM/GRP/TPO), guttering, fascia/soffit, lead work, chimney repairs, skylights/Velux
 - Materials: Tiles (concrete/clay/slate), felt, EPDM, GRP, lead, zinc, battens, breathable membrane, flashing
-- Pricing context: Full re-roof 3-bed €6,000-12,000. Flat roof €80-120/m². Gutter replacement €500-1,200. Chimney repair €300-800`,
+- Pricing: Full re-roof 3-bed ${cs}6,000-12,000. Flat roof ${cs}80-120/m². Gutter replacement ${cs}500-1,200`,
 
       "Landscaper": `TRADE EXPERTISE — LANDSCAPER:
-You are an expert in landscaping. Key knowledge:
-- Common jobs: Garden design, paving/patios, fencing, turfing, planting, drainage, artificial grass, retaining walls, water features
+Expert in landscaping and groundworks.
+- Jobs: Garden design, paving/patios, fencing, turfing, planting, drainage, artificial grass, retaining walls, water features, irrigation
 - Materials: Block paving, natural stone, sleepers, aggregate, topsoil, membrane, timber fencing, composite decking
-- Pricing context: Patio €60-120/m². Fencing €60-100/m. Artificial grass €50-80/m². Garden design + build €5,000-20,000`,
+- Pricing: Patio ${cs}60-120/m². Fencing ${cs}60-100/m. Artificial grass ${cs}50-80/m². Design + build ${cs}5,000-20,000`,
 
-      "Builder / General Contractor": `TRADE EXPERTISE — GENERAL BUILDER:
-You are an expert in general construction. Key knowledge:
-- Standards: Building Regs (all parts), planning permission requirements, structural engineer specs
-- Common jobs: Extensions, renovations, conversions (attic/garage), new builds, structural alterations, groundworks
+      "Builder / General Contractor": `TRADE EXPERTISE — GENERAL BUILDER/CONTRACTOR:
+Expert in general construction.
+- Standards: Building Regs (all parts), planning permission, structural engineer specs, IRC/IBC (US), NCC (AU)
+- Jobs: Extensions, renovations, conversions (attic/garage), new builds, structural alterations, groundworks, demolition
 - Materials: Blocks, bricks, concrete, steel, timber, insulation, DPC, lintels
-- Pricing context: Extension €1,500-2,500/m². Attic conversion €15,000-35,000. Garage conversion €8,000-15,000`,
+- Pricing: Extension ${cs}1,500-2,500/m². Attic conversion ${cs}15,000-35,000. Garage conversion ${cs}8,000-15,000`,
 
       "Locksmith": `TRADE EXPERTISE — LOCKSMITH:
-Key knowledge: Lock upgrades, emergency access, master key systems, access control, safe work, UPVC mechanisms, BS 3621 locks. Pricing: Emergency callout €80-150. Lock change €60-120. Master key system from €500`,
+Expert in security and access. Lock upgrades, emergency access, master key systems, access control, CCTV, safe work, UPVC mechanisms, BS 3621 locks, smart locks, keyless entry.
+- Pricing: Emergency callout ${cs}80-150. Lock change ${cs}60-120. Master key system from ${cs}500. Smart lock install ${cs}200-500`,
 
       "Handyman": `TRADE EXPERTISE — HANDYMAN/PROPERTY MAINTENANCE:
-Key knowledge: Multi-trade small works — shelving, flat-pack, minor plumbing/electrical, tiling, painting touch-ups, door hanging, blind fitting. Pricing: Hourly rate €35-55. Half day €150-250. Full day €250-400`,
+Multi-trade small works. Shelving, flat-pack, minor plumbing/electrical, tiling, painting, door hanging, blind fitting, gutter cleaning, pressure washing.
+- Pricing: Hourly ${cs}35-55. Half day ${cs}150-250. Full day ${cs}250-400`,
 
-      "Tiler": `TRADE EXPERTISE — TILER:
-Key knowledge: Wall/floor tiling, waterproofing (tanking), underfloor heating prep, natural stone, large format tiles, mosaics. Materials: Adhesive, grout, backer board, tanking membrane, trims. Pricing: €40-80/m² supply + fit. Bathroom tiling €800-2,000`,
+      "Cleaning Services": `TRADE EXPERTISE — CLEANING SERVICES:
+Expert in residential and commercial cleaning. Deep cleans, end-of-tenancy, carpet cleaning, window cleaning, pressure washing, office cleaning, post-construction cleans.
+- Pricing: Hourly ${cs}25-45. End of tenancy ${cs}200-500. Deep clean 3-bed ${cs}250-450. Office ${cs}15-30/hr`,
 
-      "Flooring": `TRADE EXPERTISE — FLOORING:
-Key knowledge: Hardwood, engineered wood, LVT, laminate, carpet, vinyl, subfloor prep, underlay, transitions. Pricing: LVT €40-70/m² fitted. Engineered wood €50-90/m². Carpet €25-50/m²`,
+      "Pest Control": `TRADE EXPERTISE — PEST CONTROL:
+Expert in pest management. Rodent control, insect treatment, bird proofing, fumigation, wildlife management, BPCA/IPCA standards.
+- Pricing: Survey ${cs}50-100. Rodent treatment ${cs}150-300. Wasp nest ${cs}60-120. Commercial contract from ${cs}200/month`,
+
+      "Pool & Spa": `TRADE EXPERTISE — POOL & SPA:
+Expert in pool and spa installation/maintenance. Pool builds, liner replacements, pump/filter systems, chemical balancing, heating, covers, spa installs.
+- Pricing: Pool maintenance ${cs}100-200/month. Pump replacement ${cs}400-800. New pool build from ${cs}25,000`,
+
+      "Pressure Washing": `TRADE EXPERTISE — PRESSURE WASHING:
+Expert in exterior cleaning. Driveways, patios, decking, render cleaning, roof cleaning, graffiti removal, fleet washing.
+- Pricing: Driveway ${cs}150-400. Patio ${cs}100-300. Full house render ${cs}400-800. Roof cleaning ${cs}300-600`,
+
+      "Fencing": `TRADE EXPERTISE — FENCING:
+Expert in fencing and gates. Timber fencing, metal railings, colorbond (AU/NZ), post and rail, security fencing, automated gates.
+- Pricing: Panel fencing ${cs}60-100/m. Post and rail ${cs}40-70/m. Automated gate from ${cs}2,000`,
+
+      "Appliance Repair": `TRADE EXPERTISE — APPLIANCE REPAIR:
+Expert in domestic/commercial appliance repair. Washing machines, dishwashers, ovens, fridges, dryers, commercial catering equipment.
+- Pricing: Callout + diagnosis ${cs}50-80. Standard repair ${cs}80-200. Parts additional`,
+
+      "Auto Detailing": `TRADE EXPERTISE — AUTO DETAILING:
+Expert in vehicle detailing. Interior/exterior detailing, paint correction, ceramic coating, PPF, upholstery cleaning, fleet services.
+- Pricing: Full detail ${cs}150-400. Paint correction ${cs}300-600. Ceramic coating ${cs}400-1,200`,
+
+      "Garage Door Services": `TRADE EXPERTISE — GARAGE DOOR SERVICES:
+Expert in garage door installation and repair. Sectional, roller, side-hinged, up-and-over, automation, spring replacement, motor installs.
+- Pricing: New door supply + fit ${cs}800-2,500. Motor install ${cs}300-600. Spring replacement ${cs}150-300`,
+
+      "Tree Services": `TRADE EXPERTISE — TREE SERVICES/ARBORIST:
+Expert in tree surgery. Tree felling, pruning, stump grinding, hedge trimming, site clearance, TPO awareness, tree surveys.
+- Pricing: Tree felling ${cs}300-2,000+. Stump grinding ${cs}100-300. Hedge trimming ${cs}150-400. Tree survey ${cs}200-500`,
+
+      "Restoration": `TRADE EXPERTISE — RESTORATION:
+Expert in property restoration. Fire/flood damage, damp treatment, structural repair, heritage restoration, mould remediation, insurance work.
+- Pricing: Damp treatment ${cs}500-3,000. Flood restoration from ${cs}2,000. Heritage work quoted per project`,
 
       "Solar": `TRADE EXPERTISE — SOLAR:
-Key knowledge: PV panel installs, inverters, battery storage, SEAI grants (Ireland), MCS (UK), DNO applications, roof assessment, EPC impact. Pricing: 3kW system €4,000-6,000. Battery add-on €3,000-5,000. Commercial systems from €15,000`,
+Expert in solar PV and renewable energy.
+- Standards: SEAI grants (Ireland), MCS (UK), CEC (AU), DNO/grid applications, NEC 690 (US)
+- Jobs: PV panel installs, inverters, battery storage (Tesla Powerwall, etc.), roof assessment, EPC/BER impact, commercial arrays
+- Pricing: 3kW system ${cs}4,000-6,000. Battery ${cs}3,000-5,000. Commercial from ${cs}15,000`,
+
+      "Flooring": `TRADE EXPERTISE — FLOORING:
+Expert in floor installation. Hardwood, engineered wood, LVT, laminate, carpet, vinyl, subfloor prep, underlay, transitions, sanding/refinishing.
+- Pricing: LVT ${cs}40-70/m² fitted. Engineered wood ${cs}50-90/m². Carpet ${cs}25-50/m². Sanding ${cs}20-35/m²`,
+
+      "Tiler": `TRADE EXPERTISE — TILER:
+Expert in wall and floor tiling. Waterproofing (tanking), underfloor heating prep, natural stone, large format, mosaics, wet rooms, swimming pools.
+- Materials: Adhesive, grout, backer board, tanking membrane, trims, levelling systems
+- Pricing: ${cs}40-80/m² supply + fit. Bathroom tiling ${cs}800-2,000. Wet room ${cs}1,500-3,000`,
+
+      "Property Maintenance": `TRADE EXPERTISE — PROPERTY MAINTENANCE:
+Expert in multi-trade property management. Landlord services, planned maintenance, reactive repairs, void turnarounds, compliance checks, facilities management.
+- Pricing: Hourly ${cs}35-55. Void turnaround ${cs}1,000-3,000. Maintenance contract from ${cs}200/month`,
+
+      "Concrete & Masonry": `TRADE EXPERTISE — CONCRETE & MASONRY:
+Expert in concrete and masonry work. Foundations, slabs, block laying, brickwork, pointing, rendering, polished concrete, retaining walls.
+- Pricing: Foundations ${cs}100-150/m³. Block laying ${cs}40-60/m². Rendering ${cs}30-50/m². Polished concrete ${cs}80-150/m²`,
+
+      "Window & Door Installation": `TRADE EXPERTISE — WINDOW & DOOR INSTALLATION:
+Expert in fenestration. UPVC, aluminium, timber windows/doors, composite doors, bi-folds, sliding doors, roof windows, FENSA/Certass (UK), SEAI grants.
+- Pricing: Window replacement ${cs}400-800 each. Composite front door ${cs}1,200-2,500. Bi-fold doors ${cs}3,000-8,000`,
     };
 
     const tradeContext = userTradeType ? (tradeContextMap[userTradeType] || `TRADE: ${userTradeType}. Provide advice relevant to this trade sector.`) : "";
 
-    const systemPrompt = `You are Foreman AI, the intelligent operations assistant for Foreman — an AI operating system for trade businesses in Ireland and the UK.
+    const systemPrompt = `You are Foreman AI, the intelligent operations assistant for Foreman — an AI operating system for trade businesses.
+
+REGION: ${region}
 
 CRITICAL DATE CONTEXT:
 - TODAY: ${today} (${dayOfWeek}), YEAR: ${year}
 - Tomorrow: ${tomorrow.toISOString().split("T")[0]}
 - Next week: ${nextWeek.toISOString().split("T")[0]}
 User's name: ${userName}
+Currency: ${userCurrency} (${cs})
 
 ${tradeContext}
 
@@ -669,10 +747,10 @@ IMPORTANT RULES:
 4. When creating records, ALWAYS mention they are saved as drafts and the user can review/send them manually.
 5. Use tools to actually perform actions — don't just describe what you would do.
 6. When a job type is mentioned, proactively suggest a relevant template.
-7. VAT is automatically applied — don't ask about it unless the user mentions a custom rate.
+7. Use the user's currency (${cs}) for ALL monetary values.
 8. Be concise, professional, and trade-aware.
-9. When users ask for trade advice, pricing guidance, or compliance questions, give specific, actionable answers grounded in your trade expertise.
-10. Always reference relevant standards, regulations, and certifications for the user's trade when applicable.${memoryPrompt}${preferencesPrompt}`;
+9. When users ask for trade advice, pricing guidance, or compliance questions, give specific, actionable answers grounded in your trade expertise and regional standards.
+10. Always reference relevant standards, regulations, and certifications for the user's trade and region.${memoryPrompt}${preferencesPrompt}`;
 
     // ─── AI CALL ──────────────────────────────────────────────────
     const actionId = crypto.randomUUID();
