@@ -54,6 +54,7 @@ export default function Quotes() {
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
   const { symbol: currencySymbol, formatCurrency } = useCurrency();
+  const createJob = useCreateJob();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get("status") as StatusFilter) || "all");
   const [formOpen, setFormOpen] = useState(false);
