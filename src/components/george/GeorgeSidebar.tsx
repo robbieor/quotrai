@@ -136,7 +136,7 @@ export function GeorgeSidebar({
         />
 
         {/* Sidebar panel */}
-        <div className="fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-xs bg-background flex flex-col animate-in slide-in-from-left duration-200 safe-area-pt">
+        <div className="fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-xs bg-background flex flex-col animate-in slide-in-from-left duration-200 safe-area-pt overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <span className="font-semibold">Conversations</span>
