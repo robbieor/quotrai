@@ -514,10 +514,6 @@ function ConversationItem({
     }
   };
 
-  const toggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsExpanded(!isExpanded);
-  };
 
   if (isEditing) {
     return (
