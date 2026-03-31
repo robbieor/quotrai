@@ -43,6 +43,7 @@ serve(async (req) => {
         if (profile) {
           userTradeType = profile.trade_type;
           userName = profile.full_name || "there";
+          userCurrency = profile.currency || "EUR";
         }
       }
     }
