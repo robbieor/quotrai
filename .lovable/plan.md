@@ -1,71 +1,65 @@
 
 
-# How Text Requests Are Handled — No Internal Webhooks Needed
+# Foreman AI — Mobile Sidebar Fix + Trade-Aware Consultation Mode
 
-## Your Architecture Already Works
+## Two Problems
 
-You do **not** need separate internal webhooks to mirror the ElevenLabs voice webhook. Here is how both paths currently work:
+### 1. Mobile Sidebar Squashed
+The screenshot shows the conversations sidebar overlapping the main content with text cramped. Issues:
+- The sidebar takes `w-[85vw] max-w-xs` (max 320px) which is fine, but the conversation items and the "Projects" section at the bottom consume too much vertical space
+- The sidebar doesn't have enough padding and the conversation row has no truncation on long titles like "Give me a summary of my week ahead" — it wraps and pushes content
+- The "Projects" collapsible section at the bottom wastes space for most users who won't use it
 
-```text
-┌─────────────────────────────────────────────────────┐
-│                    USER INPUT                        │
-├──────────────┬──────────────────────────────────────┤
-│  VOICE       │  TEXT (typed or quick-action tile)    │
-│              │                                      │
-│  ElevenLabs  │  Frontend (useForemanChat)           │
-│  Agent       │       │                              │
-│     │        │       ▼                              │
-│     ▼        │  george-chat (edge function)          │
-│  george-     │       │                              │
-│  webhook     │       ├─ Short-circuit? → webhook     │
-│  (direct)    │       ├─ Slash command? → webhook     │
-│              │       └─ AI reasoning → tool calls    │
-│              │              │                        │
-│              │              ▼                        │
-│              │         george-webhook                │
-│              │         (same function)               │
-└──────────────┴──────────────────────────────────────┘
-```
+### 2. Trade-Specific Consultation (the "Manus AI" experience)
+Currently, `george-chat` system prompt says "trade-specific knowledge" but provides zero actual trade context. The user's `trade_type` from their profile is available but never injected into the AI prompt. The AI has no grounding in:
+- Trade regulations (BS 7671 for electricians, Gas Safe for plumbers, etc.)
+- Pricing benchmarks for the user's region
+- Common job scopes and materials
+- Compliance and certification requirements
 
-### Voice path
-ElevenLabs agent detects intent → calls `george-webhook` directly with `{ function_name, parameters }`. No AI reasoning on your side — ElevenLabs handles that.
+**The fix**: Inject the user's `trade_type` into the system prompt with deep, trade-specific context so every response is contextually relevant to their trade. This transforms Foreman AI from a generic business assistant into a **trade-aware operating system**.
 
-### Text path
-`george-chat` receives the message → sends it to the Lovable AI gateway with OpenAI-format tool definitions (converted from the same `foreman-tool-definitions.ts`). When the AI returns tool calls, `george-chat` calls `george-webhook` internally with the exact same `{ function_name, parameters }` payload.
+---
 
-### Both paths hit the same backend
-`george-webhook` is the single execution engine. It handles `create_quote`, `create_job`, `get_todays_jobs`, etc. — identical logic regardless of whether the request came from voice or text.
+## Fix Plan
 
-## What the tool definitions do
+### Fix 1: Mobile Sidebar Layout
+**Edit: `src/components/george/GeorgeSidebar.tsx`**
+- Truncate conversation titles to single line with `truncate` class
+- Remove the "Projects" collapsible section on mobile (it adds complexity users don't need in the AI chat sidebar)
+- Increase conversation item touch targets to 48px minimum
+- Add better spacing between header, search, and conversation list
+- Make the conversation item row more compact: icon + truncated title + action menu in one line
 
-The 59 tool definitions in `_shared/foreman-tool-definitions.ts` serve dual purpose:
-- **Voice**: Synced to ElevenLabs via `sync-agent-tools` edge function (PATCH to their agent API)
-- **Text**: Converted to OpenAI function-calling format by `george-chat` line 25-38 and passed to the AI gateway
+### Fix 2: Trade-Aware System Prompt
+**Edit: `supabase/functions/george-chat/index.ts`**
+- The profile query already fetches `full_name` — extend it to also fetch `trade_type`
+- Build a `tradeContext` string based on the user's trade type with:
+  - Industry-specific regulations and standards
+  - Common job types and pricing structures
+  - Materials and supplier knowledge
+  - Certification requirements
+  - Regional compliance (Ireland/UK focused)
+- Inject this into the system prompt so every AI response is trade-contextualized
 
-Both systems use the same schema. When either system returns a tool call, `george-webhook` executes it.
+Trade context map (examples):
+- **Electrician**: BS 7671, RECI (Ireland), NICEIC, Safe Electric, EICRs, CU upgrades, EV charger regs, Part P
+- **Plumber**: Gas Safe, RGII, unvented cylinders, water regs, boiler servicing standards
+- **HVAC**: F-Gas, refrigerant handling, BER ratings, heat pump installation regs
+- **General/Builder**: Building regs, planning permission awareness, structural standards
 
-## The three text execution paths
+### Fix 3: Also Update `foreman-chat/index.ts`
+This simpler edge function also serves as a chat endpoint. Apply the same trade-context enhancement here so both paths are consistent. Currently it has no profile/trade context at all — add a profile fetch and trade prompt injection.
 
-| Path | Trigger | AI involved? | Latency |
-|------|---------|-------------|---------|
-| Direct webhook | Exact-match quick-action text (e.g. "What jobs do I have scheduled for today?") | No | ~200ms |
-| Quick-action short-circuit | Guided prompts (e.g. "Help me create a new quote") | No | ~200ms |
-| Full AI reasoning | Any freeform text | Yes (Gemini 3 Flash) | ~1-3s |
+---
 
-For the full AI path, the model returns tool calls in OpenAI format, `george-chat` parses them, and calls `george-webhook` — the same function voice uses.
+## File Summary
 
-## Confirmation gates
+| Action | File | Change |
+|--------|------|--------|
+| Edit | `src/components/george/GeorgeSidebar.tsx` | Mobile: compact conversation rows, truncate titles, remove Projects on mobile, better touch targets |
+| Edit | `supabase/functions/george-chat/index.ts` | Fetch `trade_type` from profile, inject trade-specific context into system prompt |
+| Edit | `supabase/functions/foreman-chat/index.ts` | Same trade-context injection for consistency |
 
-Write actions (`create_quote`, `create_invoice`, `create_job`, etc.) are **deferred** in the text path. `george-chat` does not execute the webhook immediately — it returns `pending_tool_calls` with a `confirmation_gate` to the frontend. The user confirms, then the frontend calls `george-webhook` directly.
-
-Voice path: ElevenLabs handles confirmation via conversation flow, then calls `george-webhook` when the user says yes.
-
-## Bottom line
-
-**No additional webhooks needed.** The system is already unified:
-- One tool definition source (`foreman-tool-definitions.ts`)
-- One execution engine (`george-webhook`)
-- Two entry points that both feed into it (`george-chat` for text, ElevenLabs for voice)
-
-The architecture is correct. The issues you've been hitting are frontend rendering bugs (state wiping, missing response display), not missing backend infrastructure.
+No database changes. No new files. The trade knowledge is embedded in the system prompt — no external API or additional LLM needed. The existing Lovable AI gateway (Gemini 3 Flash) already has strong domain knowledge about trade regulations; it just needs to be told what trade the user operates in.
 
