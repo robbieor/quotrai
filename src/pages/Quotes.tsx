@@ -60,6 +60,9 @@ export default function Quotes() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [convertToInvoiceOpen, setConvertToInvoiceOpen] = useState(false);
+  const [convertToJobOpen, setConvertToJobOpen] = useState(false);
+  const [jobPrefill, setJobPrefill] = useState<any>(null);
 
   useEffect(() => {
     const highlightId = searchParams.get("highlight");
