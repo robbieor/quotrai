@@ -133,6 +133,21 @@ export default function Quotes() {
     toast.success("Portal link copied to clipboard");
   };
 
+  const handleConvertToJob = (quote: Quote) => {
+    const description = quote.quote_items.map((item) => `${item.description} (x${item.quantity})`).join("\n");
+    setJobPrefill({
+      customer_id: quote.customer_id,
+      title: `Job from ${quote.display_number}`,
+      description,
+      quoted_price: Number(quote.total),
+    });
+    setConvertToJobOpen(true);
+  };
+
+  const handleConvertToInvoice = (_quote: Quote) => {
+    setConvertToInvoiceOpen(true);
+  };
+
   const handleExport = () => {
     const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
     const data = selected.length > 0 ? selected : sortedData;
