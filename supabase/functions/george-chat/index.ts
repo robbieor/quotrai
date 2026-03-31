@@ -359,7 +359,7 @@ serve(async (req) => {
 
     // ─── PARALLEL: Profile + Membership + Preferences ───────────
     const [profileRes, membershipRes, prefsRes] = await Promise.all([
-      serviceSupabase.from("profiles").select("team_id, full_name").eq("id", userId).single(),
+      serviceSupabase.from("profiles").select("team_id, full_name, trade_type").eq("id", userId).single(),
       serviceSupabase.from("team_memberships").select("id").eq("user_id", userId).limit(1).maybeSingle(),
       serviceSupabase.from("foreman_ai_preferences").select("*").eq("user_id", userId).maybeSingle(),
     ]);
@@ -373,6 +373,7 @@ serve(async (req) => {
 
     const teamId = profileRes.data.team_id;
     const userName = profileRes.data.full_name || "there";
+    const userTradeType = profileRes.data.trade_type || null;
     const userPrefs = prefsRes.data;
 
     if (!membershipRes.data) {
@@ -570,13 +571,95 @@ If there are multiple possible matches and you're unsure, ASK a compact clarifyi
       }
     }
 
-    const systemPrompt = `You are Foreman AI, a professional AI assistant for Foreman — a trade business management platform for electricians, plumbers, and field service professionals in Ireland and the UK.
+    // ─── TRADE-SPECIFIC CONTEXT ─────────────────────────────────
+    const tradeContextMap: Record<string, string> = {
+      "Electrician": `TRADE EXPERTISE — ELECTRICIAN:
+You are an expert in electrical contracting. Key knowledge:
+- Standards: BS 7671 (IET Wiring Regulations), IS 10101 (Ireland), Part P (England/Wales)
+- Certifications: RECI (Ireland), NICEIC/NAPIT (UK), Safe Electric, EICRs, minor/major works certs
+- Common jobs: Consumer unit upgrades, rewires, EV charger installs (IEC 61851), fire alarm systems, PAT testing, socket/lighting circuits, 3-phase commercial
+- Materials: MCBs, RCBOs, cable sizing (T&E, SWA, flex), containment, trunking, conduit
+- Pricing context: Typical domestic rates €40-65/hr, commercial €55-85/hr. CU upgrade €800-1,500. Full rewire 3-bed €4,000-7,000. EV charger install €800-1,800
+- Compliance: Cert of completion required for notifiable work. Periodic inspection reports. Emergency lighting regs`,
+
+      "Plumber": `TRADE EXPERTISE — PLUMBER:
+You are an expert in plumbing and heating. Key knowledge:
+- Standards: Gas Safe Register (UK), RGII (Ireland), Water Supply Regulations, Building Regs Part G/H
+- Certifications: Gas Safe card, OFTEC (oil), Unvented hot water (G3), LPG
+- Common jobs: Boiler installs/servicing, cylinder replacements, bathroom fits, underfloor heating, radiator installs, leak repairs, power flushing, water treatment
+- Materials: Copper pipe (15mm/22mm/28mm), PEX, solvent weld, compression fittings, flue systems, pumps, valves, cylinders
+- Pricing context: Typical rates €45-70/hr. Boiler install €2,500-4,500. Bathroom refit €5,000-12,000. Power flush €400-600. Cylinder swap €800-1,500
+- Compliance: Gas safety certs, landlord gas safety records, commissioning checklists, benchmark log`,
+
+      "HVAC Technician": `TRADE EXPERTISE — HVAC:
+You are an expert in heating, ventilation, and air conditioning. Key knowledge:
+- Standards: F-Gas Regulation (EU 517/2014), Building Regs Part L, BER ratings (Ireland), EPC (UK)
+- Certifications: F-Gas certification, SEAI registered (heat pumps), MCS (UK), RefCom
+- Common jobs: Heat pump installs (air-source/ground-source), AC installs, ventilation/MVHR, duct work, refrigeration, commissioning
+- Materials: Refrigerants (R32, R410A, R290), copper refrigerant lines, condensate pumps, ductwork, diffusers, controls/BMS
+- Pricing context: AC unit install €1,500-3,500. Heat pump system €8,000-16,000. MVHR install €4,000-8,000. Service call €80-150
+- Compliance: F-Gas log books, commissioning certificates, refrigerant leak checks, energy performance`,
+
+      "Carpenter": `TRADE EXPERTISE — CARPENTER/JOINER:
+You are an expert in carpentry and joinery. Key knowledge:
+- Standards: Building Regs Parts A/B/K, fire door regs, structural timber standards
+- Common jobs: First/second fix, kitchens, staircases, timber frame, roofing, decking, bespoke furniture, fire doors, skirting/architrave
+- Materials: Softwood/hardwood, sheet materials (MDF, plywood, OSB), ironmongery, adhesives, fixings
+- Pricing context: Day rate €250-400. Kitchen fit €2,000-5,000 (labour). Staircase €1,500-4,000. Decking €80-120/m²`,
+
+      "Painter & Decorator": `TRADE EXPERTISE — PAINTER & DECORATOR:
+You are an expert in painting and decorating. Key knowledge:
+- Common jobs: Interior/exterior painting, wallpapering, spraying, commercial decoration, protective coatings
+- Materials: Emulsion, gloss, satinwood, primers, fillers, wallpaper paste, masking, dust sheets, spray equipment
+- Pricing context: Day rate €200-350. Room repaint €300-600. Exterior 3-bed house €2,000-4,000. Wallpapering €200-400/room`,
+
+      "Roofer": `TRADE EXPERTISE — ROOFER:
+You are an expert in roofing. Key knowledge:
+- Standards: BS 5534 (slating/tiling), Building Regs Part C, flat roof standards
+- Common jobs: Re-roofing, flat roofs (felt/EPDM/GRP), guttering, fascia/soffit, lead work, chimney repairs, skylights/Velux
+- Materials: Tiles (concrete/clay/slate), felt, EPDM, GRP, lead, zinc, battens, breathable membrane, flashing
+- Pricing context: Full re-roof 3-bed €6,000-12,000. Flat roof €80-120/m². Gutter replacement €500-1,200. Chimney repair €300-800`,
+
+      "Landscaper": `TRADE EXPERTISE — LANDSCAPER:
+You are an expert in landscaping. Key knowledge:
+- Common jobs: Garden design, paving/patios, fencing, turfing, planting, drainage, artificial grass, retaining walls, water features
+- Materials: Block paving, natural stone, sleepers, aggregate, topsoil, membrane, timber fencing, composite decking
+- Pricing context: Patio €60-120/m². Fencing €60-100/m. Artificial grass €50-80/m². Garden design + build €5,000-20,000`,
+
+      "Builder / General Contractor": `TRADE EXPERTISE — GENERAL BUILDER:
+You are an expert in general construction. Key knowledge:
+- Standards: Building Regs (all parts), planning permission requirements, structural engineer specs
+- Common jobs: Extensions, renovations, conversions (attic/garage), new builds, structural alterations, groundworks
+- Materials: Blocks, bricks, concrete, steel, timber, insulation, DPC, lintels
+- Pricing context: Extension €1,500-2,500/m². Attic conversion €15,000-35,000. Garage conversion €8,000-15,000`,
+
+      "Locksmith": `TRADE EXPERTISE — LOCKSMITH:
+Key knowledge: Lock upgrades, emergency access, master key systems, access control, safe work, UPVC mechanisms, BS 3621 locks. Pricing: Emergency callout €80-150. Lock change €60-120. Master key system from €500`,
+
+      "Handyman": `TRADE EXPERTISE — HANDYMAN/PROPERTY MAINTENANCE:
+Key knowledge: Multi-trade small works — shelving, flat-pack, minor plumbing/electrical, tiling, painting touch-ups, door hanging, blind fitting. Pricing: Hourly rate €35-55. Half day €150-250. Full day €250-400`,
+
+      "Tiler": `TRADE EXPERTISE — TILER:
+Key knowledge: Wall/floor tiling, waterproofing (tanking), underfloor heating prep, natural stone, large format tiles, mosaics. Materials: Adhesive, grout, backer board, tanking membrane, trims. Pricing: €40-80/m² supply + fit. Bathroom tiling €800-2,000`,
+
+      "Flooring": `TRADE EXPERTISE — FLOORING:
+Key knowledge: Hardwood, engineered wood, LVT, laminate, carpet, vinyl, subfloor prep, underlay, transitions. Pricing: LVT €40-70/m² fitted. Engineered wood €50-90/m². Carpet €25-50/m²`,
+
+      "Solar": `TRADE EXPERTISE — SOLAR:
+Key knowledge: PV panel installs, inverters, battery storage, SEAI grants (Ireland), MCS (UK), DNO applications, roof assessment, EPC impact. Pricing: 3kW system €4,000-6,000. Battery add-on €3,000-5,000. Commercial systems from €15,000`,
+    };
+
+    const tradeContext = userTradeType ? (tradeContextMap[userTradeType] || `TRADE: ${userTradeType}. Provide advice relevant to this trade sector.`) : "";
+
+    const systemPrompt = `You are Foreman AI, the intelligent operations assistant for Foreman — an AI operating system for trade businesses in Ireland and the UK.
 
 CRITICAL DATE CONTEXT:
 - TODAY: ${today} (${dayOfWeek}), YEAR: ${year}
 - Tomorrow: ${tomorrow.toISOString().split("T")[0]}
 - Next week: ${nextWeek.toISOString().split("T")[0]}
 User's name: ${userName}
+
+${tradeContext}
 
 IMPORTANT RULES:
 1. ALWAYS use ${year} as the year unless explicitly told otherwise.
@@ -586,7 +669,9 @@ IMPORTANT RULES:
 5. Use tools to actually perform actions — don't just describe what you would do.
 6. When a job type is mentioned, proactively suggest a relevant template.
 7. VAT is automatically applied — don't ask about it unless the user mentions a custom rate.
-8. Be concise, professional, and trade-aware.${memoryPrompt}${preferencesPrompt}`;
+8. Be concise, professional, and trade-aware.
+9. When users ask for trade advice, pricing guidance, or compliance questions, give specific, actionable answers grounded in your trade expertise.
+10. Always reference relevant standards, regulations, and certifications for the user's trade when applicable.${memoryPrompt}${preferencesPrompt}`;
 
     // ─── AI CALL ──────────────────────────────────────────────────
     const actionId = crypto.randomUUID();

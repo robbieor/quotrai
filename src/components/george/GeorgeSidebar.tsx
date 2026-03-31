@@ -259,80 +259,6 @@ export function GeorgeSidebar({
             </div>
           </ScrollArea>
 
-          {/* Projects Section */}
-          <div className="border-t border-border">
-            <Collapsible open={projectsOpen} onOpenChange={setProjectsOpen}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between px-4 py-3 h-auto rounded-none"
-                >
-                  <span className="text-sm font-medium">Projects</span>
-                  {projectsOpen ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-3 pb-3 space-y-1">
-                  {projects.map((project) => (
-                    <ProjectItem
-                      key={project.id}
-                      project={project}
-                      onDelete={() => deleteProject.mutate(project.id)}
-                    />
-                  ))}
-
-                  <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2 text-muted-foreground h-10"
-                      >
-                        <FolderPlus className="h-4 w-4" />
-                        New project
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Create Project</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="name">Name</Label>
-                          <Input
-                            id="name"
-                            value={newProjectName}
-                            onChange={(e) => setNewProjectName(e.target.value)}
-                            placeholder="Project name"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="description">Description (optional)</Label>
-                          <Textarea
-                            id="description"
-                            value={newProjectDescription}
-                            onChange={(e) => setNewProjectDescription(e.target.value)}
-                            placeholder="What is this project about?"
-                          />
-                        </div>
-                        <Button
-                          onClick={handleCreateProject}
-                          disabled={!newProjectName.trim() || createProject.isPending}
-                          className="w-full"
-                        >
-                          Create Project
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
         </div>
       </>
     );
@@ -615,7 +541,7 @@ function ConversationItem({
     <div className="space-y-0.5">
       <div
         className={cn(
-          "group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors",
+          "group flex items-center gap-2 px-3 rounded-xl cursor-pointer transition-colors min-h-[48px]",
           isSelected
             ? "bg-accent text-accent-foreground"
             : "hover:bg-accent/50"
