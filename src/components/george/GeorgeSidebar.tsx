@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, MessageSquare, Trash2, FolderPlus, Folder, ChevronDown, ChevronRight, Search, X, Pencil, MoreHorizontal, Share, Archive, Pin, Copy } from "lucide-react";
+import { Plus, MessageSquare, Trash2, FolderPlus, Folder, ChevronDown, ChevronRight, Search, X, Pencil, MoreHorizontal, Share, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
