@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Download, Mail, Pencil, Link2, FileText } from "lucide-react";
+import { Download, Mail, Pencil, Link2, FileText, Briefcase, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
@@ -31,6 +31,8 @@ interface QuoteDetailSheetProps {
   onDownloadPdf: (quote: Quote) => void;
   onSendEmail: (quote: Quote) => void;
   onCopyPortalLink: (quote: Quote) => void;
+  onConvertToJob?: (quote: Quote) => void;
+  onConvertToInvoice?: (quote: Quote) => void;
 }
 
 export function QuoteDetailSheet({
@@ -41,6 +43,8 @@ export function QuoteDetailSheet({
   onDownloadPdf,
   onSendEmail,
   onCopyPortalLink,
+  onConvertToJob,
+  onConvertToInvoice,
 }: QuoteDetailSheetProps) {
   if (!quote) return null;
 
@@ -83,7 +87,25 @@ export function QuoteDetailSheet({
             createdAt={quote.created_at}
             onSend={() => onSendEmail(quote)}
             onEmail={() => onSendEmail(quote)}
+            onConvertToJob={onConvertToJob ? () => { onConvertToJob(quote); onOpenChange(false); } : undefined}
+            onConvertToInvoice={onConvertToInvoice ? () => { onConvertToInvoice(quote); onOpenChange(false); } : undefined}
           />
+
+          {/* Convert actions for accepted quotes */}
+          {quote.status === "accepted" && (onConvertToJob || onConvertToInvoice) && (
+            <div className="flex gap-2 flex-wrap">
+              {onConvertToJob && (
+                <Button size="sm" onClick={() => { onConvertToJob(quote); onOpenChange(false); }}>
+                  <Briefcase className="mr-1.5 h-3.5 w-3.5" /> Convert to Job
+                </Button>
+              )}
+              {onConvertToInvoice && (
+                <Button size="sm" variant="secondary" onClick={() => { onConvertToInvoice(quote); onOpenChange(false); }}>
+                  <Receipt className="mr-1.5 h-3.5 w-3.5" /> Convert to Invoice
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2 flex-wrap">

@@ -8,6 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays } from "lucide-react";
+import { CreateFromQuoteDialog } from "@/components/invoices/CreateFromQuoteDialog";
+import { JobFormDialog } from "@/components/jobs/JobFormDialog";
+import { useCreateJob } from "@/hooks/useJobs";
 import { useQuotes, Quote } from "@/hooks/useQuotes";
 import { QuoteFormDialog } from "@/components/quotes/QuoteFormDialog";
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog";
@@ -51,6 +54,7 @@ export default function Quotes() {
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
   const { symbol: currencySymbol, formatCurrency } = useCurrency();
+  const createJob = useCreateJob();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get("status") as StatusFilter) || "all");
   const [formOpen, setFormOpen] = useState(false);
@@ -58,6 +62,9 @@ export default function Quotes() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [convertToInvoiceOpen, setConvertToInvoiceOpen] = useState(false);
+  const [convertToJobOpen, setConvertToJobOpen] = useState(false);
+  const [jobPrefill, setJobPrefill] = useState<any>(null);
 
   useEffect(() => {
     const highlightId = searchParams.get("highlight");
@@ -126,6 +133,21 @@ export default function Quotes() {
     const portalUrl = `${window.location.origin}/portal/quote?token=${quote.portal_token}`;
     navigator.clipboard.writeText(portalUrl);
     toast.success("Portal link copied to clipboard");
+  };
+
+  const handleConvertToJob = (quote: Quote) => {
+    const description = quote.quote_items.map((item) => `${item.description} (x${item.quantity})`).join("\n");
+    setJobPrefill({
+      customer_id: quote.customer_id,
+      title: `Job from ${quote.display_number}`,
+      description,
+      quoted_price: Number(quote.total),
+    });
+    setConvertToJobOpen(true);
+  };
+
+  const handleConvertToInvoice = (_quote: Quote) => {
+    setConvertToInvoiceOpen(true);
   };
 
   const handleExport = () => {
@@ -353,7 +375,15 @@ export default function Quotes() {
         onDownloadPdf={handleDownloadPdf}
         onSendEmail={handleSendEmail}
         onCopyPortalLink={handleCopyPortalLink}
+        onConvertToJob={handleConvertToJob}
+        onConvertToInvoice={handleConvertToInvoice}
       />
+      <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} />
+      <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} onSubmit={(values) => {
+        createJob.mutate(values);
+        setConvertToJobOpen(false);
+        toast.success("Job created from quote");
+      }} />
     </DashboardLayout>
   );
 }

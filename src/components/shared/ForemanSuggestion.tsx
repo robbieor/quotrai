@@ -28,11 +28,15 @@ export function QuoteSuggestion({
   createdAt,
   onSend,
   onEmail,
+  onConvertToJob,
+  onConvertToInvoice,
 }: {
   status: string;
   createdAt: string;
   onSend?: () => void;
   onEmail?: () => void;
+  onConvertToJob?: () => void;
+  onConvertToInvoice?: () => void;
 }) {
   const days = differenceInDays(new Date(), new Date(createdAt));
   let suggestion: Suggestion | null = null;
@@ -62,6 +66,35 @@ export function QuoteSuggestion({
   }
 
   if (!suggestion) return null;
+
+  // For accepted quotes, render custom card with two action buttons
+  if (status === "accepted" && (onConvertToJob || onConvertToInvoice)) {
+    return (
+      <div className={`flex items-start gap-3 rounded-lg border p-3 ${variantStyles.success}`}>
+        <div className={`mt-0.5 ${iconColors.success}`}>
+          <HardHat className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-foreground">{suggestion.message}</p>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            {onConvertToJob && (
+              <Button size="sm" className="h-7 text-xs gap-1.5" onClick={onConvertToJob}>
+                <CheckCircle className="h-3 w-3" />
+                Convert to Job
+              </Button>
+            )}
+            {onConvertToInvoice && (
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={onConvertToInvoice}>
+                <Clock className="h-3 w-3" />
+                Convert to Invoice
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return <SuggestionCard suggestion={suggestion} />;
 }
 
