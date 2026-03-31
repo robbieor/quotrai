@@ -25,6 +25,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let userTradeType: string | null = null;
     let userName = "there";
+    let userCurrency = "EUR";
 
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
