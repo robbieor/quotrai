@@ -359,7 +359,7 @@ serve(async (req) => {
 
     // ─── PARALLEL: Profile + Membership + Preferences ───────────
     const [profileRes, membershipRes, prefsRes] = await Promise.all([
-      serviceSupabase.from("profiles").select("team_id, full_name, trade_type").eq("id", userId).single(),
+      serviceSupabase.from("profiles").select("team_id, full_name, trade_type, currency").eq("id", userId).single(),
       serviceSupabase.from("team_memberships").select("id").eq("user_id", userId).limit(1).maybeSingle(),
       serviceSupabase.from("foreman_ai_preferences").select("*").eq("user_id", userId).maybeSingle(),
     ]);
