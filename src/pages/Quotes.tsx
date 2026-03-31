@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays } from "lucide-react";
 import { CreateFromQuoteDialog } from "@/components/invoices/CreateFromQuoteDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
+import { useCreateJob } from "@/hooks/useJobs";
 import { useQuotes, Quote } from "@/hooks/useQuotes";
 import { QuoteFormDialog } from "@/components/quotes/QuoteFormDialog";
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog";
