@@ -374,6 +374,7 @@ serve(async (req) => {
     const teamId = profileRes.data.team_id;
     const userName = profileRes.data.full_name || "there";
     const userTradeType = profileRes.data.trade_type || null;
+    const userCurrency = profileRes.data.currency || "EUR";
     const userPrefs = prefsRes.data;
 
     if (!membershipRes.data) {
