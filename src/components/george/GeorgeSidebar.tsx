@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, MessageSquare, Trash2, FolderPlus, Folder, ChevronDown, ChevronRight, Search, X, Pencil, MoreHorizontal, Share, Archive, Pin, Copy } from "lucide-react";
+import { Plus, MessageSquare, Trash2, FolderPlus, Folder, ChevronDown, ChevronRight, Search, X, Pencil, MoreHorizontal, Share, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -136,7 +136,7 @@ export function GeorgeSidebar({
         />
 
         {/* Sidebar panel */}
-        <div className="fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-xs bg-background flex flex-col animate-in slide-in-from-left duration-200 safe-area-pt">
+        <div className="fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-xs bg-background flex flex-col animate-in slide-in-from-left duration-200 safe-area-pt overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <span className="font-semibold">Conversations</span>
@@ -207,7 +207,7 @@ export function GeorgeSidebar({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="px-3 pb-3 space-y-4">
+            <div className="px-3 pb-3 space-y-3">
               {/* Empty state */}
               {conversations.length === 0 && !isSearchActive && (
                 <p className="text-sm text-muted-foreground text-center py-8">
@@ -232,7 +232,7 @@ export function GeorgeSidebar({
                       <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2">
                         {group.label}
                       </h3>
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {group.conversations.map((conv) => (
                           <ConversationItem
                             key={conv.id}
@@ -475,7 +475,7 @@ function ConversationItem({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  
   const inputRef = useRef<HTMLInputElement>(null);
 
   const displayTitle =
@@ -483,7 +483,7 @@ function ConversationItem({
     conversation.first_message?.slice(0, 30) ||
     "New conversation";
 
-  const hasDescription = !!conversation.first_message && conversation.first_message.length > 0;
+  
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -514,10 +514,6 @@ function ConversationItem({
     }
   };
 
-  const toggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsExpanded(!isExpanded);
-  };
 
   if (isEditing) {
     return (
@@ -538,125 +534,71 @@ function ConversationItem({
   }
 
   return (
-    <div className="space-y-0.5">
-      <div
-        className={cn(
-          "group flex items-center gap-2 px-3 rounded-xl cursor-pointer transition-colors min-h-[48px]",
-          isSelected
-            ? "bg-accent text-accent-foreground"
-            : "hover:bg-accent/50"
-        )}
-        onClick={onSelect}
-        onDoubleClick={handleStartEdit}
-      >
-        {/* Expand/collapse button for description */}
-        {hasDescription ? (
+    <div
+      className={cn(
+        "group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors min-h-[48px]",
+        isSelected
+          ? "bg-accent text-accent-foreground"
+          : "hover:bg-accent/50"
+      )}
+      onClick={onSelect}
+      onDoubleClick={handleStartEdit}
+    >
+      <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+      
+      <span className="text-sm truncate flex-1">{displayTitle}</span>
+      
+      {/* Context menu — always visible on mobile via opacity */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-5 w-5 shrink-0 p-0"
-            onClick={toggleExpand}
+            className="h-7 w-7 shrink-0 opacity-70 md:opacity-0 md:group-hover:opacity-100"
+            onClick={(e) => e.stopPropagation()}
           >
-            {isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
+            <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
-        ) : (
-          <MessageSquare className="h-4 w-4 shrink-0" />
-        )}
-        
-        <span className="text-sm truncate flex-1">{displayTitle}</span>
-        
-        {/* Close button when selected */}
-        {isSelected && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0"
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem 
             onClick={(e) => {
               e.stopPropagation();
-              onClose();
+              const shareUrl = `${window.location.origin}/george?chat=${conversation.id}`;
+              navigator.clipboard.writeText(shareUrl);
+              toast.success("Link copied to clipboard");
             }}
-            title="Close chat"
           >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        )}
-        
-        {/* Context menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-6 w-6 shrink-0",
-                isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-              )}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem 
-              onClick={(e) => {
-                e.stopPropagation();
-                const shareUrl = `${window.location.origin}/george?chat=${conversation.id}`;
-                navigator.clipboard.writeText(shareUrl);
-                toast.success("Link copied to clipboard");
-              }}
-            >
-              <Share className="h-4 w-4 mr-2" />
-              Share
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleStartEdit}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={(e) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(displayTitle);
-                toast.success("Title copied to clipboard");
-              }}
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={(e) => {
-                e.stopPropagation();
-                toast.info("Archive feature coming soon");
-              }}
-            >
-              <Archive className="h-4 w-4 mr-2" />
-              Archive
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      
-      {/* Expandable description */}
-      {isExpanded && hasDescription && (
-        <div className="ml-8 mr-3 px-2 py-1.5 text-xs text-muted-foreground bg-muted/50 rounded-lg">
-          {conversation.first_message}
-        </div>
-      )}
+            <Share className="h-4 w-4 mr-2" />
+            Share
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleStartEdit}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(displayTitle);
+              toast.success("Title copied to clipboard");
+            }}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
