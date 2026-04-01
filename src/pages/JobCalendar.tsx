@@ -179,6 +179,7 @@ export default function JobCalendar() {
               view={view}
               onDateChange={setCurrentDate}
               onViewChange={setView}
+              pendingCount={unscheduledJobs.length}
             />
 
             {activeJob && (
