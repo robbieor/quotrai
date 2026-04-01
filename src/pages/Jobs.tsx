@@ -21,7 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, MoreVertical, Pencil, Trash2, Loader2, Briefcase, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Activity } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, Briefcase, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Activity, ChevronRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { DeleteJobDialog } from "@/components/jobs/DeleteJobDialog";
