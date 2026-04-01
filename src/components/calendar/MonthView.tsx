@@ -55,7 +55,7 @@ export function MonthView({
     <div className="border rounded-lg overflow-hidden">
       <div className="grid grid-cols-7 bg-muted">
         {weekdays.map((day) => (
-          <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground border-b">
+          <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-medium text-muted-foreground border-b">
             {day}
           </div>
         ))}
@@ -74,7 +74,7 @@ export function MonthView({
               onJobDrop={onJobDrop}
               onSlotClick={onSlotClick}
               className={cn(
-                "min-h-[120px] p-1 border-b border-r",
+                "min-h-[80px] md:min-h-[120px] p-1 border-b border-r",
                 index % 7 === 0 && "border-l-0",
                 !isCurrentMonth && "bg-muted/30"
               )}

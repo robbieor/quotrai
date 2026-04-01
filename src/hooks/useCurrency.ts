@@ -29,7 +29,7 @@ export function useCurrency() {
 
   const formatCurrency = (amount: number | null | undefined, opts?: { decimals?: number }): string => {
     if (amount == null) return `${config.symbol}0`;
-    const decimals = opts?.decimals ?? (Number.isInteger(amount) ? 0 : 2);
+    const decimals = opts?.decimals ?? 0;
     
     return new Intl.NumberFormat(config.locale, {
       style: "currency",
