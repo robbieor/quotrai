@@ -189,7 +189,7 @@ export default function Leads() {
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold truncate">{lead.name}</h3>
-                        <Badge className={statusColors[lead.status] || ""} variant="secondary">
+                        <Badge variant={statusBadgeVariant[lead.status] || "secondary"}>
                           {lead.status}
                         </Badge>
                         {lead.priority && lead.priority !== "medium" && (
