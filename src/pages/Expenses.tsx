@@ -254,14 +254,9 @@ export default function Expenses() {
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Expenses
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Track and manage business expenses
-            </p>
-          </div>
+          <h1 className="text-[28px] font-bold tracking-[-0.02em]">
+            Expenses
+          </h1>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
