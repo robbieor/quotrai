@@ -26,11 +26,19 @@ export function WeekView({
   onJobDragEnd,
   onSlotClick,
 }: WeekViewProps) {
-  const days = useMemo(() => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+  const isMobile = useIsMobile();
+  const [showWeekends, setShowWeekends] = useState(false);
+
+  const allDays = useMemo(() => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
     return eachDayOfInterval({ start: weekStart, end: weekEnd });
   }, [currentDate]);
+
+  const days = useMemo(() => {
+    if (isMobile && !showWeekends) return allDays.filter((d) => !isWeekend(d));
+    return allDays;
+  }, [allDays, isMobile, showWeekends]);
 
   const getJobsForDay = (day: Date) => {
     return jobs.filter((job) => {
