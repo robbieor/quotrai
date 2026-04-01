@@ -46,12 +46,12 @@ import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useJobInsights } from "@/hooks/usePageInsights";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 
-const statusColors: Record<JobStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-  scheduled: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-  in_progress: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-  completed: "bg-green-100 text-green-800 hover:bg-green-100",
-  cancelled: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+const statusBadgeVariant: Record<JobStatus, "warning" | "default" | "secondary" | "success" | "destructive" | "outline"> = {
+  pending: "warning",
+  scheduled: "default",
+  in_progress: "secondary",
+  completed: "success",
+  cancelled: "outline",
 };
 
 export default function Jobs() {
