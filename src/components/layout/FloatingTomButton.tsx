@@ -232,11 +232,7 @@ export function FloatingTomButton() {
         ) : isExpanded ? (
           <X className="h-6 w-6" />
         ) : (
-          <>
-            <Phone className="h-6 w-6 relative z-10" />
-            {/* Pulse animation when not connected */}
-            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping opacity-75" />
-          </>
+          <Phone className="h-6 w-6" />
         )}
       </button>
 
