@@ -293,6 +293,7 @@ export default function Expenses() {
                     <p className="text-sm font-bold truncate">
                       {formatCurrency(stats.thisMonth)}
                     </p>
+                    
                     {momChange !== 0 && (
                       <span
                         className={`text-[10px] flex items-center ${momChange > 0 ? "text-destructive" : "text-green-600"}`}
