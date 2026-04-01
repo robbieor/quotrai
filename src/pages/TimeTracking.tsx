@@ -122,10 +122,7 @@ export default function TimeTracking() {
       <TimeTrackingErrorBoundary>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Time Tracking</h1>
-            <p className="text-sm md:text-base text-muted-foreground">
-              GPS-verified clock-in/out linked to your jobs
-            </p>
+            <h1 className="text-[28px] font-bold tracking-[-0.02em]">Time Tracking</h1>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -486,7 +486,7 @@ export function ClockInOutCard({
     return (
       <div
         key={job.id}
-        className={`p-3 rounded-lg border transition-colors space-y-2 cursor-pointer ${
+        className={`p-3 rounded-lg border transition-colors space-y-2 cursor-pointer overflow-hidden ${
           isSelected ? "bg-primary/5 border-primary/30" : "bg-card hover:bg-muted/50"
         }`}
         onClick={() => setSelectedJobId(job.id)}
