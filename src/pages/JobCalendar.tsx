@@ -227,6 +227,17 @@ export default function JobCalendar() {
                     onSlotClick={handleSlotClick}
                   />
                 )}
+                {view === "pending" && (
+                  <PendingView
+                    jobs={unscheduledJobs}
+                    onSchedule={(job) => {
+                      setSlotDate(new Date());
+                      setSlotHour(undefined);
+                      handlePickerSelectJob(job);
+                    }}
+                    onJobClick={handleJobClick}
+                  />
+                )}
               </>
             )}
         </div>
