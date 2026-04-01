@@ -1,62 +1,105 @@
 
 
-# Quotes Screen — Mobile iOS-Style Redesign
+# Final Consistency & Polish Pass — Across All Screens
 
-## What Changes
+## Audit Summary
 
-On mobile, replace the data table with a card-based quote list matching the Invoices screen pattern. Add a prominent cold quotes alert card, restyle metrics/filters/search, and add cold quote indicators on list items. Desktop stays unchanged.
+After reviewing all pages, here are the inconsistencies found:
 
-## Plan
+| Issue | Screens Affected |
+|-------|-----------------|
+| Title uses `text-2xl md:text-3xl` instead of `text-[28px]` | Jobs, Expenses, Leads, PriceBook, Reports |
+| Title uses `text-display` (undefined class) | Documents |
+| Subtitles still present ("Track enquiries...", "Track and manage...") | Leads, Expenses |
+| Search bar missing pill shape on mobile | Jobs, Leads, Expenses, PriceBook |
+| "+" button is full-width `Button` on mobile instead of 44px circle | Jobs, Leads, Expenses, PriceBook |
+| Loading state is plain `Loader2` spinner, no skeleton cards | Jobs, Leads |
+| Monetary values missing `tabular-nums` | Jobs table, Expenses table, Leads stats |
+| Status badges use hardcoded colors not design system variants | Jobs (`statusColors`), Leads (`statusColors`) |
+| No `pb-24` bottom padding for FAB overlap | All list screens |
+| Hardcoded colors (`bg-yellow-100`, `bg-blue-100`) instead of CSS vars | Jobs, Leads, Expenses |
+| EmptyState component missing the design system icon styling | Already correct |
 
-### 1. Edit `src/pages/Quotes.tsx`
+## Plan — 8 Files Modified
 
-**Import** `useIsMobile` from `@/hooks/use-mobile`, `AlertTriangle` and `ChevronRight` from lucide.
+### 1. `src/index.css` — Add shimmer skeleton animation + tabular-nums utility
+- Add `@keyframes shimmer` (left-to-right gradient sweep)
+- Add `.skeleton-shimmer` class
+- Add `.tabular-nums` utility class
 
-**Compute cold quotes** — add a `useMemo` that counts quotes with status `sent` where `created_at` is 7+ days ago (no response). Also compute total value at risk from those cold quotes.
+### 2. `tailwind.config.ts` — Add shimmer animation
+- Add `shimmer` keyframe and animation
 
-**Header** (mobile branch):
-- "Quotes" 28px bold left-aligned
-- "1,000 quotes" count below in 13px muted
-- Replace full-width "New Quote" button with 44px green filled circle "+" button on mobile
-- Desktop: keep existing layout
+### 3. `src/pages/Jobs.tsx` — Full consistency pass
+- Title: `text-[28px] font-bold tracking-[-0.02em]`
+- Remove subtitle (none currently, confirm)
+- Mobile: 44px circle "+" button via `useIsMobile`
+- Search: add `rounded-[22px] bg-[hsl(240,10%,96%)]` on mobile
+- Loading: replace `Loader2` with skeleton cards (3 placeholder rows)
+- Status badges: map to design system `Badge` variants (success, warning, destructive, etc.)
+- Monetary values: add `tabular-nums` to value column
+- Add `pb-24` to scrollable container
+- Replace hardcoded `bg-yellow-100` etc. with badge variants
 
-**Cold Quotes Alert** (mobile, after header):
-- Only show when cold count > 0
-- Card with `border-l-[4px] border-red-500`, red `AlertTriangle` icon
-- "150 quotes going cold" in 15px semibold
-- "No response in 7+ days — €352K at risk" in 13px muted
-- Right side: "Chase" outlined button, 32px height, red/destructive variant
-- Chase button sets status filter to "sent" to show all sent quotes
+### 4. `src/pages/Leads.tsx` — Full consistency pass
+- Title: `text-[28px] font-bold tracking-[-0.02em]`
+- Remove subtitle "Track enquiries..."
+- Mobile: 44px circle "+" button
+- Search: pill shape on mobile
+- Loading: skeleton cards
+- Status badges: use design system variants
+- Stats cards: add `tabular-nums` to monetary values
+- Add `pb-24`
 
-**Metrics Row** (mobile):
-- 3 cards in horizontal scroll: Pipeline Value (green accent), Acceptance Rate (blue accent), Avg Quote Value (neutral)
-- Same styling as Invoices: `min-w-[120px]`, `text-[11px] uppercase tracking-[0.05em]` label, `text-[20px] font-bold tabular-nums` value
-- Colored left border per metric type
+### 5. `src/pages/Expenses.tsx` — Full consistency pass
+- Title: `text-[28px] font-bold tracking-[-0.02em]`
+- Remove subtitle "Track and manage business expenses"
+- Mobile: 44px circle "+" button, keep fuel card button as icon-only on mobile
+- Search: pill shape on mobile
+- Monetary values: `tabular-nums`
+- Add `pb-24`
 
-**Search** (mobile): pill-shaped `rounded-[22px]`, `bg-[hsl(240,10%,96%)]`, 44px height
+### 6. `src/pages/PriceBook.tsx` — Consistency pass
+- Title: `text-[28px] font-bold tracking-[-0.02em]`
+- Mobile: circle "+" button
+- Search: pill shape on mobile
+- Add `pb-24`
 
-**Status Filters**: 
-- Active pill: `bg-primary text-white` (green filled)
-- Inactive: `bg-muted text-muted-foreground`
-- `h-9 rounded-[18px]`
-- Show counts: "All 1,000" / "Draft 191" etc.
+### 7. `src/pages/Documents.tsx` — Fix title class
+- Replace `text-display` with `text-[28px]`
+- Remove subtitle
+- Add `pb-24`
 
-**Quote List** (mobile, replaces table):
-- Each quote: ~80px height row
-- Left: quote number `text-[15px] font-semibold` + customer name `text-[13px] text-muted-foreground`
-- Right: amount `text-[16px] font-semibold tabular-nums` + status badge below
-- Cold indicator: small amber dot (6px) next to quote number for sent quotes 7+ days old
-- Divider: `border-b border-[#F0F0F5]`
-- No checkboxes, no dropdown menus
-- Tap opens `handleViewQuote`
+### 8. `src/pages/Reports.tsx` — Title consistency
+- Title: `text-[28px] font-bold tracking-[-0.02em]`
+- Add `pb-24`
 
-**Desktop**: Keep existing table, KPI cards, and layout completely unchanged.
+### 9. `src/components/ui/skeleton.tsx` — Add shimmer variant
+- Add optional `shimmer` prop that applies the shimmer animation class
 
-### Files
+### 10. `src/components/shared/EmptyState.tsx` — Minor polish
+- Already well-styled; no changes needed
+
+## Scope Control
+
+- **No functionality changes** — only visual consistency
+- **Desktop layouts unchanged** — mobile gets the iOS patterns
+- All hardcoded colors replaced with CSS variable-based or design system badge variants
+- All `tabular-nums` applied via `font-variant-numeric: tabular-nums` style or Tailwind class
+
+## Files
 
 | Action | File |
 |--------|------|
-| Edit | `src/pages/Quotes.tsx` — mobile list, header, cold alert, metrics, filters |
+| Edit | `src/index.css` — shimmer animation, tabular-nums |
+| Edit | `tailwind.config.ts` — shimmer keyframe |
+| Edit | `src/components/ui/skeleton.tsx` — shimmer variant |
+| Edit | `src/pages/Jobs.tsx` — title, mobile button, search, skeleton loading, badges, padding |
+| Edit | `src/pages/Leads.tsx` — title, subtitle, mobile button, search, skeleton, badges, padding |
+| Edit | `src/pages/Expenses.tsx` — title, subtitle, mobile button, search, padding |
+| Edit | `src/pages/PriceBook.tsx` — title, mobile button, search, padding |
+| Edit | `src/pages/Documents.tsx` — title class fix, padding |
+| Edit | `src/pages/Reports.tsx` — title, padding |
 
-No new files. No database changes. Desktop layout unchanged.
+No database changes. No new dependencies.
 
