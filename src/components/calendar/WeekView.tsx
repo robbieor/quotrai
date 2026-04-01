@@ -69,10 +69,25 @@ export function WeekView({
     return slots;
   }, [jobs]);
 
+  const colCount = days.length + (isMobile ? 0 : 1); // +1 for time gutter on desktop
+
   return (
     <div className="border rounded-lg overflow-hidden">
+      {/* Mobile weekday/weekend toggle */}
+      {isMobile && (
+        <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b">
+          <span className="text-[12px] text-muted-foreground">{showWeekends ? "7 days" : "Mon – Fri"}</span>
+          <button
+            onClick={() => setShowWeekends(!showWeekends)}
+            className="text-[12px] font-medium text-primary"
+          >
+            {showWeekends ? "Hide weekends" : "Show weekends"}
+          </button>
+        </div>
+      )}
+
       {/* Header with day names */}
-      <div className="grid grid-cols-8 bg-muted border-b">
+      <div className={cn("grid bg-muted border-b", isMobile ? "" : "")} style={{ gridTemplateColumns: isMobile ? `repeat(${days.length}, 1fr)` : `auto repeat(${days.length}, 1fr)` }}>
         <div className="p-2 text-center text-sm font-medium text-muted-foreground border-r">
           Time
         </div>

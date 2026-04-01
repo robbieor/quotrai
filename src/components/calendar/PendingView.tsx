@@ -62,7 +62,7 @@ export function PendingView({ jobs, onSchedule, onJobClick }: PendingViewProps) 
               </div>
               {job.estimated_value != null && (
                 <span className="text-[13px] font-medium text-foreground mt-0.5 block tabular-nums">
-                  {formatAmount(job.estimated_value)}
+                  {formatCurrency(job.estimated_value)}
                 </span>
               )}
             </div>
