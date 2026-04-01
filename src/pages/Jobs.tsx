@@ -93,6 +93,7 @@ export default function Jobs() {
   const { sortedData, handleSort, getSortDirection } = useTableSort(filteredJobs);
   const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
   const jobInsights = useJobInsights(jobs);
+  const isMobile = useIsMobile();
 
   // Stats
   const stats = useMemo(() => {
