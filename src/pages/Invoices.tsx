@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Search, Receipt, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, DollarSign, AlertTriangle, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Receipt, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, DollarSign, AlertTriangle, TrendingUp, Clock, CheckCircle2, ChevronRight } from "lucide-react";
 import { useInvoices, useUpdateInvoiceStatus, useDeleteInvoice, Invoice } from "@/hooks/useInvoices";
 import { InvoiceFormDialog } from "@/components/invoices/InvoiceFormDialog";
 import { DeleteInvoiceDialog } from "@/components/invoices/DeleteInvoiceDialog";
