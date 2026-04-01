@@ -65,8 +65,7 @@ export default function Reports() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Reports</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Analyze your business performance</p>
+            <h1 className="text-[28px] font-bold tracking-[-0.02em]">Reports</h1>
           </div>
           <DateRangePicker dateRange={dateRange} onDateRangeChange={setDateRange} />
         </div>
