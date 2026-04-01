@@ -591,7 +591,7 @@ export default function Expenses() {
                         )}
                       </td>
                       <td className="px-3 py-0.5 text-right font-semibold whitespace-nowrap">
-                        {formatCurrency(Number(expense.amount))}
+                        <span className="tabular-nums">{formatCurrency(Number(expense.amount))}</span>
                       </td>
                       <td
                         className="px-1 py-0.5 w-8"
