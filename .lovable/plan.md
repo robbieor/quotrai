@@ -1,42 +1,84 @@
 
 
-# Fix Time Tracking Job Cards — Mobile Layout
+# Scheduler Redesign — Beat Tradify on Mobile
 
-## Problem
+## Competitive Analysis
 
-The "Available Jobs" cards on the Time Tracking screen overflow horizontally on mobile. Each job card crams the job title, "Selected" badge, and location badges ("No verified location") side-by-side in a single row, causing text truncation and horizontal overflow. The "View Map" and "Clock In" buttons also get cut off.
+**What Tradify does well:**
+- Clean tab bar (Day | Week | Pending) with minimal chrome
+- Date navigation is centered with arrows flanking — simple and scannable
+- "Pending" tab for unscheduled jobs is a dedicated screen, not hidden
+- Week view shows compact day headers (Mon 30, Tue 31)
+- Minimal visual noise — no "Today" button cluttering the header
 
-## Root Cause
+**What we already do better (keep these):**
+- Drag-and-drop rescheduling
+- Travel time chips between jobs
+- Route optimization
+- Click-to-schedule empty slots with job picker
+- Month view (Tradify doesn't have one)
 
-In `ClockInOutCard.tsx` line 494, the job row uses `flex items-center gap-3` with badges on the right that don't wrap. On a 390px screen, the badges push past the card edge.
+**What we need to fix:**
+- Header is cluttered — "Today" button + arrows + title + view tabs spread across two rows
+- No "Pending" view for unscheduled jobs — huge miss vs Tradify
+- Week view on mobile (7 narrow columns + time gutter = unreadable at 390px)
+- Day view wastes space with the large date circle header
+- Empty states feel generic
 
-## Fix — `src/components/time-tracking/ClockInOutCard.tsx`
+## Plan
 
-### Job card layout (lines 486-569 `renderJobRow`)
+### 1. Redesign `CalendarHeader.tsx` — Tradify-style layout
 
-**Replace the horizontal badge layout with a stacked layout:**
+**Top row**: Pill-shaped segmented control: `Day | Week | Pending` (replace Month with Pending on mobile; keep Month on desktop)
+- Right-aligned `...` menu (MoreHorizontal icon) for: Month view, Go to today, Export
+- 44px height tabs, rounded-full container
 
-1. **Top row**: Job title + "Selected" badge (keep `truncate`)
-2. **Second row**: Customer name + date (already exists)
-3. **Third row**: Location badge + proximity badge — move these below the title instead of beside it, using `flex flex-wrap gap-1.5`
-4. **GPS warning row**: Keep as-is
-5. **Buttons row**: Keep `flex gap-2` but ensure both buttons fit with `min-w-0`
+**Second row**: `← April 2026 →` centered with arrow buttons flanking
+- Day view: `← Thursday 02 Apr 2026 →`
+- Week view: `← Mon 30 ... Sun 05 →` inline day chips below
 
-### Page header (lines 124-129)
+Remove the standalone "Today" button — move it into the `...` overflow menu
 
-- Title: `text-[28px] font-bold tracking-[-0.02em]` (consistency)
-- Remove subtitle
+### 2. Create `PendingView.tsx` — unscheduled jobs list
 
-### Card overflow
+New component showing all jobs without a `scheduled_date`:
+- Header: count badge ("3 pending")
+- Card list: job title, customer, estimated value, created date
+- Each card has a "Schedule" button that opens the date/time picker
+- Empty state: calendar checkmark icon + "No Pending Appointments" + "All jobs are scheduled"
+- This matches Tradify's Pending tab but with richer job data
 
-- Add `overflow-hidden` to the job card container to prevent any bleed
+### 3. Improve `WeekView.tsx` — mobile optimization
+
+On mobile (< md):
+- Hide the time gutter column — use inline time labels on job cards instead
+- Show only 5 working days (Mon-Fri) by default, with a toggle for weekends
+- Reduce hour row height from 60px to 48px
+- Day headers: compact format `Mon 30` matching Tradify
+
+### 4. Improve `DayView.tsx` — compact header
+
+- Remove the large centered date circle header block (saves ~100px vertical)
+- Date is already shown in the CalendarHeader navigation row
+- Keep the "All Day / No Time Set" section
+- Reduce time label width from 80px to 56px (use `6am` not `6:00 AM`)
+
+### 5. Update `JobCalendar.tsx` — wire Pending view
+
+- Add `"pending"` to `CalendarViewType`
+- On mobile, default tab order: Day | Week | Pending
+- On desktop, keep: Day | Week | Month (Pending accessible via menu or sidebar)
+- Pass `unscheduledJobs` to `PendingView`
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Edit | `src/components/time-tracking/ClockInOutCard.tsx` — stack badges below title, prevent overflow |
-| Edit | `src/pages/TimeTracking.tsx` — title consistency, remove subtitle |
+| Edit | `src/components/calendar/CalendarHeader.tsx` — Tradify-style tabs + centered date nav |
+| Create | `src/components/calendar/PendingView.tsx` — unscheduled jobs list |
+| Edit | `src/components/calendar/WeekView.tsx` — mobile column optimization |
+| Edit | `src/components/calendar/DayView.tsx` — remove redundant header block |
+| Edit | `src/pages/JobCalendar.tsx` — wire pending view, update view type |
 
-No database changes. No functionality changes.
+No database changes. No functionality changes beyond adding the Pending view.
 
