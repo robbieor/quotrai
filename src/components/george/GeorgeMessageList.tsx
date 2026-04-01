@@ -178,8 +178,8 @@ function DesktopMessageBubble({ message }: { message: Message }) {
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5",
           isAssistant
-            ? "bg-muted text-foreground rounded-tl-md"
-            : "bg-primary text-primary-foreground rounded-tr-md"
+            ? "bg-muted/50 border border-border text-foreground rounded-tl-md"
+            : "bg-primary/10 border border-primary/20 text-foreground rounded-tr-md"
         )}
       >
         <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>

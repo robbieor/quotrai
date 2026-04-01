@@ -236,7 +236,7 @@ export function GeorgeMobileInput({
               handleSendMessage();
             }
           }}
-          placeholder="Ask Foreman anything..."
+          placeholder="Talk or type to Foreman AI..."
           className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground min-w-0 py-1.5 min-h-[44px]"
           disabled={isProcessing}
         />
