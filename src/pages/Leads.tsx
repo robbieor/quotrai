@@ -210,7 +210,7 @@ export default function Leads() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         {lead.email && <span>{lead.email}</span>}
                         {lead.phone && <span>{lead.phone}</span>}
-                        {lead.estimated_value && <span className="font-medium text-foreground">{formatCurrency(lead.estimated_value)}</span>}
+                        {lead.estimated_value && <span className="font-medium text-foreground tabular-nums">{formatCurrency(lead.estimated_value)}</span>}
                         {lead.follow_up_date && <span>Follow-up: {new Date(lead.follow_up_date).toLocaleDateString()}</span>}
                       </div>
                     </div>
