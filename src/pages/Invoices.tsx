@@ -62,6 +62,7 @@ const getDisplayStatus = (invoice: Invoice) => {
 type StatusFilter = "all" | Invoice["status"];
 
 export default function Invoices() {
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: invoices, isLoading } = useInvoices();
   const updateStatus = useUpdateInvoiceStatus();
