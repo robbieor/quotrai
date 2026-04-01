@@ -62,41 +62,7 @@ export function DayView({
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="bg-muted p-4 border-b text-center relative">
-        <div className="text-sm font-medium text-muted-foreground">
-          {format(currentDate, "EEEE")}
-        </div>
-        <div
-          className={cn(
-            "text-2xl font-bold w-12 h-12 mx-auto flex items-center justify-center rounded-full mt-1",
-            isToday(currentDate) && "bg-primary text-primary-foreground"
-          )}
-        >
-          {format(currentDate, "d")}
-        </div>
-        {/* Day summary */}
-        {dayJobs.length > 0 && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            <span className={cn(
-              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full",
-              dayJobs.length <= 2 && "bg-primary/10 text-primary",
-              dayJobs.length > 2 && dayJobs.length <= 4 && "bg-amber-500/10 text-amber-600",
-              dayJobs.length > 4 && "bg-destructive/10 text-destructive"
-            )}>
-              <span className={cn(
-                "w-1.5 h-1.5 rounded-full",
-                dayJobs.length <= 2 && "bg-primary",
-                dayJobs.length > 2 && dayJobs.length <= 4 && "bg-amber-500",
-                dayJobs.length > 4 && "bg-destructive"
-              )} />
-              {dayJobs.length} job{dayJobs.length > 1 ? 's' : ''} scheduled
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* All-day / unscheduled section */}
+      {/* All-day / unscheduled section (moved to top, no redundant date header) */}
       {unscheduledTimeJobs.length > 0 && (
         <div className="p-3 border-b bg-muted/50">
           <div className="text-xs text-muted-foreground mb-2">All Day / No Time Set</div>
