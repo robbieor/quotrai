@@ -167,8 +167,10 @@ export default function Leads() {
 
         {/* Lead cards */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} shimmer className="h-20 w-full rounded-[14px]" />
+            ))}
           </div>
         ) : filtered?.length === 0 ? (
           <EmptyState
