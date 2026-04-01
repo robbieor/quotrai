@@ -89,10 +89,10 @@ export function DayView({
           return (
             <div key={hour} className="grid grid-cols-[56px_1fr] min-h-[56px] border-b last:border-b-0">
               <div className={cn(
-                "p-2 text-sm text-muted-foreground border-r text-right pr-3",
+                "p-1 text-[11px] text-muted-foreground border-r text-right pr-2",
                 jobCount > 0 ? "bg-primary/5" : "bg-muted/30"
               )}>
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-end gap-1">
                   {jobCount > 0 && (
                     <div 
                       className={cn(
@@ -103,7 +103,7 @@ export function DayView({
                       )}
                     />
                   )}
-                  {format(new Date().setHours(hour, 0, 0, 0), "h:mm a")}
+                  {format(new Date().setHours(hour, 0, 0, 0), "ha").toLowerCase()}
                 </div>
               </div>
               <DroppableCell
