@@ -199,12 +199,12 @@ export default function Quotes() {
         <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
           {kpiCards.map((kpi) => (
             <Card key={kpi.label} className="min-w-[160px] flex-1 snap-start">
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <kpi.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{kpi.label}</span>
+                  <span className="text-[13px] text-muted-foreground font-medium">{kpi.label}</span>
                 </div>
-                <span className="text-lg font-bold">{kpi.value}</span>
+                <span className="text-xl font-bold tabular-nums">{kpi.value}</span>
               </CardContent>
             </Card>
           ))}
