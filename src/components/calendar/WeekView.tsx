@@ -87,33 +87,34 @@ export function WeekView({
       )}
 
       {/* Header with day names */}
-      <div className={cn("grid bg-muted border-b", isMobile ? "" : "")} style={{ gridTemplateColumns: isMobile ? `repeat(${days.length}, 1fr)` : `auto repeat(${days.length}, 1fr)` }}>
-        <div className="p-2 text-center text-sm font-medium text-muted-foreground border-r">
-          Time
-        </div>
+      <div className={cn("grid bg-muted border-b")} style={{ gridTemplateColumns: isMobile ? `repeat(${days.length}, 1fr)` : `auto repeat(${days.length}, 1fr)` }}>
+        {!isMobile && (
+          <div className="p-2 text-center text-sm font-medium text-muted-foreground border-r">
+            Time
+          </div>
+        )}
         {days.map((day) => {
           const dayJobs = getJobsForDay(day);
           const hasJobs = dayJobs.length > 0;
           
           return (
-            <div key={day.toISOString()} className="p-2 text-center border-r last:border-r-0 relative">
-              <div className="text-sm font-medium text-muted-foreground">
-                {format(day, "EEE")}
+            <div key={day.toISOString()} className={cn("p-1.5 md:p-2 text-center border-r last:border-r-0 relative")}>
+              <div className="text-[11px] md:text-sm font-medium text-muted-foreground">
+                {format(day, isMobile ? "EEE" : "EEE")}
               </div>
               <div
                 className={cn(
-                  "text-lg font-semibold w-8 h-8 mx-auto flex items-center justify-center rounded-full",
+                  "text-[14px] md:text-lg font-semibold w-7 h-7 md:w-8 md:h-8 mx-auto flex items-center justify-center rounded-full",
                   isToday(day) && "bg-primary text-primary-foreground"
                 )}
               >
                 {format(day, "d")}
               </div>
-              {/* Day busy indicator */}
               {hasJobs && (
                 <div className="absolute top-1 right-1">
                   <div 
                     className={cn(
-                      "w-2 h-2 rounded-full",
+                      "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full",
                       dayJobs.length <= 2 && "bg-primary/60",
                       dayJobs.length > 2 && dayJobs.length <= 4 && "bg-amber-500/70",
                       dayJobs.length > 4 && "bg-destructive/70"
@@ -130,10 +131,16 @@ export function WeekView({
       {/* Time grid */}
       <div className="overflow-auto max-h-[600px]">
         {HOURS.map((hour) => (
-          <div key={hour} className="grid grid-cols-8 min-h-[60px] border-b last:border-b-0">
-            <div className="p-2 text-xs text-muted-foreground border-r text-right pr-3">
-              {format(new Date().setHours(hour, 0, 0, 0), "h a")}
-            </div>
+          <div
+            key={hour}
+            className="grid border-b last:border-b-0"
+            style={{ gridTemplateColumns: isMobile ? `repeat(${days.length}, 1fr)` : `auto repeat(${days.length}, 1fr)`, minHeight: isMobile ? 48 : 60 }}
+          >
+            {!isMobile && (
+              <div className="p-2 text-xs text-muted-foreground border-r text-right pr-3">
+                {format(new Date().setHours(hour, 0, 0, 0), "h a")}
+              </div>
+            )}
             {days.map((day) => {
               const dayJobs = getJobsForDay(day);
               const hourJobs = dayJobs.filter((job) => {
@@ -151,7 +158,7 @@ export function WeekView({
                   id={`week-${dateKey}-${hour}`}
                   date={day}
                   hour={hour}
-                  className="border-r last:border-r-0 p-1 min-h-[60px]"
+                  className={cn("border-r last:border-r-0 p-0.5 md:p-1", isMobile ? "min-h-[48px]" : "min-h-[60px]")}
                   hasJobs={jobCount > 0}
                   jobCount={jobCount}
                   onJobDrop={onJobDrop}
@@ -173,6 +180,3 @@ export function WeekView({
           </div>
         ))}
       </div>
-    </div>
-  );
-}
