@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Loader2 } from "lucide-react";
-import { Loader2 } from "lucide-react";
 import { CalendarHeader, type CalendarViewType } from "@/components/calendar/CalendarHeader";
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
