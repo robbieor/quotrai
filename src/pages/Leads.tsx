@@ -53,6 +53,7 @@ export default function Leads() {
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
   const { formatCurrency } = useCurrency();
+  const isMobile = useIsMobile();
 
   const filtered = leads?.filter((l) => {
     const matchesSearch =
