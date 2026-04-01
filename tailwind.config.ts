@@ -14,12 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Manrope', 'sans-serif'],
-      },
-      fontSize: {
-        'display-lg': ['clamp(2.5rem, 6vw, 4rem)', { lineHeight: '1.1', letterSpacing: '-0.03em' }],
-        'display': ['clamp(1.875rem, 4vw, 2.5rem)', { lineHeight: '1.2', letterSpacing: '-0.02em' }],
-        'heading': ['clamp(1.25rem, 2.5vw, 1.5rem)', { lineHeight: '1.3', letterSpacing: '-0.01em' }],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -76,11 +71,6 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
-        teal: {
-          DEFAULT: "hsl(159 100% 45%)",
-          light: "hsl(159 100% 50%)",
-          dark: "hsl(159 100% 35%)",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -90,11 +80,9 @@ export default {
         "2xl": "1.25rem",
       },
       boxShadow: {
-        'subtle': '0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1)',
-        'medium': '0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1)',
-        'lift': '0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1)',
-        'glow-teal': '0 0 20px hsl(159 100% 50% / 0.3)',
-        'glow-teal-lg': '0 8px 32px hsl(159 100% 50% / 0.4)',
+        'subtle': '0 1px 3px rgba(0,0,0,0.04)',
+        'medium': '0 4px 12px rgba(0,0,0,0.06)',
+        'lift': '0 10px 20px rgba(0,0,0,0.08)',
       },
       spacing: {
         '18': '4.5rem',

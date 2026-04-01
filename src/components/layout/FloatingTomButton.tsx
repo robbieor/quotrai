@@ -211,7 +211,7 @@ export function FloatingTomButton() {
         className={cn(
           "fixed bottom-6 right-6 z-50",
           "h-14 w-14 rounded-full",
-          "shadow-lg",
+          "shadow-[0_4px_12px_rgba(13,155,106,0.3)]",
           "flex items-center justify-center",
           "hover:scale-110 hover:shadow-xl",
           "active:scale-95",
@@ -232,11 +232,7 @@ export function FloatingTomButton() {
         ) : isExpanded ? (
           <X className="h-6 w-6" />
         ) : (
-          <>
-            <Phone className="h-6 w-6 relative z-10" />
-            {/* Pulse animation when not connected */}
-            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping opacity-75" />
-          </>
+          <Phone className="h-6 w-6" />
         )}
       </button>
 

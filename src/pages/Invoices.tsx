@@ -207,12 +207,12 @@ export default function Invoices() {
         <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
           {kpiCards.map((kpi) => (
             <Card key={kpi.label} className={cn("min-w-[160px] flex-1 snap-start", kpi.alert && "border-destructive/30")}>
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <kpi.icon className={cn("h-3.5 w-3.5", kpi.alert ? "text-destructive" : "text-muted-foreground")} />
-                  <span className={cn("text-[10px] uppercase tracking-wider font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
+                  <span className={cn("text-[13px] font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
                 </div>
-                <span className={cn("text-lg font-bold", kpi.alert && "text-destructive")}>{kpi.value}</span>
+                <span className={cn("text-xl font-bold tabular-nums", kpi.alert && "text-destructive")}>{kpi.value}</span>
               </CardContent>
             </Card>
           ))}
@@ -230,10 +230,10 @@ export default function Invoices() {
               key={status}
               onClick={() => setStatusFilter(status)}
               className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+                "px-4 h-9 rounded-full text-xs font-medium transition-colors",
                 statusFilter === status
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border hover:bg-muted"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:bg-muted"
               )}
             >
               {status === "all" ? "All" : (statusConfig[status]?.label || status)}
@@ -306,39 +306,39 @@ export default function Invoices() {
                           key={invoice.id}
                           onClick={() => handleViewInvoice(invoice)}
                           className={cn(
-                            "border-b border-border/30 cursor-pointer transition-colors hover:bg-muted/30",
+                            "border-b border-[hsl(240_10%_95%)] cursor-pointer transition-colors hover:bg-muted/30",
                             selectedRows.has(idx) && "bg-primary/5",
-                            isOverdue && "bg-red-50/50 dark:bg-red-950/10"
+                            isOverdue && "bg-destructive/5"
                           )}
                         >
-                          <td className="px-2 py-0.5 w-8" onClick={(e) => e.stopPropagation()}>
+                          <td className="px-2 py-3 w-8" onClick={(e) => e.stopPropagation()}>
                             <Checkbox
                               checked={selectedRows.has(idx)}
                               onCheckedChange={(c) => handleCheckboxChange(idx, c)}
                               className="h-3.5 w-3.5"
                             />
                           </td>
-                          <td className="px-3 py-0.5">
-                            <span className="text-[11px] font-medium">{invoice.display_number}</span>
+                          <td className="px-3 py-3">
+                            <span className="text-sm font-medium">{invoice.display_number}</span>
                           </td>
-                          <td className="px-3 py-0.5 hidden md:table-cell">
-                            <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{invoice.customer?.name || "—"}</span>
+                          <td className="px-3 py-3 hidden md:table-cell">
+                            <span className="text-sm text-muted-foreground truncate block max-w-[150px]">{invoice.customer?.name || "—"}</span>
                           </td>
-                          <td className="px-3 py-0.5 hidden sm:table-cell">
-                            <span className={cn("text-[11px]", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
+                          <td className="px-3 py-3 hidden sm:table-cell">
+                            <span className={cn("text-sm", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
                               {format(new Date(invoice.due_date), "MMM d, yyyy")}
                             </span>
                           </td>
-                          <td className="px-3 py-0.5">
-                            <Badge className={cn((statusConfig[displayStatus] || fallbackStatus).className, "text-[10px] px-1.5 py-0")}>
+                          <td className="px-3 py-3">
+                            <Badge className={cn((statusConfig[displayStatus] || fallbackStatus).className, "text-[11px] px-2 py-0.5")}>
                               {(statusConfig[displayStatus] || fallbackStatus).label}
                             </Badge>
                           </td>
-                          <td className="px-3 py-0.5 hidden lg:table-cell">
-                            <span className="text-[11px] text-muted-foreground">{invoice.invoice_items.length}</span>
+                          <td className="px-3 py-3 hidden lg:table-cell">
+                            <span className="text-sm text-muted-foreground">{invoice.invoice_items.length}</span>
                           </td>
-                          <td className="px-3 py-0.5 text-right">
-                            <span className="text-[11px] font-semibold">{formatCurrencyValue(Number(invoice.total), currency)}</span>
+                          <td className="px-3 py-3 text-right">
+                            <span className="text-sm font-semibold tabular-nums">{formatCurrencyValue(Number(invoice.total), currency)}</span>
                           </td>
                           <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>

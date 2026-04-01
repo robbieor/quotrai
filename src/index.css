@@ -1,79 +1,77 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 @import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Foreman Design System - Revamo-inspired
-   Clean, enterprise SaaS aesthetic with teal accent
+/* Foreman Design System — Premium iOS-quality
+   System font stack, restrained green accent, subtle shadows
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --font-sans: 'Manrope', sans-serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     
-    /* Light Theme - Soft teal mint background with white cards */
-    --background: 160 40% 96%;               /* Soft mint/teal background #E8F6F3 */
-    --foreground: 222 47% 11%;              /* #0f172a - Dark text */
+    /* Light Theme — #FAFAFA canvas, white cards */
+    --background: 0 0% 98%;
+    --foreground: 235 40% 14%;
 
-    --card: 0 0% 100%;                      /* Pure white cards for contrast */
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 235 40% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 235 40% 14%;
 
-    /* Teal accent #00FFB2 = 159 100% 50% */
-    --primary: 159 100% 45%;                /* Slightly darker for better contrast */
-    --primary-foreground: 222 47% 11%;      /* Dark text on teal */
+    /* Foreman green #0D9B6A — used sparingly */
+    --primary: 155 85% 33%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 160 30% 92%;               /* Slightly darker mint for secondary */
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 240 10% 95%;
+    --secondary-foreground: 235 40% 14%;
 
-    --muted: 160 25% 93%;                   /* Soft mint gray backgrounds */
-    --muted-foreground: 215 16% 47%;        /* #64748b - Gray text */
+    --muted: 240 10% 95%;
+    --muted-foreground: 235 15% 45%;
 
-    --accent: 159 100% 45%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 155 85% 33%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 4 80% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 20%;
+    --warning: 36 91% 55%;
+    --warning-foreground: 36 91% 20%;
 
-    --border: 160 20% 88%;                  /* Teal-tinted subtle borders */
-    --input: 160 20% 88%;
-    --ring: 159 100% 45%;
+    --border: 240 10% 92%;
+    --input: 240 10% 92%;
+    --ring: 155 85% 33%;
 
-    --radius: 0.75rem;                      /* 12px border-radius */
+    --radius: 0.875rem;
 
-    /* Sidebar - Premium deep navy (Linear/Vercel inspired) */
-    --sidebar-background: 0 0% 100%;          /* White sidebar to contrast mint bg */
-    --sidebar-foreground: 222 47% 11%;        /* Dark text */
-    --sidebar-primary: 159 100% 45%;          /* Bright teal for active */
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 160 40% 96%;            /* Mint hover */
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 160 20% 88%;            /* Teal-tinted border */
-    --sidebar-ring: 159 100% 50%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 235 40% 14%;
+    --sidebar-primary: 155 85% 33%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 96%;
+    --sidebar-accent-foreground: 235 40% 14%;
+    --sidebar-border: 240 10% 92%;
+    --sidebar-ring: 155 85% 33%;
 
-    /* Chart colors - Teal-based palette */
-    --chart-1: 159 100% 45%;
+    /* Chart colors */
+    --chart-1: 155 85% 33%;
     --chart-2: 173 80% 40%;
-    --chart-3: 197 71% 50%;
+    --chart-3: 207 71% 50%;
     --chart-4: 250 60% 60%;
     --chart-5: 280 65% 60%;
 
-    /* Custom tokens for Revamo style */
-    --teal-glow: 159 100% 50%;
-    --shadow-subtle: 0 1px 3px 0 hsl(0 0% 0% / 0.06), 0 1px 2px -1px hsl(0 0% 0% / 0.06);
-    --shadow-medium: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
-    --shadow-lift: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.06);
+    /* Shadow tokens */
+    --shadow-subtle: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-medium: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-lift: 0 10px 20px rgba(0,0,0,0.08);
   }
 
-  /* Dark mode override */
+  /* Dark mode */
   .dark {
     --background: 220 26% 9%;
     --foreground: 210 40% 98%;
@@ -81,29 +79,29 @@
     --card-foreground: 210 40% 98%;
     --popover: 218 23% 14%;
     --popover-foreground: 210 40% 98%;
-    --primary: 159 100% 50%;
+    --primary: 155 85% 40%;
     --primary-foreground: 220 26% 9%;
     --secondary: 218 23% 20%;
     --secondary-foreground: 210 40% 98%;
     --muted: 218 23% 18%;
     --muted-foreground: 215 20% 65%;
-    --accent: 159 100% 50%;
+    --accent: 155 85% 40%;
     --accent-foreground: 220 26% 9%;
-    --destructive: 0 84% 60%;
+    --destructive: 4 80% 56%;
     --destructive-foreground: 210 40% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 80%;
+    --warning: 36 91% 55%;
+    --warning-foreground: 36 91% 80%;
     --border: 218 23% 22%;
     --input: 218 23% 22%;
-    --ring: 159 100% 50%;
+    --ring: 155 85% 40%;
     --sidebar-background: 220 26% 7%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 159 100% 50%;
+    --sidebar-primary: 155 85% 40%;
     --sidebar-primary-foreground: 220 26% 9%;
     --sidebar-accent: 218 23% 16%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 218 23% 18%;
-    --sidebar-ring: 159 100% 50%;
+    --sidebar-ring: 155 85% 40%;
   }
 }
 
@@ -113,44 +111,43 @@
   }
 
   html {
-    font-family: 'Manrope', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     scroll-behavior: smooth;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Manrope', sans-serif;
-    font-size: 16px;
-    line-height: 1.7;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
   }
 
-  /* Typography scale - Revamo style */
+  /* Typography scale — strict iOS-inspired */
   h1 {
-    font-size: clamp(2.5rem, 6vw, 4rem);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.03em;
-    @apply text-foreground;
-  }
-
-  h2 {
-    font-size: clamp(1.875rem, 4vw, 2.5rem);
+    font-size: 1.75rem;
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.02em;
     @apply text-foreground;
   }
 
+  h2 {
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    @apply text-foreground;
+  }
+
   h3 {
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    font-size: 1.0625rem;
     font-weight: 600;
     line-height: 1.3;
-    letter-spacing: -0.01em;
     @apply text-foreground;
   }
 
   h4 {
-    font-size: 1.125rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1.4;
     @apply text-foreground;
@@ -162,7 +159,7 @@
 }
 
 @layer components {
-  /* Primary button with teal glow */
+  /* Primary button */
   .btn-primary {
     @apply bg-primary text-primary-foreground font-semibold;
     @apply rounded-xl px-6 py-3;
@@ -170,40 +167,37 @@
   }
   
   .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px hsl(159 100% 50% / 0.35);
+    opacity: 0.9;
   }
 
   .btn-primary:active {
-    transform: translateY(0);
+    transform: scale(0.98);
   }
 
   /* Secondary/outlined button */
   .btn-secondary {
-    @apply bg-transparent border-2 border-border text-foreground font-semibold;
+    @apply bg-transparent border-[1.5px] border-primary text-primary font-semibold;
     @apply rounded-xl px-6 py-3;
     @apply transition-all duration-200 ease-out;
   }
 
   .btn-secondary:hover {
-    @apply bg-muted border-primary;
-    transform: translateY(-1px);
+    @apply bg-primary/5;
   }
 
   /* Card with hover lift effect */
   .card-hover {
     @apply transition-all duration-200 ease-out;
-    @apply border border-border rounded-xl;
+    @apply border border-border rounded-[14px];
   }
   
   .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 32px hsl(0 0% 0% / 0.08);
+    box-shadow: var(--shadow-medium);
   }
 
   /* Subtle card style */
   .card-subtle {
-    @apply bg-muted/50 border-0 rounded-xl;
+    @apply bg-muted/50 border-0 rounded-[14px];
     @apply transition-all duration-200;
   }
 
@@ -214,10 +208,10 @@
   /* Teal pill/badge */
   .pill-teal {
     @apply inline-flex items-center gap-1.5;
-    @apply px-3 py-1 rounded-full;
+    @apply px-3 py-1 rounded-md;
     @apply text-sm font-medium;
-    background: hsl(159 100% 50% / 0.1);
-    color: hsl(159 100% 35%);
+    background: hsl(155 85% 33% / 0.12);
+    color: hsl(155 85% 33%);
   }
 
   /* Focus ring style */
@@ -262,7 +256,7 @@
 
   /* Text gradient for headlines */
   .text-gradient-teal {
-    background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(159 100% 45%) 100%);
+    background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(155 85% 33%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -270,20 +264,16 @@
 
   /* Teal accent text */
   .text-teal {
-    color: hsl(159 100% 45%);
+    color: hsl(155 85% 33%);
   }
 
-  /* Power BI inspired dashboard cards */
+  /* Dashboard cards */
   .dashboard-card-glow {
-    box-shadow: 0 4px 24px -4px hsl(var(--primary) / 0.12), 
-                0 0 0 1px hsl(var(--border) / 0.5),
-                inset 0 1px 0 0 hsl(var(--primary) / 0.05);
+    box-shadow: var(--shadow-subtle);
   }
 
   .dashboard-card-glow:hover {
-    box-shadow: 0 8px 32px -4px hsl(var(--primary) / 0.2), 
-                0 0 0 1px hsl(var(--primary) / 0.3),
-                inset 0 1px 0 0 hsl(var(--primary) / 0.1);
+    box-shadow: var(--shadow-medium);
   }
 
   /* Section with subtle background */
@@ -324,20 +314,6 @@
     opacity: 0;
   }
 
-  /* Pulse glow effect */
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 0 0 hsl(159 100% 50% / 0.4);
-    }
-    50% {
-      box-shadow: 0 0 0 8px hsl(159 100% 50% / 0);
-    }
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
   /* Spacing scale (8px base) */
   .spacing-tight { @apply gap-2; }
   .spacing-normal { @apply gap-4; }
@@ -358,7 +334,6 @@
   .safe-area-pt {
     padding-top: env(safe-area-inset-top, 0);
   }
-
 }
 
 /* Leaflet overrides — MUST be outside @layer for full specificity over Tailwind preflight */
