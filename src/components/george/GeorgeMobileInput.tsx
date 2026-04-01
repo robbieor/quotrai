@@ -217,7 +217,7 @@ export function GeorgeMobileInput({
       )}
 
       {/* Input bar */}
-      <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-2xl px-3 py-2 shadow-sm">
+      <div className="flex items-center gap-2 bg-muted border border-border rounded-3xl px-3 py-2 shadow-sm min-h-[48px]">
         {/* Photo Quote Button */}
         <PhotoQuoteButton
           onQuoteSuggestion={(suggestion) => onPhotoQuote?.(suggestion)}
