@@ -191,94 +191,200 @@ export default function Invoices() {
     { label: "Avg Days to Pay", value: stats.avgDaysToPay, icon: TrendingUp },
   ];
 
+  const statusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "paid": return "success";
+      case "overdue": return "destructive";
+      case "pending": return "warning";
+      default: return "secondary";
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         <UpgradePromptBanner />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Invoices</h1>
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-[28px] font-bold tracking-[-0.02em]">Invoices</h1>
+            {invoices && (
+              <p className="text-[13px] text-muted-foreground mt-0.5">
+                {invoices.length.toLocaleString()} invoices
+              </p>
+            )}
+          </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setFromQuoteOpen(true)} className="flex-1 sm:flex-none text-xs sm:text-sm">
-              <FileText className="mr-1 sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">From Quote</span>
-              <span className="sm:hidden">Quote</span>
-            </Button>
-            <ReadOnlyGuard>
-              <Button onClick={handleNewInvoice} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                <Plus className="mr-1 sm:mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">New Invoice</span>
-                <span className="sm:hidden">New</span>
+            {!isMobile && (
+              <Button variant="outline" onClick={() => setFromQuoteOpen(true)} className="text-sm">
+                <FileText className="mr-2 h-4 w-4" />
+                From Quote
               </Button>
+            )}
+            <ReadOnlyGuard>
+              {isMobile ? (
+                <button
+                  onClick={handleNewInvoice}
+                  className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md active:scale-95 transition-transform"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              ) : (
+                <Button onClick={handleNewInvoice}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Invoice
+                </Button>
+              )}
             </ReadOnlyGuard>
           </div>
         </div>
 
-        <InsightAlerts insights={invoiceInsights} />
+        {/* Alert Banner — due within 3 days */}
+        {isMobile && dueSoonCount > 0 && (
+          <div className="flex items-center gap-3 rounded-xl bg-card border border-border p-3 border-l-[3px] border-l-amber-500">
+            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+            <span className="text-[14px] flex-1">
+              {dueSoonCount} invoice{dueSoonCount > 1 ? "s" : ""} due within 3 days
+            </span>
+            <button
+              onClick={() => setStatusFilter("pending")}
+              className="text-[14px] font-medium text-primary"
+            >
+              Review
+            </button>
+          </div>
+        )}
 
-        {/* KPI Strip */}
-        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
-          {kpiCards.map((kpi) => (
-            <Card key={kpi.label} className={cn("min-w-[160px] flex-1 snap-start", kpi.alert && "border-destructive/30")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <kpi.icon className={cn("h-3.5 w-3.5", kpi.alert ? "text-destructive" : "text-muted-foreground")} />
-                  <span className={cn("text-[13px] font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
-                </div>
-                <span className={cn("text-xl font-bold tabular-nums", kpi.alert && "text-destructive")}>{kpi.value}</span>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {!isMobile && <InsightAlerts insights={invoiceInsights} />}
 
+        {/* Metrics Row */}
+        {isMobile ? (
+          <div className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide -mx-5 px-5">
+            {[
+              { label: "OVERDUE", value: formatCurrency(stats.overdue), color: "text-destructive", accent: "border-l-destructive" },
+              { label: "PAID THIS MONTH", value: formatCurrency(stats.paidMonth), color: "text-primary", accent: "border-l-primary" },
+              { label: "AVG DAYS", value: String(stats.avgDaysToPay), color: "text-blue-600", accent: "border-l-blue-500" },
+            ].map((m) => (
+              <div
+                key={m.label}
+                className={cn(
+                  "min-w-[120px] flex-1 snap-start rounded-xl bg-card border border-border p-3 border-l-[3px] shadow-subtle",
+                  m.accent
+                )}
+              >
+                <p className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground font-medium">{m.label}</p>
+                <p className={cn("text-[20px] font-bold tabular-nums mt-1", m.color)}>{m.value}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
+            {kpiCards.map((kpi) => (
+              <Card key={kpi.label} className={cn("min-w-[160px] flex-1 snap-start", kpi.alert && "border-destructive/30")}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <kpi.icon className={cn("h-3.5 w-3.5", kpi.alert ? "text-destructive" : "text-muted-foreground")} />
+                    <span className={cn("text-[13px] font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
+                  </div>
+                  <span className={cn("text-xl font-bold tabular-nums", kpi.alert && "text-destructive")}>{kpi.value}</span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search invoices..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <Input
+            placeholder="Search invoices..."
+            className={cn("pl-9", isMobile && "rounded-[22px] bg-[hsl(240,10%,96%)] border-transparent h-11")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         {/* Status filter pills */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {(["all", "draft", "pending", "paid", "overdue"] as StatusFilter[]).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
               className={cn(
-                "px-4 h-9 rounded-full text-xs font-medium transition-colors",
+                "px-4 h-9 rounded-[18px] text-xs font-medium transition-colors whitespace-nowrap shrink-0",
                 statusFilter === status
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:bg-muted"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
             >
-              {status === "all" ? "All" : (statusConfig[status]?.label || status)}
-              <span className="ml-1.5 opacity-70">{statusCounts[status as keyof typeof statusCounts]}</span>
+              {status === "all" ? "All" : (statusConfig[status]?.label || status)}{" "}
+              {statusCounts[status as keyof typeof statusCounts]?.toLocaleString()}
             </button>
           ))}
         </div>
 
-        <Card>
-          <TableSelectionBar
-            selectedCount={selectedRows.size}
-            onClear={clearSelection}
-            onExport={handleExport}
-          />
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Skeleton className="h-8 w-8 rounded-full" />
-              </div>
-            ) : sortedData.length === 0 ? (
-              <div className="p-6">
-                <EmptyState
-                  icon={Receipt}
-                  title={searchQuery || statusFilter !== "all" ? "No invoices match your filters" : "Get paid faster with professional invoices"}
-                  description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter." : "Create invoices, send them via email or portal link, and track payments — so nothing slips through the cracks."}
-                  actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Invoice" : undefined}
-                  onAction={!searchQuery && statusFilter === "all" ? handleNewInvoice : undefined}
-                  secondaryActionLabel={!searchQuery && statusFilter === "all" ? "From a Quote" : undefined}
-                  onSecondaryAction={!searchQuery && statusFilter === "all" ? () => setFromQuoteOpen(true) : undefined}
-                />
-              </div>
-            ) : (
+        {/* Invoice List / Table */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+        ) : sortedData.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon={Receipt}
+              title={searchQuery || statusFilter !== "all" ? "No invoices match your filters" : "Get paid faster with professional invoices"}
+              description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter." : "Create invoices, send them via email or portal link, and track payments."}
+              actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Invoice" : undefined}
+              onAction={!searchQuery && statusFilter === "all" ? handleNewInvoice : undefined}
+              secondaryActionLabel={!searchQuery && statusFilter === "all" ? "From a Quote" : undefined}
+              onSecondaryAction={!searchQuery && statusFilter === "all" ? () => setFromQuoteOpen(true) : undefined}
+            />
+          </div>
+        ) : isMobile ? (
+          /* Mobile card list */
+          <div className="rounded-xl bg-card border border-border overflow-hidden">
+            {sortedData.map((invoice, idx) => {
+              const displayStatus = getDisplayStatus(invoice);
+              const currency = invoice.currency || getCurrencyFromCountry(invoice.customer?.country_code);
+              return (
+                <button
+                  key={invoice.id}
+                  type="button"
+                  onClick={() => handleViewInvoice(invoice)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-muted/60 transition-colors",
+                    idx < sortedData.length - 1 && "border-b border-[hsl(240,10%,96%)]"
+                  )}
+                  style={{ minHeight: 80 }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-semibold truncate">{invoice.display_number}</p>
+                    <p className="text-[13px] text-muted-foreground truncate mt-0.5">
+                      {invoice.customer?.name || "—"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[16px] font-semibold tabular-nums">
+                      {formatCurrencyValue(Number(invoice.total), currency)}
+                    </span>
+                    <Badge variant={statusBadgeVariant(displayStatus)} className="text-[11px]">
+                      {(statusConfig[displayStatus] || fallbackStatus).label}
+                    </Badge>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          /* Desktop table */
+          <Card>
+            <TableSelectionBar
+              selectedCount={selectedRows.size}
+              onClear={clearSelection}
+              onExport={handleExport}
+            />
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -293,16 +399,16 @@ export default function Invoices() {
                       <SortableHeader sortDirection={getSortDirection("display_number" as any)} onSort={() => handleSort("display_number" as any)} className="text-[10px] uppercase tracking-wider">
                         Invoice #
                       </SortableHeader>
-                      <SortableHeader sortDirection={getSortDirection("customer" as any)} onSort={() => handleSort("customer" as any)} className="text-[10px] uppercase tracking-wider hidden md:table-cell">
+                      <SortableHeader sortDirection={getSortDirection("customer" as any)} onSort={() => handleSort("customer" as any)} className="text-[10px] uppercase tracking-wider">
                         Customer
                       </SortableHeader>
-                      <SortableHeader sortDirection={getSortDirection("due_date" as any)} onSort={() => handleSort("due_date" as any)} className="text-[10px] uppercase tracking-wider hidden sm:table-cell">
+                      <SortableHeader sortDirection={getSortDirection("due_date" as any)} onSort={() => handleSort("due_date" as any)} className="text-[10px] uppercase tracking-wider">
                         Due Date
                       </SortableHeader>
                       <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="text-[10px] uppercase tracking-wider">
                         Status
                       </SortableHeader>
-                      <th className="h-8 px-3 text-[10px] uppercase tracking-wider font-semibold text-foreground/80 bg-muted/60 hidden lg:table-cell">Items</th>
+                      <th className="h-8 px-3 text-[10px] uppercase tracking-wider font-semibold text-foreground/80 bg-muted/60">Items</th>
                       <SortableHeader sortDirection={getSortDirection("total" as any)} onSort={() => handleSort("total" as any)} className="text-[10px] uppercase tracking-wider" align="right">
                         Total
                       </SortableHeader>
@@ -334,10 +440,10 @@ export default function Invoices() {
                           <td className="px-3 py-3">
                             <span className="text-sm font-medium">{invoice.display_number}</span>
                           </td>
-                          <td className="px-3 py-3 hidden md:table-cell">
+                          <td className="px-3 py-3">
                             <span className="text-sm text-muted-foreground truncate block max-w-[150px]">{invoice.customer?.name || "—"}</span>
                           </td>
-                          <td className="px-3 py-3 hidden sm:table-cell">
+                          <td className="px-3 py-3">
                             <span className={cn("text-sm", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
                               {format(new Date(invoice.due_date), "MMM d, yyyy")}
                             </span>
@@ -347,7 +453,7 @@ export default function Invoices() {
                               {(statusConfig[displayStatus] || fallbackStatus).label}
                             </Badge>
                           </td>
-                          <td className="px-3 py-3 hidden lg:table-cell">
+                          <td className="px-3 py-3">
                             <span className="text-sm text-muted-foreground">{invoice.invoice_items.length}</span>
                           </td>
                           <td className="px-3 py-3 text-right">
@@ -390,9 +496,9 @@ export default function Invoices() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Separator className="my-6" />
