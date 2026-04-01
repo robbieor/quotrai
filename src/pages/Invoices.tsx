@@ -207,12 +207,12 @@ export default function Invoices() {
         <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-hide">
           {kpiCards.map((kpi) => (
             <Card key={kpi.label} className={cn("min-w-[160px] flex-1 snap-start", kpi.alert && "border-destructive/30")}>
-              <CardContent className="p-3">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <kpi.icon className={cn("h-3.5 w-3.5", kpi.alert ? "text-destructive" : "text-muted-foreground")} />
-                  <span className={cn("text-[10px] uppercase tracking-wider font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
+                  <span className={cn("text-[13px] font-medium", kpi.alert ? "text-destructive" : "text-muted-foreground")}>{kpi.label}</span>
                 </div>
-                <span className={cn("text-lg font-bold", kpi.alert && "text-destructive")}>{kpi.value}</span>
+                <span className={cn("text-xl font-bold tabular-nums", kpi.alert && "text-destructive")}>{kpi.value}</span>
               </CardContent>
             </Card>
           ))}
