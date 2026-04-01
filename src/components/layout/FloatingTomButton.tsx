@@ -211,7 +211,7 @@ export function FloatingTomButton() {
         className={cn(
           "fixed bottom-6 right-6 z-50",
           "h-14 w-14 rounded-full",
-          "shadow-lg",
+          "shadow-[0_4px_12px_rgba(13,155,106,0.3)]",
           "flex items-center justify-center",
           "hover:scale-110 hover:shadow-xl",
           "active:scale-95",
