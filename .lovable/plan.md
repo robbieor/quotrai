@@ -1,67 +1,62 @@
 
 
-# Invoices Screen — Mobile iOS-Style Redesign
+# Quotes Screen — Mobile iOS-Style Redesign
 
 ## What Changes
 
-On mobile, replace the data table with a card-based invoice list. Restyle the header, alert banner, metrics, filters, and search to match the premium design system. Desktop keeps the existing table.
+On mobile, replace the data table with a card-based quote list matching the Invoices screen pattern. Add a prominent cold quotes alert card, restyle metrics/filters/search, and add cold quote indicators on list items. Desktop stays unchanged.
 
 ## Plan
 
-### 1. Edit `src/pages/Invoices.tsx` — mobile-responsive layout
+### 1. Edit `src/pages/Quotes.tsx`
 
-**Header** (lines 186-202):
-- Mobile: "Invoices" 28px bold left-aligned, "1,000 invoices" count below in 13px muted
-- Replace "From Quote" + "New Invoice" buttons with a single 44px green filled circle "+" button on mobile
-- Desktop: keep existing two-button layout
+**Import** `useIsMobile` from `@/hooks/use-mobile`, `AlertTriangle` and `ChevronRight` from lucide.
 
-**Alert Banner** (replaces `InsightAlerts` on mobile):
-- Compute "invoices due within 3 days" count from data
-- Render as a compact card: `border-l-[3px] border-amber-500`, amber `AlertTriangle` icon, text in 14px, "Review" green text button on right that sets status filter to "pending"
-- Only show when count > 0
+**Compute cold quotes** — add a `useMemo` that counts quotes with status `sent` where `created_at` is 7+ days ago (no response). Also compute total value at risk from those cold quotes.
 
-**Metrics Row** (lines 207-219):
-- Mobile: 3 cards (Overdue, Paid This Month, Avg Days), each `min-w-[120px]`
-- Overdue: red text for value, red left accent
-- Paid: green accent
-- Avg Days: blue accent
-- Label: `text-[11px] uppercase tracking-[0.05em] text-muted-foreground`
-- Value: `text-[20px] font-bold tabular-nums`
-- Cards: `rounded-xl p-3`, subtle shadow
+**Header** (mobile branch):
+- "Quotes" 28px bold left-aligned
+- "1,000 quotes" count below in 13px muted
+- Replace full-width "New Quote" button with 44px green filled circle "+" button on mobile
+- Desktop: keep existing layout
 
-**Search** (lines 221-224):
-- Mobile: pill-shaped `rounded-[22px]` with `bg-[hsl(240,10%,96%)]`
+**Cold Quotes Alert** (mobile, after header):
+- Only show when cold count > 0
+- Card with `border-l-[4px] border-red-500`, red `AlertTriangle` icon
+- "150 quotes going cold" in 15px semibold
+- "No response in 7+ days — €352K at risk" in 13px muted
+- Right side: "Chase" outlined button, 32px height, red/destructive variant
+- Chase button sets status filter to "sent" to show all sent quotes
 
-**Status Filters** (lines 227-243):
-- Change active pill from dark (`bg-foreground`) to green filled (`bg-primary text-white`)
+**Metrics Row** (mobile):
+- 3 cards in horizontal scroll: Pipeline Value (green accent), Acceptance Rate (blue accent), Avg Quote Value (neutral)
+- Same styling as Invoices: `min-w-[120px]`, `text-[11px] uppercase tracking-[0.05em]` label, `text-[20px] font-bold tabular-nums` value
+- Colored left border per metric type
+
+**Search** (mobile): pill-shaped `rounded-[22px]`, `bg-[hsl(240,10%,96%)]`, 44px height
+
+**Status Filters**: 
+- Active pill: `bg-primary text-white` (green filled)
 - Inactive: `bg-muted text-muted-foreground`
-- Height: `h-9 rounded-[18px]`
-- Show counts inside: "All 1,000"
+- `h-9 rounded-[18px]`
+- Show counts: "All 1,000" / "Draft 191" etc.
 
-**Invoice List** (mobile only, replaces table):
-- Each invoice: 80px height row
-- Left: invoice number `text-[15px] font-semibold` + customer name `text-[13px] text-muted-foreground`
-- Right: amount `text-[16px] font-semibold tabular-nums` right-aligned + status badge below
+**Quote List** (mobile, replaces table):
+- Each quote: ~80px height row
+- Left: quote number `text-[15px] font-semibold` + customer name `text-[13px] text-muted-foreground`
+- Right: amount `text-[16px] font-semibold tabular-nums` + status badge below
+- Cold indicator: small amber dot (6px) next to quote number for sent quotes 7+ days old
 - Divider: `border-b border-[#F0F0F5]`
-- No checkboxes, no "..." menu
-- Tap opens `handleViewInvoice`
-- Desktop: keep existing table unchanged
+- No checkboxes, no dropdown menus
+- Tap opens `handleViewQuote`
 
-**Status Badges**: Use design-system badge variants:
-- draft: `bg-muted text-muted-foreground`
-- pending: `variant="warning"`
-- paid: `variant="success"`
-- overdue: `variant="destructive"`
-
-### 2. Import `useIsMobile`
-
-Add responsive branching using the existing `useIsMobile` hook.
+**Desktop**: Keep existing table, KPI cards, and layout completely unchanged.
 
 ### Files
 
 | Action | File |
 |--------|------|
-| Edit | `src/pages/Invoices.tsx` — mobile list, header, metrics, filters, alert banner |
+| Edit | `src/pages/Quotes.tsx` — mobile list, header, cold alert, metrics, filters |
 
 No new files. No database changes. Desktop layout unchanged.
 
