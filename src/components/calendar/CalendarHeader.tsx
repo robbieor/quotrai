@@ -1,17 +1,27 @@
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays } from "date-fns";
+import { ChevronLeft, ChevronRight, MoreHorizontal, Calendar, CalendarCheck } from "lucide-react";
+import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-export type CalendarViewType = "day" | "week" | "month";
+export type CalendarViewType = "day" | "week" | "month" | "pending";
 
 interface CalendarHeaderProps {
   currentDate: Date;
   view: CalendarViewType;
   onDateChange: (date: Date) => void;
   onViewChange: (view: CalendarViewType) => void;
+  pendingCount?: number;
 }
 
-export function CalendarHeader({ currentDate, view, onDateChange, onViewChange }: CalendarHeaderProps) {
+export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, pendingCount = 0 }: CalendarHeaderProps) {
+  const isMobile = useIsMobile();
+
   const navigatePrevious = () => {
     switch (view) {
       case "day":
@@ -44,46 +54,94 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange }
     onDateChange(new Date());
   };
 
-  const getHeaderTitle = () => {
+  const getDateLabel = () => {
     switch (view) {
       case "day":
-        return format(currentDate, "EEEE, MMMM d, yyyy");
-      case "week":
-        return format(currentDate, "MMMM yyyy");
+        return format(currentDate, "EEE d MMM yyyy");
+      case "week": {
+        const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const we = endOfWeek(currentDate, { weekStartsOn: 1 });
+        return `${format(ws, "d MMM")} – ${format(we, "d MMM")}`;
+      }
       case "month":
         return format(currentDate, "MMMM yyyy");
+      default:
+        return "";
     }
   };
 
+  // Mobile tabs: Day | Week | Pending
+  // Desktop tabs: Day | Week | Month
+  const mobileTabs: CalendarViewType[] = ["day", "week", "pending"];
+  const desktopTabs: CalendarViewType[] = ["day", "week", "month"];
+  const tabs = isMobile ? mobileTabs : desktopTabs;
+
+  const tabLabel = (v: CalendarViewType) => {
+    if (v === "pending") return `Pending${pendingCount > 0 ? ` (${pendingCount})` : ""}`;
+    return v.charAt(0).toUpperCase() + v.slice(1);
+  };
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-      <div className="flex items-center gap-1.5">
-        <Button variant="outline" size="sm" className="h-7 text-xs md:h-9 md:text-sm" onClick={goToToday}>
-          Today
-        </Button>
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" className="h-7 w-7 md:h-9 md:w-9" onClick={navigatePrevious}>
+    <div className="space-y-3 mb-4">
+      {/* Row 1: Segmented control + overflow menu */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center bg-muted rounded-full p-1 gap-0.5">
+          {tabs.map((v) => (
+            <button
+              key={v}
+              onClick={() => onViewChange(v)}
+              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all ${
+                view === v
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tabLabel(v)}
+            </button>
+          ))}
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={goToToday}>
+              <CalendarCheck className="h-4 w-4 mr-2" />
+              Go to today
+            </DropdownMenuItem>
+            {isMobile && (
+              <DropdownMenuItem onClick={() => onViewChange("month")}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Month view
+              </DropdownMenuItem>
+            )}
+            {!isMobile && (
+              <DropdownMenuItem onClick={() => onViewChange("pending")}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Pending jobs {pendingCount > 0 && `(${pendingCount})`}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Row 2: Date navigation (hidden for pending view) */}
+      {view !== "pending" && (
+        <div className="flex items-center justify-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigatePrevious}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 md:h-9 md:w-9" onClick={navigateNext}>
+          <span className="text-[15px] font-semibold min-w-[160px] text-center">
+            {getDateLabel()}
+          </span>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <h2 className="text-sm md:text-lg font-semibold truncate">{getHeaderTitle()}</h2>
-      </div>
-      <div className="flex items-center border rounded-lg overflow-hidden">
-        {(["day", "week", "month"] as CalendarViewType[]).map((v) => (
-          <Button
-            key={v}
-            variant={view === v ? "default" : "ghost"}
-            size="sm"
-            className="rounded-none capitalize h-7 px-2 text-xs md:h-9 md:px-3 md:text-sm"
-            onClick={() => onViewChange(v)}
-          >
-            {v}
-          </Button>
-        ))}
-      </div>
+      )}
     </div>
   );
 }
