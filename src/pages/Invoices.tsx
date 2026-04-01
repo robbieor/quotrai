@@ -139,6 +139,17 @@ export default function Invoices() {
     return { outstanding, overdue, paidMonth, avgDaysToPay };
   }, [invoices]);
 
+  const dueSoonCount = useMemo(() => {
+    if (!invoices) return 0;
+    const now = new Date();
+    const threeDaysOut = addDays(now, 3);
+    return invoices.filter((i) => {
+      if (i.status === "paid" || i.status === "draft") return false;
+      const due = new Date(i.due_date);
+      return due >= now && due <= threeDaysOut;
+    }).length;
+  }, [invoices]);
+
   const handleEdit = (invoice: Invoice) => { setSelectedInvoice(invoice); setFormOpen(true); };
   const handleDelete = (invoice: Invoice) => { setSelectedInvoice(invoice); setDeleteOpen(true); };
   const handleNewInvoice = () => { setSelectedInvoice(null); setFormOpen(true); };
