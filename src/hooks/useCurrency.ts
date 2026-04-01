@@ -27,14 +27,15 @@ export function useCurrency() {
   const currencyCode = (profile?.currency as CurrencyCode) || "EUR";
   const config = CURRENCIES[currencyCode] || CURRENCIES.EUR;
 
-  const formatCurrency = (amount: number | null | undefined): string => {
-    if (amount == null) return `${config.symbol}0.00`;
+  const formatCurrency = (amount: number | null | undefined, opts?: { decimals?: number }): string => {
+    if (amount == null) return `${config.symbol}0`;
+    const decimals = opts?.decimals ?? (Number.isInteger(amount) ? 0 : 2);
     
     return new Intl.NumberFormat(config.locale, {
       style: "currency",
       currency: config.code,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
     }).format(amount);
   };
 
