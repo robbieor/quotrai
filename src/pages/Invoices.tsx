@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { format, isPast, isToday, startOfMonth, endOfMonth, isWithinInterval, differenceInDays } from "date-fns";
+import { format, isPast, isToday, startOfMonth, endOfMonth, isWithinInterval, differenceInDays, addDays } from "date-fns";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
