@@ -170,12 +170,10 @@ export default function JobCalendar() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Job Calendar</h1>
-          <p className="text-muted-foreground">View and manage scheduled jobs. Drag jobs to reschedule.</p>
+          <h1 className="text-[28px] font-bold tracking-[-0.02em]">Job Calendar</h1>
         </div>
 
-        <Card>
-          <CardContent className="p-4">
+        <div className="md:bg-card md:border md:rounded-[14px] md:shadow-sm md:p-4">
             <CalendarHeader
               currentDate={currentDate}
               view={view}

@@ -128,7 +128,7 @@ export function getCurrencyFromCountry(countryCode: string | null | undefined): 
  */
 export function formatCurrencyValue(value: number, currencyCode: string = DEFAULT_CURRENCY): string {
   const info = CURRENCY_INFO[currencyCode] || CURRENCY_INFO[DEFAULT_CURRENCY];
-  const decimals = Number.isInteger(value) ? 0 : 2;
+  const decimals = 0;
   return new Intl.NumberFormat(info.locale, {
     style: 'currency',
     currency: currencyCode,

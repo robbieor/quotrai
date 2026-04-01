@@ -74,7 +74,7 @@ export function MonthView({
               onJobDrop={onJobDrop}
               onSlotClick={onSlotClick}
               className={cn(
-                "min-h-[120px] p-1 border-b border-r",
+                "min-h-[80px] md:min-h-[120px] p-1 border-b border-r",
                 index % 7 === 0 && "border-l-0",
                 !isCurrentMonth && "bg-muted/30"
               )}
