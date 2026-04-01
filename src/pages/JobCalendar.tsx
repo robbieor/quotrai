@@ -6,6 +6,7 @@ import { CalendarHeader, type CalendarViewType } from "@/components/calendar/Cal
 import { MonthView } from "@/components/calendar/MonthView";
 import { WeekView } from "@/components/calendar/WeekView";
 import { DayView } from "@/components/calendar/DayView";
+import { PendingView } from "@/components/calendar/PendingView";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { ScheduleJobPicker } from "@/components/calendar/ScheduleJobPicker";
 import { useJobs, useUpdateJob, type Job, type JobStatus } from "@/hooks/useJobs";
