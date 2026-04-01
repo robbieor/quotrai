@@ -321,7 +321,7 @@ export default function Jobs() {
                           <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{job.customers?.name || "—"}</span>
                         </td>
                         <td className="px-3 py-0.5">
-                          <Badge className={cn(statusColors[job.status], "text-[10px] px-1.5 py-0")}>
+                          <Badge variant={statusBadgeVariant[job.status]} className="text-[10px] px-1.5 py-0">
                             {JOB_STATUSES.find((s) => s.value === job.status)?.label}
                           </Badge>
                         </td>
