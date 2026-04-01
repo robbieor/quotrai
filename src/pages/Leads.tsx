@@ -129,19 +129,19 @@ export default function Leads() {
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
             <p className="text-xs text-muted-foreground">Total Leads</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.new}</p>
+            <p className="text-2xl font-bold tabular-nums text-primary">{stats.new}</p>
             <p className="text-xs text-muted-foreground">New</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.won}</p>
+            <p className="text-2xl font-bold tabular-nums text-primary">{stats.won}</p>
             <p className="text-xs text-muted-foreground">Won</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.pipeline)}</p>
+            <p className="text-lg sm:text-2xl font-bold tabular-nums truncate">{formatCurrency(stats.pipeline)}</p>
             <p className="text-xs text-muted-foreground">Pipeline Value</p>
           </CardContent></Card>
         </div>
