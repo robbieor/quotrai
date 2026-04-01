@@ -1,48 +1,42 @@
 
 
-# Fix Decimals + Calendar & Dashboard Table Mobile Polish
+# Fix Time Tracking Job Cards — Mobile Layout
 
-## Problems
+## Problem
 
-1. **Decimals still showing** — amounts like €7,777.52 still display. The `Number.isInteger()` check doesn't help because most real amounts have cents. User wants **zero decimals everywhere** — remove cents globally.
+The "Available Jobs" cards on the Time Tracking screen overflow horizontally on mobile. Each job card crams the job title, "Selected" badge, and location badges ("No verified location") side-by-side in a single row, causing text truncation and horizontal overflow. The "View Map" and "Clock In" buttons also get cut off.
 
-2. **Job Calendar mobile** — subtitle wastes space, title uses old `text-3xl`, calendar cells `min-h-[120px]` are too tall for mobile creating huge empty rows.
+## Root Cause
 
-3. **Top Customers table** — font sizes are tiny (`text-[10px]`, `text-[11px]`), the table is hard to read on mobile. The "Click row to view" hint and 5-column layout feels raw.
+In `ClockInOutCard.tsx` line 494, the job row uses `flex items-center gap-3` with badges on the right that don't wrap. On a 390px screen, the badges push past the card edge.
 
-## Plan
+## Fix — `src/components/time-tracking/ClockInOutCard.tsx`
 
-### 1. `src/hooks/useCurrency.ts` — Force 0 decimals by default
-- Change default decimals from `Number.isInteger(amount) ? 0 : 2` to just `0`
-- Only show decimals when explicitly passed via `opts.decimals`
+### Job card layout (lines 486-569 `renderJobRow`)
 
-### 2. `src/utils/currencyUtils.ts` — Same fix
-- Force 0 decimals default in `formatCurrencyValue`
+**Replace the horizontal badge layout with a stacked layout:**
 
-### 3. `src/pages/JobCalendar.tsx` — Mobile polish
-- Title: `text-[28px] font-bold tracking-[-0.02em]`
-- Remove subtitle paragraph entirely
-- Remove the Card wrapper on mobile (unnecessary nesting)
+1. **Top row**: Job title + "Selected" badge (keep `truncate`)
+2. **Second row**: Customer name + date (already exists)
+3. **Third row**: Location badge + proximity badge — move these below the title instead of beside it, using `flex flex-wrap gap-1.5`
+4. **GPS warning row**: Keep as-is
+5. **Buttons row**: Keep `flex gap-2` but ensure both buttons fit with `min-w-0`
 
-### 4. `src/components/calendar/MonthView.tsx` — Compact mobile cells
-- Reduce `min-h-[120px]` to `min-h-[80px] md:min-h-[120px]`
-- Reduce weekday header padding on mobile
+### Page header (lines 124-129)
 
-### 5. `src/components/dashboard/TopCustomersTable.tsx` — Mobile card layout
-- On mobile, hide # and Invoices columns (keep Customer, Revenue, Jobs)
-- Increase font sizes from `text-[10px]`/`text-[11px]` to `text-xs`/`text-sm`
-- Remove "Click row to view" hint (unnecessary)
-- Increase row height from `h-8` to `h-10`
+- Title: `text-[28px] font-bold tracking-[-0.02em]` (consistency)
+- Remove subtitle
+
+### Card overflow
+
+- Add `overflow-hidden` to the job card container to prevent any bleed
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Edit | `src/hooks/useCurrency.ts` — default 0 decimals |
-| Edit | `src/utils/currencyUtils.ts` — default 0 decimals |
-| Edit | `src/pages/JobCalendar.tsx` — title, remove subtitle |
-| Edit | `src/components/calendar/MonthView.tsx` — compact mobile cells |
-| Edit | `src/components/dashboard/TopCustomersTable.tsx` — readable mobile layout |
+| Edit | `src/components/time-tracking/ClockInOutCard.tsx` — stack badges below title, prevent overflow |
+| Edit | `src/pages/TimeTracking.tsx` — title consistency, remove subtitle |
 
 No database changes. No functionality changes.
 
