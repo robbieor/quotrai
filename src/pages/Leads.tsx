@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,19 +8,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Search, Loader2, MoreHorizontal, Pencil, Trash2, UserPlus, FileText, Phone, Mail, Globe, Users, Share2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, UserPlus, FileText, Phone, Mail, Globe, Users, Share2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LeadFormDialog } from "@/components/leads/LeadFormDialog";
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead, type Lead, type LeadInsert } from "@/hooks/useLeads";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { UserPlus as UserPlusIcon } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 
-const statusColors: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  contacted: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  quoted: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  won: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  lost: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+const statusBadgeVariant: Record<string, "default" | "warning" | "secondary" | "success" | "destructive"> = {
+  new: "default",
+  contacted: "warning",
+  quoted: "secondary",
+  won: "success",
+  lost: "destructive",
 };
 
 const priorityColors: Record<string, string> = {
@@ -50,6 +53,7 @@ export default function Leads() {
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
   const { formatCurrency } = useCurrency();
+  const isMobile = useIsMobile();
 
   const filtered = leads?.filter((l) => {
     const matchesSearch =
@@ -107,35 +111,39 @@ export default function Leads() {
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Leads</h1>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Track enquiries and convert them into jobs
-            </p>
-          </div>
-          <Button onClick={() => { setSelectedLead(null); setFormDialogOpen(true); }} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Lead
-          </Button>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-[28px] font-bold tracking-[-0.02em]">Leads</h1>
+          {isMobile ? (
+            <button
+              onClick={() => { setSelectedLead(null); setFormDialogOpen(true); }}
+              className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          ) : (
+            <Button onClick={() => { setSelectedLead(null); setFormDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Lead
+            </Button>
+          )}
         </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-2xl font-bold tabular-nums">{stats.total}</p>
             <p className="text-xs text-muted-foreground">Total Leads</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{stats.new}</p>
+            <p className="text-2xl font-bold tabular-nums text-primary">{stats.new}</p>
             <p className="text-xs text-muted-foreground">New</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.won}</p>
+            <p className="text-2xl font-bold tabular-nums text-primary">{stats.won}</p>
             <p className="text-xs text-muted-foreground">Won</p>
           </CardContent></Card>
           <Card><CardContent className="p-4 text-center">
-            <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.pipeline)}</p>
+            <p className="text-lg sm:text-2xl font-bold tabular-nums truncate">{formatCurrency(stats.pipeline)}</p>
             <p className="text-xs text-muted-foreground">Pipeline Value</p>
           </CardContent></Card>
         </div>
@@ -144,7 +152,7 @@ export default function Leads() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search leads..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <Input placeholder="Search leads..." className={cn("pl-9", isMobile && "rounded-[22px] bg-[hsl(240,10%,96%)] border-0 h-11")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
@@ -161,8 +169,10 @@ export default function Leads() {
 
         {/* Lead cards */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} shimmer className="h-20 w-full rounded-[14px]" />
+            ))}
           </div>
         ) : filtered?.length === 0 ? (
           <EmptyState
@@ -181,7 +191,7 @@ export default function Leads() {
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold truncate">{lead.name}</h3>
-                        <Badge className={statusColors[lead.status] || ""} variant="secondary">
+                        <Badge variant={statusBadgeVariant[lead.status] || "secondary"}>
                           {lead.status}
                         </Badge>
                         {lead.priority && lead.priority !== "medium" && (
@@ -202,7 +212,7 @@ export default function Leads() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         {lead.email && <span>{lead.email}</span>}
                         {lead.phone && <span>{lead.phone}</span>}
-                        {lead.estimated_value && <span className="font-medium text-foreground">{formatCurrency(lead.estimated_value)}</span>}
+                        {lead.estimated_value && <span className="font-medium text-foreground tabular-nums">{formatCurrency(lead.estimated_value)}</span>}
                         {lead.follow_up_date && <span>Follow-up: {new Date(lead.follow_up_date).toLocaleDateString()}</span>}
                       </div>
                     </div>
@@ -240,6 +250,7 @@ export default function Leads() {
             ))}
           </div>
         )}
+        <div className="pb-24" />
       </div>
 
       <LeadFormDialog

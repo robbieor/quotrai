@@ -21,7 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, MoreVertical, Pencil, Trash2, Loader2, Briefcase, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Activity } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, Briefcase, TrendingUp, TrendingDown, CalendarDays, CheckCircle2, Activity, ChevronRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { DeleteJobDialog } from "@/components/jobs/DeleteJobDialog";
@@ -44,12 +46,12 @@ import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useJobInsights } from "@/hooks/usePageInsights";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 
-const statusColors: Record<JobStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-  scheduled: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-  in_progress: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-  completed: "bg-green-100 text-green-800 hover:bg-green-100",
-  cancelled: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+const statusBadgeVariant: Record<JobStatus, "warning" | "default" | "secondary" | "success" | "destructive" | "outline"> = {
+  pending: "warning",
+  scheduled: "default",
+  in_progress: "secondary",
+  completed: "success",
+  cancelled: "outline",
 };
 
 export default function Jobs() {
@@ -91,6 +93,7 @@ export default function Jobs() {
   const { sortedData, handleSort, getSortDirection } = useTableSort(filteredJobs);
   const { selectedRows, allSelected, someSelected, handleCheckboxChange, handleSelectAll, clearSelection } = useTableSelection(sortedData.length);
   const jobInsights = useJobInsights(jobs);
+  const isMobile = useIsMobile();
 
   // Stats
   const stats = useMemo(() => {
@@ -176,13 +179,22 @@ export default function Jobs() {
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Jobs</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-[28px] font-bold tracking-[-0.02em]">Jobs</h1>
           <ReadOnlyGuard>
-            <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              New Job
-            </Button>
+            {isMobile ? (
+              <button
+                onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }}
+                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            ) : (
+              <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Job
+              </Button>
+            )}
           </ReadOnlyGuard>
         </div>
 
@@ -214,7 +226,7 @@ export default function Jobs() {
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search jobs..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <Input placeholder="Search jobs..." className={cn("pl-9", isMobile && "rounded-[22px] bg-[hsl(240,10%,96%)] border-0 h-11")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -238,8 +250,10 @@ export default function Jobs() {
           />
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="p-4 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} shimmer className="h-12 w-full rounded-lg" />
+                ))}
               </div>
             ) : error ? (
               <div className="text-center py-12 text-destructive">Failed to load jobs. Please try again.</div>
@@ -307,7 +321,7 @@ export default function Jobs() {
                           <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{job.customers?.name || "—"}</span>
                         </td>
                         <td className="px-3 py-0.5">
-                          <Badge className={cn(statusColors[job.status], "text-[10px] px-1.5 py-0")}>
+                          <Badge variant={statusBadgeVariant[job.status]} className="text-[10px] px-1.5 py-0">
                             {JOB_STATUSES.find((s) => s.value === job.status)?.label}
                           </Badge>
                         </td>
@@ -317,7 +331,7 @@ export default function Jobs() {
                           </span>
                         </td>
                         <td className="px-3 py-0.5 text-right">
-                          <span className="text-[11px] font-semibold">{formatCurrency(job.estimated_value)}</span>
+                          <span className="text-[11px] font-semibold tabular-nums">{formatCurrency(job.estimated_value)}</span>
                         </td>
                         <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>

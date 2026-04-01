@@ -27,12 +27,9 @@ export default function Documents() {
       <div className="space-y-6">
         {/* Header */}
         <div className="animate-fade-up">
-          <h1 className="text-display font-bold tracking-tight text-foreground">
+          <h1 className="text-[28px] font-bold tracking-[-0.02em] text-foreground">
             Templates
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage quote templates and compliance certificates for your business.
-          </p>
         </div>
 
         {/* Tabs */}
@@ -56,6 +53,7 @@ export default function Documents() {
             <CertificatesTab />
           </TabsContent>
         </Tabs>
+        <div className="pb-24" />
       </div>
     </DashboardLayout>
   );

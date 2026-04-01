@@ -186,10 +186,7 @@ export default function PriceBook() {
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Supplier Price Book</h1>
-            <p className="text-sm text-muted-foreground">Manage materials and supplier pricing for accurate quotes</p>
-          </div>
+          <h1 className="text-[28px] font-bold tracking-[-0.02em]">Price Book</h1>
           <div className="flex gap-2">
             <label className="cursor-pointer">
               <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} disabled={importing} />
@@ -276,6 +273,7 @@ export default function PriceBook() {
             </CardContent>
           </Card>
         )}
+        <div className="pb-24" />
       </div>
 
       {showForm && (

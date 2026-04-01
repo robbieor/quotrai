@@ -254,14 +254,9 @@ export default function Expenses() {
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Expenses
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Track and manage business expenses
-            </p>
-          </div>
+          <h1 className="text-[28px] font-bold tracking-[-0.02em]">
+            Expenses
+          </h1>
           <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
@@ -298,6 +293,7 @@ export default function Expenses() {
                     <p className="text-sm font-bold truncate">
                       {formatCurrency(stats.thisMonth)}
                     </p>
+                    
                     {momChange !== 0 && (
                       <span
                         className={`text-[10px] flex items-center ${momChange > 0 ? "text-destructive" : "text-green-600"}`}
@@ -595,7 +591,7 @@ export default function Expenses() {
                         )}
                       </td>
                       <td className="px-3 py-0.5 text-right font-semibold whitespace-nowrap">
-                        {formatCurrency(Number(expense.amount))}
+                        <span className="tabular-nums">{formatCurrency(Number(expense.amount))}</span>
                       </td>
                       <td
                         className="px-1 py-0.5 w-8"
@@ -642,6 +638,7 @@ export default function Expenses() {
             Showing {sortedData.length} of {expenses?.length || 0} expenses
           </p>
         )}
+        <div className="pb-24" />
       </div>
 
       <ExpenseFormDialog
