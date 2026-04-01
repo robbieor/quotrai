@@ -486,35 +486,33 @@ export function ClockInOutCard({
     return (
       <div
         key={job.id}
-        className={`p-3 rounded-lg border transition-colors space-y-2 cursor-pointer ${
+        className={`p-3 rounded-lg border transition-colors space-y-2 cursor-pointer overflow-hidden ${
           isSelected ? "bg-primary/5 border-primary/30" : "bg-card hover:bg-muted/50"
         }`}
         onClick={() => setSelectedJobId(job.id)}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-medium truncate">{job.title}</p>
-              {isSelected && (
-                <Badge variant="outline" className="text-xs">Selected</Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground truncate">
-              {job.customers?.name}
-              {showDate && job.scheduled_date &&
-                ` · ${format(new Date(job.scheduled_date), "MMM d")}`}
-            </p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium truncate">{job.title}</p>
+            {isSelected && (
+              <Badge variant="outline" className="text-xs shrink-0">Selected</Badge>
+            )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <p className="text-xs text-muted-foreground truncate">
+            {job.customers?.name}
+            {showDate && job.scheduled_date &&
+              ` · ${format(new Date(job.scheduled_date), "MMM d")}`}
+          </p>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
             {site ? (
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs gap-1">
                 <MapPin className="h-3 w-3" />
-                {site.validForGps ? "Verified location" : "Approximate location"}
+                {site.validForGps ? "Verified" : "Approximate"}
               </Badge>
             ) : (
               <Badge variant="outline" className="text-muted-foreground text-xs gap-1">
                 <MapPinOff className="h-3 w-3" />
-                No verified location
+                No location
               </Badge>
             )}
             {proximity && (
