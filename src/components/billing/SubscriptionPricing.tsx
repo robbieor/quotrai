@@ -87,7 +87,7 @@ export function SubscriptionPricing() {
             }`}
           >
             Annual
-            <span className="bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-green-600 text-white text-[12px] font-bold px-2 py-0.5 rounded-full">
               -15%
             </span>
           </button>
