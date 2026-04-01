@@ -12,7 +12,7 @@ interface PendingViewProps {
 }
 
 export function PendingView({ jobs, onSchedule, onJobClick }: PendingViewProps) {
-  const { formatAmount } = useCurrency();
+  const { formatCurrency } = useCurrency();
 
   if (jobs.length === 0) {
     return (
