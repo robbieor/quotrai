@@ -228,8 +228,7 @@ export default function JobCalendar() {
                 )}
               </>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Edit existing job */}
