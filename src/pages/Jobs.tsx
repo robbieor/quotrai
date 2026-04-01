@@ -250,8 +250,10 @@ export default function Jobs() {
           />
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="p-4 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} shimmer className="h-12 w-full rounded-lg" />
+                ))}
               </div>
             ) : error ? (
               <div className="text-center py-12 text-destructive">Failed to load jobs. Please try again.</div>
