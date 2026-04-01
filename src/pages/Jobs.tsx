@@ -331,7 +331,7 @@ export default function Jobs() {
                           </span>
                         </td>
                         <td className="px-3 py-0.5 text-right">
-                          <span className="text-[11px] font-semibold">{formatCurrency(job.estimated_value)}</span>
+                          <span className="text-[11px] font-semibold tabular-nums">{formatCurrency(job.estimated_value)}</span>
                         </td>
                         <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
