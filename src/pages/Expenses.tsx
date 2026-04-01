@@ -638,6 +638,7 @@ export default function Expenses() {
             Showing {sortedData.length} of {expenses?.length || 0} expenses
           </p>
         )}
+        <div className="pb-24" />
       </div>
 
       <ExpenseFormDialog

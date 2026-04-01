@@ -53,6 +53,7 @@ export default function Documents() {
             <CertificatesTab />
           </TabsContent>
         </Tabs>
+        <div className="pb-24" />
       </div>
     </DashboardLayout>
   );

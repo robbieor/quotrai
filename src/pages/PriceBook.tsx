@@ -273,6 +273,7 @@ export default function PriceBook() {
             </CardContent>
           </Card>
         )}
+        <div className="pb-24" />
       </div>
 
       {showForm && (

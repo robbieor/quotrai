@@ -248,6 +248,7 @@ export default function Leads() {
             ))}
           </div>
         )}
+        <div className="pb-24" />
       </div>
 
       <LeadFormDialog

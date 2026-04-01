@@ -146,6 +146,7 @@ export default function Reports() {
             </div>
           </TabsContent>
         </Tabs>
+        <div className="pb-24" />
       </div>
     </DashboardLayout>
   );
