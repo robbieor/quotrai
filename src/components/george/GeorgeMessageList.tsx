@@ -147,7 +147,9 @@ function MobileMessageBubble({ message }: { message: Message }) {
       <div className="flex items-start gap-3">
         <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+          <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+          </div>
         </div>
       </div>
     );
@@ -155,7 +157,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
 
   return (
     <div className="flex justify-end">
-      <div className="bg-primary text-primary-foreground rounded-2xl px-4 py-2.5 max-w-[85%] shadow-sm">
+      <div className="bg-primary/10 border border-primary/20 text-foreground rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
         <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
       </div>
     </div>
