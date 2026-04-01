@@ -217,7 +217,7 @@ export function GeorgeMobileInput({
       )}
 
       {/* Input bar */}
-      <div className="flex items-center gap-2 bg-muted border border-border rounded-3xl px-3 py-2 shadow-sm min-h-[48px]">
+      <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-4 py-2 shadow-sm min-h-[48px]">
         {/* Photo Quote Button */}
         <PhotoQuoteButton
           onQuoteSuggestion={(suggestion) => onPhotoQuote?.(suggestion)}
@@ -236,7 +236,7 @@ export function GeorgeMobileInput({
               handleSendMessage();
             }
           }}
-          placeholder="Ask Foreman anything..."
+          placeholder="Talk or type to Foreman AI..."
           className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground min-w-0 py-1.5 min-h-[44px]"
           disabled={isProcessing}
         />
