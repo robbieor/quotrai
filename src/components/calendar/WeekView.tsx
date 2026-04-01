@@ -1,10 +1,10 @@
-import { useMemo } from "react";
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isToday } from "date-fns";
+import { useMemo, useState } from "react";
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isToday, isWeekend } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Job } from "@/hooks/useJobs";
 import { DraggableJobCard } from "./DraggableJobCard";
 import { DroppableCell } from "./DroppableCell";
-
 interface WeekViewProps {
   currentDate: Date;
   jobs: Job[];
