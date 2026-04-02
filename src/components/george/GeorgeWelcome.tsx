@@ -93,6 +93,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return [];
       const res = await supabase.functions.invoke("generate-nudges");
+      if (res.error) throw res.error;
       return res.data?.nudges || [];
     },
     staleTime: 60000,
