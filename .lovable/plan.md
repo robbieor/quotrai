@@ -1,61 +1,90 @@
 
 
-# Proactive AI Nudges on George Screen Open
+# Growth Acceleration — 7 High-Impact Changes
 
-## What This Does
+**Goal:** 100 paying companies × 5 seats = 500 active users
 
-When the user opens the George AI screen, instead of just showing static cards and a generic greeting, the system runs a backend analysis that generates **personalized, data-driven nudges** — natural language insights like *"That quote for Murphy's kitchen has been sitting 11 days. Usually your win rate drops after 7."*
+## Priority 1: Instant Value (Conversion)
 
-These appear as dismissable nudge cards above the chat, making George feel like he's already been watching the business.
+### 1A. Interactive Demo Mode on Landing Page
+Add a "Try George Now" button on the hero that opens a lightweight chat widget — no signup required. It uses a capped session (3 messages) against the `george-chat` function with a demo system prompt. After 3 messages: "Like what you see? Sign up to keep going."
 
-## Approach
+- **File:** New `src/components/landing/DemoChat.tsx`
+- **File:** Edit `src/components/landing/HeroSection.tsx` — add CTA
+- **File:** Edit `supabase/functions/george-chat/index.ts` — add anonymous demo mode with message cap
 
-### 1. New edge function: `generate-nudges`
+### 1B. Streamline Onboarding to 3 Steps Max
+Cut the onboarding from 6+ steps to: (1) Company name + trade, (2) Import or skip, (3) Meet George. Everything else can be progressive — prompted later when contextually relevant.
 
-A lightweight edge function that queries the user's business data and uses Lovable AI (Gemini Flash) to generate 2–3 contextual nudges in George's voice.
+- **File:** Edit `src/components/onboarding/OnboardingModal.tsx`
 
-**Data gathered:**
-- Overdue invoices (amount, days overdue, customer name)
-- Aging quotes (days since sent, customer name, amount)
-- Scheduling conflicts (overlapping jobs, understaffed days)
-- Recent patterns (win rate trends, payment velocity)
+## Priority 2: Team Expansion (Revenue per Company)
 
-**AI prompt:** Pass the raw data snapshot to Gemini Flash with instructions to produce 2–3 short, specific nudges in George's Irish foreman tone — referencing actual names, amounts, and dates.
+### 2. Post-Onboarding Team Invite Prompt
+After onboarding completes, show a dedicated "Invite Your Team" card on the dashboard. Highlight that their trial includes unlimited seats. Make it 1-tap: enter email → send invite.
 
-**Response format:**
-```json
-{
-  "nudges": [
-    {
-      "id": "nudge-1",
-      "text": "Morning. You've got 3 invoices overdue by more than 14 days — that's €8,400 sitting out there. Want me to draft reminders?",
-      "action": "get_overdue_invoices",
-      "action_label": "Chase them",
-      "urgency": "high"
-    }
-  ]
-}
-```
+- **File:** Edit `src/components/dashboard/OnboardingChecklist.tsx` — add team invite as checklist item #1
+- **File:** Edit `src/pages/Dashboard.tsx` — add prominent invite banner for solo users
 
-### 2. Frontend: Nudge cards in GeorgeWelcome
+## Priority 3: Viral Growth
 
-- On mount, call `generate-nudges` (with a 60-second stale cache so it doesn't fire on every tab switch)
-- Render nudges as dismissable cards between the greeting and quick actions
-- Each nudge has a tap-to-act button that triggers the relevant George action
-- Dismissed nudges stored in localStorage by date so they don't reappear
+### 3. Referral Program UI
+Build a visible referral card: "Give a mate 30 days free, get a month free yourself." Generate shareable link, show referral count. Wire into existing `ref` code system.
 
-### 3. Styling
+- **File:** New `src/components/settings/ReferralCard.tsx`
+- **File:** Edit `src/pages/Settings.tsx` — add referral section
+- **File:** Migration — `referrals` table to track codes, conversions, rewards
 
-- Subtle left-border accent (red for high urgency, amber for medium, blue for low)
-- George's avatar inline with the nudge text for personality
-- Tap action routes through existing `onQuickAction` handler
+## Priority 4: Retention & Activation
 
-## Files
+### 4. Activation Email Sequence
+Wire the existing `send-drip-email` function into a 5-email sequence triggered by signup:
+- Day 0: Welcome + "Meet George"
+- Day 1: "Create your first quote in 30 seconds"
+- Day 3: "Your business snapshot" (pull real data)
+- Day 5: "Invite your team — here's why"
+- Day 7: Trial ending — convert or extend
 
-| Action | File |
-|--------|------|
-| Create | `supabase/functions/generate-nudges/index.ts` — query data, call AI, return nudges |
-| Edit | `src/components/george/GeorgeWelcome.tsx` — fetch and render nudge cards |
+- **File:** New `supabase/functions/check-drip-sequence/index.ts` — cron-triggered drip logic
+- **File:** Edit `supabase/functions/send-drip-email/index.ts` — template routing
 
-No database changes needed. Uses existing tables (invoices, quotes, jobs, team_members) for data queries.
+### 5. Social Proof with Live Stats
+Replace placeholder testimonials with a live counter: "X quotes created this week" / "€X invoiced through Foreman." Pull from actual aggregate data (anonymized).
+
+- **File:** Edit `src/components/landing/SocialProofSection.tsx`
+
+## Priority 5: Conversion Optimization
+
+### 6. Exit-Intent / Idle Popup on Landing
+If user scrolls 70%+ of landing page without clicking CTA, show a subtle bottom sheet: "Want to see Foreman in action? Watch a 2-min demo" or "Chat with George now."
+
+- **File:** New `src/components/landing/ExitIntentPopup.tsx`
+- **File:** Edit `src/pages/Landing.tsx`
+
+### 7. Funnel Analytics Dashboard (Internal)
+Build an internal page showing signup → onboarding → first quote → first invoice → payment conversion rates. You need visibility into where users drop off.
+
+- **File:** New `src/pages/FunnelAnalytics.tsx` (admin-only)
+- **File:** Edit `src/App.tsx` — add route
+
+## Database Changes
+
+| Table | Purpose |
+|-------|---------|
+| `referrals` | Track referral codes, conversions, rewards |
+| `drip_sequences` | Track which emails have been sent per user |
+
+## No Changes To
+- Existing billing/Stripe integration
+- George's core AI logic
+- Existing auth flow
+
+## Implementation Order
+1. Demo chat on landing (biggest conversion lever)
+2. Streamline onboarding (reduce drop-off)
+3. Team invite prompt (increase ARPU)
+4. Drip email sequence (reduce churn)
+5. Referral program (viral loop)
+6. Social proof + exit intent (polish)
+7. Funnel dashboard (measure everything)
 
