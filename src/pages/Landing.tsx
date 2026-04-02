@@ -1,4 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
+import { DemoChat } from "@/components/landing/DemoChat";
+import { ExitIntentPopup } from "@/components/landing/ExitIntentPopup";
 import { SEOHead } from "@/components/shared/SEOHead";
 import { useState, useEffect, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
