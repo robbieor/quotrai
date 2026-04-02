@@ -138,7 +138,7 @@ export function WeekView({
 
       {/* Time grid */}
       <div className="overflow-auto max-h-[600px]">
-        {HOURS.map((hour) => (
+        {hourSlots.map((hour) => (
           <div
             key={hour}
             className="grid border-b last:border-b-0"
