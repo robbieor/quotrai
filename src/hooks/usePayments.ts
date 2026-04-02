@@ -61,6 +61,7 @@ export function useCreatePayment(onXeroSync?: (id: string) => void) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payments", data.invoice_id] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Payment recorded successfully");
       onXeroSync?.(data.id);
     },

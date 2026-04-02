@@ -44,6 +44,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useTeamMembers } from "@/hooks/useTeam";
 import { type Job, JOB_STATUSES, type JobStatus } from "@/hooks/useJobs";
 import {
   isPOBoxAddress,
@@ -58,6 +59,7 @@ const jobSchema = z.object({
   scheduled_date: z.date().optional().nullable(),
   scheduled_time: z.string().optional(),
   estimated_value: z.coerce.number().optional().nullable(),
+  assigned_to: z.string().optional().nullable(),
 });
 
 type JobFormValues = z.infer<typeof jobSchema>;
@@ -86,6 +88,7 @@ interface JobFormDialogProps {
     scheduled_date?: string | null;
     scheduled_time?: string | null;
     estimated_value?: number | null;
+    assigned_to?: string | null;
     location?: JobLocationData;
   }) => void;
   isLoading?: boolean;
@@ -101,8 +104,7 @@ export function JobFormDialog({
   isLoading,
 }: JobFormDialogProps) {
   const { data: customers, isLoading: customersLoading } = useCustomers();
-
-  // Location state
+  const { data: teamMembers } = useTeamMembers();
   const [siteAddress, setSiteAddress] = useState("");
   const [siteCoords, setSiteCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geofenceRadius, setGeofenceRadius] = useState(100);
@@ -123,6 +125,7 @@ export function JobFormDialog({
       scheduled_date: null,
       scheduled_time: "",
       estimated_value: null,
+      assigned_to: null,
     },
   });
 
@@ -158,6 +161,7 @@ export function JobFormDialog({
         scheduled_date: job.scheduled_date ? new Date(job.scheduled_date) : null,
         scheduled_time: job.scheduled_time || "",
         estimated_value: job.estimated_value,
+        assigned_to: (job as any).assigned_to || null,
       });
     } else {
       form.reset({
@@ -168,6 +172,7 @@ export function JobFormDialog({
         scheduled_date: defaultDate || null,
         scheduled_time: defaultTime || "",
         estimated_value: null,
+        assigned_to: null,
       });
       setSiteAddress("");
       setSiteCoords(null);
@@ -213,6 +218,7 @@ export function JobFormDialog({
         : null,
       scheduled_time: values.scheduled_time || null,
       estimated_value: values.estimated_value ?? null,
+      assigned_to: values.assigned_to || null,
       location,
     });
   };
@@ -489,6 +495,38 @@ export function JobFormDialog({
                 )}
               />
             </div>
+
+            {/* Assign To Team Member */}
+            {teamMembers && teamMembers.length > 1 && (
+              <FormField
+                control={form.control}
+                name="assigned_to"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign To</FormLabel>
+                    <Select
+                      onValueChange={(val) => field.onChange(val === "__none__" ? null : val)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">Unassigned</SelectItem>
+                        {teamMembers.map((member) => (
+                          <SelectItem key={member.user_id} value={member.user_id}>
+                            {member.profile?.full_name || member.profile?.email || "Team member"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

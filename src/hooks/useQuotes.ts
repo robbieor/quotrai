@@ -255,31 +255,31 @@ export function useUpdateQuoteStatus() {
             .single();
 
           if (quote) {
-            // Check if a job already exists for this quote
-            const { data: existingJobs } = await supabase
+            // Check if a job already exists for THIS quote
+            const { data: existingJobs } = await (supabase
               .from("jobs")
               .select("id")
-              .limit(1);
+              .eq("quote_id", id)
+              .limit(1) as any);
 
-            // Use raw fetch to check quote_id since types may not be updated yet
-            const { data: linkedJobs } = await supabase.rpc("get_user_team_id");
-            const teamId = linkedJobs as unknown as string;
+            if (existingJobs && existingJobs.length > 0) {
+              console.log("Job already exists for this quote, skipping auto-create");
+            } else {
+              const jobPayload: Record<string, unknown> = {
+                title: `Job from Quote ${quote.display_number}`,
+                customer_id: quote.customer_id,
+                team_id: quote.team_id,
+                status: "scheduled",
+                estimated_value: quote.total,
+                description: quote.notes || undefined,
+                quote_id: id,
+              };
 
-            // Simple insert with type assertion for new column
-            const jobPayload: Record<string, unknown> = {
-              title: `Job from Quote ${quote.display_number}`,
-              customer_id: quote.customer_id,
-              team_id: quote.team_id,
-              status: "scheduled",
-              estimated_value: quote.total,
-              description: quote.notes || undefined,
-              quote_id: id,
-            };
+              await (supabase.from("jobs").insert(jobPayload as any) as any);
 
-            await (supabase.from("jobs").insert(jobPayload as any) as any);
-
-            toast.success("Job auto-created from accepted quote");
-            queryClient.invalidateQueries({ queryKey: ["jobs"] });
+              toast.success("Job auto-created from accepted quote");
+              queryClient.invalidateQueries({ queryKey: ["jobs"] });
+            }
           }
         } catch (jobErr) {
           console.warn("Auto-create job failed:", jobErr);

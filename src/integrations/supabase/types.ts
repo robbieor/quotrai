@@ -2605,6 +2605,7 @@ export type Database = {
       jobs: {
         Row: {
           actual_cost: number | null
+          assigned_to: string | null
           created_at: string
           customer_id: string
           description: string | null
@@ -2625,6 +2626,7 @@ export type Database = {
         }
         Insert: {
           actual_cost?: number | null
+          assigned_to?: string | null
           created_at?: string
           customer_id: string
           description?: string | null
@@ -2645,6 +2647,7 @@ export type Database = {
         }
         Update: {
           actual_cost?: number | null
+          assigned_to?: string | null
           created_at?: string
           customer_id?: string
           description?: string | null
