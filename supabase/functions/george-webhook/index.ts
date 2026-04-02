@@ -2799,7 +2799,7 @@ serve(async (req) => {
           .select("id, name, description, category, labour_rate_default, estimated_duration")
           .eq("team_id", company_id)
           .eq("is_active", true)
-          .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+          .or(`name.ilike.%${sanitizeIlike(searchQuery)}%,description.ilike.%${sanitizeIlike(searchQuery)}%`);
 
         if (category) {
           templatesQuery = templatesQuery.eq("category", category.toLowerCase());
@@ -2885,7 +2885,7 @@ serve(async (req) => {
           .order("name");
 
         if (search) {
-          query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,contact_person.ilike.%${search}%`);
+          query = query.or(`name.ilike.%${sanitizeIlike(search)}%,email.ilike.%${sanitizeIlike(search)}%,contact_person.ilike.%${sanitizeIlike(search)}%`);
         }
 
         const { data: customers, error } = await query.limit(limitParam || 20);
@@ -3998,7 +3998,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name, email, phone, address, contact_person")
           .eq("team_id", company_id)
-          .or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,contact_person.ilike.%${searchQuery}%`)
+          .or(`name.ilike.%${sanitizeIlike(searchQuery)}%,email.ilike.%${sanitizeIlike(searchQuery)}%,phone.ilike.%${sanitizeIlike(searchQuery)}%,contact_person.ilike.%${sanitizeIlike(searchQuery)}%`)
           .limit(10);
 
         if (error) throw error;
