@@ -87,6 +87,8 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isProcessing, streamingText]);
+  const lastAssistantIdx = [...messages].reverse().findIndex(m => m.role === "assistant");
+  const lastAssistantId = lastAssistantIdx >= 0 ? messages[messages.length - 1 - lastAssistantIdx]?.id : null;
 
   // Mobile: Clean ChatGPT-style messages
   if (isMobile) {
@@ -94,7 +96,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
       <ScrollArea className="flex-1">
         <div className="px-4 py-4 space-y-6">
           {messages.map((message) => (
-            <MobileMessageBubble key={message.id} message={message} />
+            <div key={message.id}>
+              <MobileMessageBubble message={message} />
+              {message.id === lastAssistantId && !isProcessing && !streamingText && (
+                <QuickActionChips content={message.content} onAction={onQuickAction} />
+              )}
+            </div>
           ))}
 
           {/* Streaming text — progressive render */}
