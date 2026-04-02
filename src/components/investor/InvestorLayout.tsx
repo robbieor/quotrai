@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 import foremanLogo from "@/assets/foreman-logo.png";
+import ScrollProgress from "./ScrollProgress";
 
 const NAV_ITEMS = [
   { label: "Pitch", path: "/investor/pitch" },
@@ -15,25 +16,23 @@ const NAV_ITEMS = [
 
 interface InvestorLayoutProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children: ReactNode;
 }
 
-export default function InvestorLayout({ title, subtitle, children }: InvestorLayoutProps) {
+export default function InvestorLayout({ title, children }: InvestorLayoutProps) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-background scroll-smooth">
+      <ScrollProgress />
+      <header className="border-b border-border/50 bg-[#0f172a] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/investor/pitch">
               <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
             </Link>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">{title}</h1>
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            </div>
+            <h1 className="text-lg font-bold text-white">{title}</h1>
           </div>
           <div className="flex items-center gap-3">
             <nav className="hidden md:flex items-center gap-4 text-sm mr-4">
@@ -43,22 +42,22 @@ export default function InvestorLayout({ title, subtitle, children }: InvestorLa
                   to={item.path}
                   className={`transition-colors ${
                     location.pathname === item.path
-                      ? "text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-primary font-semibold"
+                      : "text-white/60 hover:text-white"
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
             </nav>
-            <Badge variant="outline" className="gap-1.5 border-destructive/30 text-destructive">
+            <Badge variant="outline" className="gap-1.5 border-red-500/40 text-red-400 bg-red-500/10">
               <Shield className="h-3 w-3" />
               Confidential
             </Badge>
           </div>
         </div>
         {/* Mobile nav */}
-        <div className="md:hidden overflow-x-auto border-t border-border/30">
+        <div className="md:hidden overflow-x-auto border-t border-white/10">
           <div className="flex items-center gap-1 px-3 py-2">
             {NAV_ITEMS.map((item) => (
               <Link
@@ -67,7 +66,7 @@ export default function InvestorLayout({ title, subtitle, children }: InvestorLa
                 className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   location.pathname === item.path
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
+                    : "text-white/50 hover:text-white hover:bg-white/10"
                 }`}
               >
                 {item.label}
@@ -77,9 +76,7 @@ export default function InvestorLayout({ title, subtitle, children }: InvestorLa
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-10">
-        {children}
-      </main>
+      <main>{children}</main>
     </div>
   );
 }
