@@ -13,6 +13,7 @@ import { DataImportSection } from "@/components/settings/DataImportSection";
 import { DataExportSection } from "@/components/settings/DataExportSection";
 import { ExpenseEmailForwarding } from "@/components/settings/ExpenseEmailForwarding";
 import { ForemanAISettings } from "@/components/settings/ForemanAISettings";
+import { ReferralCard } from "@/components/settings/ReferralCard";
 
 import { StripeConnectSetup } from "@/components/settings/StripeConnectSetup";
 import { XeroConnectionCard } from "@/components/settings/XeroConnectionCard";
