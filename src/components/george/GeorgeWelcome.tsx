@@ -101,6 +101,32 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
 
   const visibleNudges = (nudges || []).filter((n: any) => !dismissedNudges.includes(n.id));
 
+  // Weekly analysis — cached for 1 hour
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const { data: weeklyAnalysis, isLoading: analysisLoading } = useQuery({
+    queryKey: ["weekly-analysis"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      const res = await supabase.functions.invoke("weekly-analysis");
+      return res.data?.analysis || null;
+    },
+    staleTime: 3600000, // 1 hour
+    refetchOnWindowFocus: false,
+    enabled: showAnalysis,
+  });
+
+  const statusIcon: Record<string, any> = {
+    good: CheckCircle2,
+    warning: AlertCircle,
+    critical: AlertTriangle,
+  };
+  const statusColor: Record<string, string> = {
+    good: "text-green-500",
+    warning: "text-[hsl(36,91%,55%)]",
+    critical: "text-destructive",
+  };
+
   const dismissNudge = (id: string) => {
     const updated = [...dismissedNudges, id];
     setDismissedNudges(updated);
