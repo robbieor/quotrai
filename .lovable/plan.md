@@ -1,112 +1,149 @@
 
 
-# Core Workflow Audit — Foreman App
+# API Call Audit — Foreman App
 
-## Audit Results
-
-| Flow | Status | Issues | Fixes |
-|------|--------|--------|-------|
-| **1. Quote → Job → Invoice** | **Partial** | 4 issues found | See below |
-| **2. Job → Calendar → Time Track** | **Working** | 1 minor issue | See below |
-| **3. Customer → Job → Invoice** | **Working** | No issues | — |
-| **4. Invoice → Paid → Dashboard** | **Partial** | 1 issue | See below |
-| **5. Team Member → Assign Job** | **Broken** | No `assigned_to` column on jobs table | See below |
-| **6. Expense → Link to Job** | **Working** | No issues | — |
+## Methodology
+Traced every `supabase.functions.invoke()`, `supabase.rpc()`, raw `fetch()`, and `supabase.from()` call across 32+ source files. Assessed: endpoint existence, payload validity, response handling, error handling, and loading states.
 
 ---
 
-## Flow 1: Quote → Job → Invoice
+## Audit Table
 
-### Path A: Manual conversion (QuoteDetailSheet buttons)
-- **Create Quote** → Working. `useCreateQuote` inserts quote + items, sets team_id, generates `Q-XXXX` number.
-- **Convert to Job** → Working. `handleConvertToJob` prefills `JobFormDialog` with customer, title, description, estimated_value. User confirms → `createJob.mutate()`.
-- **Convert to Invoice** → Working (after previous fix). `CreateFromQuoteDialog` receives `preselectedQuoteId`, auto-selects it. `useCreateInvoiceFromQuote` copies all line items.
+### Edge Function Invocations (`supabase.functions.invoke`)
 
-### Path B: Auto-create job on quote acceptance
-- **`useUpdateQuoteStatus`** → **BROKEN LOGIC (lines 258-262)**. When status is set to "accepted", it attempts to auto-create a job. But:
-  1. **Duplicate check is wrong**: `existingJobs` fetches ANY job (`.select("id").limit(1)`) — it doesn't filter by `quote_id`. So it checks if *any* job exists in the system, not whether a job for *this quote* already exists.
-  2. **Result is ignored**: The `existingJobs` result is fetched but never used in a conditional — the job is always created regardless.
-  3. **Double job creation**: If user accepts a quote (auto-creates job) then also clicks "Convert to Job" in the detail sheet, two duplicate jobs are created for the same quote.
+| Endpoint | Caller | Status | Issue | Fix |
+|----------|--------|--------|-------|-----|
+| `george-chat` | `GeorgeInputArea`, `CommandBar`, `DemoChat` | **Working** | — | — |
+| `george-photo-quote` | `PhotoQuoteButton` | **Working** | — | — |
+| `george-webhook` | `useForemanChat`, `useElevenLabsAgent` | **Working** | — | — |
+| `generate-nudges` | `GeorgeWelcome` | **Partial** | No error handling — `res.data?.nudges \|\| []` silently returns empty on 500. User sees no nudges with no explanation. | Check `res.error` before accessing `.data` |
+| `weekly-analysis` | `GeorgeWelcome` | **Partial** | Same pattern — `res.data?.analysis \|\| null`. Errors swallowed silently. | Check `res.error` |
+| `scan-receipt` | `ExpenseFormDialog` | **Working** | Has error check + toast | — |
+| `create-checkout-session` | `SelectPlan`, `SubscriptionPricing` | **Working** | Has error check | — |
+| `create-customer-portal-session` | `SubscriptionOverview` | **Working** | — | — |
+| `cancel-subscription` | `SubscriptionOverview` | **Working** | — | — |
+| `end-trial-early` | `SubscriptionOverview` | **Working** | — | — |
+| `list-invoices` | `SubscriptionOverview` | **Working** | — | — |
+| `add-subscription-seat` | `useAddSeat` | **Working** | — | — |
+| `sync-seat-to-stripe` | `useUpdateSeatType` | **Working** | Double error check (`error` + `data.error`) | — |
+| `stripe-connect` | `StripeConnectSetup` | **Working** | 3 actions (status/onboard/dashboard) all handled | — |
+| `send-roi-summary` | `ROICalculator` | **Working** | — | — |
+| `send-document-email` | `SendEmailDialog` | **Working** | — | — |
+| `send-team-invitation` | `useTeam` | **Working** | — | — |
+| `toggle-george-voice` | `useToggleGeorgeVoice` | **Working** | — | — |
+| `sync-agent-tools` | `ForemanAISettings` | **Working** | — | — |
+| `dashboard-analytics` | `useDashboardAnalytics` | **Working** | — | — |
+| `elevenlabs-scribe-token` | `useGeorgeVoice` | **Working** | — | — |
+| `elevenlabs-agent-token` | `useElevenLabsAgent` | **Working** | — | — |
+| `validate-clock-event` | `useTimeTracking` | **Working** | Fire-and-forget with `.catch()` — correct pattern for async validation | — |
+| `import-data` | `DataImportSection` | **Working** | — | — |
+| `request-early-access` | `RequestAccess` | **Working** | — | — |
+| `run-task` | `AgentTaskContext` | **Working** | — | — |
+| `xero-auth` | `useXeroConnection` | **Partial** | No `onError` toast on the mutation — user clicks Connect, if it fails they see nothing | Add `onError` toast to `connect` mutation |
+| `quickbooks-auth` | `useQuickBooksConnection` | **Partial** | Same issue — no error feedback | Add `onError` toast |
+| `xero-sync` | `useXeroSync` | **Partial** | All 3 sync calls wrapped in try/catch but error is silently `console.warn`'d. User gets no feedback if sync fails. | Add toast on catch |
+| `send-drip-email` | Cron (server-side only) | **Working** | N/A — not called from client | — |
+| `check-drip-sequence` | Cron (server-side only) | **Working** | N/A | — |
 
-### Path B → Invoice gap
-- **`useCreateInvoiceFromQuote` (line 172-186)** does NOT set `currency` on the new invoice. The `useCreateInvoice` hook does resolve currency from customer country, but `useCreateInvoiceFromQuote` skips this. Result: invoice created from quote has `null` currency — falls back to default but inconsistent with direct invoice creation.
+### Raw fetch() Calls
 
-### Fixes
-1. **Fix duplicate job check**: Change line 259-262 to filter by `quote_id` — `supabase.from("jobs").select("id").eq("quote_id", id).limit(1)` — and skip insert if a match exists.
-2. **Add currency to `useCreateInvoiceFromQuote`**: After fetching the quote, resolve customer country and set currency on the invoice insert.
+| Endpoint | Caller | Status | Issue | Fix |
+|----------|--------|--------|-------|-----|
+| `POST /rest/v1/analytics_events` | `utils/analytics.ts` | **Working** | Silent fail by design — correct for analytics | — |
+| `POST /functions/v1/george-chat` (demo) | `DemoChat.tsx` | **Working** | Uses anon key, no auth. Catches errors with fallback message. | — |
+
+### RPC Calls (`supabase.rpc`)
+
+| Function | Caller(s) | Status | Issue | Fix |
+|----------|-----------|--------|-------|-----|
+| `get_user_team_id` | 15+ hooks | **Working** | Most check for error. Some don't (e.g. `GeorgeInputArea` line 105, `GeorgeAgentInput` line 85) — if null, subsequent queries return empty. | Add null guard where missing |
+| `get_user_org_id_v2` | `useSubscription` | **Working** | — | — |
+| `get_user_seat_type` | `useSeatAccess` | **Working** | — | — |
+| `get_user_team_role` | `useUserRole` | **Working** | — | — |
+| `get_team_seat_usage` | `useSeatUsage` | **Working** | — | — |
+| `get_team_george_users` | `useTeamGeorgeUsers` | **Working** | — | — |
+| `get_quote_by_portal_token` | `usePortal` | **Working** | — | — |
+| `get_invoice_by_portal_token` | `usePortal` | **Working** | — | — |
+| `accept_quote_from_portal` | `usePortal` | **Working** | — | — |
+| `decline_quote_from_portal` | `usePortal` | **Working** | — | — |
+| `is_customer` | `useIsCustomer` | **Working** | — | — |
+| `seed_team_templates` | `OnboardingTemplatesStep` | **Working** | — | — |
+
+### Direct Table Queries (`.from()`)
+
+| Table | Hook/Component | Status | Issue | Fix |
+|-------|---------------|--------|-------|-----|
+| `quotes` | `useQuotes` | **Working** | `.limit(5000)` with overflow warning | — |
+| `invoices` | `useInvoices` | **Working** | — | — |
+| `jobs` | `useJobs` | **Working** | — | — |
+| `customers` | `useCustomers` | **Working** | — | — |
+| `expenses` | `useExpenses` | **Working** | — | — |
+| `profiles` | `useProfile` | **Working** | — | — |
+| `teams` | `useTeam`, `useGeorgeAccess` | **Working** | — | — |
+| `team_memberships` | `useTeamMembers` | **Working** | — | — |
+| `notifications` | `useNotifications` | **Working** | Realtime subscription included | — |
+| `comms_settings` | `useCommsSettings` | **Working** | Auto-creates row if missing — good pattern | — |
+| `templates` | `useTemplates` | **Working** | — | — |
+| `certificates` | `useCertificates` | **Working** | — | — |
+| `time_entries` | `useTimeTracking` | **Working** | — | — |
+| `leads` | `useLeads` | **Working** | — | — |
+| `price_book_items` | `usePriceBook` | **Working** | — | — |
+| `payments` | `usePayments` | **Working** | — | — |
+| `recurring_invoices` | `useRecurringInvoices` | **Working** | — | — |
+| `customer_accounts` | `useCustomerPortal` | **Working** | — | — |
+| `xero_connections` | `useXeroConnection` | **Partial** | Uses `(supabase as any)` — table not in generated types | Add to types or use RPC |
+| `quickbooks_connections` | `useQuickBooksConnection` | **Partial** | Same `(supabase as any)` cast — no type safety | Same |
+| `subscriptions_v2` | `useSubscription` | **Working** | — | — |
+| `org_members_v2` | `useOrgMembers` | **Working** | — | — |
+| `george_projects` | `useGeorge` | **Working** | — | — |
 
 ---
 
-## Flow 2: Job → Calendar → Time Track
+## Summary of Issues
 
-- **Create Job with date** → Working. Job appears on calendar via `scheduledJobs` filter.
-- **Calendar drag-and-drop** → Working. `handleDropJob` calls `updateJob.mutate()` with new `scheduled_date` and `scheduled_time`.
-- **Empty slot click** → Working. Opens `ScheduleJobPicker` or `JobFormDialog` for new job creation.
-- **Time tracking** → Working. `ClockInOutCard` lists jobs, user selects one, clocks in. `useClockIn` inserts `time_entries` row linked to `job_id`.
-- **Minor**: No direct "Start Timer" button from the calendar view — user must navigate to `/time-tracking` separately. This is a UX friction point, not a data flow break.
+### Critical (fix before launch)
 
----
+| # | Issue | Location | Impact |
+|---|-------|----------|--------|
+| 1 | **`generate-nudges` and `weekly-analysis` silently swallow errors** | `GeorgeWelcome.tsx` L95, L111 | Edge function returns 500 → user sees empty state with no error message. The `res.error` field is never checked. |
+| 2 | **Xero/QuickBooks connect mutations have no error feedback** | `useXeroConnection.ts` L32-41, `useQuickBooksConnection.ts` L32-41 | User clicks "Connect", request fails, nothing happens. No toast, no loading indicator change. |
+| 3 | **Xero sync failures are silent** | `useXeroSync.ts` L15-47 | All 3 sync types `console.warn` errors but never inform the user. Sync appears to succeed when it hasn't. |
+| 4 | **`TESTING_MODE = true` hardcoded in production** | `useGeorgeAccess.ts` L67 | Every user gets unlimited voice access, bypassing seat checks and minute limits. Must be `false` before launch. |
 
-## Flow 3: Customer → Job → Invoice
+### Medium
 
-- **Create Customer** → Working. `useCreateCustomer` inserts with team_id.
-- **Create Job with customer** → Working. `JobFormDialog` has customer select dropdown populated by `useCustomers()`.
-- **Create Invoice with customer** → Working. `InvoiceFormDialog` has customer select. Customer data flows through to PDF and portal.
-- **Full chain intact**: customer_id is a foreign key on both jobs and invoices tables.
+| # | Issue | Location | Impact |
+|---|-------|----------|--------|
+| 5 | **`(supabase as any)` type casts** | `useXeroConnection.ts`, `useQuickBooksConnection.ts` | No compile-time safety. If table name or column changes, error appears only at runtime. |
+| 6 | **`get_user_team_id` null not checked in George chat** | `GeorgeInputArea.tsx` L105 | If user has no team, `team_id: null` is sent to george-chat. Edge function may not handle this gracefully. |
+| 7 | **Dashboard `revenueThisMonth` uses `issue_date` not payment date** | `useDashboard.ts` L90-93 | Already flagged in previous audit — still present. Revenue for invoices paid this month but issued last month is missed. |
 
----
+### Low / Polish
 
-## Flow 4: Invoice → Paid → Dashboard
-
-- **Create Invoice** → Working.
-- **Mark as Paid**: Two paths exist:
-  - `useUpdateInvoiceStatus({ id, status: "paid" })` — updates status directly.
-  - `PaymentTrackerSheet` → records individual payments via `useCreatePayment`.
-- **Dashboard reflection** → **PARTIAL**. `useDashboardStats` calculates `revenueThisMonth` by filtering invoices with `status === "paid"` AND `issue_date` within the current month. Problem: if the invoice was *issued* last month but *paid* this month, it won't count toward this month's revenue. The filter should use `paid_date` or `updated_at` when status is paid, not `issue_date`.
-- **Dashboard invalidation** → `useUpdateInvoiceStatus` invalidates `["invoices"]` but does NOT invalidate `["dashboard-stats"]`. The dashboard won't refresh until the user navigates away and back.
-
-### Fixes
-1. Add `queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })` to `useUpdateInvoiceStatus.onSuccess` and `useCreatePayment.onSuccess`.
-2. Consider adding a `paid_at` timestamp column for accurate revenue reporting (optional but recommended).
+| # | Issue | Location | Impact |
+|---|-------|----------|--------|
+| 8 | **No retry logic on any edge function call** | All 31 files | Network blips cause permanent failures. React Query provides `retry` but defaults to 3 for queries only — mutations have 0 retries. |
+| 9 | **Quotes query `.limit(5000)` with no pagination** | `useQuotes.ts` L21-28 | Works now, but will degrade for high-volume teams. Already has a `console.warn` but no user-facing indicator. |
 
 ---
 
-## Flow 5: Add Team Member → Assign Job
+## Recommended Fixes (Priority Order)
 
-- **Add Team Member** → Working. `useTeam.ts` has `useSendInvitation` which calls the `send-team-invitation` edge function. Invitation flow → accept → user joins team.
-- **Assign Job to Team Member** → **BROKEN**. The `jobs` table has no `assigned_to` or `assigned_user_id` column. The `JobFormDialog` schema does not include an assignee field. There is no UI to assign a job to a specific team member. Jobs are only scoped to the team, not to individuals.
+1. **`TESTING_MODE` flag**: Set to `false` in `useGeorgeAccess.ts` or make it environment-driven before launch
+2. **`generate-nudges` / `weekly-analysis`**: Add `if (res.error) throw res.error` before accessing `.data`
+3. **Xero/QuickBooks connect**: Add `onError: (e) => toast.error("Connection failed: " + e.message)` to both connect mutations
+4. **Xero sync**: Replace `console.warn` with `toast.error("Sync failed")` in all 3 catch blocks
+5. **George chat null team guard**: Add `if (!teamId)` early return with user-facing message
+6. **Type casts**: These are cosmetic — fix when the tables are added to the generated types schema
 
-### Fix
-1. Add `assigned_to UUID REFERENCES auth.users(id)` column to the `jobs` table via migration.
-2. Add an "Assign To" select field in `JobFormDialog` populated by `useTeamMembers()`.
-3. Update `useCreateJob` and `useUpdateJob` to persist the `assigned_to` value.
-4. Filter calendar and time tracking views by assigned user when relevant.
+## Files to Change
 
----
-
-## Flow 6: Expense → Link to Job
-
-- **Create Expense** → Working. `ExpenseFormDialog` includes optional `job_id` select.
-- **Expense linked to job** → Working. `useExpenses` query joins `jobs(title)` to display the linked job name.
-- **Receipt scan** → Working. `scan-receipt` edge function processes image, returns parsed data.
-- **Full chain intact**: `job_id` foreign key on expenses table is nullable, allowing both linked and unlinked expenses.
-
----
-
-## Summary of Critical Fixes
-
-| # | Issue | Severity | File(s) |
-|---|-------|----------|---------|
-| 1 | **Duplicate job on quote acceptance** — check queries ANY job, not jobs for this quote; result ignored | Critical | `src/hooks/useQuotes.ts` lines 258-279 |
-| 2 | **No `assigned_to` on jobs** — team member assignment is impossible | Critical | DB migration + `JobFormDialog.tsx` + `useJobs.ts` |
-| 3 | **Invoice from quote missing currency** | Medium | `src/hooks/useInvoices.ts` line 173-186 |
-| 4 | **Dashboard not invalidated on payment/status change** | Medium | `src/hooks/useInvoices.ts`, `src/hooks/usePayments.ts` |
-| 5 | **Revenue uses `issue_date` not `paid_at`** | Low | `src/hooks/useDashboard.ts` line 90-93 |
-
-## Implementation Order
-1. Fix duplicate job creation logic (quick code fix)
-2. Add dashboard cache invalidation (quick code fix)
-3. Add currency to invoice-from-quote (quick code fix)
-4. Add `assigned_to` column + UI (migration + component changes)
-5. Revenue date logic improvement (optional enhancement)
+| File | Change |
+|------|--------|
+| `src/hooks/useGeorgeAccess.ts` | Set `TESTING_MODE = false` |
+| `src/components/george/GeorgeWelcome.tsx` | Add error checks on nudges + analysis calls |
+| `src/hooks/useXeroConnection.ts` | Add `onError` to `connect` mutation |
+| `src/hooks/useQuickBooksConnection.ts` | Add `onError` to `connect` mutation |
+| `src/hooks/useXeroSync.ts` | Replace `console.warn` with `toast.error` |
+| `src/components/george/GeorgeInputArea.tsx` | Add null guard for `teamId` |
 
