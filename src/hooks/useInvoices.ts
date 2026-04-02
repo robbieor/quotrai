@@ -326,6 +326,8 @@ export function useUpdateInvoiceStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-recent-jobs"] });
       toast.success("Invoice status updated");
     },
     onError: (error) => {
