@@ -230,6 +230,7 @@ export default function JobCalendar() {
                     onJobDragStart={setActiveJob}
                     onJobDragEnd={() => setActiveJob(null)}
                     onSlotClick={handleSlotClick}
+                    hourSlots={hourSlots}
                   />
                 )}
                 {view === "pending" && (
