@@ -357,7 +357,8 @@ export default function Settings() {
                 </Button>
               </CardContent>
             </Card>
-            
+
+            <ReferralCard />
           </TabsContent>
 
           <TabsContent value="branding" className="space-y-6 max-w-3xl">

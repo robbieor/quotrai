@@ -171,6 +171,7 @@ const App = () => {
 
                 {/* Grow seat required */}
                 <Route path="/leads" element={<RoleGuard><SeatGuard requiredSeat="grow"><Leads /></SeatGuard></RoleGuard>} />
+                <Route path="/funnel" element={<RoleGuard><FunnelAnalytics /></RoleGuard>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>

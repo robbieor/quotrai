@@ -191,6 +191,12 @@ export default function Landing() {
       {/* Final CTA */}
       <FinalCTASection />
 
+      {/* Demo Chat Widget */}
+      <DemoChat open={demoOpen} onClose={() => setDemoOpen(false)} />
+
+      {/* Exit Intent Popup */}
+      <ExitIntentPopup onTryDemo={() => setDemoOpen(true)} />
+
       {/* Footer */}
       <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t border-border">
         <div className="container mx-auto">
