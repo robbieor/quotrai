@@ -40,7 +40,7 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasBrowserTTS = typeof window !== "undefined" && !!window.speechSynthesis;
 
   const hasSpeechSupport = !!SpeechRecognitionAPI;
 
