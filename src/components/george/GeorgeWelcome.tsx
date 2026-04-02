@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, FileText, CalendarDays, PlusCircle, AlertTriangle, TrendingUp, ChevronRight, X, BarChart3, CheckCircle2, AlertCircle, Shield } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -141,20 +141,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
     low: "border-l-primary",
   };
 
-  // Auto-trigger morning briefing on first load if there are urgent items
-  const briefingTriggered = useRef(false);
-  useEffect(() => {
-    if (!briefingTriggered.current && insights && hasUrgentItems && !isProcessing && onQuickAction) {
-      const briefingKey = `foreman-auto-briefing-${today}`;
-      if (!localStorage.getItem(briefingKey)) {
-        briefingTriggered.current = true;
-        localStorage.setItem(briefingKey, "true");
-        setTimeout(() => {
-          onQuickAction("get_today_summary", "Give me my morning briefing — what needs attention today?");
-        }, 800);
-      }
-    }
-  }, [insights, hasUrgentItems, isProcessing, onQuickAction]);
+  // Auto-trigger disabled — let user decide what to ask
 
   if (isMobile) {
     return (
