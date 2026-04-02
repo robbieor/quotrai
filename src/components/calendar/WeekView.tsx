@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Job } from "@/hooks/useJobs";
 import { DraggableJobCard } from "./DraggableJobCard";
 import { DroppableCell } from "./DroppableCell";
+
 interface WeekViewProps {
   currentDate: Date;
   jobs: Job[];
@@ -13,9 +14,13 @@ interface WeekViewProps {
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
   onSlotClick?: (date: Date, hour?: number) => void;
+  hourSlots?: number[];
 }
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
+const formatHourShort = (hour: number) => {
+  const h = hour % 12 || 12;
+  return `${h}${hour < 12 ? "a" : "p"}`;
+};
 
 export function WeekView({
   currentDate,
