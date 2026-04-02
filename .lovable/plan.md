@@ -1,61 +1,91 @@
 
 
-# Dashboard Tiles — Unified Click-to-Drill Experience
+# Investor Deck — Interactive Story-Driven Redesign
 
-## Problems
+## Problem
+All 6 investor pages are static walls of cards and tables. No visual hierarchy, no narrative flow, no scroll-driven storytelling. They look like admin dashboards, not a pitch experience. An investor scanning these pages gets no emotional impact.
 
-1. **ControlHeader tiles** (Overdue, Stale Quotes, Stuck Jobs, Status) are completely static — no click handlers at all
-2. **KPI Strip tiles** are inconsistent — "Outstanding" opens a drawer, "Overdue 30+" and "Jobs" navigate away to a different page, "Cash Collected" has an onClick that does nothing (no handler case), "Revenue" has no onClick
-3. No unified interaction pattern — sometimes drawer, sometimes page navigation, sometimes nothing
+## Design Direction
+Transform each page into a scroll-driven story with full-bleed hero sections, animated counters, cinematic backgrounds, and progressive reveal. Think Apple product pages meets Linear's investor materials. The investor should feel the problem, see the solution, and believe in the opportunity — all through scrolling.
 
-## Solution
+## Shared Components (New)
 
-Every tile in both rows opens the same `DrillThroughDrawer` with the relevant records. Each row in the drawer links to the specific record (invoice, job, quote). This is already built — it just needs to be wired up consistently.
+### `InvestorSection` — Full-width story block
+Each "section" is a full-viewport-height (or min-height) block with its own background treatment. Replaces flat Card grids with immersive sections that alternate between dark navy hero blocks and light content blocks.
 
-## Changes
+### `AnimatedCounter` — Number reveal
+Large stats (€18B, 65%, 11M+) animate up from 0 when they scroll into view using `IntersectionObserver`. Creates the "jaw drop" moment.
 
-### 1. `ControlHeader.tsx` — Make all 4 tiles clickable
+### `FadeInOnScroll` — Progressive reveal wrapper
+Children fade + slide up when entering viewport. Staggered delays for grid items.
 
-Add an `onDrillDown` callback prop (same pattern as KPIStrip). Each tile gets a click handler:
-- **Overdue** → `onDrillDown("overdue")` — shows overdue invoices
-- **Stale Quotes** → `onDrillDown("staleQuotes")` — shows quotes needing follow-up
-- **Stuck Jobs** → `onDrillDown("stuckJobs")` — shows jobs with 7+ days no progress
-- **Status** → `onDrillDown("status")` — shows combined issues list
+### Updated `InvestorLayout`
+- Remove the generic header subtitle area
+- Add smooth scroll behavior
+- Dark/light alternating section support
+- Progress indicator (thin green bar at top showing scroll %)
 
-Add cursor-pointer, hover state, and the "Click to drill ↗" hint (same as KPICard).
+## Page-by-Page Redesign
 
-### 2. `Dashboard.tsx` — Wire up all drill handlers
+### 1. Pitch (`/investor/pitch`) — "The Story"
+**Structure**: Problem → Pain → Solution → Traction → Ask
 
-Add a `handleControlDrillDown` function that opens the DrillThroughDrawer for each ControlHeader metric:
-- **overdue**: columns = Invoice #, Client, Amount, Days Overdue → data from `data?.drillData?.outstanding` filtered to overdue, link to `/invoices`
-- **staleQuotes**: columns = Quote #, Client, Amount, Days Since Sent → data from `data?.drillData?.pendingQuotes`, link to `/quotes`
-- **stuckJobs**: columns = Job Title, Customer, Status, Days Stuck, Value → data from `data?.jobsAtRisk`, link to `/jobs`
+- **Hero**: Full dark navy section. "The Operating System for Trade Businesses" in massive 56px white text. Single green accent line. Scroll arrow.
+- **Problem section**: Dark red/navy gradient. 4 animated counters (65%, 8hrs, 42%, 11M+) that count up on scroll. Below: one punchy paragraph.
+- **Solution section**: Light background. 4 pillars as large icon+title blocks that fade in staggered. No descriptions until hover/click expands.
+- **Business Model**: 3 large number cards side by side (€19-69/seat, 2.5% fee, 80%+ margin) with subtle green left borders.
+- **The Ask**: Dark section. €500K–€1M in massive green text. Use of funds as animated horizontal bars. Milestones as a timeline.
 
-Fix `handleKPIDrillDown` to handle ALL cases:
-- **cash**: show payments collected (from drill data)
-- **outstanding**: already works (keep)
-- **overdue30**: open drawer instead of navigating away
-- **revenue**: show invoices contributing to revenue
-- **jobs**: open drawer with active jobs instead of navigating away
+### 2. Market (`/investor/market`) — "The Opportunity"
+- **Hero**: "€18B" in enormous text (80px+) with animated counter. "The last major vertical to digitise" subtitle.
+- **TAM/SAM/SOM**: Concentric circles or nested boxes visualization, not flat cards.
+- **Why Now**: 6 tailwinds as a 2×3 grid with icons that pulse/glow on scroll-in.
+- **Competitors**: Visual comparison matrix with green checkmarks for Foreman advantages.
+- **Geographic expansion**: Map-style visual showing launch markets.
 
-### 3. `DrillThroughDrawer.tsx` — Minor improvement
+### 3. Product (`/investor/product`) — "See It In Action"
+- **Hero**: "Built. Shipped. Live." with animated feature count.
+- **Feature showcase**: Instead of 20 cards, show 5 key workflows as horizontal scroll cards with large icons and one-line descriptions. Click expands detail.
+- **AI section**: Dark navy background. Show 3 voice commands in a mock chat interface that types out letter by letter.
+- **Tech stack**: Minimal pill badges, not a table.
+- **Roadmap**: Horizontal timeline with quarter markers.
 
-Add row click behavior: clicking a row navigates to the record (not just the small icon button). Makes touch targets much better on mobile.
+### 4. Team (`/investor/team`) — "Who's Building This"
+- **Founder spotlight**: Large section with photo placeholder, key stats (features built, zero outsourcing, solo-built).
+- **Why this team**: Cards with hover reveal for details.
+- **Hiring plan**: Visual timeline (vertical) with role + timing.
+- **Values**: 3 large quote-style blocks.
 
-### 4. Edge function `dashboard-analytics/index.ts` — Ensure drill data is complete
+### 5. Projections & Forecast — Keep existing interactive sliders but wrap in the new section treatment with better backgrounds and typography.
 
-Check that the edge function returns sufficient drill data for all tiles. May need to add:
-- `staleQuotes` array (quotes sent 7+ days ago, no response)
-- `cashCollected` array (payments in period)
-- `overdueInvoices` array (30+ day overdue specifically)
+## Technical Implementation
 
-## Files
+### New files:
+| File | Purpose |
+|------|---------|
+| `src/components/investor/InvestorSection.tsx` | Full-bleed section with dark/light variants |
+| `src/components/investor/AnimatedCounter.tsx` | Scroll-triggered number animation |
+| `src/components/investor/FadeInOnScroll.tsx` | IntersectionObserver fade-in wrapper |
+| `src/components/investor/ScrollProgress.tsx` | Thin green progress bar at top |
 
-| Action | File |
-|--------|------|
-| Edit | `src/components/dashboard/ControlHeader.tsx` — add onDrillDown prop + clickable tiles |
-| Edit | `src/components/dashboard/KPIStrip.tsx` — ensure all 5 cards have onClick |
-| Edit | `src/pages/Dashboard.tsx` — wire both handlers with complete drill data |
-| Edit | `src/components/dashboard/DrillThroughDrawer.tsx` — row-click navigation |
-| Edit | `supabase/functions/dashboard-analytics/index.ts` — ensure all drill arrays populated |
+### Edited files:
+| File | Change |
+|------|--------|
+| `src/components/investor/InvestorLayout.tsx` | Add scroll progress bar, remove flat subtitle, add dark mode section support |
+| `src/pages/InvestorPitch.tsx` | Full rewrite — story-driven sections |
+| `src/pages/InvestorMarket.tsx` | Full rewrite — hero counter, visual TAM, competitor matrix |
+| `src/pages/InvestorProduct.tsx` | Full rewrite — workflow showcase, typing AI demo |
+| `src/pages/InvestorTeam.tsx` | Full rewrite — cinematic founder section, timeline hiring |
+
+### Animation approach:
+- `IntersectionObserver` with `threshold: 0.2` for scroll triggers
+- CSS transitions (transform + opacity) — no heavy animation libraries
+- Counters use `requestAnimationFrame` for smooth 60fps counting
+- Staggered delays via `transitionDelay` on grid children
+
+### Color system for investor pages:
+- Dark sections: `bg-[#0f172a]` (sidebar navy) with white text
+- Light sections: `bg-background` (warm off-white)
+- Accent: `text-primary` (Foreman green) for key stats and CTAs
+- Alternating pattern creates visual rhythm and prevents flatness
 
