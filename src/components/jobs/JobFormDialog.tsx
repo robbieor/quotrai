@@ -59,6 +59,7 @@ const jobSchema = z.object({
   scheduled_date: z.date().optional().nullable(),
   scheduled_time: z.string().optional(),
   estimated_value: z.coerce.number().optional().nullable(),
+  assigned_to: z.string().optional().nullable(),
 });
 
 type JobFormValues = z.infer<typeof jobSchema>;
