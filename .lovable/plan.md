@@ -1,52 +1,41 @@
 
 
-# Voice-Enabled Demo Chat on Landing Page
+# Switch Demo Chat Voice to Free Browser SpeechSynthesis
 
-## Problem
-The demo chat is text-only. Visitors can't experience George's voice — which is a major differentiator. The full voice agent (ElevenLabs Conversational AI) requires authentication, so it can't be used anonymously on the landing page.
+## What Changes
 
-## Approach: Hybrid Voice Demo
+Replace the ElevenLabs TTS call in the demo chat with the browser's built-in `window.speechSynthesis` API. This eliminates all ElevenLabs costs for anonymous visitors while keeping the voice experience. ElevenLabs remains reserved for authenticated/paying users.
 
-Combine three existing pieces without needing a new ElevenLabs agent or authentication changes:
+## How It Works
 
-1. **Voice Input** → Browser Web Speech API (`SpeechRecognition`) — free, no API key, works in Chrome/Safari/Edge
-2. **AI Reasoning** → Existing `george-chat` edge function with `demo_mode: true` — already built
-3. **Voice Output** → Existing `elevenlabs-tts` edge function — speaks George's response back using the George voice (voice ID `JBFqnCBsd6RMkjVDRZzb`)
+The `speakResponse` function in `DemoChat.tsx` currently calls the `elevenlabs-tts` edge function. We replace it with:
 
-This gives visitors the full "talk to George" experience within the 3-message cap, without exposing any authenticated endpoints.
-
-## Changes
-
-### 1. Edit `src/components/landing/DemoChat.tsx`
-
-- Add a **microphone button** next to the send button in the input bar
-- On tap: start `SpeechRecognition`, show a pulsing mic indicator, transcribe speech to text, auto-send when speech ends
-- After George responds: auto-play his response via `elevenlabs-tts` (fetch as blob, play via `Audio`)
-- Add a small speaker toggle so users can mute voice output
-- Show a "Tap to talk" hint on first open if browser supports speech recognition
-- Graceful fallback: if `SpeechRecognition` is not supported (Firefox), hide the mic button — text-only still works
-
-### 2. Edit `supabase/functions/elevenlabs-tts/index.ts`
-
-- Allow unauthenticated requests when a `demo` flag is passed (rate-limit by IP or skip auth check for demo calls)
-- Cap demo TTS to short text (under 200 chars) to prevent abuse
-
-### No new edge functions. No new tables. No ElevenLabs agent changes.
-
-## UX Flow
-
-```text
-Visitor taps "Try George Now" → Demo chat opens
-  → Taps mic button → "Quote for Mrs. Patterson, EV charger"
-  → Speech transcribed → sent to george-chat (demo_mode)
-  → George's text response appears + auto-spoken aloud
-  → 3 messages → "Like what you see? Sign up"
+```typescript
+const utterance = new SpeechSynthesisUtterance(text);
+utterance.lang = "en-GB";
+utterance.rate = 1.0;
+utterance.pitch = 1.0;
+// Pick a male British voice if available
+const voices = speechSynthesis.getVoices();
+const preferred = voices.find(v => v.lang === "en-GB" && v.name.includes("Male"));
+if (preferred) utterance.voice = preferred;
+speechSynthesis.speak(utterance);
 ```
+
+- Free, zero API calls, works offline
+- Supported in Chrome, Safari, Edge, Firefox
+- Stop/cancel works via `speechSynthesis.cancel()`
+- No edge function changes needed
+
+## Quality Note
+
+Browser voices are noticeably less natural than ElevenLabs. We add a subtle hint in the demo: *"Sign up to hear George's real voice"* — turning the quality gap into a conversion lever.
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Edit | `src/components/landing/DemoChat.tsx` — add mic button, Web Speech API, TTS playback |
-| Edit | `supabase/functions/elevenlabs-tts/index.ts` — allow demo-mode unauthenticated calls with text length cap |
+| Edit | `src/components/landing/DemoChat.tsx` — replace `speakResponse` with `SpeechSynthesis`, remove ElevenLabs fetch, update voice toggle hint |
+
+No backend changes. No new files.
 
