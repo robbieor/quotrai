@@ -66,11 +66,13 @@ export function SubscriptionOverview() {
   const { data: members } = useOrgMembers();
   const { formatCurrency } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEndingTrial, setIsEndingTrial] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelStep, setCancelStep] = useState<"reason" | "confirm">("reason");
   const [cancelReason, setCancelReason] = useState("");
   const [cancelDetail, setCancelDetail] = useState("");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [endTrialDialogOpen, setEndTrialDialogOpen] = useState(false);
   const isNative = useIsNative();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -161,7 +163,26 @@ export function SubscriptionOverview() {
     } catch (err: any) {
       toast.error(err?.message || "Failed to resume subscription");
     } finally {
-      setIsCancelling(false);
+    setIsCancelling(false);
+    }
+  };
+
+  const handleEndTrialEarly = async () => {
+    setIsEndingTrial(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("end-trial-early");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
+      toast.success("Trial ended — your subscription is now active!", {
+        description: "Your first payment has been processed.",
+        duration: 5000,
+      });
+      setEndTrialDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to end trial");
+    } finally {
+      setIsEndingTrial(false);
     }
   };
 
@@ -272,12 +293,41 @@ export function SubscriptionOverview() {
                 </span>
               </div>
               <Progress value={trialProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                Your trial ends {subscription?.trial_ends_at
-                  ? format(new Date(subscription.trial_ends_at), "MMMM d, yyyy")
-                  : "soon"
-                }. Subscribe to keep full access.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Your trial ends {subscription?.trial_ends_at
+                    ? format(new Date(subscription.trial_ends_at), "MMMM d, yyyy")
+                    : "soon"
+                  }. Subscribe to keep full access.
+                </p>
+                {subscription?.stripe_subscription_id && (
+                  <AlertDialog open={endTrialDialogOpen} onOpenChange={setEndTrialDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-xs shrink-0 ml-3">
+                        Start Paying Now
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>End trial and start paying?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Your free trial will end immediately and your first payment will be processed now. 
+                          Your subscription will become fully active right away.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Trial</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleEndTrialEarly} disabled={isEndingTrial}>
+                          {isEndingTrial ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          Confirm & Pay
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </div>
           )}
 
