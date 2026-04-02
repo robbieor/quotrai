@@ -100,6 +100,7 @@ export function GeorgeChatArea({
         streamingText={streamingText}
         lastError={lastError}
         onRetry={onRetry}
+        onQuickAction={handleChipAction}
       />
     </div>
   );
