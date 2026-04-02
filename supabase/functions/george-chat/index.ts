@@ -303,6 +303,23 @@ function buildMemory(toolCalls: any[], toolResults: any[], existingMemory?: any)
   return memory;
 }
 
+// ─── AI CONVERSATIONS LOGGING (fire-and-forget) ────────────────────
+function logToAiConversations(
+  supabase: any,
+  userId: string,
+  userMessage: string,
+  assistantMessage: string,
+  metadata: Record<string, any>,
+  tokensUsed?: number
+) {
+  supabase.from("ai_conversations").insert([
+    { user_id: userId, role: "user", content: userMessage, metadata },
+    { user_id: userId, role: "assistant", content: assistantMessage, metadata, tokens_used: tokensUsed },
+  ]).then(({ error }: any) => {
+    if (error) console.error("ai_conversations log error (non-fatal):", error);
+  });
+}
+
 // ─── MAIN HANDLER ───────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -441,6 +458,11 @@ serve(async (req) => {
         ]);
       }
 
+      // Log to ai_conversations
+      logToAiConversations(serviceSupabase, userId, message, responseMsg, {
+        conversation_id: activeConvId, team_id: teamId, intent: directAction.intent, model: "webhook-shortcircuit",
+      });
+
       return new Response(
         JSON.stringify({
           message: responseMsg,
@@ -470,6 +492,10 @@ serve(async (req) => {
           { conversation_id: activeConversationId, role: "assistant", content: shortCircuit.response },
         ]);
       }
+      // Log to ai_conversations
+      logToAiConversations(serviceSupabase, userId, message, shortCircuit.response, {
+        conversation_id: activeConversationId, team_id: teamId, intent: shortCircuit.intent, model: "quick-action-shortcircuit",
+      });
       return new Response(
         JSON.stringify({
           message: shortCircuit.response,
@@ -777,11 +803,13 @@ IMPORTANT RULES:
           conversation_id: activeConversationId, role: "assistant", content: fallbackMsg,
         });
       }
+      logToAiConversations(serviceSupabase, userId, message, fallbackMsg, {
+        conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "no-api-key-fallback",
+      });
       return new Response(
         JSON.stringify({
           message: fallbackMsg,
           conversation_id: activeConversationId,
-          // No action_plan for pure chat — renders as plain bubble
           action_plan: null,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -921,6 +949,10 @@ IMPORTANT RULES:
         sseChunks.push("data: [DONE]\n\n");
 
         const sseBody = sseChunks.join("");
+        // Log to ai_conversations
+        logToAiConversations(serviceSupabase, userId, message, collectedContent, {
+          conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "google/gemini-2.5-pro",
+        });
         return new Response(encoder.encode(sseBody), {
           headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
         });
@@ -949,6 +981,9 @@ IMPORTANT RULES:
           .update({ updated_at: now.toISOString() })
           .eq("id", activeConversationId);
       }
+      logToAiConversations(serviceSupabase, userId, message, fallbackMsg, {
+        conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "ai-error-fallback",
+      });
       return new Response(
         JSON.stringify({
           message: fallbackMsg,
@@ -1072,6 +1107,10 @@ IMPORTANT RULES:
 
     // Change 5: For pure chat (no tools called), return action_plan: null
     if (!hasAction) {
+      // Log pure chat to ai_conversations
+      logToAiConversations(serviceSupabase, userId, message, finalMessage, {
+        conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "google/gemini-2.5-pro",
+      });
       return new Response(
         JSON.stringify({
           message: finalMessage,
@@ -1136,6 +1175,13 @@ IMPORTANT RULES:
       memory_resolution_log: Object.keys(memoryLog).length > 0 ? memoryLog : null,
     }).then(({ error }) => {
       if (error) console.error("george-chat: Audit log error (non-fatal):", error);
+    });
+
+    // Log tool-call response to ai_conversations
+    const toolNames = toolCalls.map((tc: any) => tc.function.name);
+    logToAiConversations(serviceSupabase, userId, message, finalMessage, {
+      conversation_id: activeConversationId, team_id: teamId, intent: intentInfo.intent,
+      model: "google/gemini-2.5-pro", tool_calls: toolNames,
     });
 
     return new Response(
