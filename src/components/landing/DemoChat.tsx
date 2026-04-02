@@ -179,10 +179,7 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => {
-                  if (audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current = null;
-                  }
+                  window.speechSynthesis?.cancel();
                   setVoiceEnabled((v) => !v);
                 }}
               >
