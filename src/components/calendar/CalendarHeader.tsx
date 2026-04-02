@@ -18,10 +18,22 @@ interface CalendarHeaderProps {
   onDateChange: (date: Date) => void;
   onViewChange: (view: CalendarViewType) => void;
   pendingCount?: number;
+  startHour: number;
+  endHour: number;
+  onWorkingHoursChange: (start: number, end: number) => void;
 }
 
-export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, pendingCount = 0 }: CalendarHeaderProps) {
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i);
+const formatHour = (h: number) => {
+  if (h === 0) return "12 AM";
+  if (h < 12) return `${h} AM`;
+  if (h === 12) return "12 PM";
+  return `${h - 12} PM`;
+};
+
+export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, pendingCount = 0, startHour, endHour, onWorkingHoursChange }: CalendarHeaderProps) {
   const isMobile = useIsMobile();
+  const [showHoursMenu, setShowHoursMenu] = useState(false);
 
   const navigatePrevious = () => {
     switch (view) {
