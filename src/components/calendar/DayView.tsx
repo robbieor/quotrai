@@ -27,6 +27,7 @@ export function DayView({
   onJobDragStart,
   onJobDragEnd,
   onSlotClick,
+  hourSlots = DEFAULT_HOURS,
 }: DayViewProps) {
   const dayJobs = jobs.filter((job) => {
     if (!job.scheduled_date) return false;
