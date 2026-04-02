@@ -1167,6 +1167,13 @@ IMPORTANT RULES:
       if (error) console.error("george-chat: Audit log error (non-fatal):", error);
     });
 
+    // Log tool-call response to ai_conversations
+    const toolNames = toolCalls.map((tc: any) => tc.function.name);
+    logToAiConversations(serviceSupabase, userId, message, finalMessage, {
+      conversation_id: activeConversationId, team_id: teamId, intent: intentInfo.intent,
+      model: "google/gemini-2.5-pro", tool_calls: toolNames,
+    });
+
     return new Response(
       JSON.stringify({
         message: finalMessage,
