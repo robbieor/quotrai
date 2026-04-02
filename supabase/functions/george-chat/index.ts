@@ -11,6 +11,7 @@ interface ChatRequest {
   message: string;
   conversation_id: string | null;
   stream?: boolean;
+  demo_mode?: boolean;
   memory_context?: {
     current_customer?: { id: string; name: string };
     current_job?: { id: string; title: string };
