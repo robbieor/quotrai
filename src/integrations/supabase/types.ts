@@ -1978,6 +1978,7 @@ export type Database = {
           job_id: string | null
           notes: string | null
           portal_token: string | null
+          portal_token_expires_at: string | null
           quote_id: string | null
           ref: string
           status: Database["public"]["Enums"]["invoice_status"]
@@ -2004,6 +2005,7 @@ export type Database = {
           job_id?: string | null
           notes?: string | null
           portal_token?: string | null
+          portal_token_expires_at?: string | null
           quote_id?: string | null
           ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -2030,6 +2032,7 @@ export type Database = {
           job_id?: string | null
           notes?: string | null
           portal_token?: string | null
+          portal_token_expires_at?: string | null
           quote_id?: string | null
           ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -3669,6 +3672,7 @@ export type Database = {
           last_viewed_at: string | null
           notes: string | null
           portal_token: string | null
+          portal_token_expires_at: string | null
           ref: string
           reminders_enabled: boolean | null
           signature_url: string | null
@@ -3696,6 +3700,7 @@ export type Database = {
           last_viewed_at?: string | null
           notes?: string | null
           portal_token?: string | null
+          portal_token_expires_at?: string | null
           ref?: string
           reminders_enabled?: boolean | null
           signature_url?: string | null
@@ -3723,6 +3728,7 @@ export type Database = {
           last_viewed_at?: string | null
           notes?: string | null
           portal_token?: string | null
+          portal_token_expires_at?: string | null
           ref?: string
           reminders_enabled?: boolean | null
           signature_url?: string | null

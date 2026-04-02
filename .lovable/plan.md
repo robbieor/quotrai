@@ -1,48 +1,45 @@
 
+# Post-Launch Improvements — Full Implementation
 
-# Security Blocker Fix — Round 2 (Actually Complete This Time)
+## Batch 1: Security Hardening (Migration)
 
-## Root Cause of Incomplete Fix
+| # | Task | Effort |
+|---|------|--------|
+| 1 | **Add DELETE policy to `document-emails` bucket** — team-folder scoped | 5 min |
+| 2 | **`email-assets` bucket team isolation** — add team-folder scoped SELECT/INSERT/DELETE | 10 min |
+| 3 | **`currency_rates` table** — restrict to authenticated users only | 5 min |
+| 4 | **`early_access_requests`** — add admin-only SELECT policy | 5 min |
+| 5 | **`drip_sequences`** — add service-role-only INSERT policy (clear linter warning) | 5 min |
 
-The previous migration **added** team-scoped policies but **did not drop** the existing permissive policies. In Supabase, multiple PERMISSIVE policies are ORed together — so if even one policy says "allow all authenticated users", the restrictive one is meaningless.
+All above in a single migration.
 
-## What This Migration Does
+## Batch 2: Edge Function Fixes
 
-### 1. `document-emails` Storage — Drop Old Policies
-- DROP `"Users can read document PDFs via signed URLs"` (SELECT, bucket_id only)
-- DROP `"Authenticated users can upload document PDFs"` (INSERT, bucket_id only)
-- The team-scoped policies from the previous migration remain in effect
+| # | Task | File |
+|---|------|------|
+| 6 | **ILIKE wildcard sanitization in `george-webhook`** — escape `%` and `_` in user input | `supabase/functions/george-webhook/index.ts` |
+| 7 | **Portal token expiration** — add `expires_at` check on quote/invoice portal token lookup | Relevant portal hooks/pages |
 
-### 2. `job_photos` — Drop Anon Read Policy
-- DROP any remaining anon SELECT policy with `USING(true)`
-- The team-scoped authenticated policy from previous migration stays
+## Batch 3: Frontend Code Fixes
 
-### 3. `team_member_profiles` View — Fix Underlying Access
-- The view uses `security_invoker = true`, which means RLS on `team_memberships` and `profiles` applies
-- `team_memberships` already has team-scoped RLS ✅
-- `profiles` likely has a broad SELECT policy — add a team-scoped policy so users can only see profiles of their own team members (via join to `team_memberships`)
+| # | Task | File |
+|---|------|------|
+| 8 | **Quotes pagination** — replace `limit(5000)` with proper paginated fetching | `src/hooks/useQuotes.ts` |
+| 9 | **Revenue reporting by `paid_at`** — use payment date instead of invoice issue date | `src/hooks/useDashboard.ts` |
+| 10 | **Xero/QuickBooks type casts** — replace `(supabase as any)` with proper typing | `src/hooks/useXeroConnection.ts`, `src/hooks/useQuickBooksConnection.ts` |
 
-### 4. Realtime — Add Policy to `realtime.messages`
-- This is a Supabase-managed schema — we **cannot** modify `realtime.messages` directly
-- The correct approach: ensure the **source tables** (`location_pings`, `notifications`) have tight SELECT policies (already done), and document that Realtime broadcast/presence channels are not row-filtered
-- Mark this as a known limitation with mitigation (table-level RLS blocks the actual data)
+## Not Included (Requires Supabase Dashboard Access)
 
-### 5. `marketing-assets` Storage — Add Team Scoping
-- DROP `"Marketing assets auth upload"` and `"Marketing assets auth delete"`
-- Add team-folder-scoped INSERT and DELETE policies matching the `document-emails` pattern
-
-### 6. `cancellation_reasons` — Add SELECT Policy
-- Add `SELECT` policy: `user_id = auth.uid()` so users can read their own entries
-
-## Single Migration File
-
-One new migration with all DROP + CREATE statements.
+- Moving extensions out of `public` schema — this requires `CREATE EXTENSION ... SCHEMA extensions` which can break existing function references. Documented as a future infrastructure task.
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Create | `supabase/migrations/<timestamp>.sql` — single migration with all fixes |
-
-No frontend code changes needed.
-
+| Create | `supabase/migrations/<timestamp>.sql` — Batch 1 |
+| Edit | `supabase/functions/george-webhook/index.ts` — Batch 2 |
+| Edit | Quote/Invoice portal pages — Batch 2 |
+| Edit | `src/hooks/useQuotes.ts` — Batch 3 |
+| Edit | `src/hooks/useDashboard.ts` — Batch 3 |
+| Edit | `src/hooks/useXeroConnection.ts` — Batch 3 |
+| Edit | `src/hooks/useQuickBooksConnection.ts` — Batch 3 |

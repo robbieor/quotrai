@@ -39,17 +39,16 @@ export function useDashboardStats() {
       const weekEnd = addDays(now, 7);
 
       // Fetch all data in parallel
-      const [
-        jobsResult,
-        customersResult,
-        quotesResult,
-        invoicesResult,
-      ] = await Promise.all([
+      const [jobsResult, customersResult] = await Promise.all([
         supabase.from("jobs").select("id, status, scheduled_date"),
         supabase.from("customers").select("id, created_at"),
+      ]);
+      const [quotesResult, invoicesResult] = await Promise.all([
         supabase.from("quotes").select("id, status, total"),
         supabase.from("invoices").select("id, status, total, issue_date"),
       ]);
+      const paymentsResult: { data: Array<{ invoice_id: string; payment_date: string }> | null } = 
+        await (supabase as any).from("payments").select("invoice_id, payment_date").eq("status", "completed");
 
       if (jobsResult.error) throw jobsResult.error;
       if (customersResult.error) throw customersResult.error;
@@ -60,6 +59,7 @@ export function useDashboardStats() {
       const customers = customersResult.data || [];
       const quotes = quotesResult.data || [];
       const invoices = invoicesResult.data || [];
+      const payments = paymentsResult.data || [];
 
       // Calculate active jobs (pending, scheduled, in_progress)
       const activeJobs = jobs.filter((j) => 
@@ -86,11 +86,19 @@ export function useDashboardStats() {
         0
       );
 
-      // Paid invoices this month
+      // Paid invoices this month — use payment_date from payments table when available
+      const paymentDateMap = new Map<string, string>();
+      for (const p of payments) {
+        if (p.invoice_id && p.payment_date) {
+          paymentDateMap.set(p.invoice_id, p.payment_date);
+        }
+      }
+
       const paidInvoicesThisMonth = invoices.filter((inv) => {
         if (inv.status !== "paid") return false;
-        const issueDate = new Date(inv.issue_date);
-        return issueDate >= monthStart && issueDate <= monthEnd;
+        const dateStr = paymentDateMap.get(inv.id) || inv.issue_date;
+        const relevantDate = new Date(dateStr);
+        return relevantDate >= monthStart && relevantDate <= monthEnd;
       });
 
       const revenueThisMonth = paidInvoicesThisMonth.reduce(

@@ -45,6 +45,11 @@ function getNextDisplayNumber(
   return `${prefix}${nextNumber.toString().padStart(4, "0")}`;
 }
 
+/** Escape ILIKE wildcard characters to prevent injection */
+function sanitizeIlike(value: string): string {
+  return value.replace(/[%_\\]/g, (ch) => `\\${ch}`);
+}
+
 interface WebhookRequest {
   function_name: string;
   parameters: Record<string, unknown>;
@@ -276,7 +281,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name")
           .eq("team_id", company_id)
-          .ilike("name", client_name)
+          .ilike("name", sanitizeIlike(client_name))
           .limit(1)
           .single();
 
@@ -357,7 +362,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name")
           .eq("team_id", company_id)
-          .ilike("name", client_name)
+          .ilike("name", sanitizeIlike(client_name))
           .limit(1)
           .single();
 
@@ -419,7 +424,7 @@ serve(async (req) => {
             .from("jobs")
             .select("id, title")
             .eq("team_id", company_id)
-            .ilike("title", `%${job_title}%`)
+            .ilike("title", `%${sanitizeIlike(job_title)}%`)
             .limit(1);
           if (jobs && jobs.length > 0) {
             linkedJobId = jobs[0].id;
@@ -677,7 +682,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name, email, phone, address, notes")
           .eq("team_id", company_id)
-          .ilike("name", `%${client_name}%`)
+          .ilike("name", `%${sanitizeIlike(client_name)}%`)
           .limit(1);
 
         if (clientError) throw clientError;
@@ -798,14 +803,14 @@ serve(async (req) => {
         if (job_id) {
           jobQuery = jobQuery.eq("id", job_id);
         } else if (job_title) {
-          jobQuery = jobQuery.ilike("title", `%${job_title}%`);
+          jobQuery = jobQuery.ilike("title", `%${sanitizeIlike(job_title)}%`);
         } else if (client_name) {
           // Need to find by client name - get customer first
           const { data: customers } = await supabase
             .from("customers")
             .select("id")
             .eq("team_id", company_id)
-            .ilike("name", `%${client_name}%`)
+            .ilike("name", `%${sanitizeIlike(client_name)}%`)
             .limit(1);
 
           if (!customers || customers.length === 0) {
@@ -914,7 +919,7 @@ serve(async (req) => {
         }
 
         if (search) {
-          query = query.ilike("name", `%${search}%`);
+          query = query.ilike("name", `%${sanitizeIlike(search)}%`);
         }
 
         const { data: templates, error } = await query;
@@ -999,7 +1004,7 @@ serve(async (req) => {
             .select("id, name, description, category, labour_rate_default, estimated_duration")
             .eq("team_id", company_id)
             .eq("is_active", true)
-            .ilike("name", `%${template_name}%`)
+            .ilike("name", `%${sanitizeIlike(template_name)}%`)
             .limit(1)
             .maybeSingle();
 
@@ -1064,7 +1069,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name")
           .eq("team_id", company_id)
-          .ilike("name", client_name)
+          .ilike("name", sanitizeIlike(client_name))
           .limit(1)
           .single();
 
@@ -1139,7 +1144,7 @@ serve(async (req) => {
             .from("jobs")
             .select("id, title")
             .eq("team_id", company_id)
-            .ilike("title", `%${job_title}%`)
+            .ilike("title", `%${sanitizeIlike(job_title)}%`)
             .limit(1);
           if (jobs && jobs.length > 0) {
             linkedJobId = jobs[0].id;
@@ -1261,7 +1266,7 @@ serve(async (req) => {
             .select("id, name, description, category, labour_rate_default, estimated_duration")
             .eq("team_id", company_id)
             .eq("is_active", true)
-            .ilike("name", `%${template_name}%`)
+            .ilike("name", `%${sanitizeIlike(template_name)}%`)
             .limit(1)
             .maybeSingle();
 
@@ -1326,7 +1331,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name")
           .eq("team_id", company_id)
-          .ilike("name", client_name)
+          .ilike("name", sanitizeIlike(client_name))
           .limit(1)
           .single();
 
@@ -1403,7 +1408,7 @@ serve(async (req) => {
             .from("jobs")
             .select("id, title")
             .eq("team_id", company_id)
-            .ilike("title", `%${job_title}%`)
+            .ilike("title", `%${sanitizeIlike(job_title)}%`)
             .limit(1);
           if (jobs && jobs.length > 0) {
             linkedJobId = jobs[0].id;
@@ -1506,7 +1511,7 @@ serve(async (req) => {
         if (quote_id) {
           quoteQuery = quoteQuery.eq("id", quote_id);
         } else if (quote_number) {
-          quoteQuery = quoteQuery.ilike("display_number", `%${quote_number}%`);
+          quoteQuery = quoteQuery.ilike("display_number", `%${sanitizeIlike(quote_number)}%`);
         }
 
         const { data: quotes, error: quoteError } = await quoteQuery.limit(1);
@@ -1642,13 +1647,13 @@ serve(async (req) => {
         if (job_id) {
           jobQuery = jobQuery.eq("id", job_id);
         } else if (job_title) {
-          jobQuery = jobQuery.ilike("title", `%${job_title}%`);
+          jobQuery = jobQuery.ilike("title", `%${sanitizeIlike(job_title)}%`);
         } else if (client_name) {
           const { data: customers } = await supabase
             .from("customers")
             .select("id")
             .eq("team_id", company_id)
-            .ilike("name", `%${client_name}%`)
+            .ilike("name", `%${sanitizeIlike(client_name)}%`)
             .limit(1);
 
           if (!customers || customers.length === 0) {
@@ -2408,7 +2413,7 @@ serve(async (req) => {
         if (invoice_id) {
           invoiceQuery = invoiceQuery.eq("id", invoice_id);
         } else if (invoice_number) {
-          invoiceQuery = invoiceQuery.ilike("display_number", `%${invoice_number}%`);
+          invoiceQuery = invoiceQuery.ilike("display_number", `%${sanitizeIlike(invoice_number)}%`);
         }
 
         const { data: invoices, error: findError } = await invoiceQuery.limit(1);
@@ -2511,7 +2516,7 @@ serve(async (req) => {
           if (invoice_id) {
             invoiceQuery = invoiceQuery.eq("id", invoice_id);
           } else if (invoice_number) {
-            invoiceQuery = invoiceQuery.ilike("display_number", `%${invoice_number}%`);
+            invoiceQuery = invoiceQuery.ilike("display_number", `%${sanitizeIlike(invoice_number)}%`);
           }
 
           const { data: invoices, error: invoiceError } = await invoiceQuery.limit(1);
@@ -2544,7 +2549,7 @@ serve(async (req) => {
             .from("customers")
             .select("id, name")
             .eq("team_id", company_id)
-            .ilike("name", `%${customer_name}%`)
+            .ilike("name", `%${sanitizeIlike(customer_name)}%`)
             .limit(1);
 
           if (custError) throw custError;
@@ -2724,7 +2729,7 @@ serve(async (req) => {
         if (template_id) {
           templateQuery = templateQuery.eq("id", template_id);
         } else if (template_name) {
-          templateQuery = templateQuery.ilike("name", `%${template_name}%`);
+          templateQuery = templateQuery.ilike("name", `%${sanitizeIlike(template_name)}%`);
         }
 
         const { data: templates, error: templateError } = await templateQuery.limit(1);
@@ -2794,7 +2799,7 @@ serve(async (req) => {
           .select("id, name, description, category, labour_rate_default, estimated_duration")
           .eq("team_id", company_id)
           .eq("is_active", true)
-          .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+          .or(`name.ilike.%${sanitizeIlike(searchQuery)}%,description.ilike.%${sanitizeIlike(searchQuery)}%`);
 
         if (category) {
           templatesQuery = templatesQuery.eq("category", category.toLowerCase());
@@ -2880,7 +2885,7 @@ serve(async (req) => {
           .order("name");
 
         if (search) {
-          query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,contact_person.ilike.%${search}%`);
+          query = query.or(`name.ilike.%${sanitizeIlike(search)}%,email.ilike.%${sanitizeIlike(search)}%,contact_person.ilike.%${sanitizeIlike(search)}%`);
         }
 
         const { data: customers, error } = await query.limit(limitParam || 20);
@@ -2934,7 +2939,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name")
           .eq("team_id", company_id)
-          .ilike("name", name)
+          .ilike("name", sanitizeIlike(name))
           .limit(1)
           .single();
 
@@ -2996,7 +3001,7 @@ serve(async (req) => {
         if (customer_id) {
           customerQuery = customerQuery.eq("id", customer_id);
         } else if (customer_name) {
-          customerQuery = customerQuery.ilike("name", `%${customer_name}%`);
+          customerQuery = customerQuery.ilike("name", `%${sanitizeIlike(customer_name)}%`);
         } else {
           response = {
             success: false,
@@ -3068,7 +3073,7 @@ serve(async (req) => {
         if (customer_id) {
           customerQuery = customerQuery.eq("id", customer_id);
         } else if (customer_name) {
-          customerQuery = customerQuery.ilike("name", `%${customer_name}%`);
+          customerQuery = customerQuery.ilike("name", `%${sanitizeIlike(customer_name)}%`);
         } else {
           response = {
             success: false,
@@ -3215,13 +3220,13 @@ serve(async (req) => {
         if (job_id) {
           jobQuery = jobQuery.eq("id", job_id);
         } else if (job_title) {
-          jobQuery = jobQuery.ilike("title", `%${job_title}%`);
+          jobQuery = jobQuery.ilike("title", `%${sanitizeIlike(job_title)}%`);
         } else if (client_name) {
           const { data: customers } = await supabase
             .from("customers")
             .select("id")
             .eq("team_id", company_id)
-            .ilike("name", `%${client_name}%`)
+            .ilike("name", `%${sanitizeIlike(client_name)}%`)
             .limit(1);
 
           if (!customers || customers.length === 0) {
@@ -3493,7 +3498,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name")
           .eq("team_id", company_id)
-          .ilike("name", client_name)
+          .ilike("name", sanitizeIlike(client_name))
           .limit(1)
           .single();
 
@@ -3806,7 +3811,7 @@ serve(async (req) => {
         }
 
         if (vendor) {
-          query = query.ilike("vendor", `%${vendor}%`);
+          query = query.ilike("vendor", `%${sanitizeIlike(vendor)}%`);
         }
 
         if (job_id) {
@@ -3869,9 +3874,9 @@ serve(async (req) => {
         if (expense_id) {
           expenseQuery = expenseQuery.eq("id", expense_id);
         } else if (vendor && amount !== undefined) {
-          expenseQuery = expenseQuery.ilike("vendor", `%${vendor}%`).eq("amount", amount);
+          expenseQuery = expenseQuery.ilike("vendor", `%${sanitizeIlike(vendor)}%`).eq("amount", amount);
         } else if (vendor) {
-          expenseQuery = expenseQuery.ilike("vendor", `%${vendor}%`);
+          expenseQuery = expenseQuery.ilike("vendor", `%${sanitizeIlike(vendor)}%`);
         } else {
           response = {
             success: false,
@@ -3993,7 +3998,7 @@ serve(async (req) => {
           .from("customers")
           .select("id, name, email, phone, address, contact_person")
           .eq("team_id", company_id)
-          .or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,contact_person.ilike.%${searchQuery}%`)
+          .or(`name.ilike.%${sanitizeIlike(searchQuery)}%,email.ilike.%${sanitizeIlike(searchQuery)}%,phone.ilike.%${sanitizeIlike(searchQuery)}%,contact_person.ilike.%${sanitizeIlike(searchQuery)}%`)
           .limit(10);
 
         if (error) throw error;
