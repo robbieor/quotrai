@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
-import { UserMenu } from "@/components/layout/UserMenu";
+
 
 interface GeorgeMobileHeaderProps {
   onMenuClick: () => void;
