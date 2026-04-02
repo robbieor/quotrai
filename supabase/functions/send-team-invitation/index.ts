@@ -76,7 +76,8 @@ const handler = async (req: Request): Promise<Response> => {
             <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-            <p>Hi there,</p>
+            <h1 style="margin:0 0 16px;font-size:20px;color:#0f172a;font-weight:700;">🎉 You're Invited!</h1>
+            <p style="color:#64748b;font-size:14px;">Hi there,</p>
             <p><strong>${inviterName || "A team member"}</strong> has invited you to join:</p>
             <div style="font-size: 28px; font-weight: 700; text-align: center; margin: 15px 0; color: #00B386;">${teamName}</div>
             ${role || seatType ? `<p style="text-align: center; color: #64748b; font-size: 14px;">Role: <strong>${role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : 'Team Member'}</strong> · Seat: <strong>${seatType === 'grow' ? 'Grow' : seatType === 'connect' ? 'Connect' : 'Lite'}</strong></p>` : ''}
