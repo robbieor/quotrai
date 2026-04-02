@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, FileText, CalendarDays, PlusCircle, AlertTriangle, TrendingUp, ChevronRight, X, BarChart3, CheckCircle2, AlertCircle, Shield } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useIsMobile } from "@/hooks/use-mobile";

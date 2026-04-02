@@ -280,7 +280,7 @@ function DesktopMessageBubble({ message }: { message: Message }) {
         {isAssistant ? (
           <MarkdownContent content={message.content} className="text-foreground" />
         ) : (
-          <p className="text-sm whitespace-pre-wrap leading-relaxed text-white">{message.content}</p>
+          <p className="text-[15px] whitespace-pre-wrap leading-relaxed text-white font-medium">{message.content}</p>
         )}
         <p
           className={cn(
