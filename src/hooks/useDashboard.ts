@@ -48,7 +48,7 @@ export function useDashboardStats() {
         supabase.from("jobs").select("id, status, scheduled_date"),
         supabase.from("customers").select("id, created_at"),
         supabase.from("quotes").select("id, status, total"),
-        supabase.from("invoices").select("id, status, total, issue_date"),
+        supabase.from("invoices").select("id, status, total, issue_date, paid_at"),
       ]);
 
       if (jobsResult.error) throw jobsResult.error;
