@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Calendar, FileText, CalendarDays, PlusCircle, AlertTriangle, TrendingUp, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Calendar, FileText, CalendarDays, PlusCircle, AlertTriangle, TrendingUp, ChevronRight, X } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
