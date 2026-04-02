@@ -11,7 +11,7 @@ const APP_URL = "https://quotrai.lovable.app";
 
 interface DripRow { id: string; user_id: string; email: string; full_name: string | null; drip_step: number; send_at: string; }
 
-const btnStyle = `display:inline-block;background:#f97316;color:#ffffff;font-family:'Manrope',sans-serif;font-size:15px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;margin-top:8px;`;
+const btnStyle = `display:inline-block;background:#00E6A0;color:#0f172a;font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:12px;margin-top:8px;`;
 
 const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string; cta: { label: string; url: string } }> = {
   1: {
@@ -43,7 +43,7 @@ const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => 
 
 function buildHtml(bodyText: string, cta: { label: string; url: string }, name: string): string {
   const paragraphs = bodyText.split("\n\n").map(p => 
-    `<p style="font-family:'Manrope',sans-serif;font-size:15px;color:#334155;line-height:1.6;margin:0 0 16px;">${p.replace(/\n/g, "<br/>")}</p>`
+    `<p style="font-family:'Manrope',sans-serif;font-size:15px;color:#64748b;line-height:1.6;margin:0 0 16px;">${p.replace(/\n/g, "<br/>")}</p>`
   ).join("");
 
   return `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
@@ -56,6 +56,9 @@ function buildHtml(bodyText: string, cta: { label: string; url: string }, name: 
       <a href="${cta.url}" style="${btnStyle}">${cta.label}</a>
     </div>
     <p style="font-family:'Manrope',sans-serif;font-size:14px;color:#64748b;margin:24px 0 0;">— George</p>
+  </div>
+  <div style="text-align:center;padding:20px 25px;border-top:1px solid #e2e8f0;">
+    <p style="margin:0;color:#94a3b8;font-size:12px;font-family:'Manrope',sans-serif;">Need help? <a href="mailto:support@foreman.ie" style="color:#94a3b8;">support@foreman.ie</a></p>
   </div>
 </div>`;
 }

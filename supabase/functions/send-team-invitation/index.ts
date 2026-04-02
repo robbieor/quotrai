@@ -74,24 +74,24 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="max-width: 600px; margin: 0 auto;">
           <div style="background: #0f172a; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
             <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
-            <h1 style="color: #ffffff; margin: 10px 0 0; font-size: 24px; font-weight: 700;">🎉 You're Invited!</h1>
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-            <p>Hi there,</p>
-            <p><strong>${inviterName || "A team member"}</strong> has invited you to join:</p>
+            <h1 style="margin:0 0 16px;font-size:20px;color:#0f172a;font-weight:700;">🎉 You're Invited!</h1>
+            <p style="color:#64748b;font-size:14px;">Hi there,</p>
+            <p style="color:#64748b;font-size:14px;"><strong>${inviterName || "A team member"}</strong> has invited you to join:</p>
             <div style="font-size: 28px; font-weight: 700; text-align: center; margin: 15px 0; color: #00B386;">${teamName}</div>
             ${role || seatType ? `<p style="text-align: center; color: #64748b; font-size: 14px;">Role: <strong>${role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : 'Team Member'}</strong> · Seat: <strong>${seatType === 'grow' ? 'Grow' : seatType === 'connect' ? 'Connect' : 'Lite'}</strong></p>` : ''}
-            <p style="text-align: center; color: #64748b;">Join the team to collaborate on jobs, quotes, invoices, and more.</p>
+            <p style="text-align: center; color: #64748b; font-size: 14px;">Join the team to collaborate on jobs, quotes, invoices, and more.</p>
             <div style="text-align: center;">
-              <a href="${inviteUrl}" style="display: inline-block; background: #00E6A0; color: #0f172a; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0;">Accept Invitation</a>
+              <a href="${inviteUrl}" style="display: inline-block; background: #00E6A0; color: #0f172a; padding: 12px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 14px; margin: 20px 0;">Accept Invitation</a>
             </div>
             <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px; color: #92400e;">
               <strong>⏰ Note:</strong> This invitation will expire in 7 days.
             </div>
             <p style="margin-top: 20px; color: #64748b; font-size: 14px;">If you weren't expecting this invitation, you can safely ignore this email.</p>
           </div>
-          <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-            Powered by <a href="#" style="color: #00E6A0; text-decoration: none;">Foreman</a>
+          <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;">
+            © ${new Date().getFullYear()} Foreman · <a href="mailto:support@foreman.ie" style="color: #94a3b8; text-decoration: none;">support@foreman.ie</a>
           </div>
         </div>
       </body>

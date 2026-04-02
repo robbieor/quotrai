@@ -14,20 +14,19 @@ const logStep = (step: string, details?: any) => {
 };
 
 function brandedEmailHtml(title: string, bodyLines: string[]): string {
-  const bodyHtml = bodyLines.map(l => `<p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6">${l}</p>`).join("");
+  const bodyHtml = bodyLines.map(l => `<p style="margin:0 0 12px;color:#64748b;font-size:14px;line-height:1.6;font-family:'Manrope',Arial,sans-serif">${l}</p>`).join("");
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:'Manrope',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
-<tr><td style="background:#0f1b2d;padding:24px 32px;text-align:center">
-<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="40" height="40" style="border-radius:8px"/>
-<span style="color:#fff;font-size:20px;font-weight:700;margin-left:12px;vertical-align:middle">Foreman</span>
+<tr><td style="background:#0f172a;padding:30px 32px;text-align:center">
+<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
 </td></tr>
 <tr><td style="padding:32px">
-<h1 style="margin:0 0 16px;font-size:20px;color:#0f1b2d">${title}</h1>
+<h1 style="margin:0 0 16px;font-size:20px;color:#0f172a">${title}</h1>
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 32px;background:#f9fafb;text-align:center;font-size:12px;color:#999">
-© ${new Date().getFullYear()} Foreman · support@foreman.ie
+<tr><td style="padding:16px 32px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0">
+© ${new Date().getFullYear()} Foreman · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
@@ -242,7 +241,7 @@ serve(async (req) => {
                   brandedEmailHtml("Payment Failed", [
                     "We were unable to process your latest payment for Foreman.",
                     "Please update your payment method to avoid any interruption to your service.",
-                    '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:10px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Update Payment Method</a>',
+                    '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Update Payment Method</a>',
                     "If you believe this is an error, please contact us at support@foreman.ie.",
                   ]),
                   `payment-failed-${invoice.id}`
