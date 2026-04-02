@@ -61,6 +61,7 @@ export default function Quotes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
+  const deleteQuote = useDeleteQuote();
   const { symbol: currencySymbol, formatCurrency } = useCurrency();
   const createJob = useCreateJob();
   const isMobile = useIsMobile();
