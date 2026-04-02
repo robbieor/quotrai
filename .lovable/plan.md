@@ -1,87 +1,54 @@
 
 
-# Wire `ai_conversations` Table into George Chat System
+# Wire George System Prompt + ai_user_memory into Foreman AI
 
-## What This Does
+## What Changes
 
-The new `ai_conversations` table acts as a **flat analytics/logging layer** alongside the existing `george_conversations` + `george_messages` tables. It captures every message exchange with token usage and metadata — useful for usage tracking, billing, and AI performance analysis.
+**1. Replace the system prompt** with the new George persona — business partner, not generic assistant. The new prompt reframes George as the user's dedicated operations co-pilot who references real data, remembers everything, and proactively surfaces insights.
 
-## Approach
+**2. Load persistent memories** from `ai_user_memory` before each AI call — inject them into the system prompt as `{context}` so George knows the user's preferences, business facts, goals, and pain points.
 
-After each AI exchange in the `george-chat` edge function, insert both the user message and assistant response into `ai_conversations` using the service client. This is fire-and-forget (non-blocking) so it doesn't slow down chat responses.
+**3. Extract and store new memories** after each AI response — use a lightweight secondary AI call to identify any new facts/preferences/patterns revealed in the conversation, then upsert them into `ai_user_memory`.
 
-### Data captured per row:
-- `user_id` — authenticated user
-- `role` — "user" or "assistant"
-- `content` — the message text
-- `tokens_used` — from the AI model response (when available)
-- `metadata` — conversation_id, intent, model used, team_id, tool calls made
+## Technical Details
 
-## Changes
+### System prompt replacement (~line 756-793)
 
-### 1. Create the table (migration — already proposed, needs execution)
+Replace the existing `systemPrompt` block with the new George persona. Keep all existing dynamic injections (trade context, region, date, preferences, memory context) but restructure them into the `{context}` section of the new prompt. The new prompt includes:
+- George identity and tone rules
+- Capability list (answer questions, remember, proactively surface, help decide, draft/create, learn/adapt, schedule, trade knowledge)
+- Memory extraction instructions (returned as metadata)
+- Rules (no hallucination, reference real data, use tools, be concise)
 
-```sql
-create table public.ai_conversations (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
-  role text not null check (role in ('user', 'assistant', 'system')),
-  content text not null,
-  metadata jsonb default '{}',
-  tokens_used int,
-  created_at timestamptz default now()
-);
+### Load memories (~line 378, parallel with profile/prefs fetch)
 
-create index idx_ai_conversations_user on public.ai_conversations(user_id, created_at desc);
-
-alter table public.ai_conversations enable row level security;
-
-create policy "Users can read own conversations"
-  on public.ai_conversations for select to authenticated
-  using (user_id = auth.uid());
-
-create policy "Users can insert own conversations"
-  on public.ai_conversations for insert to authenticated
-  with check (user_id = auth.uid());
-```
-
-### 2. Edit `supabase/functions/george-chat/index.ts`
-
-Add a helper function `logToAiConversations` that inserts user + assistant rows:
-
+Add `ai_user_memory` query to the existing `Promise.all` block:
 ```typescript
-async function logToAiConversations(
-  supabase: any,
-  userId: string,
-  userMessage: string,
-  assistantMessage: string,
-  metadata: Record<string, any>,
-  tokensUsed?: number
-) {
-  await supabase.from("ai_conversations").insert([
-    { user_id: userId, role: "user", content: userMessage, metadata },
-    { user_id: userId, role: "assistant", content: assistantMessage, metadata, tokens_used: tokensUsed },
-  ]);
-}
+serviceSupabase.from("ai_user_memory")
+  .select("category, key, value, confidence, source")
+  .eq("user_id", userId)
+  .order("last_referenced_at", { ascending: false, nullsFirst: false })
+  .limit(30)
 ```
 
-Call this function at every response exit point:
-- After direct webhook responses (~line 437)
-- After quick action short-circuits (~line 467)
-- After streaming completion (~end of SSE loop)
-- After JSON fallback responses
-- After tool-call round-trip responses
+Inject loaded memories into the system prompt context section, grouped by category.
 
-Metadata will include: `{ conversation_id, team_id, intent, model, tool_calls }`.
+### Extract memories after response (~after line 1092)
 
-Token usage will be extracted from the Lovable AI response when available (from `usage.total_tokens` in the response).
+After getting the final AI response, make a fire-and-forget secondary AI call using `gemini-2.5-flash-lite` with tool calling to extract structured memory updates:
+- Tool: `update_user_memory` with parameters `{ memories: [{ category, key, value, confidence, source }] }`
+- Upsert extracted memories into `ai_user_memory` using `ON CONFLICT (user_id, category, key)` via the service client
+- This is non-blocking — doesn't slow down the response
+
+### Update `last_referenced_at` on used memories
+
+When memories are loaded and injected, update their `last_referenced_at` timestamp so frequently-used memories stay at the top.
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Migration | Create `ai_conversations` table with RLS |
-| Edit | `supabase/functions/george-chat/index.ts` — add logging at all response exit points |
+| Edit | `supabase/functions/george-chat/index.ts` — new system prompt, load memories, extract memories |
 
-No frontend changes needed — the existing chat UI continues using `george_conversations` / `george_messages`. This table is for analytics and usage tracking.
+No database changes. No frontend changes. The `ai_user_memory` table already exists.
 
