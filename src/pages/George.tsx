@@ -73,7 +73,27 @@ export default function George() {
   // Track whether user explicitly selected a conversation from sidebar
   const [hydrateFromDb, setHydrateFromDb] = useState(false);
 
-  // Load messages from database ONLY when user picks an existing conversation from sidebar
+  // Auto-load most recent conversation on first mount (persistent chat feel)
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+  useEffect(() => {
+    if (initialLoadDone || activeConversationId) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("george_conversations")
+          .select("id")
+          .order("updated_at", { ascending: false })
+          .limit(1);
+        if (data?.length) {
+          setActiveConversationId(data[0].id);
+          setHydrateFromDb(true);
+        }
+      } catch { /* ignore */ }
+      setInitialLoadDone(true);
+    })();
+  }, [initialLoadDone, activeConversationId]);
+
+  // Load messages from database when hydrating (sidebar pick or auto-load)
   useEffect(() => {
     if (!hydrateFromDb) return;
     if (dbMessages.length > 0) {
@@ -85,7 +105,7 @@ export default function George() {
       }));
       setMessages(msgs);
       setDisplayItems(msgs.map(m => ({ type: "message" as const, data: m })));
-      setHydrateFromDb(false); // done hydrating
+      setHydrateFromDb(false);
     }
   }, [dbMessages, hydrateFromDb]);
 
