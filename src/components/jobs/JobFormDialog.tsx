@@ -172,6 +172,7 @@ export function JobFormDialog({
         scheduled_date: defaultDate || null,
         scheduled_time: defaultTime || "",
         estimated_value: null,
+        assigned_to: null,
       });
       setSiteAddress("");
       setSiteCoords(null);
