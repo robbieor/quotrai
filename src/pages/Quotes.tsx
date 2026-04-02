@@ -11,7 +11,7 @@ import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal,
 import { CreateFromQuoteDialog } from "@/components/invoices/CreateFromQuoteDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { useCreateJob } from "@/hooks/useJobs";
-import { useQuotes, Quote } from "@/hooks/useQuotes";
+import { useQuotes, useDeleteQuote, Quote } from "@/hooks/useQuotes";
 import { QuoteFormDialog } from "@/components/quotes/QuoteFormDialog";
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog";
 import { QuoteDetailSheet } from "@/components/quotes/QuoteDetailSheet";
@@ -61,6 +61,7 @@ export default function Quotes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
+  const deleteQuote = useDeleteQuote();
   const { symbol: currencySymbol, formatCurrency } = useCurrency();
   const createJob = useCreateJob();
   const isMobile = useIsMobile();
@@ -153,7 +154,7 @@ export default function Quotes() {
   const handleDownloadPdf = async (quote: Quote) => { await downloadQuotePdf(quote, branding, currencySymbol); };
   const handleSendEmail = (quote: Quote) => { setSelectedQuote(quote); setEmailOpen(true); };
   const handleCopyPortalLink = (quote: Quote) => {
-    const portalUrl = `${window.location.origin}/portal/quote?token=${quote.portal_token}`;
+    const portalUrl = `${window.location.origin}/quote/${quote.portal_token}`;
     navigator.clipboard.writeText(portalUrl);
     toast.success("Portal link copied to clipboard");
   };
@@ -169,7 +170,8 @@ export default function Quotes() {
     setConvertToJobOpen(true);
   };
 
-  const handleConvertToInvoice = (_quote: Quote) => {
+  const handleConvertToInvoice = (quote: Quote) => {
+    setSelectedQuote(quote);
     setConvertToInvoiceOpen(true);
   };
 
@@ -391,6 +393,11 @@ export default function Quotes() {
               selectedCount={selectedRows.size}
               onClear={clearSelection}
               onExport={handleExport}
+              onBulkDelete={() => {
+                const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+                selected.forEach((q) => deleteQuote.mutate(q.id));
+                clearSelection();
+              }}
             />
             <CardContent className="p-0">
               {isLoading ? (
@@ -531,7 +538,7 @@ export default function Quotes() {
         onConvertToJob={handleConvertToJob}
         onConvertToInvoice={handleConvertToInvoice}
       />
-      <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} />
+      <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} preselectedQuoteId={selectedQuote?.id} />
       <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} onSubmit={(values) => {
         createJob.mutate(values);
         setConvertToJobOpen(false);

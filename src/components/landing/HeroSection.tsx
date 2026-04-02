@@ -71,7 +71,7 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
             </div>
 
             <p className="text-xs sm:text-sm text-muted-foreground">
-              {"\n"}
+              No credit card required · Cancel anytime
             </p>
           </div>
 

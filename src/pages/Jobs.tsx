@@ -1,4 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCurrency } from "@/hooks/useCurrency";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
 import { useSearchParams } from "react-router-dom";
@@ -143,10 +153,17 @@ export default function Jobs() {
     }
   };
 
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
   const handleBulkDelete = () => {
+    setBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
     const selectedJobs = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
     selectedJobs.forEach((job) => deleteJob.mutate(job.id));
     clearSelection();
+    setBulkDeleteOpen(false);
   };
 
   const handleExport = () => {
@@ -363,6 +380,24 @@ export default function Jobs() {
       <JobFormDialog open={formDialogOpen} onOpenChange={setFormDialogOpen} job={selectedJob} onSubmit={handleCreateOrUpdate} isLoading={createJobWithSite.isPending || updateJob.isPending} />
       <DeleteJobDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} job={selectedJob} onConfirm={handleDelete} isLoading={deleteJob.isPending} />
       <JobDetailSheet open={!!detailJob} onOpenChange={(open) => !open && setDetailJob(null)} job={detailJob} />
+
+      {/* Bulk delete confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedRows.size} job{selectedRows.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. All associated quotes and invoices will also be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
