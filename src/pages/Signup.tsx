@@ -65,11 +65,15 @@ export default function Signup() {
     }
   };
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
     track("signup_started", { method: "google" });
     const { error } = await signInWithGoogle();
     if (error) {
       toast.error(error.message);
+      setGoogleLoading(false);
     }
   };
 
