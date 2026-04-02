@@ -1,7 +1,7 @@
 import { useRef, useCallback } from "react";
 
-const MAX_RETRIES = 2;
-const INITIAL_RETRY_DELAY = 500;
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 300;
 
 interface RetryState {
   attempts: number;

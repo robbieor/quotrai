@@ -15,7 +15,7 @@ interface AgentContext {
   userName?: string;
 }
 
-type ConnectionStatus = "connected" | "connecting" | "disconnecting" | "disconnected";
+type ConnectionStatus = "connected" | "connecting" | "disconnecting" | "disconnected" | "error";
 
 interface VoiceAgentContextType {
   status: ConnectionStatus;
@@ -70,7 +70,7 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
   const cachedTokenRef = useRef<{ token?: string; usePublicAgent?: boolean; fetchedAt: number } | null>(null);
-  const TOKEN_TTL_MS = 45_000; // tokens valid ~60s, use within 45s
+  const TOKEN_TTL_MS = 30_000; // tokens valid ~60s, use within 30s for freshness
 
   // Webhook caller that invalidates relevant React Query caches after mutations
   const callGeorgeWebhook = useCallback(async (
