@@ -546,7 +546,14 @@ function ConversationItem({
     >
       <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
       
-      <span className="text-sm truncate flex-1">{displayTitle}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm truncate block">{displayTitle}</span>
+        {conversation.first_message && (
+          <span className="text-[11px] text-muted-foreground/60 truncate block">
+            {conversation.first_message.slice(0, 50)}
+          </span>
+        )}
+      </div>
       
       {/* Context menu — always visible on mobile via opacity */}
       <DropdownMenu>
