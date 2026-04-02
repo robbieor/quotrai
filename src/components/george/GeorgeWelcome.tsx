@@ -332,7 +332,35 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
         </span>
       </div>
 
-      <p className="text-center text-muted-foreground mb-8 max-w-sm">{statusMessage}</p>
+      <p className="text-center text-muted-foreground mb-6 max-w-sm">{statusMessage}</p>
+
+      {/* AI Nudges — Desktop */}
+      {visibleNudges.length > 0 && (
+        <div className="w-full max-w-sm mb-6 space-y-2">
+          {visibleNudges.map((nudge: any) => (
+            <div
+              key={nudge.id}
+              className={`bg-card rounded-xl shadow-sm border border-border border-l-[3px] ${urgencyBorder[nudge.urgency] || urgencyBorder.low} p-3.5 relative text-left`}
+            >
+              <button
+                onClick={() => dismissNudge(nudge.id)}
+                className="absolute top-2 right-2 p-1 text-muted-foreground/50 hover:text-muted-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <p className="text-sm text-foreground pr-6 leading-relaxed">{nudge.text}</p>
+              {nudge.action_label && (
+                <button
+                  onClick={() => onQuickAction?.(nudge.action, nudge.text)}
+                  className="mt-2 text-xs font-semibold text-primary hover:underline"
+                >
+                  {nudge.action_label} →
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
         {displayActions.map((qa) => (
