@@ -136,11 +136,11 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
             <div className="flex items-start gap-3">
               <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
               <div className="flex items-center gap-2 pt-2">
-                <span className="text-sm text-muted-foreground">George is thinking</span>
-                <span className="flex gap-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="text-sm text-muted-foreground">Thinking</span>
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse" style={{ animationDelay: "0ms", animationDuration: "1.4s" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse" style={{ animationDelay: "200ms", animationDuration: "1.4s" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse" style={{ animationDelay: "400ms", animationDuration: "1.4s" }} />
                 </span>
               </div>
             </div>
@@ -242,7 +242,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
       <div className="flex items-start gap-3">
         <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
-          <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
+          <div className="bg-muted/40 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
             <MarkdownContent content={message.content} className="text-foreground" />
           </div>
         </div>

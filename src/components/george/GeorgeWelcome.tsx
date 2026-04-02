@@ -159,81 +159,72 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
   if (isMobile) {
     return (
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col px-5 pt-6 pb-6 space-y-4">
+        <div className="flex flex-col px-5 pt-8 pb-6 space-y-5">
           {/* Greeting */}
-          <div>
-            <h1 className="text-[22px] font-semibold leading-tight text-foreground">
+          <div className="text-center">
+            <ForemanAvatar size="lg" className="mx-auto mb-3" />
+            <h1 className="text-[26px] font-bold leading-tight text-foreground tracking-tight">
               {getGreeting()}, {firstName}
             </h1>
-            <p className="text-[13px] text-muted-foreground mt-0.5">
-              {format(new Date(), "EEEE, d MMMM")}
+            <p className="text-[14px] text-muted-foreground mt-1">
+              How can I help you today?
             </p>
           </div>
 
-          {/* Needs Attention */}
+          {/* Urgent Alert Strip */}
           {hasUrgentItems && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-destructive" />
-                <span className="text-[15px] font-semibold text-muted-foreground">
-                  Needs attention
-                </span>
-              </div>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x pb-1 -mx-5 px-5">
-                {insights?.overdueCount ? (
-                  <button
-                    onClick={() => onQuickAction?.("get_overdue_invoices", "Which invoices are overdue? Help me chase them.")}
-                    disabled={isProcessing}
-                    className="min-w-[160px] w-40 bg-card rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border border-l-[3px] border-l-destructive p-3.5 snap-start active:scale-[0.97] transition-transform text-left disabled:opacity-50"
-                  >
-                    <AlertTriangle className="h-5 w-5 text-destructive mb-2" />
-                    <p className="text-[20px] font-bold tabular-nums text-foreground">
-                      €{Math.round(insights.overdueTotal).toLocaleString()}
+              {insights?.overdueCount ? (
+                <button
+                  onClick={() => onQuickAction?.("get_overdue_invoices", "Which invoices are overdue? Help me chase them.")}
+                  disabled={isProcessing}
+                  className="w-full flex items-center gap-3 bg-destructive/5 border border-destructive/15 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform text-left disabled:opacity-50"
+                >
+                  <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-foreground">
+                      €{Math.round(insights.overdueTotal).toLocaleString()} overdue
                     </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[13px] text-muted-foreground">
-                        {insights.overdueCount} overdue
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-                    </div>
-                  </button>
-                ) : null}
+                    <p className="text-[12px] text-muted-foreground">
+                      {insights.overdueCount} invoice{insights.overdueCount > 1 ? "s" : ""} need chasing
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                </button>
+              ) : null}
 
-                {insights?.draftQuotesCount ? (
-                  <button
-                    onClick={() => onQuickAction?.(null, "Show me my draft quotes that need to be sent.")}
-                    disabled={isProcessing}
-                    className="min-w-[160px] w-40 bg-card rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border border-l-[3px] border-l-[hsl(36,91%,55%)] p-3.5 snap-start active:scale-[0.97] transition-transform text-left disabled:opacity-50"
-                  >
-                    <TrendingUp className="h-5 w-5 text-[hsl(36,91%,55%)] mb-2" />
-                    <p className="text-[20px] font-bold tabular-nums text-foreground">
-                      {insights.draftQuotesCount}
+              {insights?.draftQuotesCount ? (
+                <button
+                  onClick={() => onQuickAction?.(null, "Show me my draft quotes that need to be sent.")}
+                  disabled={isProcessing}
+                  className="w-full flex items-center gap-3 bg-[hsl(36,91%,55%)]/5 border border-[hsl(36,91%,55%)]/15 rounded-2xl px-4 py-3 active:scale-[0.98] transition-transform text-left disabled:opacity-50"
+                >
+                  <div className="w-9 h-9 rounded-full bg-[hsl(36,91%,55%)]/10 flex items-center justify-center shrink-0">
+                    <TrendingUp className="h-4 w-4 text-[hsl(36,91%,55%)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-foreground">
+                      {insights.draftQuotesCount} draft quote{insights.draftQuotesCount > 1 ? "s" : ""}
                     </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[13px] text-muted-foreground">
-                        draft quote{insights.draftQuotesCount > 1 ? "s" : ""}
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-                    </div>
-                  </button>
-                ) : null}
-              </div>
+                    <p className="text-[12px] text-muted-foreground">
+                      Ready to send
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                </button>
+              ) : null}
             </div>
           )}
 
           {/* AI Nudges */}
           {visibleNudges.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <ForemanAvatar size="sm" />
-                <span className="text-[15px] font-semibold text-muted-foreground">
-                  George says
-                </span>
-              </div>
               {visibleNudges.map((nudge: any) => (
                 <div
                   key={nudge.id}
-                  className={`bg-card rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border border-l-[3px] ${urgencyBorder[nudge.urgency] || urgencyBorder.low} p-3.5 relative`}
+                  className={`bg-card rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border border-l-[3px] ${urgencyBorder[nudge.urgency] || urgencyBorder.low} p-3.5 relative`}
                 >
                   <button
                     onClick={() => dismissNudge(nudge.id)}
@@ -256,30 +247,50 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
             </div>
           )}
 
-          {/* Weekly Analysis */}
+          {/* Suggestion Chips */}
+          <div className="space-y-2.5">
+            <span className="text-[13px] font-medium text-muted-foreground/70 px-1">
+              Try asking
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {mobileQuickActions.map((qa) => (
+                <button
+                  key={qa.label}
+                  onClick={() => onQuickAction?.(qa.action, qa.message)}
+                  disabled={isProcessing}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-muted/50 border border-border rounded-full text-[13px] font-medium text-foreground active:scale-[0.97] transition-all disabled:opacity-50 hover:bg-muted"
+                >
+                  <qa.icon className="h-3.5 w-3.5 text-primary" />
+                  {qa.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Weekly Analysis — collapsed by default */}
           <div className="space-y-2">
             <button
               onClick={() => setShowAnalysis(!showAnalysis)}
               className="flex items-center gap-2 w-full"
             >
               <BarChart3 className="h-4 w-4 text-primary" />
-              <span className="text-[15px] font-semibold text-muted-foreground">
+              <span className="text-[13px] font-medium text-muted-foreground/70">
                 Weekly analysis
               </span>
-              <ChevronRight className={`h-4 w-4 text-muted-foreground/50 ml-auto transition-transform ${showAnalysis ? "rotate-90" : ""}`} />
+              <ChevronRight className={`h-4 w-4 text-muted-foreground/40 ml-auto transition-transform ${showAnalysis ? "rotate-90" : ""}`} />
             </button>
             {showAnalysis && (
               <div className="space-y-2">
                 {analysisLoading ? (
-                  <div className="bg-card rounded-[14px] border border-border p-4 animate-pulse">
+                  <div className="bg-card rounded-2xl border border-border p-4 animate-pulse">
                     <div className="flex items-center gap-2">
                       <ForemanAvatar size="sm" />
-                      <span className="text-[13px] text-muted-foreground">George is analysing 4 weeks of data…</span>
+                      <span className="text-[13px] text-muted-foreground">Analysing 4 weeks of data…</span>
                     </div>
                   </div>
                 ) : weeklyAnalysis ? (
                   <>
-                    <div className="bg-card rounded-[14px] border border-border p-3.5">
+                    <div className="bg-card rounded-2xl border border-border p-3.5">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[13px] font-semibold text-muted-foreground">Health Score</span>
                         <span className="text-[22px] font-bold text-primary">{weeklyAnalysis.health_score}/10</span>
@@ -289,7 +300,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
                     {weeklyAnalysis.sections?.map((section: any, i: number) => {
                       const Icon = statusIcon[section.status] || CheckCircle2;
                       return (
-                        <div key={i} className="bg-card rounded-[14px] border border-border p-3.5">
+                        <div key={i} className="bg-card rounded-2xl border border-border p-3.5">
                           <div className="flex items-center gap-2 mb-1.5">
                             <Icon className={`h-4 w-4 ${statusColor[section.status] || "text-muted-foreground"}`} />
                             <span className="text-[14px] font-semibold text-foreground">{section.title}</span>
@@ -300,7 +311,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
                       );
                     })}
                     {weeklyAnalysis.top_actions?.length > 0 && (
-                      <div className="bg-card rounded-[14px] border border-border p-3.5">
+                      <div className="bg-card rounded-2xl border border-border p-3.5">
                         <span className="text-[13px] font-semibold text-muted-foreground mb-2 block">Priority actions</span>
                         {weeklyAnalysis.top_actions.map((action: any, i: number) => (
                           <div key={i} className="flex items-start gap-2 mt-1.5">
@@ -315,59 +326,12 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
                     )}
                   </>
                 ) : (
-                  <div className="bg-card rounded-[14px] border border-border p-4">
+                  <div className="bg-card rounded-2xl border border-border p-4">
                     <p className="text-[13px] text-muted-foreground">Not enough data yet. Keep using Foreman and George will start spotting trends.</p>
                   </div>
                 )}
               </div>
             )}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="space-y-2">
-            <span className="text-[15px] font-semibold text-muted-foreground">
-              Quick actions
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {mobileQuickActions.map((qa) => (
-                <button
-                  key={qa.label}
-                  onClick={() => onQuickAction?.(qa.action, qa.message)}
-                  disabled={isProcessing}
-                  className="flex flex-col items-center justify-center gap-2 py-4 bg-card rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border active:scale-[0.97] transition-transform disabled:opacity-50 min-h-[90px]"
-                >
-                  <div className="w-11 h-11 rounded-full bg-[hsl(var(--primary)/0.1)] flex items-center justify-center">
-                    <qa.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="text-[14px] font-medium text-foreground">{qa.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Daily Snapshot */}
-          <div className="space-y-2">
-            <span className="text-[15px] font-semibold text-muted-foreground">Today</span>
-            <div className="bg-card rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border grid grid-cols-3 divide-x divide-border">
-              <div className="flex flex-col items-center justify-center py-4 px-2">
-                <span className="text-[18px] font-bold tabular-nums text-foreground">
-                  {insights?.todayJobsCount ?? 0}
-                </span>
-                <span className="text-[12px] text-muted-foreground mt-0.5">scheduled</span>
-              </div>
-              <div className="flex flex-col items-center justify-center py-4 px-2">
-                <span className="text-[18px] font-bold tabular-nums text-foreground">
-                  €{Math.round(insights?.todayInvoicedTotal ?? 0).toLocaleString()}
-                </span>
-                <span className="text-[12px] text-muted-foreground mt-0.5">invoiced</span>
-              </div>
-              <div className="flex flex-col items-center justify-center py-4 px-2">
-                <span className="text-[18px] font-bold tabular-nums text-foreground">
-                  {insights?.todayJobsCount ?? 0}
-                </span>
-                <span className="text-[12px] text-muted-foreground mt-0.5">appointments</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
