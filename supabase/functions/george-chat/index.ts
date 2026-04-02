@@ -375,10 +375,11 @@ serve(async (req) => {
     const userId = user.id;
 
     // ─── PARALLEL: Profile + Membership + Preferences ───────────
-    const [profileRes, membershipRes, prefsRes] = await Promise.all([
+    const [profileRes, membershipRes, prefsRes, memoryRes] = await Promise.all([
       serviceSupabase.from("profiles").select("team_id, full_name, trade_type, currency").eq("id", userId).single(),
       serviceSupabase.from("team_memberships").select("id").eq("user_id", userId).limit(1).maybeSingle(),
       serviceSupabase.from("foreman_ai_preferences").select("*").eq("user_id", userId).maybeSingle(),
+      serviceSupabase.from("ai_user_memory").select("id, category, key, value, confidence, source").eq("user_id", userId).order("last_referenced_at", { ascending: false, nullsFirst: false }).limit(30),
     ]);
 
     if (!profileRes.data?.team_id) {
@@ -753,33 +754,71 @@ Expert in fenestration. UPVC, aluminium, timber windows/doors, composite doors, 
 
     const tradeContext = userTradeType ? (tradeContextMap[userTradeType] || `TRADE: ${userTradeType}. Provide advice relevant to this trade sector.`) : "";
 
-    const systemPrompt = `You are Foreman AI — the no-nonsense operations brain behind Foreman, an AI operating system for trade businesses.
+    // ─── PERSISTENT MEMORY CONTEXT ──────────────────────────────
+    let persistentMemoryPrompt = "";
+    const loadedMemories = memoryRes.data || [];
+    if (loadedMemories.length > 0) {
+      const grouped: Record<string, string[]> = {};
+      for (const m of loadedMemories) {
+        if (!grouped[m.category]) grouped[m.category] = [];
+        grouped[m.category].push(`${m.key}: ${m.value}`);
+      }
+      const sections: string[] = [];
+      const categoryLabels: Record<string, string> = {
+        preference: "How they like things done",
+        business_fact: "Known business facts",
+        pattern: "Observed patterns",
+        goal: "Their goals",
+        pain_point: "Recurring frustrations",
+      };
+      for (const [cat, items] of Object.entries(grouped)) {
+        sections.push(`${categoryLabels[cat] || cat}:\n${items.map(i => `  - ${i}`).join("\n")}`);
+      }
+      persistentMemoryPrompt = `\n\nWHAT YOU KNOW ABOUT THIS USER:\n${sections.join("\n")}`;
 
-PERSONALITY:
-- You're direct, sharp, and trade-savvy. Think experienced Irish site foreman who's seen it all.
-- Keep responses SHORT and decision-focused. No waffle. No corporate AI phrasing.
-- NEVER say "certainly", "absolutely", "I'd be happy to", "great question", or "of course". Just do the thing.
-- Use "right", "grand", "sorted", "done" naturally but don't overdo the dialect.
+      // Update last_referenced_at (fire and forget)
+      const memoryIds = loadedMemories.map((m: any) => m.id).filter(Boolean);
+      if (memoryIds.length > 0) {
+        serviceSupabase.from("ai_user_memory").update({ last_referenced_at: now.toISOString() }).in("id", memoryIds);
+      }
+    }
+
+    const systemPrompt = `You are George — the AI business partner inside Foreman. You work exclusively for ${userName} and their business. You are not a generic assistant — you are their operations manager, financial advisor, scheduler, and strategic thinker rolled into one.
+
+## Your Identity
+- Name: George
+- Role: Virtual business partner and operations co-pilot
+- Tone: Direct, practical, no-nonsense. Like a smart mate who happens to know business inside out. Never corporate. Never patronising.
+- You use short, punchy responses unless the user asks for detail.
+- You refer to real data from their business — never make things up.
 - Format responses with markdown: use **bold** for key numbers/names, bullet points for lists, and line breaks for readability.
+- NEVER say "certainly", "absolutely", "I'd be happy to", "great question", or "of course". Just do the thing.
 
-RESPONSE FRAMEWORK — every response must follow:
-1. **Insight** — what's happening (the data/fact)
-2. **Impact** — why it matters (the business consequence)
-3. **Action** — what to do next (the recommendation or executed action)
+## Response Framework
+1. **Insight** — what is happening
+2. **Impact** — why it matters
+3. **Action** — what should be done next
 Skip steps that don't apply (e.g. simple lookups just need Insight + Action).
 
+## Context
 REGION: ${region}
-
-CRITICAL DATE CONTEXT:
-- TODAY: ${today} (${dayOfWeek}), YEAR: ${year}
-- Tomorrow: ${tomorrow.toISOString().split("T")[0]}
-- Next week: ${nextWeek.toISOString().split("T")[0]}
-User's name: ${userName}
+TODAY: ${today} (${dayOfWeek}), YEAR: ${year}
+Tomorrow: ${tomorrow.toISOString().split("T")[0]}
+Next week: ${nextWeek.toISOString().split("T")[0]}
 Currency: ${userCurrency} (${cs})
 
 ${tradeContext}
 
-IMPORTANT RULES:
+## Your Capabilities
+1. **Answer any business question** using their actual data (revenue, pipeline, overdue invoices, team utilisation, margins)
+2. **Remember everything** — preferences, decisions, recurring problems, goals they've mentioned, clients they've complained about, pricing strategies they've tried
+3. **Proactively surface insights** — if you notice unpaid invoices piling up, say so. If a quote has been sitting for 2 weeks, flag it. If they're underpricing compared to what they've told you about their costs, challenge them.
+4. **Help with decisions** — quoting a job, hiring, pricing, whether to take on a client, cashflow planning
+5. **Draft and create** — quotes, invoice follow-up messages, job descriptions, client emails
+6. **Schedule and task management** — help them plan their week, allocate team members, flag scheduling conflicts
+7. **Trade-specific knowledge** — you understand their trade, regional regulations, typical pricing, supplier dynamics, and seasonal patterns
+
+## Rules
 1. ALWAYS use ${year} as the year unless explicitly told otherwise.
 2. "Tomorrow" = ${tomorrow.toISOString().split("T")[0]}. "Next week" = ${nextWeek.toISOString().split("T")[0]}.
 3. NEVER automatically send anything to clients. All quotes, invoices, and reminders are created as DRAFTS.
@@ -787,10 +826,11 @@ IMPORTANT RULES:
 5. Use tools to actually perform actions — don't just describe what you would do.
 6. When a job type is mentioned, proactively suggest a relevant template.
 7. Use the user's currency (${cs}) for ALL monetary values.
-8. Be concise and trade-aware. Get to the point fast.
-9. When users ask for trade advice, pricing guidance, or compliance questions, give specific, actionable answers grounded in your trade expertise and regional standards.
-10. Always reference relevant standards, regulations, and certifications for the user's trade and region.
-11. If you spot a risk or opportunity in the data, flag it proactively — don't wait to be asked.${memoryPrompt}${preferencesPrompt}`;
+8. Never hallucinate data. If you don't have the data, say so and suggest how to get it.
+9. Never give generic advice when you have specific data to reference.
+10. Always reference actual numbers, dates, client names, and job details when relevant.
+11. If you spot a risk or opportunity in the data, flag it proactively — don't wait to be asked.
+12. Be concise by default. Expand only when asked or when the complexity demands it.${persistentMemoryPrompt}${memoryPrompt}${preferencesPrompt}`;
 
     // ─── AI CALL ──────────────────────────────────────────────────
     const actionId = crypto.randomUUID();
@@ -1099,6 +1139,80 @@ IMPORTANT RULES:
       serviceSupabase.from("george_conversations")
         .update({ updated_at: now.toISOString() })
         .eq("id", activeConversationId);
+    }
+
+    // ─── EXTRACT & STORE MEMORIES (fire and forget) ──────────────
+    if (lovableApiKey && finalMessage) {
+      (async () => {
+        try {
+          const memExtractResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [
+                { role: "system", content: `Extract structured memory updates from this conversation. Only extract NEW facts, preferences, or patterns the user has revealed. Return nothing if there's nothing new to learn. Categories: preference, business_fact, pattern, goal, pain_point. Source should be "stated" for explicit statements, "inferred" for implied facts.` },
+                { role: "user", content: `User said: "${message}"\n\nAssistant replied: "${finalMessage.slice(0, 500)}"` },
+              ],
+              tools: [{
+                type: "function",
+                function: {
+                  name: "update_user_memory",
+                  description: "Store new facts/preferences learned about the user",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      memories: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            category: { type: "string", enum: ["preference", "business_fact", "pattern", "goal", "pain_point"] },
+                            key: { type: "string", description: "Short identifier, e.g. 'minimum_margin' or 'team_size'" },
+                            value: { type: "string", description: "The fact or preference value" },
+                            confidence: { type: "number", description: "0.0-1.0" },
+                            source: { type: "string", enum: ["stated", "inferred", "observed"] },
+                          },
+                          required: ["category", "key", "value"],
+                        },
+                      },
+                    },
+                    required: ["memories"],
+                    additionalProperties: false,
+                  },
+                },
+              }],
+              tool_choice: "auto",
+              temperature: 0.3,
+              max_tokens: 300,
+            }),
+          });
+          if (memExtractResponse.ok) {
+            const memData = await memExtractResponse.json();
+            const memToolCall = memData.choices?.[0]?.message?.tool_calls?.[0];
+            if (memToolCall?.function?.name === "update_user_memory") {
+              const parsed = JSON.parse(memToolCall.function.arguments || "{}");
+              if (parsed.memories?.length) {
+                for (const mem of parsed.memories) {
+                  await serviceSupabase.from("ai_user_memory").upsert({
+                    user_id: userId,
+                    category: mem.category,
+                    key: mem.key,
+                    value: mem.value,
+                    confidence: mem.confidence || 1.0,
+                    source: mem.source || "inferred",
+                    updated_at: now.toISOString(),
+                    last_referenced_at: now.toISOString(),
+                  }, { onConflict: "user_id,category,key" });
+                }
+                console.log(`george-chat: Stored ${parsed.memories.length} memory update(s)`);
+              }
+            }
+          }
+        } catch (memErr) {
+          console.error("george-chat: Memory extraction error (non-fatal):", memErr);
+        }
+      })();
     }
 
     // ─── BUILD STRUCTURED ACTION PLAN ─────────────────────────────
