@@ -148,7 +148,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
         <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
           <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{message.content}</p>
           </div>
         </div>
       </div>
@@ -157,8 +157,8 @@ function MobileMessageBubble({ message }: { message: Message }) {
 
   return (
     <div className="flex justify-end">
-      <div className="bg-primary/10 border border-primary/20 text-foreground rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+      <div className="bg-primary text-white rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+        <p className="text-sm whitespace-pre-wrap leading-relaxed text-white">{message.content}</p>
       </div>
     </div>
   );
@@ -178,15 +178,15 @@ function DesktopMessageBubble({ message }: { message: Message }) {
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5",
           isAssistant
-            ? "bg-muted/50 border border-border text-foreground rounded-tl-md"
-            : "bg-primary/10 border border-primary/20 text-foreground rounded-tr-md"
+            ? "bg-muted/50 border border-border text-foreground/90 rounded-tl-md"
+            : "bg-primary text-white rounded-tr-md"
         )}
       >
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        <p className={cn("text-sm whitespace-pre-wrap leading-relaxed", isAssistant ? "text-foreground/90" : "text-white")}>{message.content}</p>
         <p
           className={cn(
             "text-[10px] mt-1 opacity-70",
-            isAssistant ? "text-muted-foreground" : "text-primary-foreground"
+            isAssistant ? "text-muted-foreground" : "text-white/70"
           )}
         >
           {format(message.timestamp, "h:mm a")}
