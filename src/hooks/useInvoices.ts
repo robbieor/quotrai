@@ -160,13 +160,12 @@ export function useCreateInvoiceFromQuote() {
       const { data: teamId, error: teamError } = await supabase.rpc("get_user_team_id");
       if (teamError) throw teamError;
 
-      // Generate invoice number
-      const { count } = await supabase
-        .from("invoices")
-        .select("*", { count: "exact", head: true })
-        .eq("team_id", teamId);
-      
-      const invoiceNumber = `INV-${String((count || 0) + 1).padStart(4, "0")}`;
+      // Generate invoice number atomically
+      const { data: invoiceNumber, error: numError } = await supabase.rpc(
+        "generate_invoice_number" as any,
+        { p_team_id: teamId }
+      );
+      if (numError) throw numError;
 
       // Resolve currency from customer country
       const { data: customer } = await supabase

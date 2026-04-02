@@ -75,13 +75,12 @@ export function useCreateQuote() {
       const { data: teamId, error: teamError } = await supabase.rpc("get_user_team_id");
       if (teamError) throw teamError;
 
-      // Generate quote number
-      const { count } = await supabase
-        .from("quotes")
-        .select("*", { count: "exact", head: true })
-        .eq("team_id", teamId);
-      
-      const quoteNumber = `Q-${String((count || 0) + 1).padStart(4, "0")}`;
+      // Generate quote number atomically (prevents race conditions)
+      const { data: quoteNumber, error: numError } = await supabase.rpc(
+        "generate_quote_number" as any,
+        { p_team_id: teamId }
+      );
+      if (numError) throw numError;
 
       // Calculate totals
       const subtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.unit_price || 0), 0);
