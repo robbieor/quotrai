@@ -242,7 +242,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
       <div className="flex items-start gap-3">
         <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
-          <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
+          <div className="bg-muted/40 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
             <MarkdownContent content={message.content} className="text-foreground" />
           </div>
         </div>

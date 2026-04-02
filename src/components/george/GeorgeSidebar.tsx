@@ -538,7 +538,7 @@ function ConversationItem({
       className={cn(
         "group flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-colors min-h-[48px]",
         isSelected
-          ? "bg-accent text-accent-foreground"
+          ? "bg-primary/10 text-foreground"
           : "hover:bg-accent/50"
       )}
       onClick={onSelect}
