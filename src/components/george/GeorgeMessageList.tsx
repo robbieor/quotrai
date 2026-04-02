@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Loader2, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,12 +16,18 @@ interface Message {
   timestamp: Date;
 }
 
+interface QuickActionChip {
+  label: string;
+  message: string;
+}
+
 interface GeorgeMessageListProps {
   messages: Message[];
   isProcessing?: boolean;
   streamingText?: string;
   lastError?: string | null;
   onRetry?: () => void;
+  onQuickAction?: (message: string) => void;
 }
 
 function MarkdownContent({ content, className }: { content: string; className?: string }) {
@@ -52,7 +58,45 @@ function MarkdownContent({ content, className }: { content: string; className?: 
   );
 }
 
-export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry }: GeorgeMessageListProps) {
+// Detect contextual quick actions from message content
+function getQuickActions(content: string): QuickActionChip[] {
+  const chips: QuickActionChip[] = [];
+  const lower = content.toLowerCase();
+  if (lower.includes("overdue") || lower.includes("unpaid") || lower.includes("outstanding")) {
+    chips.push({ label: "Send Reminders", message: "Send payment reminders for all overdue invoices" });
+    chips.push({ label: "View Invoices", message: "Show me the overdue invoices" });
+  }
+  if (lower.includes("quote") && (lower.includes("draft") || lower.includes("created") || lower.includes("ready"))) {
+    chips.push({ label: "Send Quote", message: "Send the quote to the customer" });
+  }
+  if (lower.includes("job") && (lower.includes("today") || lower.includes("scheduled"))) {
+    chips.push({ label: "View Calendar", message: "Show me my calendar for today" });
+  }
+  if (lower.includes("invoice") && lower.includes("created")) {
+    chips.push({ label: "View Invoice", message: "Show me the invoice" });
+  }
+  return chips.slice(0, 3);
+}
+// Quick action chips component
+function QuickActionChips({ content, onAction }: { content: string; onAction?: (msg: string) => void }) {
+  const chips = getQuickActions(content);
+  if (chips.length === 0 || !onAction) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mt-2 ml-11">
+      {chips.map((chip) => (
+        <button
+          key={chip.label}
+          onClick={() => onAction(chip.message)}
+          className="text-xs font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 active:scale-[0.97] transition-all"
+        >
+          {chip.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry, onQuickAction }: GeorgeMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -61,6 +105,8 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isProcessing, streamingText]);
+  const lastAssistantIdx = [...messages].reverse().findIndex(m => m.role === "assistant");
+  const lastAssistantId = lastAssistantIdx >= 0 ? messages[messages.length - 1 - lastAssistantIdx]?.id : null;
 
   // Mobile: Clean ChatGPT-style messages
   if (isMobile) {
@@ -68,7 +114,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
       <ScrollArea className="flex-1">
         <div className="px-4 py-4 space-y-6">
           {messages.map((message) => (
-            <MobileMessageBubble key={message.id} message={message} />
+            <div key={message.id}>
+              <MobileMessageBubble message={message} />
+              {message.id === lastAssistantId && !isProcessing && !streamingText && (
+                <QuickActionChips content={message.content} onAction={onQuickAction} />
+              )}
+            </div>
           ))}
 
           {/* Streaming text — progressive render */}
@@ -85,7 +136,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
             <div className="flex items-start gap-3">
               <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
               <div className="flex items-center gap-2 pt-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">George is thinking</span>
+                <span className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </span>
               </div>
             </div>
           )}
@@ -119,7 +175,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
     <ScrollArea className="flex-1">
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {messages.map((message) => (
-          <DesktopMessageBubble key={message.id} message={message} />
+          <div key={message.id}>
+            <DesktopMessageBubble message={message} />
+            {message.id === lastAssistantId && !isProcessing && !streamingText && (
+              <QuickActionChips content={message.content} onAction={onQuickAction} />
+            )}
+          </div>
         ))}
 
         {/* Streaming text — progressive render */}
@@ -137,8 +198,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
             <ForemanAvatar size="md" />
             <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
               <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Thinking...</span>
+                <span className="text-sm text-muted-foreground">George is thinking</span>
+                <span className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </span>
               </div>
             </div>
           </div>
