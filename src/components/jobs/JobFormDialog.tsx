@@ -104,8 +104,7 @@ export function JobFormDialog({
   isLoading,
 }: JobFormDialogProps) {
   const { data: customers, isLoading: customersLoading } = useCustomers();
-
-  // Location state
+  const { data: teamMembers } = useTeamMembers();
   const [siteAddress, setSiteAddress] = useState("");
   const [siteCoords, setSiteCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geofenceRadius, setGeofenceRadius] = useState(100);
