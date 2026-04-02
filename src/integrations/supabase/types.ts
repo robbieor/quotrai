@@ -176,6 +176,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_user_memory: {
+        Row: {
+          category: string
+          confidence: number | null
+          created_at: string | null
+          id: string
+          key: string
+          last_referenced_at: string | null
+          source: string | null
+          updated_at: string | null
+          user_id: string
+          value: string
+        }
+        Insert: {
+          category: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          key: string
+          last_referenced_at?: string | null
+          source?: string | null
+          updated_at?: string | null
+          user_id: string
+          value: string
+        }
+        Update: {
+          category?: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          key?: string
+          last_referenced_at?: string | null
+          source?: string | null
+          updated_at?: string | null
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
