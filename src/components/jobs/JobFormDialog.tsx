@@ -161,6 +161,7 @@ export function JobFormDialog({
         scheduled_date: job.scheduled_date ? new Date(job.scheduled_date) : null,
         scheduled_time: job.scheduled_time || "",
         estimated_value: job.estimated_value,
+        assigned_to: (job as any).assigned_to || null,
       });
     } else {
       form.reset({
