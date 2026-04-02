@@ -66,11 +66,13 @@ export function SubscriptionOverview() {
   const { data: members } = useOrgMembers();
   const { formatCurrency } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEndingTrial, setIsEndingTrial] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelStep, setCancelStep] = useState<"reason" | "confirm">("reason");
   const [cancelReason, setCancelReason] = useState("");
   const [cancelDetail, setCancelDetail] = useState("");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [endTrialDialogOpen, setEndTrialDialogOpen] = useState(false);
   const isNative = useIsNative();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
