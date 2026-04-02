@@ -169,7 +169,8 @@ export default function Quotes() {
     setConvertToJobOpen(true);
   };
 
-  const handleConvertToInvoice = (_quote: Quote) => {
+  const handleConvertToInvoice = (quote: Quote) => {
+    setSelectedQuote(quote);
     setConvertToInvoiceOpen(true);
   };
 
