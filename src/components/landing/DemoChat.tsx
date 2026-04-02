@@ -167,6 +167,9 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
             <p className="text-xs text-muted-foreground">
               {MAX_DEMO_MESSAGES - userMessageCount} message{MAX_DEMO_MESSAGES - userMessageCount !== 1 ? "s" : ""} remaining
               {hasSpeechSupport && " · Voice enabled"}
+              {voiceEnabled && hasBrowserTTS && (
+                <span className="block text-[10px] text-primary/60 italic">Sign up to hear George's real voice</span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-1">
