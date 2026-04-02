@@ -166,12 +166,17 @@ export function WeekView({
                   id={`week-${dateKey}-${hour}`}
                   date={day}
                   hour={hour}
-                  className={cn("border-r last:border-r-0 p-0.5 md:p-1", isMobile ? "min-h-[48px]" : "min-h-[60px]")}
+                  className={cn("border-r last:border-r-0 p-0.5 md:p-1 relative", isMobile ? "min-h-[48px]" : "min-h-[60px]")}
                   hasJobs={jobCount > 0}
                   jobCount={jobCount}
                   onJobDrop={onJobDrop}
                   onSlotClick={onSlotClick}
                 >
+                  {isMobile && (
+                    <span className="absolute top-0.5 left-0.5 text-[9px] leading-none text-muted-foreground/70 pointer-events-none select-none">
+                      {formatHourShort(hour)}
+                    </span>
+                  )}
                   {[...hourJobs, ...unscheduledJobs].map((job) => (
                     <DraggableJobCard
                       key={job.id}

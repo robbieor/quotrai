@@ -84,7 +84,7 @@ export function DayView({
 
       {/* Time grid */}
       <div className="overflow-auto max-h-[600px]">
-        {HOURS.map((hour) => {
+        {hourSlots.map((hour) => {
           const hourJobs = getJobsForHour(hour);
           const jobCount = busySlots[hour] || 0;
           

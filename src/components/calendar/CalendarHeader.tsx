@@ -159,6 +159,40 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, 
           </Button>
         </div>
       )}
+      {/* Working hours picker */}
+      {showHoursMenu && (
+        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+          <span className="text-xs text-muted-foreground">From</span>
+          <select
+            value={startHour}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (v < endHour) onWorkingHoursChange(v, endHour);
+            }}
+            className="text-xs bg-background border rounded px-1.5 py-1"
+          >
+            {HOUR_OPTIONS.filter((h) => h < endHour).map((h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-foreground">to</span>
+          <select
+            value={endHour}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (v > startHour) onWorkingHoursChange(startHour, v);
+            }}
+            className="text-xs bg-background border rounded px-1.5 py-1"
+          >
+            {HOUR_OPTIONS.filter((h) => h > startHour).map((h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowHoursMenu(false)}>
+            Done
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
