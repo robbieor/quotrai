@@ -43,7 +43,7 @@ const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => 
 
 function buildHtml(bodyText: string, cta: { label: string; url: string }, name: string): string {
   const paragraphs = bodyText.split("\n\n").map(p => 
-    `<p style="font-family:'Manrope',sans-serif;font-size:15px;color:#334155;line-height:1.6;margin:0 0 16px;">${p.replace(/\n/g, "<br/>")}</p>`
+    `<p style="font-family:'Manrope',sans-serif;font-size:15px;color:#64748b;line-height:1.6;margin:0 0 16px;">${p.replace(/\n/g, "<br/>")}</p>`
   ).join("");
 
   return `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
