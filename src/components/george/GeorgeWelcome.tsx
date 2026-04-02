@@ -193,6 +193,41 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
             </div>
           )}
 
+          {/* AI Nudges */}
+          {visibleNudges.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ForemanAvatar size="sm" />
+                <span className="text-[15px] font-semibold text-muted-foreground">
+                  George says
+                </span>
+              </div>
+              {visibleNudges.map((nudge: any) => (
+                <div
+                  key={nudge.id}
+                  className={`bg-card rounded-[14px] shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border border-l-[3px] ${urgencyBorder[nudge.urgency] || urgencyBorder.low} p-3.5 relative`}
+                >
+                  <button
+                    onClick={() => dismissNudge(nudge.id)}
+                    className="absolute top-2 right-2 p-1 text-muted-foreground/50 hover:text-muted-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                  <p className="text-[14px] text-foreground pr-6 leading-relaxed">{nudge.text}</p>
+                  {nudge.action_label && (
+                    <button
+                      onClick={() => onQuickAction?.(nudge.action, nudge.text)}
+                      disabled={isProcessing}
+                      className="mt-2 text-[13px] font-semibold text-primary active:scale-[0.97] transition-transform disabled:opacity-50"
+                    >
+                      {nudge.action_label} →
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Quick Actions */}
           <div className="space-y-2">
             <span className="text-[15px] font-semibold text-muted-foreground">
