@@ -89,10 +89,18 @@ export function useDashboardStats() {
         0
       );
 
-      // Paid invoices this month — use paid_at date when available, fallback to issue_date
+      // Paid invoices this month — use payment_date from payments table when available
+      const paymentDateMap = new Map<string, string>();
+      for (const p of payments) {
+        if (p.invoice_id && p.payment_date) {
+          paymentDateMap.set(p.invoice_id, p.payment_date);
+        }
+      }
+
       const paidInvoicesThisMonth = invoices.filter((inv) => {
         if (inv.status !== "paid") return false;
-        const relevantDate = new Date((inv as any).paid_at || inv.issue_date);
+        const dateStr = paymentDateMap.get(inv.id) || inv.issue_date;
+        const relevantDate = new Date(dateStr);
         return relevantDate >= monthStart && relevantDate <= monthEnd;
       });
 
