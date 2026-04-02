@@ -85,7 +85,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
             <div className="flex items-start gap-3">
               <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
               <div className="flex items-center gap-2 pt-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">George is thinking</span>
+                <span className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </span>
               </div>
             </div>
           )}
