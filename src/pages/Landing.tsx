@@ -26,6 +26,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roiOpen, setRoiOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const { formatPrice } = useLandingCurrency();
 
   // Force light mode on landing page
