@@ -6,9 +6,10 @@ import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface HeroSectionProps {
   formatPrice: (eur: number, decimals?: number) => string;
+  onTryDemo?: () => void;
 }
 
-export function HeroSection({ formatPrice }: HeroSectionProps) {
+export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
   return (
     <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative">
       {/* Background decoration */}
@@ -58,12 +59,15 @@ export function HeroSection({ formatPrice }: HeroSectionProps) {
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <a href="#how-it-works" className="w-full sm:w-auto">
-                <Button variant="outline" size="lg" className="text-base px-6 py-6 sm:py-7 font-medium gap-2 w-full sm:w-auto">
-                  <Play className="h-4 w-4" />
-                  See how it works
-                </Button>
-              </a>
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-base px-6 py-6 sm:py-7 font-medium gap-2 w-full sm:w-auto"
+                onClick={onTryDemo}
+              >
+                <Play className="h-4 w-4" />
+                Try George Now
+              </Button>
             </div>
 
             <p className="text-xs sm:text-sm text-muted-foreground">

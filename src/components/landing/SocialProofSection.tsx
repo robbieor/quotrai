@@ -1,4 +1,6 @@
-import { Plug, Droplets, Hammer, Wrench, Star } from "lucide-react";
+import { Plug, Droplets, Hammer, Wrench, Star, FileText, Receipt, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const trades = [
   { icon: Plug, name: "Electricians" },
@@ -8,6 +10,29 @@ const trades = [
 ];
 
 export function SocialProofSection() {
+  const { data: stats } = useQuery({
+    queryKey: ["landing-live-stats"],
+    queryFn: async () => {
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [quotesRes, invoicesRes] = await Promise.all([
+        supabase.from("quotes").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
+        supabase.from("invoices").select("total", { count: "exact", head: false }).gte("created_at", weekAgo),
+      ]);
+
+      const totalInvoiced = (invoicesRes.data || []).reduce((sum: number, inv: any) => sum + (inv.total || 0), 0);
+
+      return {
+        quotesThisWeek: quotesRes.count || 0,
+        invoicedThisWeek: totalInvoiced,
+      };
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const hasStats = stats && (stats.quotesThisWeek > 5 || stats.invoicedThisWeek > 500);
+
   return (
     <section className="py-16 sm:py-24 px-4 sm:px-6">
       <div className="container mx-auto max-w-4xl text-center">
@@ -37,12 +62,33 @@ export function SocialProofSection() {
           ))}
         </div>
 
-        {/* Testimonial placeholder */}
-        <div className="p-8 rounded-2xl border-2 border-dashed border-border bg-muted/20">
-          <p className="text-sm text-muted-foreground italic">
-            "Testimonials coming soon — we're onboarding our first 100 businesses."
-          </p>
-        </div>
+        {/* Live stats or placeholder */}
+        {hasStats ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <FileText className="h-5 w-5 text-primary shrink-0" />
+              <div className="text-left">
+                <p className="text-lg font-bold text-foreground">{stats.quotesThisWeek}</p>
+                <p className="text-xs text-muted-foreground">quotes created this week</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <TrendingUp className="h-5 w-5 text-primary shrink-0" />
+              <div className="text-left">
+                <p className="text-lg font-bold text-foreground">
+                  €{Math.round(stats.invoicedThisWeek).toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">invoiced through Foreman</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 rounded-2xl border-2 border-dashed border-border bg-muted/20">
+            <p className="text-sm text-muted-foreground italic">
+              "Join the growing community of tradespeople running their business with Foreman."
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

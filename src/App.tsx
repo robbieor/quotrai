@@ -57,6 +57,7 @@ const InvestorForecast = lazy(() => import("./pages/InvestorForecast"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const SubscriptionConfirmed = lazy(() => import("./pages/SubscriptionConfirmed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const FunnelAnalytics = lazy(() => import("./pages/FunnelAnalytics"));
 
 const queryClient = new QueryClient();
 
@@ -170,6 +171,7 @@ const App = () => {
 
                 {/* Grow seat required */}
                 <Route path="/leads" element={<RoleGuard><SeatGuard requiredSeat="grow"><Leads /></SeatGuard></RoleGuard>} />
+                <Route path="/funnel" element={<RoleGuard><FunnelAnalytics /></RoleGuard>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>

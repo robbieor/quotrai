@@ -1259,6 +1259,30 @@ export type Database = {
         }
         Relationships: []
       }
+      drip_sequences: {
+        Row: {
+          drip_step: number
+          email: string
+          id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          drip_step: number
+          email: string
+          id?: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          drip_step?: number
+          email?: string
+          id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       early_access_requests: {
         Row: {
           company_name: string
@@ -3944,6 +3968,7 @@ export type Database = {
           converted_at: string | null
           created_at: string
           id: string
+          referral_code: string | null
           referred_email: string
           referred_team_id: string | null
           referred_user_id: string | null
@@ -3956,6 +3981,7 @@ export type Database = {
           converted_at?: string | null
           created_at?: string
           id?: string
+          referral_code?: string | null
           referred_email: string
           referred_team_id?: string | null
           referred_user_id?: string | null
@@ -3968,6 +3994,7 @@ export type Database = {
           converted_at?: string | null
           created_at?: string
           id?: string
+          referral_code?: string | null
           referred_email?: string
           referred_team_id?: string | null
           referred_user_id?: string | null

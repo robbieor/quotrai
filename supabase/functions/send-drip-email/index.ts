@@ -11,10 +11,11 @@ const FROM_DOMAIN = "foreman.ie";
 interface DripRow { id: string; user_id: string; email: string; full_name: string | null; drip_step: number; send_at: string; }
 
 const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string }> = {
-  1: { subject: "Create your first quote in 60 seconds ⚡", body: (name) => `Hi ${name},\n\nWelcome to Foreman! The easiest way to get started is to create your first quote.\n\nHead to Quotes → New Quote and pick one of your trade-specific templates.\n\nHappy quoting!\n— The Foreman Team` },
-  2: { subject: "Meet Foreman AI — your hands-free assistant 🤖", body: (name) => `Hey ${name},\n\nDid you know Foreman comes with a built-in AI assistant?\n\nForeman AI can create quotes, schedule jobs, log expenses, and more — all by voice or text.\n\nTry it: Go to the Foreman AI page and say "What can you do?"\n\n— The Foreman Team` },
-  3: { subject: "How much admin time could you save? 📊", body: (name) => `Hi ${name},\n\nTradespeople using Foreman save an average of 10 hours per week on admin.\n\nCurious what that means for your business? Try our ROI calculator on the homepage.\n\n— The Foreman Team` },
-  4: { subject: "Your free trial ends in 2 days ⏰", body: (name) => `Hi ${name},\n\nJust a heads-up — your 30-day Foreman trial ends soon.\n\nTo keep all your data, subscribe from Settings → Billing.\n\n— The Foreman Team` },
+  1: { subject: "Welcome to Foreman — meet George, your AI partner 🤝", body: (name) => `Hey ${name},\n\nWelcome to Foreman! I'm George — your AI business partner.\n\nI can create quotes, chase invoices, schedule jobs, and give you a morning briefing — all by voice or text.\n\nHead to Foreman AI and say "What can you do?" to get started.\n\n— George` },
+  2: { subject: "Create your first quote in 30 seconds ⚡", body: (name) => `Hi ${name},\n\nThe fastest way to see Foreman in action? Create your first quote.\n\nHead to Quotes → New Quote, pick a template for your trade, and fill in the details. Or just tell me:\n\n"Quote for [customer name], [job description], [amount]"\n\nI'll do the rest.\n\n— George` },
+  3: { subject: "Your business snapshot is ready 📊", body: (name) => `Hi ${name},\n\nI've been looking at your business data. Head to your Dashboard to see your morning briefing — overdue invoices, upcoming jobs, and what needs your attention today.\n\nThe more data you add, the smarter my insights get.\n\n— George` },
+  4: { subject: "Your crew should be on Foreman too 👷", body: (name) => `Hey ${name},\n\nForeman works even better with your team. Your trial includes unlimited seats — invite your crew from Settings → Team.\n\nThey'll get their own login, see assigned jobs, and clock in/out from their phone.\n\n— George` },
+  5: { subject: "Your free trial ends soon ⏰", body: (name) => `Hi ${name},\n\nJust a heads-up — your Foreman trial wraps up soon.\n\nTo keep everything running (and keep me on the job), subscribe from Settings → Billing.\n\nAll your data stays safe. Pick the plan that fits.\n\n— George` },
 };
 
 Deno.serve(async (req) => {

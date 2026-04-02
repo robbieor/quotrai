@@ -11,6 +11,7 @@ interface ChatRequest {
   message: string;
   conversation_id: string | null;
   stream?: boolean;
+  demo_mode?: boolean;
   memory_context?: {
     current_customer?: { id: string; name: string };
     current_job?: { id: string; title: string };
@@ -333,6 +334,76 @@ serve(async (req) => {
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
     const authHeader = req.headers.get("Authorization");
+    const body = await req.json();
+    const { message, conversation_id, memory_context, stream: streamRequested, demo_mode }: ChatRequest = body;
+
+    if (!message) {
+      return new Response(
+        JSON.stringify({ error: "Message is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ─── DEMO MODE: Anonymous, no auth, limited response ────────
+    if (demo_mode) {
+      if (!lovableApiKey) {
+        return new Response(
+          JSON.stringify({ message: "Demo mode is temporarily unavailable. Sign up for the full experience!" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const demoSystemPrompt = `You are George, the AI business partner inside Foreman — an AI operating system for trade businesses (electricians, plumbers, builders, etc.).
+
+This is a DEMO conversation. The user is not logged in and is exploring Foreman on the landing page.
+
+Your job:
+- Show them what George can do — be impressive, specific, and practical
+- Give realistic sample responses as if you had access to their data
+- Use example data: customer names, job types, amounts that feel real
+- Be Irish, direct, no-nonsense, warm
+- Keep responses SHORT (3-4 sentences max)
+- Always end with a subtle nudge to sign up: "Sign up to connect your real business data."
+
+You CANNOT actually create quotes, access real data, or perform actions. You're demonstrating personality and capability.`;
+
+      try {
+        const demoRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: demoSystemPrompt },
+              { role: "user", content: message },
+            ],
+            max_tokens: 300,
+          }),
+        });
+
+        const demoText = await demoRes.text();
+        let demoMessage = "I'd love to show you more! Sign up for the full George experience.";
+        try {
+          const demoData = JSON.parse(demoText);
+          demoMessage = demoData.choices?.[0]?.message?.content || demoMessage;
+        } catch {
+          console.error("Demo API returned non-JSON:", demoText.slice(0, 200));
+        }
+
+        return new Response(
+          JSON.stringify({ message: demoMessage, conversation_id: null, action_plan: null }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (err) {
+        console.error("Demo mode error:", err);
+        return new Response(
+          JSON.stringify({ message: "Something went wrong in demo mode. Sign up to get the full experience!" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // ─── AUTHENTICATED MODE ─────────────────────────────────────
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
@@ -343,16 +414,6 @@ serve(async (req) => {
     const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
-
-    // ─── PARALLEL: Auth + Profile ───────────────────────────────
-    const { message, conversation_id, memory_context, stream: streamRequested }: ChatRequest = await req.json();
-
-    if (!message) {
-      return new Response(
-        JSON.stringify({ error: "Message is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     const serviceSupabase = createClient(supabaseUrl, supabaseServiceKey);
 

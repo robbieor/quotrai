@@ -1,4 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
+import { DemoChat } from "@/components/landing/DemoChat";
+import { ExitIntentPopup } from "@/components/landing/ExitIntentPopup";
 import { SEOHead } from "@/components/shared/SEOHead";
 import { useState, useEffect, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roiOpen, setRoiOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const { formatPrice } = useLandingCurrency();
 
   // Force light mode on landing page
@@ -160,7 +163,7 @@ export default function Landing() {
       </nav>
 
       {/* Section 1: Hero */}
-      <HeroSection formatPrice={formatPrice} />
+      <HeroSection formatPrice={formatPrice} onTryDemo={() => setDemoOpen(true)} />
 
       {/* Demo Video */}
       <DemoVideoSection />
@@ -187,6 +190,12 @@ export default function Landing() {
 
       {/* Final CTA */}
       <FinalCTASection />
+
+      {/* Demo Chat Widget */}
+      <DemoChat open={demoOpen} onClose={() => setDemoOpen(false)} />
+
+      {/* Exit Intent Popup */}
+      <ExitIntentPopup onTryDemo={() => setDemoOpen(true)} />
 
       {/* Footer */}
       <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t border-border">
