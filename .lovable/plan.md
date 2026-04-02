@@ -1,54 +1,61 @@
 
 
-# Wire George System Prompt + ai_user_memory into Foreman AI
+# Proactive AI Nudges on George Screen Open
 
-## What Changes
+## What This Does
 
-**1. Replace the system prompt** with the new George persona — business partner, not generic assistant. The new prompt reframes George as the user's dedicated operations co-pilot who references real data, remembers everything, and proactively surfaces insights.
+When the user opens the George AI screen, instead of just showing static cards and a generic greeting, the system runs a backend analysis that generates **personalized, data-driven nudges** — natural language insights like *"That quote for Murphy's kitchen has been sitting 11 days. Usually your win rate drops after 7."*
 
-**2. Load persistent memories** from `ai_user_memory` before each AI call — inject them into the system prompt as `{context}` so George knows the user's preferences, business facts, goals, and pain points.
+These appear as dismissable nudge cards above the chat, making George feel like he's already been watching the business.
 
-**3. Extract and store new memories** after each AI response — use a lightweight secondary AI call to identify any new facts/preferences/patterns revealed in the conversation, then upsert them into `ai_user_memory`.
+## Approach
 
-## Technical Details
+### 1. New edge function: `generate-nudges`
 
-### System prompt replacement (~line 756-793)
+A lightweight edge function that queries the user's business data and uses Lovable AI (Gemini Flash) to generate 2–3 contextual nudges in George's voice.
 
-Replace the existing `systemPrompt` block with the new George persona. Keep all existing dynamic injections (trade context, region, date, preferences, memory context) but restructure them into the `{context}` section of the new prompt. The new prompt includes:
-- George identity and tone rules
-- Capability list (answer questions, remember, proactively surface, help decide, draft/create, learn/adapt, schedule, trade knowledge)
-- Memory extraction instructions (returned as metadata)
-- Rules (no hallucination, reference real data, use tools, be concise)
+**Data gathered:**
+- Overdue invoices (amount, days overdue, customer name)
+- Aging quotes (days since sent, customer name, amount)
+- Scheduling conflicts (overlapping jobs, understaffed days)
+- Recent patterns (win rate trends, payment velocity)
 
-### Load memories (~line 378, parallel with profile/prefs fetch)
+**AI prompt:** Pass the raw data snapshot to Gemini Flash with instructions to produce 2–3 short, specific nudges in George's Irish foreman tone — referencing actual names, amounts, and dates.
 
-Add `ai_user_memory` query to the existing `Promise.all` block:
-```typescript
-serviceSupabase.from("ai_user_memory")
-  .select("category, key, value, confidence, source")
-  .eq("user_id", userId)
-  .order("last_referenced_at", { ascending: false, nullsFirst: false })
-  .limit(30)
+**Response format:**
+```json
+{
+  "nudges": [
+    {
+      "id": "nudge-1",
+      "text": "Morning. You've got 3 invoices overdue by more than 14 days — that's €8,400 sitting out there. Want me to draft reminders?",
+      "action": "get_overdue_invoices",
+      "action_label": "Chase them",
+      "urgency": "high"
+    }
+  ]
+}
 ```
 
-Inject loaded memories into the system prompt context section, grouped by category.
+### 2. Frontend: Nudge cards in GeorgeWelcome
 
-### Extract memories after response (~after line 1092)
+- On mount, call `generate-nudges` (with a 60-second stale cache so it doesn't fire on every tab switch)
+- Render nudges as dismissable cards between the greeting and quick actions
+- Each nudge has a tap-to-act button that triggers the relevant George action
+- Dismissed nudges stored in localStorage by date so they don't reappear
 
-After getting the final AI response, make a fire-and-forget secondary AI call using `gemini-2.5-flash-lite` with tool calling to extract structured memory updates:
-- Tool: `update_user_memory` with parameters `{ memories: [{ category, key, value, confidence, source }] }`
-- Upsert extracted memories into `ai_user_memory` using `ON CONFLICT (user_id, category, key)` via the service client
-- This is non-blocking — doesn't slow down the response
+### 3. Styling
 
-### Update `last_referenced_at` on used memories
-
-When memories are loaded and injected, update their `last_referenced_at` timestamp so frequently-used memories stay at the top.
+- Subtle left-border accent (red for high urgency, amber for medium, blue for low)
+- George's avatar inline with the nudge text for personality
+- Tap action routes through existing `onQuickAction` handler
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Edit | `supabase/functions/george-chat/index.ts` — new system prompt, load memories, extract memories |
+| Create | `supabase/functions/generate-nudges/index.ts` — query data, call AI, return nudges |
+| Edit | `src/components/george/GeorgeWelcome.tsx` — fetch and render nudge cards |
 
-No database changes. No frontend changes. The `ai_user_memory` table already exists.
+No database changes needed. Uses existing tables (invoices, quotes, jobs, team_members) for data queries.
 
