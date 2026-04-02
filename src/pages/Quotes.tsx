@@ -532,7 +532,7 @@ export default function Quotes() {
         onConvertToJob={handleConvertToJob}
         onConvertToInvoice={handleConvertToInvoice}
       />
-      <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} />
+      <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} preselectedQuoteId={selectedQuote?.id} />
       <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} onSubmit={(values) => {
         createJob.mutate(values);
         setConvertToJobOpen(false);

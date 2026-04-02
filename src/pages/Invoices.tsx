@@ -157,7 +157,7 @@ export default function Invoices() {
   const handleDownloadPdf = async (invoice: Invoice) => { await downloadInvoicePdf(invoice, branding, currencySymbol); };
   const handleSendEmail = (invoice: Invoice) => { setSelectedInvoice(invoice); setEmailOpen(true); };
   const handleCopyPortalLink = (invoice: Invoice) => {
-    const portalUrl = `${window.location.origin}/portal/invoice?token=${invoice.portal_token}`;
+    const portalUrl = `${window.location.origin}/invoice/${invoice.portal_token}`;
     navigator.clipboard.writeText(portalUrl);
     toast.success("Portal link copied to clipboard");
   };
