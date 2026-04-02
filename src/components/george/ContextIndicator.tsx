@@ -12,7 +12,7 @@ export function ContextIndicator() {
       const [jobsRes, overdueRes, teamRes, customersRes] = await Promise.all([
         supabase.from("jobs").select("id", { count: "exact", head: true }).eq("team_id", teamId).in("status", ["scheduled", "in_progress"]),
         supabase.from("invoices").select("id", { count: "exact", head: true }).eq("team_id", teamId).eq("status", "overdue"),
-        supabase.from("team_members").select("id", { count: "exact", head: true }).eq("team_id", teamId),
+        supabase.from("team_member_profiles").select("id", { count: "exact", head: true }),
         supabase.from("customers").select("id", { count: "exact", head: true }).eq("team_id", teamId),
       ]);
 
