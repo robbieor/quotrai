@@ -469,6 +469,71 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
           </button>
         ))}
       </div>
+
+      {/* Weekly Analysis — Desktop */}
+      <div className="w-full max-w-sm mt-6">
+        <button
+          onClick={() => setShowAnalysis(!showAnalysis)}
+          className="flex items-center gap-2 w-full mb-3 hover:opacity-80 transition-opacity"
+        >
+          <BarChart3 className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold text-muted-foreground">Weekly business analysis</span>
+          <ChevronRight className={`h-4 w-4 text-muted-foreground/50 ml-auto transition-transform ${showAnalysis ? "rotate-90" : ""}`} />
+        </button>
+        {showAnalysis && (
+          <div className="space-y-2">
+            {analysisLoading ? (
+              <div className="bg-card rounded-xl border border-border p-4 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <ForemanAvatar size="sm" />
+                  <span className="text-xs text-muted-foreground">George is analysing 4 weeks of data…</span>
+                </div>
+              </div>
+            ) : weeklyAnalysis ? (
+              <>
+                <div className="bg-card rounded-xl border border-border p-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground">Health Score</span>
+                    <span className="text-lg font-bold text-primary">{weeklyAnalysis.health_score}/10</span>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{weeklyAnalysis.summary}</p>
+                </div>
+                {weeklyAnalysis.sections?.map((section: any, i: number) => {
+                  const Icon = statusIcon[section.status] || CheckCircle2;
+                  return (
+                    <div key={i} className="bg-card rounded-xl border border-border p-3.5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon className={`h-4 w-4 ${statusColor[section.status] || "text-muted-foreground"}`} />
+                        <span className="text-sm font-semibold text-foreground">{section.title}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1">{section.insight}</p>
+                      <p className="text-xs text-primary font-medium">→ {section.recommendation}</p>
+                    </div>
+                  );
+                })}
+                {weeklyAnalysis.top_actions?.length > 0 && (
+                  <div className="bg-card rounded-xl border border-border p-3.5">
+                    <span className="text-xs font-semibold text-muted-foreground mb-2 block">Priority actions</span>
+                    {weeklyAnalysis.top_actions.map((action: any, i: number) => (
+                      <div key={i} className="flex items-start gap-2 mt-1.5">
+                        <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${action.urgency === "high" ? "bg-destructive" : action.urgency === "medium" ? "bg-[hsl(36,91%,55%)]" : "bg-primary"}`} />
+                        <div>
+                          <p className="text-xs text-foreground font-medium">{action.action}</p>
+                          <p className="text-[11px] text-muted-foreground">{action.impact}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="bg-card rounded-xl border border-border p-4">
+                <p className="text-xs text-muted-foreground">Not enough data yet. Keep using Foreman and George will start spotting trends.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
