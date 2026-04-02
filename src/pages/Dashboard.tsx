@@ -43,6 +43,27 @@ const quickActions = [
   { label: "New Job", icon: Briefcase, route: "/jobs" },
 ];
 
+// Shared column definitions
+const invoiceColumns: DrillColumn[] = [
+  { key: "invoiceNumber", label: "Invoice #" },
+  { key: "client", label: "Client" },
+  { key: "amount", label: "Amount", align: "right" },
+  { key: "daysOverdue", label: "Days Overdue", align: "right" },
+];
+
+const quoteColumns: DrillColumn[] = [
+  { key: "quoteNumber", label: "Quote #" },
+  { key: "client", label: "Client" },
+  { key: "amount", label: "Amount", align: "right" },
+];
+
+const jobColumns: DrillColumn[] = [
+  { key: "title", label: "Job" },
+  { key: "client", label: "Customer" },
+  { key: "status", label: "Status" },
+  { key: "value", label: "Value", align: "right" },
+];
+
 function DashboardContent() {
   const { data, isLoading } = useDashboardAnalytics();
   const { isOnboardingComplete, savedStep, isLoading: onboardingLoading } = useOnboarding();
@@ -75,6 +96,22 @@ function DashboardContent() {
     queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
   };
 
+  const fmtCol = (v: any) => formatCurrency(v);
+  const fmtDays = (v: any) => `${v}d`;
+
+  const invoiceColsWithFmt: DrillColumn[] = invoiceColumns.map(c =>
+    c.key === "amount" ? { ...c, format: fmtCol } :
+    c.key === "daysOverdue" ? { ...c, format: fmtDays } : c
+  );
+
+  const quoteColsWithFmt: DrillColumn[] = quoteColumns.map(c =>
+    c.key === "amount" ? { ...c, format: fmtCol } : c
+  );
+
+  const jobColsWithFmt: DrillColumn[] = jobColumns.map(c =>
+    c.key === "value" ? { ...c, format: fmtCol } : c
+  );
+
   const openDrill = (title: string, columns: DrillColumn[], records: any[], link?: string) => {
     setDrillTitle(title);
     setDrillColumns(columns);
@@ -83,18 +120,58 @@ function DashboardContent() {
     setDrillOpen(true);
   };
 
+  // ── Control Header drill handler ──
+  const handleControlDrillDown = (metric: string) => {
+    if (metric === "overdue") {
+      openDrill("Overdue Invoices", invoiceColsWithFmt, data?.overdueInvoices || [], "/invoices");
+    } else if (metric === "staleQuotes") {
+      openDrill("Stale Quotes — 7+ Days No Response", quoteColsWithFmt, data?.drillData?.pendingQuotes?.filter((q: any) => true) || [], "/quotes");
+    } else if (metric === "stuckJobs") {
+      const stuckData = (data?.jobsAtRisk || []).map((j: any) => ({
+        ...j, client: j.customer,
+      }));
+      openDrill("Stuck Jobs — 7+ Days No Progress", [
+        { key: "title", label: "Job" },
+        { key: "client", label: "Customer" },
+        { key: "status", label: "Status" },
+        { key: "daysInStage", label: "Days Stuck", align: "right", format: fmtDays },
+        { key: "value", label: "Value", align: "right", format: fmtCol },
+      ], stuckData, "/jobs");
+    } else if (metric === "status") {
+      // Combined: show overdue invoices + stuck jobs + stale quotes
+      const combined = [
+        ...(data?.overdueInvoices || []).map((i: any) => ({ ...i, title: `Invoice ${i.invoiceNumber}`, type: "Invoice" })),
+        ...(data?.jobsAtRisk || []).map((j: any) => ({ ...j, client: j.customer, type: "Job" })),
+      ];
+      openDrill("All Issues Requiring Action", [
+        { key: "type", label: "Type" },
+        { key: "title", label: "Item" },
+        { key: "client", label: "Client" },
+      ], combined);
+    }
+  };
+
+  // ── KPI Strip drill handler ──
   const handleKPIDrillDown = (metric: string) => {
-    if (metric === "outstanding") {
-      openDrill("Outstanding Invoices", [
+    if (metric === "cash") {
+      openDrill("Cash Collected", [
         { key: "invoiceNumber", label: "Invoice #" },
         { key: "client", label: "Client" },
-        { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
-        { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
-      ], data?.drillData?.outstanding || [], "/invoices");
+        { key: "amount", label: "Amount", align: "right", format: fmtCol },
+      ], data?.drillData?.cashCollected || [], "/invoices");
+    } else if (metric === "outstanding") {
+      openDrill("Outstanding Invoices", invoiceColsWithFmt, data?.drillData?.outstanding || [], "/invoices");
     } else if (metric === "overdue30") {
-      navigate("/invoices?status=overdue");
+      const overdue30 = (data?.drillData?.outstanding || []).filter((i: any) => (i.daysOverdue || 0) > 30);
+      openDrill("30+ Day Overdue Invoices", invoiceColsWithFmt, overdue30, "/invoices");
+    } else if (metric === "revenue") {
+      openDrill("Revenue — Invoices in Period", [
+        { key: "invoiceNumber", label: "Invoice #" },
+        { key: "client", label: "Client" },
+        { key: "amount", label: "Amount", align: "right", format: fmtCol },
+      ], data?.drillData?.revenueInvoices || data?.drillData?.outstanding || [], "/invoices");
     } else if (metric === "jobs") {
-      navigate("/jobs?status=in_progress");
+      openDrill("Active Jobs", jobColsWithFmt, data?.drillData?.activeJobs || [], "/jobs");
     }
   };
 
@@ -141,7 +218,7 @@ function DashboardContent() {
 
         {/* 1. Control Header — operational summary */}
         <AnimatedSection delay={40}>
-          <ControlHeader data={data?.controlHeader} isLoading={isLoading} />
+          <ControlHeader data={data?.controlHeader} isLoading={isLoading} onDrillDown={handleControlDrillDown} />
         </AnimatedSection>
 
         {/* 2. KPI Strip — 5 key metrics */}
@@ -189,12 +266,7 @@ function DashboardContent() {
                 agingBuckets={data?.agingBuckets}
                 onBucketClick={(bucket) => {
                   const invoices = data?.agingInvoices?.[bucket] || [];
-                  openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, [
-                    { key: "invoiceNumber", label: "Invoice #" },
-                    { key: "client", label: "Client" },
-                    { key: "amount", label: "Amount", align: "right", format: (v) => formatCurrency(v) },
-                    { key: "daysOverdue", label: "Days Overdue", align: "right", format: (v) => `${v}d` },
-                  ], invoices, "/invoices");
+                  openDrill(`Invoices — ${bucket === "current" ? "Current" : bucket + " days overdue"}`, invoiceColsWithFmt, invoices, "/invoices");
                 }}
               />
             </PlanGate>
