@@ -64,7 +64,7 @@ export function MorningBriefingCard() {
   }
 
   return (
-    <div className="relative rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card p-5 sm:p-6 animate-fade-up">
+    <div className="relative rounded-xl border border-primary/20 border-l-[4px] border-l-primary bg-gradient-to-r from-primary/10 via-primary/3 to-card p-5 sm:p-6 animate-fade-up">
       {/* Dismiss */}
       <button
         onClick={handleDismiss}

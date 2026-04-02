@@ -102,14 +102,14 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-          <span className="text-xl font-bold tracking-tight text-foreground">Foreman</span>
+          <span className="text-xl font-bold tracking-tight text-white">Foreman</span>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         {filteredGroups.map(group => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-foreground font-semibold">{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-white/40 font-semibold text-[10px] uppercase tracking-widest">{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map(item => {
@@ -121,8 +121,8 @@ export function AppSidebar() {
                       <NavLink
                         to={item.url}
                         end={item.url === "/dashboard"}
-                        className="flex items-center gap-3 rounded-full border border-muted-foreground/50 px-3 py-2 text-foreground transition-all duration-300 ease-out hover:bg-muted hover:translate-x-1 [&>svg]:transition-transform [&>svg]:duration-300"
-                        activeClassName="bg-primary/20 text-foreground font-medium border-primary [&>svg]:scale-110"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-white/70 transition-all duration-200 ease-out hover:bg-white/10 hover:text-white [&>svg]:transition-transform [&>svg]:duration-300"
+                        activeClassName="bg-primary/20 text-white font-medium [&>svg]:scale-110"
                       >
                         <item.icon className="h-5 w-5" />
                         <span className="flex-1">{item.title}</span>
@@ -142,19 +142,19 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-3">
-        <Link to="/settings?tab=profile" className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-muted">
-          <Avatar className="h-9 w-9 border-2 border-muted-foreground/20">
+      <SidebarFooter className="border-t border-white/10 p-4 space-y-3">
+        <Link to="/settings?tab=profile" className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-white/10">
+          <Avatar className="h-9 w-9 border-2 border-primary/40">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />
             <AvatarFallback className="bg-primary text-primary-foreground font-medium text-sm">
               {getInitials(profile?.full_name)}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium text-foreground truncate">
+            <span className="text-sm font-medium text-white truncate">
               {profile?.full_name || "User"}
             </span>
-            <span className="text-xs text-muted-foreground truncate">
+            <span className="text-xs text-white/50 truncate">
               {profile?.email || ""}
             </span>
           </div>
@@ -163,7 +163,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/settings" className="flex items-center gap-3 rounded-full border border-muted-foreground/50 px-3 py-2 text-foreground transition-all duration-300 ease-out hover:bg-muted hover:translate-x-1 [&>svg]:transition-transform [&>svg]:duration-300" activeClassName="bg-primary/20 text-foreground font-medium border-primary [&>svg]:scale-110">
+              <NavLink to="/settings" className="flex items-center gap-3 rounded-lg px-3 py-2 text-white/70 transition-all duration-200 ease-out hover:bg-white/10 hover:text-white [&>svg]:transition-transform [&>svg]:duration-300" activeClassName="bg-primary/20 text-white font-medium [&>svg]:scale-110">
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </NavLink>
@@ -171,7 +171,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <button onClick={signOut} className="flex w-full items-center gap-3 rounded-full border border-muted-foreground/50 px-3 py-2 text-foreground transition-colors hover:bg-destructive/20 hover:text-destructive">
+              <button onClick={signOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-white/70 transition-colors hover:bg-destructive/20 hover:text-destructive">
                 <LogOut className="h-5 w-5" />
                 <span>Log out</span>
               </button>

@@ -29,7 +29,8 @@ export function ControlHeader({ data, isLoading }: ControlHeaderProps) {
   const hasIssues = data.overdueCount > 0 || data.quotesNeedFollowUp > 0 || data.stuckJobs > 0;
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <div className="h-[2px] bg-primary/50" />
       <div className="flex overflow-x-auto scrollbar-none snap-x snap-mandatory sm:grid sm:grid-cols-4 divide-x divide-border">
         <div className="p-3 text-center min-w-[120px] shrink-0 snap-start sm:min-w-0 sm:shrink">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p>
