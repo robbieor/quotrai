@@ -14,6 +14,23 @@ serve(async (req) => {
 
   const log = (s: string, d?: any) => console.log(`[END-TRIAL] ${s}`, d || "");
 
+  function brandedEmailHtml(title: string, bodyLines: string[]): string {
+    const bodyHtml = bodyLines.map(l => `<p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6">${l}</p>`).join("");
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:'Manrope',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#0f1b2d;padding:24px 32px;text-align:center">
+<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+</td></tr>
+<tr><td style="padding:32px">
+<h1 style="margin:0 0 16px;font-size:20px;color:#0f1b2d">${title}</h1>
+${bodyHtml}
+</td></tr>
+<tr><td style="padding:16px 32px;background:#f9fafb;text-align:center;font-size:12px;color:#999">
+© ${new Date().getFullYear()} Foreman · support@foreman.ie
+</td></tr></table></td></tr></table></body></html>`;
+  }
+
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe not configured");
