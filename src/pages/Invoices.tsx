@@ -383,6 +383,11 @@ export default function Invoices() {
               selectedCount={selectedRows.size}
               onClear={clearSelection}
               onExport={handleExport}
+              onBulkDelete={() => {
+                const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+                selected.forEach((inv) => deleteInvoice.mutate(inv.id));
+                clearSelection();
+              }}
             />
             <CardContent className="p-0">
               <div className="overflow-x-auto">

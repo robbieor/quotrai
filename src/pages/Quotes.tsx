@@ -393,6 +393,11 @@ export default function Quotes() {
               selectedCount={selectedRows.size}
               onClear={clearSelection}
               onExport={handleExport}
+              onBulkDelete={() => {
+                const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
+                selected.forEach((q) => deleteQuote.mutate(q.id));
+                clearSelection();
+              }}
             />
             <CardContent className="p-0">
               {isLoading ? (
