@@ -7,16 +7,58 @@ const corsHeaders = {
 
 const SENDER_DOMAIN = "notify.foreman.ie";
 const FROM_DOMAIN = "foreman.ie";
+const APP_URL = "https://quotrai.lovable.app";
 
 interface DripRow { id: string; user_id: string; email: string; full_name: string | null; drip_step: number; send_at: string; }
 
-const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string }> = {
-  1: { subject: "Welcome to Foreman — meet George, your AI partner 🤝", body: (name) => `Hey ${name},\n\nWelcome to Foreman! I'm George — your AI business partner.\n\nI can create quotes, chase invoices, schedule jobs, and give you a morning briefing — all by voice or text.\n\nHead to Foreman AI and say "What can you do?" to get started.\n\n— George` },
-  2: { subject: "Create your first quote in 30 seconds ⚡", body: (name) => `Hi ${name},\n\nThe fastest way to see Foreman in action? Create your first quote.\n\nHead to Quotes → New Quote, pick a template for your trade, and fill in the details. Or just tell me:\n\n"Quote for [customer name], [job description], [amount]"\n\nI'll do the rest.\n\n— George` },
-  3: { subject: "Your business snapshot is ready 📊", body: (name) => `Hi ${name},\n\nI've been looking at your business data. Head to your Dashboard to see your morning briefing — overdue invoices, upcoming jobs, and what needs your attention today.\n\nThe more data you add, the smarter my insights get.\n\n— George` },
-  4: { subject: "Your crew should be on Foreman too 👷", body: (name) => `Hey ${name},\n\nForeman works even better with your team. Your trial includes unlimited seats — invite your crew from Settings → Team.\n\nThey'll get their own login, see assigned jobs, and clock in/out from their phone.\n\n— George` },
-  5: { subject: "Your free trial ends soon ⏰", body: (name) => `Hi ${name},\n\nJust a heads-up — your Foreman trial wraps up soon.\n\nTo keep everything running (and keep me on the job), subscribe from Settings → Billing.\n\nAll your data stays safe. Pick the plan that fits.\n\n— George` },
+const btnStyle = `display:inline-block;background:#f97316;color:#ffffff;font-family:'Manrope',sans-serif;font-size:15px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;margin-top:8px;`;
+
+const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string; cta: { label: string; url: string } }> = {
+  1: {
+    subject: "Welcome to Foreman — meet George, your AI partner 🤝",
+    body: (name) => `Hey ${name},\n\nWelcome to Foreman! I'm George — your AI business partner.\n\nI can create quotes, chase invoices, schedule jobs, and give you a morning briefing — all by voice or text.\n\nSay "What can you do?" to get started.`,
+    cta: { label: "Talk to George →", url: `${APP_URL}/george` },
+  },
+  2: {
+    subject: "Create your first quote in 30 seconds ⚡",
+    body: (name) => `Hi ${name},\n\nThe fastest way to see Foreman in action? Create your first quote.\n\nPick a template for your trade, fill in the details — or just tell George:\n\n"Quote for [customer], [job], [amount]"\n\nI'll do the rest.`,
+    cta: { label: "Create a Quote →", url: `${APP_URL}/quotes` },
+  },
+  3: {
+    subject: "Your business snapshot is ready 📊",
+    body: (name) => `Hi ${name},\n\nI've been looking at your business data. Your morning briefing is ready — overdue invoices, upcoming jobs, and what needs your attention today.\n\nThe more data you add, the smarter my insights get.`,
+    cta: { label: "View Your Dashboard →", url: `${APP_URL}/dashboard` },
+  },
+  4: {
+    subject: "Your crew should be on Foreman too 👷",
+    body: (name) => `Hey ${name},\n\nForeman works even better with your team. Your trial includes unlimited seats — invite your crew now.\n\nThey'll get their own login, see assigned jobs, and clock in/out from their phone.`,
+    cta: { label: "Invite Your Team →", url: `${APP_URL}/settings` },
+  },
+  5: {
+    subject: "Your free trial ends soon ⏰",
+    body: (name) => `Hi ${name},\n\nJust a heads-up — your Foreman trial wraps up soon.\n\nTo keep everything running (and keep me on the job), pick the plan that fits. All your data stays safe.`,
+    cta: { label: "Choose a Plan →", url: `${APP_URL}/settings` },
+  },
 };
+
+function buildHtml(bodyText: string, cta: { label: string; url: string }, name: string): string {
+  const paragraphs = bodyText.split("\n\n").map(p => 
+    `<p style="font-family:'Manrope',sans-serif;font-size:15px;color:#334155;line-height:1.6;margin:0 0 16px;">${p.replace(/\n/g, "<br/>")}</p>`
+  ).join("");
+
+  return `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
+  <div style="background:#0f172a;padding:30px 25px;text-align:center;border-radius:12px 12px 0 0;">
+    <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+  </div>
+  <div style="padding:30px 25px;">
+    ${paragraphs}
+    <div style="text-align:center;margin:24px 0 16px;">
+      <a href="${cta.url}" style="${btnStyle}">${cta.label}</a>
+    </div>
+    <p style="font-family:'Manrope',sans-serif;font-size:14px;color:#64748b;margin:24px 0 0;">— George</p>
+  </div>
+</div>`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -36,18 +78,19 @@ Deno.serve(async (req) => {
       if (!template) continue;
       const name = row.full_name?.split(" ")[0] || "there";
       const messageId = crypto.randomUUID();
+      const bodyText = template.body(name);
+      const html = buildHtml(bodyText, template.cta, name);
 
       await supabase.from("email_send_log").insert({ message_id: messageId, template_name: `drip:${row.drip_step}`, recipient_email: row.email, status: "pending" });
       const { error: enqueueError } = await supabase.rpc("enqueue_email", {
         queue_name: "transactional_emails",
-        payload: { message_id: messageId, to: row.email, from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: template.subject, html: `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;"><div style="background:#0f172a;padding:30px 25px;text-align:center;border-radius:12px 12px 0 0;"><img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" /></div><div style="padding:30px 25px;"><pre style="font-family:'Manrope',sans-serif;white-space:pre-wrap;">${template.body(name)}</pre></div></div>`, text: template.body(name), purpose: "transactional", label: `drip:${row.drip_step}`, queued_at: new Date().toISOString() },
+        payload: { message_id: messageId, to: row.email, from: `Foreman <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: template.subject, html, text: bodyText, purpose: "transactional", label: `drip:${row.drip_step}`, queued_at: new Date().toISOString() },
       });
 
       if (enqueueError) { console.error(`Failed drip ${row.drip_step} to ${row.email}:`, enqueueError); continue; }
 
       await supabase.from("drip_queue").update({ sent: true, sent_at: new Date().toISOString() }).eq("id", row.id);
 
-      // Audit log entry
       await supabase.from("comms_audit_log").insert({
         channel: "email", record_type: "drip_onboarding", record_id: row.id,
         recipient: row.email, template: `drip:${row.drip_step}`,
