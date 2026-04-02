@@ -182,11 +182,11 @@ function DesktopMessageBubble({ message }: { message: Message }) {
             : "bg-primary/10 border border-primary/20 text-foreground rounded-tr-md"
         )}
       >
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        <p className={cn("text-sm whitespace-pre-wrap leading-relaxed", isAssistant ? "text-foreground/90" : "text-white")}>{message.content}</p>
         <p
           className={cn(
             "text-[10px] mt-1 opacity-70",
-            isAssistant ? "text-muted-foreground" : "text-primary-foreground"
+            isAssistant ? "text-muted-foreground" : "text-white/70"
           )}
         >
           {format(message.timestamp, "h:mm a")}
