@@ -22,6 +22,13 @@ export function useReadOnly(): boolean {
     if (trialEnd > new Date()) return false;
   }
 
-  // Everything else (expired, canceled, past_due, trial expired) = read-only
+  // Past due — allow a 3-day grace period for Stripe retries
+  if (subscriptionV2.status === "past_due" && subscriptionV2.current_period_end) {
+    const periodEnd = new Date(subscriptionV2.current_period_end);
+    const graceEnd = new Date(periodEnd.getTime() + 3 * 24 * 60 * 60 * 1000);
+    if (graceEnd > new Date()) return false;
+  }
+
+  // Everything else (expired, canceled, grace exhausted, trial expired) = read-only
   return true;
 }

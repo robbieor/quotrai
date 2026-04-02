@@ -187,6 +187,12 @@ export function useSubscriptionTier() {
     trialDaysRemaining,
     startTrial: startTrialMutation.mutateAsync,
     isStartingTrial: startTrialMutation.isPending,
-    currentPlan: CONNECT_SEAT_DETAILS,
+    currentPlan: (() => {
+      // Derive from subscriptions_v2 plan_id or fall back to seat type lookup
+      const planId = teamSubscription?.subscription_tier;
+      if (planId === 'lite') return LITE_SEAT_DETAILS;
+      if (planId === 'grow') return GROW_SEAT_DETAILS;
+      return CONNECT_SEAT_DETAILS; // default
+    })(),
   };
 }
