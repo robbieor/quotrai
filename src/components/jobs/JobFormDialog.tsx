@@ -44,6 +44,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useTeamMembers } from "@/hooks/useTeam";
 import { type Job, JOB_STATUSES, type JobStatus } from "@/hooks/useJobs";
 import {
   isPOBoxAddress,
