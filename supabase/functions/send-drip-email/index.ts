@@ -57,6 +57,9 @@ function buildHtml(bodyText: string, cta: { label: string; url: string }, name: 
     </div>
     <p style="font-family:'Manrope',sans-serif;font-size:14px;color:#64748b;margin:24px 0 0;">— George</p>
   </div>
+  <div style="text-align:center;padding:20px 25px;border-top:1px solid #e2e8f0;">
+    <p style="margin:0;color:#94a3b8;font-size:12px;font-family:'Manrope',sans-serif;">Need help? <a href="mailto:support@foreman.ie" style="color:#94a3b8;">support@foreman.ie</a></p>
+  </div>
 </div>`;
 }
 

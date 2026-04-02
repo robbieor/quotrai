@@ -117,7 +117,7 @@ ${bodyHtml}
         "Your free trial has ended and your Foreman subscription is now fully active. 🎉",
         `Your first billing period runs until <strong>${formattedDate}</strong>.`,
         "You now have full access to all the tools you need to run your business — quotes, invoices, scheduling, and George AI at your side.",
-        '<a href="https://foreman.world/dashboard" style="display:inline-block;padding:12px 28px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Open Foreman →</a>',
+        '<a href="https://foreman.world/dashboard" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Open Foreman →</a>',
         "Thanks for choosing Foreman. We're here if you need anything — just reply to this email or reach out at support@foreman.ie.",
       ]);
 

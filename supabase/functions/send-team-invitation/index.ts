@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
             ${role || seatType ? `<p style="text-align: center; color: #64748b; font-size: 14px;">Role: <strong>${role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : 'Team Member'}</strong> · Seat: <strong>${seatType === 'grow' ? 'Grow' : seatType === 'connect' ? 'Connect' : 'Lite'}</strong></p>` : ''}
             <p style="text-align: center; color: #64748b;">Join the team to collaborate on jobs, quotes, invoices, and more.</p>
             <div style="text-align: center;">
-              <a href="${inviteUrl}" style="display: inline-block; background: #00E6A0; color: #0f172a; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0;">Accept Invitation</a>
+              <a href="${inviteUrl}" style="display: inline-block; background: #00E6A0; color: #0f172a; padding: 12px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 14px; margin: 20px 0;">Accept Invitation</a>
             </div>
             <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 14px; color: #92400e;">
               <strong>⏰ Note:</strong> This invitation will expire in 7 days.
