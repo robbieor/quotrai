@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useXeroConnection } from "./useXeroConnection";
 import { useCallback } from "react";
+import { toast } from "sonner";
 
 /**
  * Hook that provides auto-sync helpers for pushing data to Xero.
