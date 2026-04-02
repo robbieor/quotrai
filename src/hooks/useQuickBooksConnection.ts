@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { toast } from "sonner";
 
 export function useQuickBooksConnection() {
   const { profile } = useProfile();
@@ -37,6 +38,9 @@ export function useQuickBooksConnection() {
       });
       if (error) throw error;
       return data.auth_url as string;
+    },
+    onError: (e: Error) => {
+      toast.error("QuickBooks connection failed: " + e.message);
     },
   });
 
