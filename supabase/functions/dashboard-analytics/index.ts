@@ -466,7 +466,7 @@ Deno.serve(async (req) => {
       metrics, controlHeader, kpi, actionAlerts, revenueChartData, jobStatusData, quoteFunnel,
       agingBuckets, agingInvoices, topCustomers, customerProfitability,
       jobsAtRisk, invoicesAtRisk, revenueByJobType,
-      drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList },
+      drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList, cashCollected: cashCollectedList, revenueInvoices: revenueInvoicesList },
       jobsDueThisWeek, overdueInvoices: overdueList, insights, healthInsights: [],
     };
 
