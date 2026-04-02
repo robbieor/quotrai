@@ -16,12 +16,18 @@ interface Message {
   timestamp: Date;
 }
 
+interface QuickActionChip {
+  label: string;
+  message: string;
+}
+
 interface GeorgeMessageListProps {
   messages: Message[];
   isProcessing?: boolean;
   streamingText?: string;
   lastError?: string | null;
   onRetry?: () => void;
+  onQuickAction?: (message: string) => void;
 }
 
 function MarkdownContent({ content, className }: { content: string; className?: string }) {
