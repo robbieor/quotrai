@@ -181,6 +181,9 @@ export default function JobCalendar() {
               onDateChange={setCurrentDate}
               onViewChange={setView}
               pendingCount={unscheduledJobs.length}
+              startHour={startHour}
+              endHour={endHour}
+              onWorkingHoursChange={updateHours}
             />
 
             {activeJob && (
