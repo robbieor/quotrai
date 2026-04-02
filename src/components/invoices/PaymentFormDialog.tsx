@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useCurrency } from "@/hooks/useCurrency";
 import { format } from "date-fns";
 import {
@@ -65,6 +66,11 @@ export function PaymentFormDialog({
     
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
+      return;
+    }
+
+    if (numAmount > outstandingBalance) {
+      toast.error(`Payment cannot exceed outstanding balance of ${formatCurrency(outstandingBalance)}`);
       return;
     }
 
