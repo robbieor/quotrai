@@ -148,7 +148,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
         <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
           <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{message.content}</p>
           </div>
         </div>
       </div>
