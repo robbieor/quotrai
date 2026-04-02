@@ -492,6 +492,10 @@ serve(async (req) => {
           { conversation_id: activeConversationId, role: "assistant", content: shortCircuit.response },
         ]);
       }
+      // Log to ai_conversations
+      logToAiConversations(serviceSupabase, userId, message, shortCircuit.response, {
+        conversation_id: activeConversationId, team_id: teamId, intent: shortCircuit.intent, model: "quick-action-shortcircuit",
+      });
       return new Response(
         JSON.stringify({
           message: shortCircuit.response,
