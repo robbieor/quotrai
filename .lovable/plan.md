@@ -1,66 +1,30 @@
 
 
-# Foreman AI Chat — UX Overhaul
+# Week View Calendar — Time Labels & Flexible Hours
 
-## Problems Identified
+## Problems
 
-From the screenshots and code review:
-
-1. **Input text box overflow**: The text input placeholder "Talk or type to Foreman AI..." visually bleeds outside the rounded input container on mobile — the `min-h-[44px]` on the inner `<input>` combined with the container `min-h-[48px]` and padding creates misalignment
-2. **Placeholder text colour**: Input placeholder text uses `text-muted-foreground` (grey) — user wants white text inside the input (the send button area has a green bg, but the text field itself needs better contrast treatment)
-3. **User message bubble text**: Already white (`text-white`) — confirmed working
-4. **Header layout cramped**: Back button + avatar + "Foreman AI / Online" + hamburger menu + notifications + user avatar all squeezed into one row on 402px viewport
-5. **Context indicator bar feels disconnected**: "George knows about 127 active jobs..." sits awkwardly between header and chat
-6. **Welcome screen pre-chat**: The quick actions grid and greeting are functional but feel generic — not "industry-leading AI assistant" quality
-7. **Sidebar (Conversations panel)**: Clean but the conversation items use basic text truncation, no preview snippets
+1. **No time labels on mobile**: The time gutter column is hidden on mobile (`!isMobile`), so users see unlabelled rows with no indication of what hour each slot represents
+2. **Fixed 7 AM – 8 PM range**: `HOURS` is hardcoded as `Array.from({ length: 14 }, (_, i) => i + 7)` — no way to adjust for trades that start earlier (6 AM) or finish later (9–10 PM)
+3. **Same issue in DayView**: `DayView.tsx` line 19 has the identical hardcoded `HOURS` array
 
 ## Fixes
 
-### 1. Mobile Input Bar — Fix Overflow and Styling
-- **File**: `src/components/george/GeorgeMobileInput.tsx`
-- Change outer container from `rounded-xl` to `rounded-2xl` with proper overflow hidden
-- Remove `min-h-[44px]` from inner input — let padding control height
-- Set input text colour explicitly: `text-foreground` with `placeholder:text-muted-foreground/60`
-- Ensure the input container clips content with `overflow-hidden`
+### 1. Add Time Label to Each Cell on Mobile
+In `WeekView.tsx`, add a small `text-[9px]` time label (e.g. "7a", "10a", "1p") in the top-left corner of each cell on mobile. This sits inside each `DroppableCell` but only renders on the first column to avoid repetition — or better, render it inside every cell so each column is self-explanatory when scrolling horizontally.
 
-### 2. Mobile Header — Tighten Layout
-- **File**: `src/components/george/GeorgeMobileHeader.tsx`
-- Remove the hamburger `Menu` button from the header row — move conversation history access to a swipe gesture or a dedicated icon in the top-left (replace back arrow with a sidebar toggle when on the George page)
-- Reduce avatar size from `md` to `sm`
-- Drop "Online" status text on very small screens or make it a simple green dot only
-
-### 3. Context Indicator — Integrate Into Header
-- **File**: `src/components/george/ContextIndicator.tsx`
-- Reduce visual weight: smaller text, remove the Shield icon, make it a single-line subtle bar
-- Use `text-[10px]` and lighter opacity
-
-### 4. Welcome Screen — Elevate to ChatGPT-Level Quality
-- **File**: `src/components/george/GeorgeWelcome.tsx` (mobile section)
-- Cleaner greeting with larger, bolder typography
-- Reduce "Needs attention" cards to a single compact alert strip instead of horizontally scrolling cards
-- Quick action buttons: use pill-shaped buttons instead of grid cards — more like ChatGPT's suggestion chips
-- Remove the "Today" stats row from the welcome (it clutters — dashboard already shows this)
-- Weekly analysis section: collapse by default, keep as-is
-
-### 5. Message Bubbles — Polish
-- **File**: `src/components/george/GeorgeMessageList.tsx`
-- User bubbles: already `bg-primary text-white` — confirmed good
-- Assistant bubbles: tighten border radius, remove the outer `border border-border` (cleaner look), keep `bg-muted/50`
-- "George is thinking" indicator: use a more elegant animation (3 fading dots, not bouncing)
-
-### 6. Sidebar — Mobile Polish
-- **File**: `src/components/george/GeorgeSidebar.tsx`
-- Add first-message preview snippet under each conversation title (truncated to 1 line)
-- Active conversation: use `bg-primary/10` highlight instead of default
+### 2. Configurable Working Hours
+- Extract `HOURS` into a shared constant file or use `useState` with sensible defaults (7 AM – 7 PM)
+- Add a small control in the `CalendarHeader` overflow menu (the `...` button) to let users set "Start hour" and "End hour" via a simple dropdown or stepper
+- Store the preference in `localStorage` so it persists across sessions
+- Apply to both `WeekView` and `DayView`
 
 ## Files Changed
 
-| Action | File |
-|--------|------|
-| Edit | `src/components/george/GeorgeMobileInput.tsx` |
-| Edit | `src/components/george/GeorgeMobileHeader.tsx` |
-| Edit | `src/components/george/ContextIndicator.tsx` |
-| Edit | `src/components/george/GeorgeWelcome.tsx` |
-| Edit | `src/components/george/GeorgeMessageList.tsx` |
-| Edit | `src/components/george/GeorgeSidebar.tsx` |
+| Action | File | Change |
+|--------|------|--------|
+| Edit | `src/components/calendar/WeekView.tsx` | Add per-cell time label on mobile; use configurable hours |
+| Edit | `src/components/calendar/DayView.tsx` | Use same configurable hours |
+| Edit | `src/components/calendar/CalendarHeader.tsx` | Add "Working hours" option in overflow menu |
+| Create | `src/hooks/useWorkingHours.ts` | Small hook: reads/writes start/end hour from localStorage |
 
