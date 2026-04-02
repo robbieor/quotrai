@@ -388,6 +388,7 @@ export default function George() {
           <GeorgeMobileHeader onMenuClick={() => setSidebarOpen(true)} />
 
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <ContextIndicator />
             <GeorgeUsageWarning />
             <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
 
