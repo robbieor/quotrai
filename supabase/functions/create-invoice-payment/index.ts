@@ -85,7 +85,7 @@ serve(async (req) => {
     const applicationFee = Math.round(totalInCents * (platformFeePercent / 100));
 
     const origin = req.headers.get("origin") || "https://foreman.world";
-    const returnUrl = `${origin}/portal/invoice?token=${portal_token}`;
+    const returnUrl = `${origin}/invoice/${portal_token}`;
 
     const session = await stripe.checkout.sessions.create({
       line_items: lineItems,
