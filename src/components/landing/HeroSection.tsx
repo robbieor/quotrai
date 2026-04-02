@@ -9,7 +9,7 @@ interface HeroSectionProps {
   onTryDemo?: () => void;
 }
 
-export function HeroSection({ formatPrice }: HeroSectionProps) {
+export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
   return (
     <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative">
       {/* Background decoration */}
