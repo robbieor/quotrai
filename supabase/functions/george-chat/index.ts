@@ -1141,6 +1141,80 @@ ${tradeContext}
         .eq("id", activeConversationId);
     }
 
+    // ─── EXTRACT & STORE MEMORIES (fire and forget) ──────────────
+    if (lovableApiKey && finalMessage) {
+      (async () => {
+        try {
+          const memExtractResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [
+                { role: "system", content: `Extract structured memory updates from this conversation. Only extract NEW facts, preferences, or patterns the user has revealed. Return nothing if there's nothing new to learn. Categories: preference, business_fact, pattern, goal, pain_point. Source should be "stated" for explicit statements, "inferred" for implied facts.` },
+                { role: "user", content: `User said: "${message}"\n\nAssistant replied: "${finalMessage.slice(0, 500)}"` },
+              ],
+              tools: [{
+                type: "function",
+                function: {
+                  name: "update_user_memory",
+                  description: "Store new facts/preferences learned about the user",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      memories: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            category: { type: "string", enum: ["preference", "business_fact", "pattern", "goal", "pain_point"] },
+                            key: { type: "string", description: "Short identifier, e.g. 'minimum_margin' or 'team_size'" },
+                            value: { type: "string", description: "The fact or preference value" },
+                            confidence: { type: "number", description: "0.0-1.0" },
+                            source: { type: "string", enum: ["stated", "inferred", "observed"] },
+                          },
+                          required: ["category", "key", "value"],
+                        },
+                      },
+                    },
+                    required: ["memories"],
+                    additionalProperties: false,
+                  },
+                },
+              }],
+              tool_choice: "auto",
+              temperature: 0.3,
+              max_tokens: 300,
+            }),
+          });
+          if (memExtractResponse.ok) {
+            const memData = await memExtractResponse.json();
+            const memToolCall = memData.choices?.[0]?.message?.tool_calls?.[0];
+            if (memToolCall?.function?.name === "update_user_memory") {
+              const parsed = JSON.parse(memToolCall.function.arguments || "{}");
+              if (parsed.memories?.length) {
+                for (const mem of parsed.memories) {
+                  await serviceSupabase.from("ai_user_memory").upsert({
+                    user_id: userId,
+                    category: mem.category,
+                    key: mem.key,
+                    value: mem.value,
+                    confidence: mem.confidence || 1.0,
+                    source: mem.source || "inferred",
+                    updated_at: now.toISOString(),
+                    last_referenced_at: now.toISOString(),
+                  }, { onConflict: "user_id,category,key" });
+                }
+                console.log(`george-chat: Stored ${parsed.memories.length} memory update(s)`);
+              }
+            }
+          }
+        } catch (memErr) {
+          console.error("george-chat: Memory extraction error (non-fatal):", memErr);
+        }
+      })();
+    }
+
     // ─── BUILD STRUCTURED ACTION PLAN ─────────────────────────────
     const intentInfo = classifyIntent(toolCalls);
     const hasAction = toolCalls.length > 0;
