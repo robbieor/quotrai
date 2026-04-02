@@ -58,7 +58,27 @@ function MarkdownContent({ content, className }: { content: string; className?: 
   );
 }
 
-export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry }: GeorgeMessageListProps) {
+// Detect contextual quick actions from message content
+function getQuickActions(content: string): QuickActionChip[] {
+  const chips: QuickActionChip[] = [];
+  const lower = content.toLowerCase();
+  if (lower.includes("overdue") || lower.includes("unpaid") || lower.includes("outstanding")) {
+    chips.push({ label: "Send Reminders", message: "Send payment reminders for all overdue invoices" });
+    chips.push({ label: "View Invoices", message: "Show me the overdue invoices" });
+  }
+  if (lower.includes("quote") && (lower.includes("draft") || lower.includes("created") || lower.includes("ready"))) {
+    chips.push({ label: "Send Quote", message: "Send the quote to the customer" });
+  }
+  if (lower.includes("job") && (lower.includes("today") || lower.includes("scheduled"))) {
+    chips.push({ label: "View Calendar", message: "Show me my calendar for today" });
+  }
+  if (lower.includes("invoice") && lower.includes("created")) {
+    chips.push({ label: "View Invoice", message: "Show me the invoice" });
+  }
+  return chips.slice(0, 3);
+}
+
+export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry, onQuickAction }: GeorgeMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
