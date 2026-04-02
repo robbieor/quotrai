@@ -157,7 +157,12 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
     <ScrollArea className="flex-1">
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {messages.map((message) => (
-          <DesktopMessageBubble key={message.id} message={message} />
+          <div key={message.id}>
+            <DesktopMessageBubble message={message} />
+            {message.id === lastAssistantId && !isProcessing && !streamingText && (
+              <QuickActionChips content={message.content} onAction={onQuickAction} />
+            )}
+          </div>
         ))}
 
         {/* Streaming text — progressive render */}
