@@ -143,10 +143,17 @@ export default function Jobs() {
     }
   };
 
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
   const handleBulkDelete = () => {
+    setBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
     const selectedJobs = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
     selectedJobs.forEach((job) => deleteJob.mutate(job.id));
     clearSelection();
+    setBulkDeleteOpen(false);
   };
 
   const handleExport = () => {
