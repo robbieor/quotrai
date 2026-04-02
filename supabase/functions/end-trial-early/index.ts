@@ -14,6 +14,23 @@ serve(async (req) => {
 
   const log = (s: string, d?: any) => console.log(`[END-TRIAL] ${s}`, d || "");
 
+  function brandedEmailHtml(title: string, bodyLines: string[]): string {
+    const bodyHtml = bodyLines.map(l => `<p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6">${l}</p>`).join("");
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:'Manrope',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#0f1b2d;padding:24px 32px;text-align:center">
+<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+</td></tr>
+<tr><td style="padding:32px">
+<h1 style="margin:0 0 16px;font-size:20px;color:#0f1b2d">${title}</h1>
+${bodyHtml}
+</td></tr>
+<tr><td style="padding:16px 32px;background:#f9fafb;text-align:center;font-size:12px;color:#999">
+© ${new Date().getFullYear()} Foreman · support@foreman.ie
+</td></tr></table></td></tr></table></body></html>`;
+  }
+
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe not configured");
@@ -86,6 +103,41 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq("org_id", orgMember.org_id);
+
+    // Send branded confirmation email
+    const periodEnd = new Date(updated.current_period_end * 1000);
+    const formattedDate = periodEnd.toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" });
+
+    // Get customer email from Stripe
+    const customerId = updated.customer as string;
+    const customer = await stripe.customers.retrieve(customerId);
+    if (!customer.deleted && (customer as any).email) {
+      const email = (customer as any).email;
+      const html = brandedEmailHtml("Welcome Aboard — Your Subscription is Active", [
+        "Your free trial has ended and your Foreman subscription is now fully active. 🎉",
+        `Your first billing period runs until <strong>${formattedDate}</strong>.`,
+        "You now have full access to all the tools you need to run your business — quotes, invoices, scheduling, and George AI at your side.",
+        '<a href="https://foreman.world/dashboard" style="display:inline-block;padding:12px 28px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:8px 0">Open Foreman →</a>',
+        "Thanks for choosing Foreman. We're here if you need anything — just reply to this email or reach out at support@foreman.ie.",
+      ]);
+
+      try {
+        await supabaseClient.rpc("enqueue_email", {
+          p_queue_name: "transactional_emails",
+          p_message: JSON.stringify({
+            to: email,
+            subject: "Welcome aboard — your Foreman subscription is active",
+            html,
+            from: "Foreman <support@foreman.ie>",
+            idempotency_key: `trial-ended-${subscription.stripe_subscription_id}`,
+            purpose: "transactional",
+          }),
+        });
+        log("Confirmation email enqueued", { to: email });
+      } catch (e) {
+        log("Email enqueue failed (non-fatal)", { error: String(e) });
+      }
+    }
 
     return new Response(
       JSON.stringify({
