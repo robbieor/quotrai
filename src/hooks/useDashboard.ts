@@ -62,6 +62,7 @@ export function useDashboardStats() {
       const customers = customersResult.data || [];
       const quotes = quotesResult.data || [];
       const invoices = invoicesResult.data || [];
+      const payments = paymentsResult.data || [];
 
       // Calculate active jobs (pending, scheduled, in_progress)
       const activeJobs = jobs.filter((j) => 
