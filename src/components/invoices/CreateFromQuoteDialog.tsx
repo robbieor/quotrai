@@ -23,12 +23,20 @@ import { useCreateInvoiceFromQuote } from "@/hooks/useInvoices";
 interface CreateFromQuoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preselectedQuoteId?: string;
 }
 
-export function CreateFromQuoteDialog({ open, onOpenChange }: CreateFromQuoteDialogProps) {
+export function CreateFromQuoteDialog({ open, onOpenChange, preselectedQuoteId }: CreateFromQuoteDialogProps) {
   const { data: quotes } = useQuotes();
   const createFromQuote = useCreateInvoiceFromQuote();
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>("");
+
+  // Auto-select when preselectedQuoteId changes
+  useEffect(() => {
+    if (preselectedQuoteId) {
+      setSelectedQuoteId(preselectedQuoteId);
+    }
+  }, [preselectedQuoteId]);
 
   // Filter to only show accepted quotes
   const acceptedQuotes = quotes?.filter((q) => q.status === "accepted") || [];
