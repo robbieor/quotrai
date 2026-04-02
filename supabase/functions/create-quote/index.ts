@@ -7,22 +7,54 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { client_name, template_name, additional_notes, valid_days, team_id, tax_rate } = await req.json();
+    // --- AUTH CHECK ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Validate required fields
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: teamId, error: teamError } = await userClient.rpc("get_user_team_id");
+    if (teamError || !teamId) {
+      return new Response(
+        JSON.stringify({ error: "No team found for user" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+
+    const { client_name, template_name, additional_notes, valid_days, tax_rate } = await req.json();
+
     if (!client_name) {
       return new Response(
         JSON.stringify({ error: "client_name is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
     if (!template_name) {
       return new Response(
         JSON.stringify({ error: "template_name is required" }),
@@ -30,22 +62,17 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-    
-    // Country to VAT rate mapping
     const COUNTRY_VAT_RATES: Record<string, number> = {
       ie: 23, gb: 20, uk: 20, us: 0, ca: 5, au: 10, nz: 15,
       de: 19, fr: 20, es: 21, it: 22, nl: 21, be: 21, at: 20,
-      ch: 8.1, se: 25, no: 25, dk: 25, fi: 24, pl: 23, pt: 23
+      ch: 8.1, se: 25, no: 25, dk: 25, fi: 24, pl: 23, pt: 23,
     };
 
-    // Look up client by name (case-insensitive)
+    // Scope client lookup to user's team
     const { data: client, error: clientError } = await supabase
       .from("customers")
-      .select("id, name, team_id, country_code")
+      .select("id, name, country_code")
+      .eq("team_id", teamId)
       .ilike("name", `%${client_name}%`)
       .limit(1)
       .single();
@@ -56,41 +83,31 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    // Get VAT rate based on client's country or default
+
     const clientCountry = client.country_code?.toLowerCase() || "ie";
     const defaultVatRate = COUNTRY_VAT_RATES[clientCountry] ?? 0;
 
-    const effectiveTeamId = team_id || client.team_id;
-
-    // Look up template by name - try exact substring first, then fuzzy word match
+    // Scope template lookup — try direct match, then fuzzy
     let template = null;
-    let templateError = null;
 
-    // First try direct substring match
-    const { data: directMatch, error: directErr } = await supabase
+    const { data: directMatch } = await supabase
       .from("templates")
       .select("*, template_items(*)")
       .ilike("name", `%${template_name}%`)
-      .eq("team_id", effectiveTeamId)
+      .eq("team_id", teamId)
       .limit(1)
       .maybeSingle();
 
     if (directMatch) {
       template = directMatch;
     } else {
-      // Fuzzy match: split search into words and find templates matching all words
       const searchWords = template_name.toLowerCase().split(/\s+/).filter((w: string) => w.length > 1);
-      
-      const { data: allTemplates, error: allErr } = await supabase
+      const { data: allTemplates } = await supabase
         .from("templates")
         .select("*, template_items(*)")
-        .eq("team_id", effectiveTeamId);
+        .eq("team_id", teamId);
 
-      if (allErr) {
-        templateError = allErr;
-      } else if (allTemplates) {
-        // Score templates by how many search words match
+      if (allTemplates) {
         const scored = allTemplates
           .map((t: any) => {
             const nameLower = t.name.toLowerCase();
@@ -99,14 +116,11 @@ serve(async (req) => {
           })
           .filter((t: any) => t.matchCount > 0)
           .sort((a: any, b: any) => b.matchCount - a.matchCount);
-
-        if (scored.length > 0) {
-          template = scored[0];
-        }
+        if (scored.length > 0) template = scored[0];
       }
     }
 
-    if (templateError || !template) {
+    if (!template) {
       return new Response(
         JSON.stringify({ error: `Template not found: ${template_name}` }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -115,34 +129,30 @@ serve(async (req) => {
 
     const templateItems = template.template_items || [];
 
-    // Generate quote number
-    const { count } = await supabase
-      .from("quotes")
-      .select("*", { count: "exact", head: true })
-      .eq("team_id", effectiveTeamId);
+    // Use atomic number generator
+    const { data: quoteNumber, error: numError } = await supabase.rpc("generate_quote_number", { p_team_id: teamId });
+    if (numError || !quoteNumber) {
+      return new Response(
+        JSON.stringify({ error: "Failed to generate quote number" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const year = new Date().getFullYear();
-    const quoteNumber = `QTE-${year}-${String((count || 0) + 1).padStart(3, "0")}`;
-
-    // Calculate totals from template items
     const subtotal = templateItems.reduce(
       (sum: number, item: any) => sum + (Number(item.quantity) || 1) * (Number(item.unit_price) || 0),
       0
     );
-    // Use provided tax_rate, template tax_rate, or default from country
     const taxRateValue = tax_rate !== undefined ? tax_rate : (template.tax_rate || defaultVatRate);
     const taxAmount = subtotal * (taxRateValue / 100);
     const total = subtotal + taxAmount;
 
-    // Calculate valid_until date (default 30 days)
     const validDays = valid_days || 30;
     const validUntil = new Date(Date.now() + validDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    // Create quote
     const { data: quote, error: quoteError } = await supabase
       .from("quotes")
       .insert({
-        team_id: effectiveTeamId,
+        team_id: teamId,
         customer_id: client.id,
         display_number: quoteNumber,
         status: "draft",
@@ -164,7 +174,6 @@ serve(async (req) => {
       );
     }
 
-    // Create quote items from template (copy line_items)
     if (templateItems.length > 0) {
       const quoteItems = templateItems.map((item: any) => ({
         quote_id: quote.id,
@@ -172,14 +181,8 @@ serve(async (req) => {
         quantity: item.quantity || 1,
         unit_price: item.unit_price || 0,
       }));
-
-      const { error: itemsError } = await supabase
-        .from("quote_items")
-        .insert(quoteItems);
-
-      if (itemsError) {
-        console.error("Quote items error:", itemsError);
-      }
+      const { error: itemsError } = await supabase.from("quote_items").insert(quoteItems);
+      if (itemsError) console.error("Quote items error:", itemsError);
     }
 
     return new Response(

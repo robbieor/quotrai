@@ -7,22 +7,57 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { client_name, template_name, additional_notes, team_id, tax_rate, due_days } = await req.json();
+    // --- AUTH CHECK ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Validate required fields
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const userId = claimsData.claims.sub;
+
+    // Get user's team_id
+    const { data: teamId, error: teamError } = await userClient.rpc("get_user_team_id");
+    if (teamError || !teamId) {
+      return new Response(
+        JSON.stringify({ error: "No team found for user" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Service client for writes
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+
+    const { client_name, template_name, additional_notes, tax_rate, due_days } = await req.json();
+
     if (!client_name) {
       return new Response(
         JSON.stringify({ error: "client_name is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
     if (!template_name) {
       return new Response(
         JSON.stringify({ error: "template_name is required" }),
@@ -30,22 +65,17 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-    
-    // Country to VAT rate mapping
     const COUNTRY_VAT_RATES: Record<string, number> = {
       ie: 23, gb: 20, uk: 20, us: 0, ca: 5, au: 10, nz: 15,
       de: 19, fr: 20, es: 21, it: 22, nl: 21, be: 21, at: 20,
-      ch: 8.1, se: 25, no: 25, dk: 25, fi: 24, pl: 23, pt: 23
+      ch: 8.1, se: 25, no: 25, dk: 25, fi: 24, pl: 23, pt: 23,
     };
 
-    // Look up client by name (case-insensitive)
+    // Scope client lookup to user's team
     const { data: client, error: clientError } = await supabase
       .from("customers")
-      .select("id, name, team_id, country_code")
+      .select("id, name, country_code")
+      .eq("team_id", teamId)
       .ilike("name", `%${client_name}%`)
       .limit(1)
       .single();
@@ -56,19 +86,16 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    // Get VAT rate based on client's country or default
+
     const clientCountry = client.country_code?.toLowerCase() || "ie";
     const defaultVatRate = COUNTRY_VAT_RATES[clientCountry] ?? 0;
 
-    const effectiveTeamId = team_id || client.team_id;
-
-    // Look up template by name (case-insensitive)
+    // Scope template lookup to user's team
     const { data: template, error: templateError } = await supabase
       .from("templates")
       .select("*, template_items(*)")
       .ilike("name", `%${template_name}%`)
-      .eq("team_id", effectiveTeamId)
+      .eq("team_id", teamId)
       .limit(1)
       .single();
 
@@ -81,26 +108,23 @@ serve(async (req) => {
 
     const templateItems = template.template_items || [];
 
-    // Generate invoice number
-    const { count } = await supabase
-      .from("invoices")
-      .select("*", { count: "exact", head: true })
-      .eq("team_id", effectiveTeamId);
+    // Use atomic number generator
+    const { data: invoiceNumber, error: numError } = await supabase.rpc("generate_invoice_number", { p_team_id: teamId });
+    if (numError || !invoiceNumber) {
+      return new Response(
+        JSON.stringify({ error: "Failed to generate invoice number" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const year = new Date().getFullYear();
-    const invoiceNumber = `INV-${year}-${String((count || 0) + 1).padStart(3, "0")}`;
-
-    // Calculate totals from template items
     const subtotal = templateItems.reduce(
       (sum: number, item: any) => sum + (Number(item.quantity) || 1) * (Number(item.unit_price) || 0),
       0
     );
-    // Use provided tax_rate, template tax_rate, or default from country
     const taxRateValue = tax_rate !== undefined ? tax_rate : (template.tax_rate || defaultVatRate);
     const taxAmount = subtotal * (taxRateValue / 100);
     const total = subtotal + taxAmount;
 
-    // Create invoice
     const today = new Date().toISOString().split("T")[0];
     const daysUntilDue = due_days || 30;
     const dueDate = new Date(Date.now() + daysUntilDue * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -108,7 +132,7 @@ serve(async (req) => {
     const { data: invoice, error: invoiceError } = await supabase
       .from("invoices")
       .insert({
-        team_id: effectiveTeamId,
+        team_id: teamId,
         customer_id: client.id,
         display_number: invoiceNumber,
         status: "draft",
@@ -131,7 +155,6 @@ serve(async (req) => {
       );
     }
 
-    // Create invoice items from template (copy line_items)
     if (templateItems.length > 0) {
       const invoiceItems = templateItems.map((item: any) => ({
         invoice_id: invoice.id,
@@ -141,13 +164,8 @@ serve(async (req) => {
         amount: (item.quantity || 1) * (item.unit_price || 0),
       }));
 
-      const { error: itemsError } = await supabase
-        .from("invoice_items")
-        .insert(invoiceItems);
-
-      if (itemsError) {
-        console.error("Invoice items error:", itemsError);
-      }
+      const { error: itemsError } = await supabase.from("invoice_items").insert(invoiceItems);
+      if (itemsError) console.error("Invoice items error:", itemsError);
     }
 
     return new Response(
