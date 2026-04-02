@@ -977,13 +977,10 @@ IMPORTANT RULES:
           .update({ updated_at: now.toISOString() })
           .eq("id", activeConversationId);
       }
+      logToAiConversations(serviceSupabase, userId, message, fallbackMsg, {
+        conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "ai-error-fallback",
+      });
       return new Response(
-        JSON.stringify({
-          message: fallbackMsg,
-          conversation_id: activeConversationId,
-          action_plan: {
-            action_id: actionId,
-            status: "failed",
             input_source: "typed",
             command_text: message,
             timestamp: now.toISOString(),
