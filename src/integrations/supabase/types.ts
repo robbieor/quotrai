@@ -5069,41 +5069,24 @@ export type Database = {
       team_member_profiles: {
         Row: {
           avatar_url: string | null
-          bio: string | null
+          created_at: string | null
           email: string | null
           full_name: string | null
           id: string | null
+          role: Database["public"]["Enums"]["team_role"] | null
           team_id: string | null
-          trade_type: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string | null
-          team_id?: string | null
-          trade_type?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          email?: string | null
-          full_name?: string | null
-          id?: string | null
-          team_id?: string | null
-          trade_type?: string | null
+          user_id: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "profiles_team_id_fkey"
+            foreignKeyName: "team_memberships_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "team_public"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "profiles_team_id_fkey"
+            foreignKeyName: "team_memberships_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
