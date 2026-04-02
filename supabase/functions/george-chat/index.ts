@@ -1097,6 +1097,10 @@ IMPORTANT RULES:
 
     // Change 5: For pure chat (no tools called), return action_plan: null
     if (!hasAction) {
+      // Log pure chat to ai_conversations
+      logToAiConversations(serviceSupabase, userId, message, finalMessage, {
+        conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "google/gemini-2.5-pro",
+      });
       return new Response(
         JSON.stringify({
           message: finalMessage,
