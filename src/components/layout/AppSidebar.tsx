@@ -102,14 +102,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-          <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tight text-foreground">Foreman</span>
-            {trialDaysRemaining !== null && (
-              <Link to="/settings?tab=billing" className="text-[10px] font-semibold text-amber-500 hover:text-amber-400 transition-colors">
-                Trial · {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""} left
-              </Link>
-            )}
-          </div>
+          <span className="text-xl font-bold tracking-tight text-foreground">Foreman</span>
         </div>
       </SidebarHeader>
 
