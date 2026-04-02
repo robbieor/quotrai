@@ -13,11 +13,11 @@
   :root {
     --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     
-    /* Light Theme — #FAFAFA canvas, white cards */
-    --background: 0 0% 98%;
+    /* Light Theme — warm off-white canvas, white cards */
+    --background: 220 14% 96%;
     --foreground: 235 40% 14%;
 
-    --card: 0 0% 100%;
+    --card: 220 20% 99%;
     --card-foreground: 235 40% 14%;
 
     --popover: 0 0% 100%;
@@ -27,10 +27,10 @@
     --primary: 155 85% 33%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 10% 95%;
+    --secondary: 220 14% 94%;
     --secondary-foreground: 235 40% 14%;
 
-    --muted: 240 10% 95%;
+    --muted: 220 14% 94%;
     --muted-foreground: 235 15% 45%;
 
     --accent: 155 85% 33%;
@@ -42,20 +42,20 @@
     --warning: 36 91% 55%;
     --warning-foreground: 36 91% 20%;
 
-    --border: 240 10% 92%;
-    --input: 240 10% 92%;
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
     --ring: 155 85% 33%;
 
     --radius: 0.875rem;
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 235 40% 14%;
+    /* Sidebar — Dark Navy */
+    --sidebar-background: 220 26% 12%;
+    --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 155 85% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 96%;
-    --sidebar-accent-foreground: 235 40% 14%;
-    --sidebar-border: 240 10% 92%;
+    --sidebar-accent: 220 26% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 26% 18%;
     --sidebar-ring: 155 85% 33%;
 
     /* Chart colors */
