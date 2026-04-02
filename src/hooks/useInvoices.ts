@@ -169,6 +169,14 @@ export function useCreateInvoiceFromQuote() {
       
       const invoiceNumber = `INV-${String((count || 0) + 1).padStart(4, "0")}`;
 
+      // Resolve currency from customer country
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("country_code")
+        .eq("id", quote.customer_id)
+        .single();
+      const currency = getCurrencyFromCountry(customer?.country_code);
+
       // Create invoice from quote
       const { data: newInvoice, error: invoiceError } = await supabase
         .from("invoices")
@@ -183,6 +191,7 @@ export function useCreateInvoiceFromQuote() {
           tax_amount: quote.tax_amount,
           total: quote.total,
           notes: quote.notes,
+          currency,
         })
         .select()
         .single();
