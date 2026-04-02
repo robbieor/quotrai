@@ -11,7 +11,7 @@ const APP_URL = "https://quotrai.lovable.app";
 
 interface DripRow { id: string; user_id: string; email: string; full_name: string | null; drip_step: number; send_at: string; }
 
-const btnStyle = `display:inline-block;background:#f97316;color:#ffffff;font-family:'Manrope',sans-serif;font-size:15px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;margin-top:8px;`;
+const btnStyle = `display:inline-block;background:#00E6A0;color:#0f172a;font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:12px;margin-top:8px;`;
 
 const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string; cta: { label: string; url: string } }> = {
   1: {
