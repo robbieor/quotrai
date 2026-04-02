@@ -68,6 +68,11 @@ export function PaymentFormDialog({
       return;
     }
 
+    if (numAmount > outstandingBalance) {
+      toast.error(`Payment cannot exceed outstanding balance of ${formatCurrency(outstandingBalance)}`);
+      return;
+    }
+
     createPayment.mutate(
       {
         invoice_id: invoiceId,
