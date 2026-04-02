@@ -6,6 +6,7 @@ import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
 interface HeroSectionProps {
   formatPrice: (eur: number, decimals?: number) => string;
+  onTryDemo?: () => void;
 }
 
 export function HeroSection({ formatPrice }: HeroSectionProps) {
