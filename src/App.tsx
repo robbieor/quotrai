@@ -57,6 +57,7 @@ const InvestorForecast = lazy(() => import("./pages/InvestorForecast"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const SubscriptionConfirmed = lazy(() => import("./pages/SubscriptionConfirmed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const FunnelAnalytics = lazy(() => import("./pages/FunnelAnalytics"));
 
 const queryClient = new QueryClient();
 
