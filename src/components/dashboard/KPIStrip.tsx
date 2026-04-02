@@ -35,8 +35,8 @@ function KPICard({ label, value, subMetric, context, contextType = "neutral", on
   return (
     <div
       className={cn(
-        "bg-card border border-border rounded-lg p-3 transition-all duration-200 min-w-[170px] shrink-0 snap-start sm:min-w-0 sm:shrink group relative",
-        onClick && "cursor-pointer hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm"
+        "bg-card border border-border rounded-lg p-3 transition-all duration-200 min-w-[170px] shrink-0 snap-start sm:min-w-0 sm:shrink group relative border-l-[3px] border-l-primary/60",
+        onClick && "cursor-pointer hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm hover:border-l-primary"
       )}
       onClick={onClick}
     >

@@ -32,25 +32,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex-1 flex flex-col min-w-0">
             <ReadOnlyBanner />
             
-            <header className="h-12 md:h-14 border-b border-border text-muted-foreground items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-primary-foreground sticky top-0 z-20">
-              <SidebarTrigger className="mr-2 md:mr-4" />
+            <header className="h-12 md:h-14 border-b border-white/10 items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-[hsl(220_26%_12%)] sticky top-0 z-20">
+              <SidebarTrigger className="mr-2 md:mr-4 text-white/70 hover:text-white" />
 
               {/* Command Bar Trigger */}
               <button
                 onClick={() => commandBar.setOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-sidebar text-muted-foreground text-xs hover:bg-muted transition-colors flex-1 max-w-xs"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-white/50 text-xs hover:bg-white/10 hover:text-white/70 transition-colors flex-1 max-w-xs"
               >
                 <Search className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Search or command...</span>
                 <span className="sm:hidden">Search...</span>
-                <kbd className="hidden md:inline-flex ml-auto text-[10px] bg-background border border-border rounded px-1.5 py-0.5 font-mono">
+                <kbd className="hidden md:inline-flex ml-auto text-[10px] bg-white/10 border border-white/10 rounded px-1.5 py-0.5 font-mono text-white/40">
                   ⌘K
                 </kbd>
               </button>
 
               <div className="flex-1" />
-              <NotificationCenter />
-              <UserMenu />
+              <div className="text-white/70 [&_button]:text-white/70 [&_button:hover]:text-white">
+                <NotificationCenter />
+              </div>
+              <div className="text-white/70 [&_button]:text-white/70 [&_button:hover]:text-white">
+                <UserMenu />
+              </div>
             </header>
             <main className="flex-1 overflow-auto">
               <div className="mx-auto w-full max-w-7xl px-5 md:px-6 py-4 md:py-6 space-y-6">
