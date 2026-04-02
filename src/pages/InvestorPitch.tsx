@@ -1,19 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Shield, Target, Zap, Bot, Globe, TrendingUp, DollarSign,
-  CheckCircle2, ArrowRight, Lightbulb, AlertTriangle, Users,
-  Clock, Receipt, Smartphone, BarChart3
-} from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  AlertTriangle, Clock, Receipt, DollarSign,
+  Smartphone, Bot, Globe, Target,
+  CheckCircle2, ArrowRight, ChevronDown
+} from "lucide-react";
 import InvestorLayout from "@/components/investor/InvestorLayout";
+import InvestorSection from "@/components/investor/InvestorSection";
+import AnimatedCounter from "@/components/investor/AnimatedCounter";
+import FadeInOnScroll from "@/components/investor/FadeInOnScroll";
 
 const PROBLEM_STATS = [
-  { stat: "65%", label: "of trade businesses still use pen & paper for admin", icon: AlertTriangle },
-  { stat: "8hrs", label: "lost per week to invoicing, scheduling & chasing payments", icon: Clock },
-  { stat: "42%", label: "of trade invoices are paid late — avg 23 days overdue", icon: Receipt },
-  { stat: "11M+", label: "trade SMBs globally — the last major vertical to digitise", icon: DollarSign },
+  { end: 65, suffix: "%", label: "of trade businesses still use pen & paper", icon: AlertTriangle },
+  { end: 8, suffix: "hrs", label: "lost per week to admin, chasing & scheduling", icon: Clock },
+  { end: 42, suffix: "%", label: "of trade invoices paid late — avg 23 days overdue", icon: Receipt },
+  { end: 11, suffix: "M+", label: "trade SMBs globally — last major vertical to digitise", icon: DollarSign },
 ];
 
 const SOLUTION_PILLARS = [
@@ -23,255 +23,206 @@ const SOLUTION_PILLARS = [
   { title: "Multi-Market Ready", desc: "20+ currencies, GDPR-compliant, launched for UK, Ireland, ANZ & North America", icon: Globe },
 ];
 
-const TRACTION = [
-  { metric: "12", label: "Core features shipped & production-ready" },
-  { metric: "3", label: "Revenue streams (seats + AI + platform fees)" },
-  { metric: "20+", label: "Trade verticals with dedicated landing pages" },
-  { metric: "€19–€69", label: "Per-seat pricing validated against competitors" },
-];
-
 const USE_OF_FUNDS = [
-  { pct: 40, label: "Product & Engineering", detail: "Mobile app, offline mode, deeper AI capabilities" },
-  { pct: 25, label: "Sales & Marketing", detail: "Professional video production, paid acquisition, trade partnerships" },
-  { pct: 20, label: "Customer Success", detail: "Onboarding team, support, activation optimisation" },
-  { pct: 15, label: "Operations & Legal", detail: "Compliance, accounting integrations, infrastructure" },
+  { pct: 40, label: "Product & Engineering", detail: "Mobile app, offline mode, deeper AI" },
+  { pct: 25, label: "Sales & Marketing", detail: "Video production, paid acquisition, trade partnerships" },
+  { pct: 20, label: "Customer Success", detail: "Onboarding, support, activation" },
+  { pct: 15, label: "Operations & Legal", detail: "Compliance, accounting integrations" },
 ];
 
-const ASK = {
-  raising: "€500K–€1M",
-  type: "Pre-Seed / Seed",
-  valuation: "€3M–€5M pre-money",
-  runway: "18 months",
-  milestones: [
-    "1,000 paying customers within 6 months",
-    "€100K MRR within 9 months",
-    "Series A readiness at month 15",
-    "Expand to 3 additional markets",
-  ],
-};
+const MILESTONES = [
+  "1,000 paying customers within 6 months",
+  "€100K MRR within 9 months",
+  "Series A readiness at month 15",
+  "Expand to 3 additional markets",
+];
 
 export default function InvestorPitch() {
   return (
-    <InvestorLayout title="Foreman — Executive Summary" subtitle="Investment Pitch — March 2026">
-        {/* Hero / Vision */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 py-8">
-          <Badge className="bg-primary/10 text-primary border-primary/20 mb-4">
-            <Zap className="h-3.5 w-3.5 mr-1" />
-            Pre-Seed Opportunity
-          </Badge>
-          <h2 className="text-gradient-teal">The Operating System for Trade Businesses</h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Foreman replaces pen & paper, spreadsheets, and 5+ disconnected tools with a single AI-powered 
-            platform — enabling plumbers, electricians, builders and 20+ trades to quote, invoice, schedule, 
-            and get paid faster. An €18B TAM with 65% still undigitised. The last great vertical SaaS opportunity.
-          </p>
-        </div>
-
-        {/* The Problem */}
-        <Card className="border-destructive/20 bg-destructive/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              The Problem
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {PROBLEM_STATS.map((item) => (
-                <div key={item.label} className="p-4 rounded-xl bg-card border border-border">
-                  <item.icon className="h-5 w-5 text-destructive mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{item.stat}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{item.label}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
-              The trades industry is one of the last major sectors to digitise. Most tradespeople manage their 
-              entire business from a phone contacts list, WhatsApp messages, and handwritten invoices. They lose 
-              thousands annually to late payments, missed jobs, and inefficient admin — yet no incumbent offers 
-              an affordable, AI-native solution built for their workflow.
+    <InvestorLayout title="Foreman">
+      {/* HERO */}
+      <InvestorSection theme="dark" className="min-h-[90vh] relative">
+        <div className="text-center max-w-4xl mx-auto space-y-8">
+          <FadeInOnScroll>
+            <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-4">Pre-Seed Opportunity</p>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight">
+              The Operating System<br />
+              <span className="text-primary">for Trade Businesses</span>
+            </h1>
+          </FadeInOnScroll>
+          <FadeInOnScroll delay={200}>
+            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed">
+              Foreman replaces pen & paper, spreadsheets, and 5+ disconnected tools with a single 
+              AI-powered platform for 11M+ trade businesses worldwide.
             </p>
-          </CardContent>
-        </Card>
+          </FadeInOnScroll>
+          <FadeInOnScroll delay={400}>
+            <div className="flex items-center justify-center gap-6 text-sm text-white/40">
+              <span>€18B TAM</span>
+              <span className="h-4 w-px bg-white/20" />
+              <span>65% Undigitised</span>
+              <span className="h-4 w-px bg-white/20" />
+              <span>AI-Native</span>
+            </div>
+          </FadeInOnScroll>
+        </div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <ChevronDown className="h-6 w-6 text-white/30" />
+        </div>
+      </InvestorSection>
 
-        {/* The Solution */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Lightbulb className="h-5 w-5 text-primary" />
-              The Solution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {SOLUTION_PILLARS.map((item) => (
-                <div key={item.title} className="flex gap-3 p-4 rounded-xl bg-card border border-border">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <item.icon className="h-5 w-5 text-primary" />
+      {/* THE PROBLEM */}
+      <InvestorSection theme="dark" className="bg-gradient-to-b from-[#0f172a] to-[#1a1020]">
+        <FadeInOnScroll>
+          <p className="text-red-400 font-semibold tracking-widest uppercase text-sm mb-3">The Problem</p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-16">
+            The trades industry is<br />
+            <span className="text-red-400">broken by design</span>
+          </h2>
+        </FadeInOnScroll>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {PROBLEM_STATS.map((item, i) => (
+            <FadeInOnScroll key={item.label} delay={i * 150}>
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center group hover:bg-white/10 transition-colors">
+                <item.icon className="h-6 w-6 text-red-400 mx-auto mb-4" />
+                <p className="text-4xl md:text-5xl font-extrabold text-white mb-2">
+                  <AnimatedCounter end={item.end} suffix={item.suffix} />
+                </p>
+                <p className="text-sm text-white/50">{item.label}</p>
+              </div>
+            </FadeInOnScroll>
+          ))}
+        </div>
+        <FadeInOnScroll delay={600}>
+          <p className="text-white/40 text-center max-w-2xl mx-auto mt-12 leading-relaxed">
+            Most tradespeople manage their entire business from WhatsApp, a contacts list, and handwritten invoices.
+            They lose thousands annually to late payments, missed jobs, and inefficient admin.
+          </p>
+        </FadeInOnScroll>
+      </InvestorSection>
+
+      {/* THE SOLUTION */}
+      <InvestorSection theme="light">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">The Solution</p>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+            One platform.<br />Zero admin.
+          </h2>
+          <p className="text-muted-foreground max-w-xl mb-16">
+            Foreman doesn't just track work — it runs the business. AI handles calls, generates quotes from photos,
+            chases payments, and schedules jobs. Hands-free.
+          </p>
+        </FadeInOnScroll>
+        <div className="grid sm:grid-cols-2 gap-6">
+          {SOLUTION_PILLARS.map((item, i) => (
+            <FadeInOnScroll key={item.title} delay={i * 120}>
+              <div className="group p-8 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all cursor-default">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+                  <item.icon className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
+            </FadeInOnScroll>
+          ))}
+        </div>
+      </InvestorSection>
+
+      {/* BUSINESS MODEL */}
+      <InvestorSection theme="dark">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">Business Model</p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-16">Three revenue engines</h2>
+        </FadeInOnScroll>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { value: "€19–69", unit: "/seat/mo", label: "Seat Revenue", sub: "3 tiers: Lite, Connect & Grow" },
+            { value: "2.5%", unit: " per txn", label: "Platform Fee", sub: "On all Stripe Connect payments" },
+            { value: "80%+", unit: "", label: "Gross Margin", sub: "AI COGS ~€8/seat, SaaS-standard" },
+          ].map((item, i) => (
+            <FadeInOnScroll key={item.label} delay={i * 150}>
+              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 border-l-4 border-l-primary text-center">
+                <p className="text-4xl md:text-5xl font-extrabold text-white">
+                  {item.value}<span className="text-xl text-white/50">{item.unit}</span>
+                </p>
+                <p className="text-primary font-semibold mt-3">{item.label}</p>
+                <p className="text-sm text-white/40 mt-1">{item.sub}</p>
+              </div>
+            </FadeInOnScroll>
+          ))}
+        </div>
+      </InvestorSection>
+
+      {/* THE ASK */}
+      <InvestorSection theme="light">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">The Ask</p>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+            Raising <span className="text-primary">€500K–€1M</span>
+          </h2>
+          <p className="text-muted-foreground mb-12">Pre-Seed / Seed · €3M–€5M pre-money · 18 months runway</p>
+        </FadeInOnScroll>
+
+        {/* Use of Funds */}
+        <div className="grid md:grid-cols-2 gap-12 mb-16">
+          <FadeInOnScroll>
+            <h3 className="text-xl font-bold text-foreground mb-6">Use of Funds</h3>
+            <div className="space-y-5">
+              {USE_OF_FUNDS.map((item) => (
+                <div key={item.label}>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-medium text-foreground">{item.label}</span>
+                    <span className="text-primary font-bold">{item.pct}%</span>
                   </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-1000"
+                      style={{ width: `${item.pct}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </FadeInOnScroll>
+          <FadeInOnScroll delay={200}>
+            <h3 className="text-xl font-bold text-foreground mb-6">Key Milestones</h3>
+            <div className="space-y-4">
+              {MILESTONES.map((m, i) => (
+                <div key={m} className="flex items-start gap-4">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                    {i + 1}
+                  </div>
+                  <div className="pt-1">
+                    <p className="text-foreground font-medium">{m}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Traction */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Traction & Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {TRACTION.map((item) => (
-                <div key={item.label} className="text-center p-4 rounded-xl bg-muted/50">
-                  <p className="text-3xl font-bold text-foreground">{item.metric}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Business Model Summary */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card className="border-primary/20">
-            <CardContent className="p-5 text-center">
-              <Users className="h-6 w-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium text-muted-foreground">Seat Revenue</p>
-              <p className="text-xl font-bold text-foreground">€19–€69/seat/mo</p>
-              <p className="text-xs text-muted-foreground mt-1">3 tiers: Lite (€19), Connect (€39) & Grow (€69)</p>
-            </CardContent>
-          </Card>
-          <Card className="border-primary/20">
-            <CardContent className="p-5 text-center">
-              <Receipt className="h-6 w-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium text-muted-foreground">Platform Fee</p>
-              <p className="text-xl font-bold text-foreground">2.5% per transaction</p>
-              <p className="text-xs text-muted-foreground mt-1">On all Stripe Connect invoice payments</p>
-            </CardContent>
-          </Card>
-          <Card className="border-primary/20">
-            <CardContent className="p-5 text-center">
-              <BarChart3 className="h-6 w-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium text-muted-foreground">Target Gross Margin</p>
-              <p className="text-xl font-bold text-foreground">80%+</p>
-              <p className="text-xs text-muted-foreground mt-1">AI COGS ~€8/Connect seat, SaaS-standard margins</p>
-            </CardContent>
-          </Card>
+          </FadeInOnScroll>
         </div>
+      </InvestorSection>
 
-        <Separator />
-
-        {/* The Ask */}
-        <Card className="border-2 border-primary/30 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Target className="h-5 w-5 text-primary" />
-              The Ask
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl bg-card border border-border text-center">
-                <p className="text-sm text-muted-foreground">Raising</p>
-                <p className="text-2xl font-bold text-primary">{ASK.raising}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-card border border-border text-center">
-                <p className="text-sm text-muted-foreground">Round</p>
-                <p className="text-2xl font-bold text-foreground">{ASK.type}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-card border border-border text-center">
-                <p className="text-sm text-muted-foreground">Valuation</p>
-                <p className="text-2xl font-bold text-foreground">{ASK.valuation}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-card border border-border text-center">
-                <p className="text-sm text-muted-foreground">Runway</p>
-                <p className="text-2xl font-bold text-foreground">{ASK.runway}</p>
-              </div>
-            </div>
-
-            {/* Use of Funds */}
-            <div>
-              <p className="font-semibold text-foreground mb-3">Use of Funds</p>
-              <div className="space-y-3">
-                {USE_OF_FUNDS.map((item) => (
-                  <div key={item.label} className="flex items-center gap-4">
-                    <div className="w-12 text-right font-bold text-primary">{item.pct}%</div>
-                    <div className="flex-1">
-                      <div className="h-3 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary/80"
-                          style={{ width: `${item.pct}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{item.label}</p>
-                      <p className="text-xs text-muted-foreground">{item.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Milestones */}
-            <div>
-              <p className="font-semibold text-foreground mb-3">Key Milestones</p>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {ASK.milestones.map((m) => (
-                  <div key={m} className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border">
-                    <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                    <p className="text-sm text-foreground">{m}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Navigation to other investor pages */}
-        <div className="grid sm:grid-cols-3 gap-4 pt-4">
-          <Link to="/investor/market">
-            <Card className="card-hover cursor-pointer group">
-              <CardContent className="p-5 flex items-center justify-between">
+      {/* NAVIGATION */}
+      <InvestorSection theme="dark" className="min-h-0 py-16">
+        <div className="grid sm:grid-cols-3 gap-4">
+          {[
+            { to: "/investor/market", label: "Market Analysis", sub: "TAM, competitors & timing" },
+            { to: "/investor/product", label: "Product", sub: "Features & technology" },
+            { to: "/investor/projections", label: "Financial Model", sub: "Interactive projections" },
+          ].map((item) => (
+            <Link key={item.to} to={item.to}>
+              <div className="p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-foreground">Market Analysis</p>
-                  <p className="text-sm text-muted-foreground">TAM, SAM, SOM & competitors</p>
+                  <p className="font-semibold text-white">{item.label}</p>
+                  <p className="text-sm text-white/40">{item.sub}</p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
-          <Link to="/investor/product">
-            <Card className="card-hover cursor-pointer group">
-              <CardContent className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">Product Demo</p>
-                  <p className="text-sm text-muted-foreground">Feature walkthrough</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
-          <Link to="/investor/projections">
-            <Card className="card-hover cursor-pointer group">
-              <CardContent className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">Financial Model</p>
-                  <p className="text-sm text-muted-foreground">Interactive projections</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
+                <ArrowRight className="h-5 w-5 text-white/30 group-hover:text-primary transition-colors" />
+              </div>
+            </Link>
+          ))}
         </div>
+      </InvestorSection>
     </InvestorLayout>
   );
 }

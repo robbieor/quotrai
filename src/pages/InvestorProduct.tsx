@@ -1,215 +1,250 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Shield, FileText, Bot, Globe, RefreshCcw, Mail, CalendarDays,
-  Clock, CreditCard, BarChart, Megaphone, Users, CheckCircle2,
-  ArrowRight, Smartphone, Camera, Mic, MapPin, Receipt, Zap,
-  MessageSquare, Bell, Settings
-} from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  FileText, Bot, CreditCard, Clock, BarChart,
+  Camera, Mic, Mail, CalendarDays, Users,
+  MapPin, Smartphone, ArrowRight, CheckCircle2, Zap
+} from "lucide-react";
 import InvestorLayout from "@/components/investor/InvestorLayout";
+import InvestorSection from "@/components/investor/InvestorSection";
+import AnimatedCounter from "@/components/investor/AnimatedCounter";
+import FadeInOnScroll from "@/components/investor/FadeInOnScroll";
 
-const FEATURE_SECTIONS = [
-  {
-    category: "Core Operations",
-    color: "text-primary",
-    features: [
-      { icon: FileText, name: "Quoting & Invoicing", desc: "Create professional quotes and invoices with line items, tax auto-calculation, PDF generation. Multi-currency support across 20+ countries.", status: "shipped" },
-      { icon: CalendarDays, name: "Job Calendar", desc: "Drag-and-drop scheduling with day, week, and month views. Customer SMS/email reminders for upcoming jobs.", status: "shipped" },
-      { icon: Users, name: "Customer Management", desc: "Full CRM with contact details, job history, address autocomplete, and inline editing. Excel-style spreadsheet navigation.", status: "shipped" },
-      { icon: Receipt, name: "Expense Tracking", desc: "Log expenses by category, attach receipts, link to jobs. Email forwarding auto-creates expense entries.", status: "shipped" },
-    ],
-  },
-  {
-    category: "AI & Automation",
-    color: "text-primary",
-    features: [
-      { icon: Bot, name: "Foreman AI (George)", desc: "AI assistant that handles voice calls, answers questions, creates quotes, schedules jobs, and manages admin — all hands-free.", status: "shipped" },
-      { icon: Camera, name: "Photo-to-Quote", desc: "Snap a photo of the job site. AI identifies components, estimates materials & labour, generates a professional quote in 30 seconds.", status: "shipped" },
-      { icon: Mic, name: "Voice Agent", desc: "Real-time voice AI via ElevenLabs. Tradespeople talk to George while driving — he books jobs, creates quotes, updates statuses.", status: "shipped" },
-      { icon: Mail, name: "Automated Payment Chasers", desc: "Escalating reminder emails for overdue invoices. Configurable schedules. Reduces avg payment time from 23 to 9 days.", status: "shipped" },
-    ],
-  },
-  {
-    category: "Payments & Revenue",
-    color: "text-primary",
-    features: [
-      { icon: CreditCard, name: "Stripe Connect", desc: "Customers pay invoices online via the customer portal. 2.5% platform fee on every transaction — passive revenue stream.", status: "shipped" },
-      { icon: RefreshCcw, name: "Recurring Invoices", desc: "Set up weekly, monthly, or quarterly auto-generated invoices. Perfect for maintenance contracts and retainers.", status: "shipped" },
-      { icon: Globe, name: "Customer Portal", desc: "Branded portal where customers view quotes, approve them, and pay invoices. Magic link authentication — no passwords.", status: "shipped" },
-      { icon: Bell, name: "Payment Reminders", desc: "Multi-stage reminder system: friendly nudge → firm follow-up → final notice. Tracks which reminders were sent.", status: "shipped" },
-    ],
-  },
-  {
-    category: "Team & Field Operations",
-    color: "text-primary",
-    features: [
-      { icon: Clock, name: "GPS Time Tracking", desc: "Geofenced clock-in/out. Staff arrive on-site, phone detects location, auto-prompts clock-in. Manager sees live map.", status: "shipped" },
-      { icon: MapPin, name: "Staff Location Map", desc: "Real-time map showing where all team members are. Battery level, last ping time, moving/stationary status.", status: "shipped" },
-      { icon: Megaphone, name: "Lead Management", desc: "Full pipeline: new leads → qualified → quoted → won/lost. Source tracking, priority levels, follow-up dates.", status: "shipped" },
-      { icon: Settings, name: "Role-Based Access", desc: "Owner, manager, and member roles. Control who can see financials, delete records, or manage team settings.", status: "shipped" },
-    ],
-  },
-  {
-    category: "Analytics & Integrations",
-    color: "text-primary",
-    features: [
-      { icon: BarChart, name: "Advanced Reports", desc: "Revenue charts, expense breakdowns, quote conversion funnels, job performance radar, top customers.", status: "shipped" },
-      { icon: Zap, name: "Xero Integration", desc: "Two-way sync with Xero accounting. Invoices, payments, and expenses flow automatically.", status: "shipped" },
-      { icon: MessageSquare, name: "QuickBooks Integration", desc: "Connect to QuickBooks Online for seamless accounting sync. One-click connection.", status: "shipped" },
-      { icon: Smartphone, name: "Mobile PWA", desc: "Install to homescreen, works offline, push notifications. Full functionality on any device.", status: "shipped" },
-    ],
-  },
+const KEY_WORKFLOWS = [
+  { icon: Bot, title: "AI Voice Agent", desc: "Talk to Foreman while driving — book jobs, create quotes, update statuses. Fully hands-free.", tag: "AI" },
+  { icon: Camera, title: "Photo-to-Quote", desc: "Snap a photo of the job. AI identifies components, estimates materials & labour, generates a quote in 30 seconds.", tag: "AI" },
+  { icon: CreditCard, title: "Stripe Connect Payments", desc: "Customers pay online via branded portal. 2.5% platform fee on every transaction. Passive revenue.", tag: "Revenue" },
+  { icon: Mail, title: "Auto Payment Chasers", desc: "Escalating reminder emails for overdue invoices. Reduces avg payment time from 23 to 9 days.", tag: "Automation" },
+  { icon: Clock, title: "GPS Time Tracking", desc: "Geofenced clock-in/out. Staff arrive on-site, phone auto-prompts. Live map for managers.", tag: "Operations" },
 ];
 
-const TECH_STACK = [
-  { label: "Frontend", value: "React + TypeScript + Tailwind CSS" },
-  { label: "Backend", value: "Lovable Cloud (Supabase)" },
-  { label: "AI Engine", value: "GPT-5 + Gemini 2.5 Pro (multi-model)" },
-  { label: "Voice AI", value: "ElevenLabs Conversational AI" },
-  { label: "Payments", value: "Stripe Connect" },
-  { label: "Hosting", value: "Edge-deployed globally (Lovable Cloud)" },
-  { label: "Auth", value: "Email/password + Google OAuth + Magic Links" },
-  { label: "Database", value: "PostgreSQL with Row-Level Security" },
+const ALL_FEATURES = [
+  { icon: FileText, name: "Quoting & Invoicing" },
+  { icon: CalendarDays, name: "Job Calendar" },
+  { icon: Users, name: "Customer CRM" },
+  { icon: MapPin, name: "Staff Location Map" },
+  { icon: BarChart, name: "Advanced Reports" },
+  { icon: Smartphone, name: "Mobile PWA" },
+  { icon: Zap, name: "Xero / QuickBooks" },
+  { icon: Bot, name: "Foreman AI Chat" },
+];
+
+const TECH_PILLS = [
+  "React + TypeScript", "Tailwind CSS", "PostgreSQL + RLS",
+  "GPT-5 + Gemini", "ElevenLabs Voice", "Stripe Connect",
+  "Edge Functions", "PWA + Capacitor",
 ];
 
 const ROADMAP = [
-  { quarter: "Q1 2026", items: ["Native iOS/Android app via Capacitor", "Offline mode with sync", "WhatsApp integration for customer comms"] },
-  { quarter: "Q2 2026", items: ["AI scheduling optimisation", "Parts/materials catalogue", "Sub-contractor management"] },
-  { quarter: "Q3 2026", items: ["Custom forms & checklists", "Fleet/van tracking", "Certification expiry automation"] },
-  { quarter: "Q4 2026", items: ["Marketplace (supplier discounts)", "API for integrations", "Multi-language support"] },
+  { q: "Q1 2026", items: ["Native iOS/Android", "Offline sync", "WhatsApp comms"] },
+  { q: "Q2 2026", items: ["AI scheduling", "Parts catalogue", "Sub-contractors"] },
+  { q: "Q3 2026", items: ["Custom forms", "Fleet tracking", "Cert automation"] },
+  { q: "Q4 2026", items: ["Supplier marketplace", "Public API", "Multi-language"] },
 ];
+
+const AI_COMMANDS = [
+  "Hey George, create a quote for Mrs. Murphy — boiler service, €280 including parts",
+  "Schedule a callback with Dave's Plumbing for Thursday at 2pm",
+  "Chase all invoices overdue more than 7 days",
+];
+
+function TypingDemo() {
+  const [lineIdx, setLineIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [showResponse, setShowResponse] = useState(false);
+
+  useEffect(() => {
+    const cmd = AI_COMMANDS[lineIdx];
+    if (charIdx < cmd.length) {
+      const timer = setTimeout(() => setCharIdx(charIdx + 1), 35);
+      return () => clearTimeout(timer);
+    } else {
+      const timer = setTimeout(() => {
+        setShowResponse(true);
+        const next = setTimeout(() => {
+          setShowResponse(false);
+          setCharIdx(0);
+          setLineIdx((lineIdx + 1) % AI_COMMANDS.length);
+        }, 2500);
+        return () => clearTimeout(next);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [charIdx, lineIdx]);
+
+  return (
+    <div className="max-w-xl mx-auto">
+      <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+          <div className="h-3 w-3 rounded-full bg-primary" />
+          <span className="text-sm font-medium text-white/60">Foreman AI</span>
+        </div>
+        <div className="p-6 min-h-[140px] flex flex-col justify-between">
+          <div className="flex items-start gap-3">
+            <Mic className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+            <p className="text-white font-medium">
+              {AI_COMMANDS[lineIdx].slice(0, charIdx)}
+              <span className="animate-pulse text-primary">|</span>
+            </p>
+          </div>
+          {showResponse && (
+            <div className="flex items-start gap-3 mt-4 animate-fade-in">
+              <Bot className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-white/60 text-sm">Done ✓ — I've created that for you.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function InvestorProduct() {
   return (
-    <InvestorLayout title="Foreman — Product Overview" subtitle="Feature Walkthrough & Technical Architecture">
-        {/* Hero */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 py-4">
-          <Badge className="bg-primary/10 text-primary border-primary/20">
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            20 Features Shipped & Production-Ready
-          </Badge>
-          <h2 className="text-gradient-teal">Everything a Tradesperson Needs</h2>
-          <p className="text-muted-foreground">
-            From first customer call to final payment — Foreman handles the entire workflow with AI automation at every step
-          </p>
+    <InvestorLayout title="Foreman — Product">
+      {/* HERO */}
+      <InvestorSection theme="dark" className="min-h-[70vh]">
+        <div className="text-center">
+          <FadeInOnScroll>
+            <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-6">Product</p>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-[1.1]">
+              Built. Shipped.<br /><span className="text-primary">Live.</span>
+            </h1>
+            <p className="text-xl text-white/50 mt-6 max-w-lg mx-auto">
+              <AnimatedCounter end={20} className="text-white font-bold text-2xl" /> features in production.
+              Zero outsourced. One founder.
+            </p>
+          </FadeInOnScroll>
         </div>
+      </InvestorSection>
 
-        {/* Feature Sections */}
-        {FEATURE_SECTIONS.map((section) => (
-          <div key={section.category} className="space-y-4">
-            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary" />
-              {section.category}
-            </h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {section.features.map((feat) => (
-                <Card key={feat.name} className="card-hover">
-                  <CardContent className="p-5">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <feat.icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-foreground">{feat.name}</p>
-                          <Badge variant="secondary" className="text-[10px] h-5">
-                            {feat.status === "shipped" ? "✓ Live" : feat.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{feat.desc}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        <Separator />
-
-        {/* Tech Stack */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Technology Stack</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {TECH_STACK.map((item) => (
-                <div key={item.label} className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{item.label}</p>
-                  <p className="text-sm font-semibold text-foreground mt-1">{item.value}</p>
+      {/* KEY WORKFLOWS */}
+      <InvestorSection theme="light">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">Core Workflows</p>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-16">Five killer features</h2>
+        </FadeInOnScroll>
+        <div className="space-y-6">
+          {KEY_WORKFLOWS.map((item, i) => (
+            <FadeInOnScroll key={item.title} delay={i * 100}>
+              <div className="flex flex-col sm:flex-row gap-6 p-6 md:p-8 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all group">
+                <div className="flex-shrink-0 h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <item.icon className="h-7 w-7 text-primary" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{item.tag}</span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            </FadeInOnScroll>
+          ))}
+        </div>
+      </InvestorSection>
 
-        {/* Roadmap */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Product Roadmap — 2026
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {ROADMAP.map((q) => (
-                <div key={q.quarter} className="p-4 rounded-xl bg-card border border-border">
-                  <p className="font-bold text-foreground mb-3">{q.quarter}</p>
+      {/* AI DEMO */}
+      <InvestorSection theme="dark">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3 text-center">AI in Action</p>
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-center">
+            Talk to Foreman.<br /><span className="text-primary">It just works.</span>
+          </h2>
+          <p className="text-white/40 text-center max-w-lg mx-auto mb-12">
+            Voice commands, photo quoting, automated chasers — all powered by GPT-5, Gemini & ElevenLabs.
+          </p>
+        </FadeInOnScroll>
+        <FadeInOnScroll delay={300}>
+          <TypingDemo />
+        </FadeInOnScroll>
+      </InvestorSection>
+
+      {/* FULL FEATURE LIST */}
+      <InvestorSection theme="light" className="min-h-0 py-20">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">Full Platform</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-10">Everything else that ships</h2>
+        </FadeInOnScroll>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {ALL_FEATURES.map((f, i) => (
+            <FadeInOnScroll key={f.name} delay={i * 80}>
+              <div className="p-5 rounded-xl border border-border bg-card text-center hover:border-primary/30 transition-colors">
+                <f.icon className="h-6 w-6 text-primary mx-auto mb-3" />
+                <p className="text-sm font-semibold text-foreground">{f.name}</p>
+              </div>
+            </FadeInOnScroll>
+          ))}
+        </div>
+      </InvestorSection>
+
+      {/* TECH STACK */}
+      <InvestorSection theme="dark" className="min-h-0 py-20">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">Technology</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-10">Modern stack. Zero tech debt.</h2>
+        </FadeInOnScroll>
+        <FadeInOnScroll delay={200}>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {TECH_PILLS.map((t) => (
+              <span key={t} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-white/70">
+                {t}
+              </span>
+            ))}
+          </div>
+        </FadeInOnScroll>
+      </InvestorSection>
+
+      {/* ROADMAP */}
+      <InvestorSection theme="light">
+        <FadeInOnScroll>
+          <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-3">Roadmap</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12">2026 Product Plan</h2>
+        </FadeInOnScroll>
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-border" />
+          <div className="grid md:grid-cols-4 gap-6">
+            {ROADMAP.map((r, i) => (
+              <FadeInOnScroll key={r.q} delay={i * 150}>
+                <div className="relative p-6 rounded-2xl border border-border bg-card">
+                  <div className="hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-primary border-4 border-background" />
+                  <p className="font-bold text-primary mb-4">{r.q}</p>
                   <div className="space-y-2">
-                    {q.items.map((item) => (
-                      <div key={item} className="flex items-start gap-2 text-sm">
-                        <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">{item}</span>
+                    {r.items.map((item) => (
+                      <div key={item} className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">{item}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Navigation */}
-        <div className="grid sm:grid-cols-3 gap-4 pt-4">
-          <Link to="/investor/pitch">
-            <Card className="card-hover cursor-pointer group">
-              <CardContent className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">Executive Summary</p>
-                  <p className="text-sm text-muted-foreground">Problem, solution & ask</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
-          <Link to="/investor/market">
-            <Card className="card-hover cursor-pointer group">
-              <CardContent className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">Market Analysis</p>
-                  <p className="text-sm text-muted-foreground">TAM, competitors, timing</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
-          <Link to="/investor/projections">
-            <Card className="card-hover cursor-pointer group">
-              <CardContent className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">Financial Model</p>
-                  <p className="text-sm text-muted-foreground">Interactive projections</p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </CardContent>
-            </Card>
-          </Link>
+              </FadeInOnScroll>
+            ))}
+          </div>
         </div>
+      </InvestorSection>
+
+      {/* NAV */}
+      <InvestorSection theme="dark" className="min-h-0 py-16">
+        <div className="grid sm:grid-cols-3 gap-4">
+          {[
+            { to: "/investor/pitch", label: "Executive Summary", sub: "Problem, solution & ask" },
+            { to: "/investor/team", label: "Team", sub: "Founders & hiring plan" },
+            { to: "/investor/projections", label: "Financial Model", sub: "Interactive projections" },
+          ].map((item) => (
+            <Link key={item.to} to={item.to}>
+              <div className="p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-white">{item.label}</p>
+                  <p className="text-sm text-white/40">{item.sub}</p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-white/30 group-hover:text-primary transition-colors" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </InvestorSection>
     </InvestorLayout>
   );
 }
