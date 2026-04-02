@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
@@ -20,6 +22,34 @@ interface GeorgeMessageListProps {
   streamingText?: string;
   lastError?: string | null;
   onRetry?: () => void;
+}
+
+function MarkdownContent({ content, className }: { content: string; className?: string }) {
+  return (
+    <div className={cn("prose prose-sm max-w-none", className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => <p className="mb-1.5 last:mb-0 leading-relaxed">{children}</p>,
+          ul: ({ children }) => <ul className="mb-1.5 last:mb-0 pl-4 list-disc space-y-0.5">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-1.5 last:mb-0 pl-4 list-decimal space-y-0.5">{children}</ol>,
+          li: ({ children }) => <li className="text-sm leading-relaxed">{children}</li>,
+          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+          h1: ({ children }) => <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>,
+          h2: ({ children }) => <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>,
+          h3: ({ children }) => <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>,
+          blockquote: ({ children }) => <blockquote className="border-l-2 border-primary/30 pl-3 italic text-muted-foreground">{children}</blockquote>,
+          code: ({ children, className: codeClassName }) => {
+            const isInline = !codeClassName;
+            if (isInline) return <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono">{children}</code>;
+            return <pre className="bg-muted rounded-lg p-3 overflow-x-auto"><code className="text-xs font-mono">{children}</code></pre>;
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry }: GeorgeMessageListProps) {
@@ -46,7 +76,7 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
             <div className="flex items-start gap-3">
               <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
               <div className="flex-1 pt-1">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{streamingText}</p>
+                <MarkdownContent content={streamingText} className="text-foreground" />
               </div>
             </div>
           )}
@@ -96,8 +126,8 @@ export function GeorgeMessageList({ messages, isProcessing, streamingText, lastE
         {streamingText && !isProcessing && (
           <div className="flex gap-3">
             <ForemanAvatar size="md" />
-            <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{streamingText}</p>
+            <div className="bg-muted/50 border border-border rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
+              <MarkdownContent content={streamingText} className="text-foreground" />
             </div>
           </div>
         )}
@@ -148,7 +178,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
         <ForemanAvatar size="md" className="bg-white border border-border shadow-sm" />
         <div className="flex-1 pt-1">
           <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{message.content}</p>
+            <MarkdownContent content={message.content} className="text-foreground" />
           </div>
         </div>
       </div>
@@ -178,11 +208,15 @@ function DesktopMessageBubble({ message }: { message: Message }) {
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5",
           isAssistant
-            ? "bg-muted/50 border border-border text-foreground/90 rounded-tl-md"
+            ? "bg-muted/50 border border-border text-foreground rounded-tl-md"
             : "bg-primary text-white rounded-tr-md"
         )}
       >
-        <p className={cn("text-sm whitespace-pre-wrap leading-relaxed", isAssistant ? "text-foreground/90" : "text-white")}>{message.content}</p>
+        {isAssistant ? (
+          <MarkdownContent content={message.content} className="text-foreground" />
+        ) : (
+          <p className="text-sm whitespace-pre-wrap leading-relaxed text-white">{message.content}</p>
+        )}
         <p
           className={cn(
             "text-[10px] mt-1 opacity-70",
