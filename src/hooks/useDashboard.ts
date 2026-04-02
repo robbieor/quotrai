@@ -47,10 +47,8 @@ export function useDashboardStats() {
         supabase.from("quotes").select("id, status, total"),
         supabase.from("invoices").select("id, status, total, issue_date"),
       ]);
-      const { data: paymentsData } = await supabase
-        .from("payments" as any)
-        .select("invoice_id, payment_date")
-        .eq("status" as any, "completed") as any;
+      const paymentsResult: { data: Array<{ invoice_id: string; payment_date: string }> | null } = 
+        await (supabase as any).from("payments").select("invoice_id, payment_date").eq("status", "completed");
 
       if (jobsResult.error) throw jobsResult.error;
       if (customersResult.error) throw customersResult.error;
