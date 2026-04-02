@@ -218,6 +218,7 @@ export function JobFormDialog({
         : null,
       scheduled_time: values.scheduled_time || null,
       estimated_value: values.estimated_value ?? null,
+      assigned_to: values.assigned_to || null,
       location,
     });
   };
