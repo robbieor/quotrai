@@ -496,7 +496,38 @@ export function JobFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Assign To Team Member */}
+            {teamMembers && teamMembers.length > 1 && (
+              <FormField
+                control={form.control}
+                name="assigned_to"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign To</FormLabel>
+                    <Select
+                      onValueChange={(val) => field.onChange(val === "__none__" ? null : val)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">Unassigned</SelectItem>
+                        {teamMembers.map((member) => (
+                          <SelectItem key={member.user_id} value={member.user_id}>
+                            {member.profile?.full_name || member.profile?.email || "Team member"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
               <FormField
                 control={form.control}
                 name="scheduled_date"
