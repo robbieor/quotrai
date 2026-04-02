@@ -437,9 +437,11 @@ Deno.serve(async (req) => {
     }).sort((a, b) => b.riskPoints - a.riskPoints).slice(0, 10);
 
     // ── DRILL DATA ──────────────────────────────────────────────────
-    const activeJobsList = activeJobs.map((j: any) => ({ id: j.id, title: j.title, client: j.customer?.name || "Unknown", status: j.status, date: j.scheduled_date, value: j.estimated_value }));
+    const activeJobsList = activeJobs.map((j: any) => ({ id: j.id, title: j.title, client: j.customer?.name || "Unknown", status: j.status, date: j.scheduled_date, value: Number(j.estimated_value) || 0 }));
     const outstandingList = outstandingInvoices.map((inv: any) => ({ id: inv.id, invoiceNumber: inv.display_number, client: inv.customer?.name || "Unknown", amount: Number(inv.total) || 0, daysOverdue: Math.max(0, diffDays(now, new Date(inv.due_date))), dueDate: inv.due_date }));
-    const pendingQuotesList = pendingQuotes.map((q: any) => ({ id: q.id, quoteNumber: q.display_number, client: q.customer?.name || "Unknown", amount: Number(q.total) || 0, date: q.created_at }));
+    const pendingQuotesList = pendingQuotes.map((q: any) => ({ id: q.id, quoteNumber: q.display_number, client: q.customer?.name || "Unknown", amount: Number(q.total) || 0, date: q.created_at, daysSinceSent: diffDays(now, new Date(q.created_at)) }));
+    const cashCollectedList = payments.map((p: any) => { const inv = p.invoice as any; return { id: p.id, invoiceNumber: inv?.display_number || "—", client: inv?.customer?.name || "Unknown", amount: Number(p.amount) || 0, date: p.payment_date }; });
+    const revenueInvoicesList = invoices.filter((i: any) => !["cancelled","draft"].includes(i.status)).map((inv: any) => ({ id: inv.id, invoiceNumber: inv.display_number, client: inv.customer?.name || "Unknown", amount: Number(inv.total) || 0 }));
 
     const today = fmt(now, "yyyy-MM-dd");
     const nextWeekStr = fmt(addDays(now, 7), "yyyy-MM-dd");
