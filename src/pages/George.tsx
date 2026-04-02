@@ -11,6 +11,7 @@ import { GeorgeLoginDialog } from "@/components/george/GeorgeLoginDialog";
 import { GeorgeSidebar } from "@/components/george/GeorgeSidebar";
 import { GeorgeUsageWarning } from "@/components/george/GeorgeUsageWarning";
 import { VoiceFallbackBanner } from "@/components/george/VoiceFallbackBanner";
+import { ContextIndicator } from "@/components/george/ContextIndicator";
 import { PhotoQuoteCard } from "@/components/george/PhotoQuoteCard";
 import { LiveActionFeed, type DisplayItem } from "@/components/george/action-mode/LiveActionFeed";
 import { MemoryContextPanel } from "@/components/george/action-mode/MemoryContextPanel";
