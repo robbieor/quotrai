@@ -45,6 +45,11 @@ function getNextDisplayNumber(
   return `${prefix}${nextNumber.toString().padStart(4, "0")}`;
 }
 
+/** Escape ILIKE wildcard characters to prevent injection */
+function sanitizeIlike(value: string): string {
+  return value.replace(/[%_\\]/g, (ch) => `\\${ch}`);
+}
+
 interface WebhookRequest {
   function_name: string;
   parameters: Record<string, unknown>;

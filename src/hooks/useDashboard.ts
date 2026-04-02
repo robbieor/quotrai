@@ -86,11 +86,11 @@ export function useDashboardStats() {
         0
       );
 
-      // Paid invoices this month
+      // Paid invoices this month — use paid_at date when available, fallback to issue_date
       const paidInvoicesThisMonth = invoices.filter((inv) => {
         if (inv.status !== "paid") return false;
-        const issueDate = new Date(inv.issue_date);
-        return issueDate >= monthStart && issueDate <= monthEnd;
+        const relevantDate = new Date((inv as any).paid_at || inv.issue_date);
+        return relevantDate >= monthStart && relevantDate <= monthEnd;
       });
 
       const revenueThisMonth = paidInvoicesThisMonth.reduce(

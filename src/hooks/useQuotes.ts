@@ -17,22 +17,31 @@ export function useQuotes() {
   return useQuery({
     queryKey: ["quotes"],
     queryFn: async () => {
-      const { data, error, count } = await supabase
-        .from("quotes")
-        .select(`
-          *,
-          customer:customers(name, country_code),
-          job:jobs!quotes_job_id_fkey(id, title),
-          quote_items(*)
-        `, { count: "exact" })
-        .order("created_at", { ascending: false })
-        .limit(5000);
+      // Paginated fetch to avoid the 1000-row default limit
+      const PAGE_SIZE = 1000;
+      let allData: Quote[] = [];
+      let from = 0;
+      let hasMore = true;
 
-      if (error) throw error;
-      if (count && count >= 5000) {
-        console.warn(`Quotes query returned ${count} rows — pagination recommended`);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("quotes")
+          .select(`
+            *,
+            customer:customers(name, country_code),
+            job:jobs!quotes_job_id_fkey(id, title),
+            quote_items(*)
+          `)
+          .order("created_at", { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) throw error;
+        allData = allData.concat((data || []) as Quote[]);
+        hasMore = (data?.length || 0) === PAGE_SIZE;
+        from += PAGE_SIZE;
       }
-      return data as Quote[];
+
+      return allData;
     },
   });
 }
