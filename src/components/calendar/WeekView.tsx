@@ -22,6 +22,8 @@ const formatHourShort = (hour: number) => {
   return `${h}${hour < 12 ? "a" : "p"}`;
 };
 
+const DEFAULT_HOURS = Array.from({ length: 15 }, (_, i) => i + 6);
+
 export function WeekView({
   currentDate,
   jobs,
@@ -30,6 +32,7 @@ export function WeekView({
   onJobDragStart,
   onJobDragEnd,
   onSlotClick,
+  hourSlots = DEFAULT_HOURS,
 }: WeekViewProps) {
   const isMobile = useIsMobile();
   const [showWeekends, setShowWeekends] = useState(false);
