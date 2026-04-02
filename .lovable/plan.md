@@ -1,149 +1,191 @@
 
 
-# API Call Audit — Foreman App
+# FOREMAN LAUNCH READINESS AUDIT — GO / NO-GO
 
-## Methodology
-Traced every `supabase.functions.invoke()`, `supabase.rpc()`, raw `fetch()`, and `supabase.from()` call across 32+ source files. Assessed: endpoint existence, payload validity, response handling, error handling, and loading states.
+## VERDICT: NO-GO
 
----
-
-## Audit Table
-
-### Edge Function Invocations (`supabase.functions.invoke`)
-
-| Endpoint | Caller | Status | Issue | Fix |
-|----------|--------|--------|-------|-----|
-| `george-chat` | `GeorgeInputArea`, `CommandBar`, `DemoChat` | **Working** | — | — |
-| `george-photo-quote` | `PhotoQuoteButton` | **Working** | — | — |
-| `george-webhook` | `useForemanChat`, `useElevenLabsAgent` | **Working** | — | — |
-| `generate-nudges` | `GeorgeWelcome` | **Partial** | No error handling — `res.data?.nudges \|\| []` silently returns empty on 500. User sees no nudges with no explanation. | Check `res.error` before accessing `.data` |
-| `weekly-analysis` | `GeorgeWelcome` | **Partial** | Same pattern — `res.data?.analysis \|\| null`. Errors swallowed silently. | Check `res.error` |
-| `scan-receipt` | `ExpenseFormDialog` | **Working** | Has error check + toast | — |
-| `create-checkout-session` | `SelectPlan`, `SubscriptionPricing` | **Working** | Has error check | — |
-| `create-customer-portal-session` | `SubscriptionOverview` | **Working** | — | — |
-| `cancel-subscription` | `SubscriptionOverview` | **Working** | — | — |
-| `end-trial-early` | `SubscriptionOverview` | **Working** | — | — |
-| `list-invoices` | `SubscriptionOverview` | **Working** | — | — |
-| `add-subscription-seat` | `useAddSeat` | **Working** | — | — |
-| `sync-seat-to-stripe` | `useUpdateSeatType` | **Working** | Double error check (`error` + `data.error`) | — |
-| `stripe-connect` | `StripeConnectSetup` | **Working** | 3 actions (status/onboard/dashboard) all handled | — |
-| `send-roi-summary` | `ROICalculator` | **Working** | — | — |
-| `send-document-email` | `SendEmailDialog` | **Working** | — | — |
-| `send-team-invitation` | `useTeam` | **Working** | — | — |
-| `toggle-george-voice` | `useToggleGeorgeVoice` | **Working** | — | — |
-| `sync-agent-tools` | `ForemanAISettings` | **Working** | — | — |
-| `dashboard-analytics` | `useDashboardAnalytics` | **Working** | — | — |
-| `elevenlabs-scribe-token` | `useGeorgeVoice` | **Working** | — | — |
-| `elevenlabs-agent-token` | `useElevenLabsAgent` | **Working** | — | — |
-| `validate-clock-event` | `useTimeTracking` | **Working** | Fire-and-forget with `.catch()` — correct pattern for async validation | — |
-| `import-data` | `DataImportSection` | **Working** | — | — |
-| `request-early-access` | `RequestAccess` | **Working** | — | — |
-| `run-task` | `AgentTaskContext` | **Working** | — | — |
-| `xero-auth` | `useXeroConnection` | **Partial** | No `onError` toast on the mutation — user clicks Connect, if it fails they see nothing | Add `onError` toast to `connect` mutation |
-| `quickbooks-auth` | `useQuickBooksConnection` | **Partial** | Same issue — no error feedback | Add `onError` toast |
-| `xero-sync` | `useXeroSync` | **Partial** | All 3 sync calls wrapped in try/catch but error is silently `console.warn`'d. User gets no feedback if sync fails. | Add toast on catch |
-| `send-drip-email` | Cron (server-side only) | **Working** | N/A — not called from client | — |
-| `check-drip-sequence` | Cron (server-side only) | **Working** | N/A | — |
-
-### Raw fetch() Calls
-
-| Endpoint | Caller | Status | Issue | Fix |
-|----------|--------|--------|-------|-----|
-| `POST /rest/v1/analytics_events` | `utils/analytics.ts` | **Working** | Silent fail by design — correct for analytics | — |
-| `POST /functions/v1/george-chat` (demo) | `DemoChat.tsx` | **Working** | Uses anon key, no auth. Catches errors with fallback message. | — |
-
-### RPC Calls (`supabase.rpc`)
-
-| Function | Caller(s) | Status | Issue | Fix |
-|----------|-----------|--------|-------|-----|
-| `get_user_team_id` | 15+ hooks | **Working** | Most check for error. Some don't (e.g. `GeorgeInputArea` line 105, `GeorgeAgentInput` line 85) — if null, subsequent queries return empty. | Add null guard where missing |
-| `get_user_org_id_v2` | `useSubscription` | **Working** | — | — |
-| `get_user_seat_type` | `useSeatAccess` | **Working** | — | — |
-| `get_user_team_role` | `useUserRole` | **Working** | — | — |
-| `get_team_seat_usage` | `useSeatUsage` | **Working** | — | — |
-| `get_team_george_users` | `useTeamGeorgeUsers` | **Working** | — | — |
-| `get_quote_by_portal_token` | `usePortal` | **Working** | — | — |
-| `get_invoice_by_portal_token` | `usePortal` | **Working** | — | — |
-| `accept_quote_from_portal` | `usePortal` | **Working** | — | — |
-| `decline_quote_from_portal` | `usePortal` | **Working** | — | — |
-| `is_customer` | `useIsCustomer` | **Working** | — | — |
-| `seed_team_templates` | `OnboardingTemplatesStep` | **Working** | — | — |
-
-### Direct Table Queries (`.from()`)
-
-| Table | Hook/Component | Status | Issue | Fix |
-|-------|---------------|--------|-------|-----|
-| `quotes` | `useQuotes` | **Working** | `.limit(5000)` with overflow warning | — |
-| `invoices` | `useInvoices` | **Working** | — | — |
-| `jobs` | `useJobs` | **Working** | — | — |
-| `customers` | `useCustomers` | **Working** | — | — |
-| `expenses` | `useExpenses` | **Working** | — | — |
-| `profiles` | `useProfile` | **Working** | — | — |
-| `teams` | `useTeam`, `useGeorgeAccess` | **Working** | — | — |
-| `team_memberships` | `useTeamMembers` | **Working** | — | — |
-| `notifications` | `useNotifications` | **Working** | Realtime subscription included | — |
-| `comms_settings` | `useCommsSettings` | **Working** | Auto-creates row if missing — good pattern | — |
-| `templates` | `useTemplates` | **Working** | — | — |
-| `certificates` | `useCertificates` | **Working** | — | — |
-| `time_entries` | `useTimeTracking` | **Working** | — | — |
-| `leads` | `useLeads` | **Working** | — | — |
-| `price_book_items` | `usePriceBook` | **Working** | — | — |
-| `payments` | `usePayments` | **Working** | — | — |
-| `recurring_invoices` | `useRecurringInvoices` | **Working** | — | — |
-| `customer_accounts` | `useCustomerPortal` | **Working** | — | — |
-| `xero_connections` | `useXeroConnection` | **Partial** | Uses `(supabase as any)` — table not in generated types | Add to types or use RPC |
-| `quickbooks_connections` | `useQuickBooksConnection` | **Partial** | Same `(supabase as any)` cast — no type safety | Same |
-| `subscriptions_v2` | `useSubscription` | **Working** | — | — |
-| `org_members_v2` | `useOrgMembers` | **Working** | — | — |
-| `george_projects` | `useGeorge` | **Working** | — | — |
+There are 3 critical security blockers and 2 critical functional gaps that must be resolved before any paying user touches this product.
 
 ---
 
-## Summary of Issues
+## SECTION-BY-SECTION ASSESSMENT
 
-### Critical (fix before launch)
+### SECTION 1: CORE FUNCTIONALITY — CONDITIONAL PASS
+- Quote → Job → Invoice: **Fixed** (duplicate job bug resolved, currency on invoice-from-quote resolved)
+- Job → Calendar → Time Track: **Working**
+- Customer → Job → Invoice: **Working**
+- Invoice lifecycle: **Working** (balance triggers, payment tracking, dashboard invalidation all fixed)
+- Dashboard reflects real data: **Pass** (dashboard-stats cache invalidation now in place)
 
-| # | Issue | Location | Impact |
-|---|-------|----------|--------|
-| 1 | **`generate-nudges` and `weekly-analysis` silently swallow errors** | `GeorgeWelcome.tsx` L95, L111 | Edge function returns 500 → user sees empty state with no error message. The `res.error` field is never checked. |
-| 2 | **Xero/QuickBooks connect mutations have no error feedback** | `useXeroConnection.ts` L32-41, `useQuickBooksConnection.ts` L32-41 | User clicks "Connect", request fails, nothing happens. No toast, no loading indicator change. |
-| 3 | **Xero sync failures are silent** | `useXeroSync.ts` L15-47 | All 3 sync types `console.warn` errors but never inform the user. Sync appears to succeed when it hasn't. |
-| 4 | **`TESTING_MODE = true` hardcoded in production** | `useGeorgeAccess.ts` L67 | Every user gets unlimited voice access, bypassing seat checks and minute limits. Must be `false` before launch. |
-
-### Medium
-
-| # | Issue | Location | Impact |
-|---|-------|----------|--------|
-| 5 | **`(supabase as any)` type casts** | `useXeroConnection.ts`, `useQuickBooksConnection.ts` | No compile-time safety. If table name or column changes, error appears only at runtime. |
-| 6 | **`get_user_team_id` null not checked in George chat** | `GeorgeInputArea.tsx` L105 | If user has no team, `team_id: null` is sent to george-chat. Edge function may not handle this gracefully. |
-| 7 | **Dashboard `revenueThisMonth` uses `issue_date` not payment date** | `useDashboard.ts` L90-93 | Already flagged in previous audit — still present. Revenue for invoices paid this month but issued last month is missed. |
-
-### Low / Polish
-
-| # | Issue | Location | Impact |
-|---|-------|----------|--------|
-| 8 | **No retry logic on any edge function call** | All 31 files | Network blips cause permanent failures. React Query provides `retry` but defaults to 3 for queries only — mutations have 0 retries. |
-| 9 | **Quotes query `.limit(5000)` with no pagination** | `useQuotes.ts` L21-28 | Works now, but will degrade for high-volume teams. Already has a `console.warn` but no user-facing indicator. |
+**Status: PASS** (after recent fixes)
 
 ---
 
-## Recommended Fixes (Priority Order)
+### SECTION 2: BUTTON & ACTION INTEGRITY — CONDITIONAL PASS
+- Previous audit identified and fixed: hero empty paragraph, portal link URLs, bulk delete handlers
+- Loading states present on all mutations via `isPending`
+- Success/error toasts on all CRUD operations
 
-1. **`TESTING_MODE` flag**: Set to `false` in `useGeorgeAccess.ts` or make it environment-driven before launch
-2. **`generate-nudges` / `weekly-analysis`**: Add `if (res.error) throw res.error` before accessing `.data`
-3. **Xero/QuickBooks connect**: Add `onError: (e) => toast.error("Connection failed: " + e.message)` to both connect mutations
-4. **Xero sync**: Replace `console.warn` with `toast.error("Sync failed")` in all 3 catch blocks
-5. **George chat null team guard**: Add `if (!teamId)` early return with user-facing message
-6. **Type casts**: These are cosmetic — fix when the tables are added to the generated types schema
+**Status: PASS** (assuming previous audit fixes deployed)
 
-## Files to Change
+---
 
-| File | Change |
-|------|--------|
-| `src/hooks/useGeorgeAccess.ts` | Set `TESTING_MODE = false` |
-| `src/components/george/GeorgeWelcome.tsx` | Add error checks on nudges + analysis calls |
-| `src/hooks/useXeroConnection.ts` | Add `onError` to `connect` mutation |
-| `src/hooks/useQuickBooksConnection.ts` | Add `onError` to `connect` mutation |
-| `src/hooks/useXeroSync.ts` | Replace `console.warn` with `toast.error` |
-| `src/components/george/GeorgeInputArea.tsx` | Add null guard for `teamId` |
+### SECTION 3: BILLING & PAYMENTS — PASS WITH NOTES
+- Trial: 7-day trial auto-provisioned via `handle_new_user` trigger
+- Upgrade: `create-checkout-session` → Stripe Checkout → webhook updates `subscriptions_v2`
+- Subscription status: `useReadOnly` correctly gates expired/canceled/past_due with 3-day grace
+- Failed payments: `past_due` status handled with grace period + dunning emails from Stripe webhook
+- Plan/Price/Renewal: visible in `SubscriptionOverview` component
+- `TESTING_MODE` set to `false` (fixed in API audit)
+
+**Status: PASS**
+
+---
+
+### SECTION 4: DATA INTEGRITY — PASS
+- FK cascade rules fixed (comms_queue, expenses, certificates)
+- Atomic number generation via DB functions (race conditions eliminated)
+- No orphaned records found in DB audit
+- Payment overpayment guard added
+
+**Status: PASS**
+
+---
+
+### SECTION 5: ERROR HANDLING — PASS
+- Silent failures in George welcome (nudges/analysis) now throw on error
+- Xero/QuickBooks connect and sync now show toast errors
+- George chat null team guard added
+- All CRUD mutations have `onError` toasts
+
+**Status: PASS**
+
+---
+
+### SECTION 6: FOREMAN AI — PASS WITH NOTES
+- George chat calls real edge function with tool definitions
+- Action mode with confirmation gates prevents accidental execution
+- Memory system persists across sessions
+- Commands route through `george-chat` with real DB context
+
+**Minor concern**: AI accuracy depends on LLM quality; no hallucination guardrails beyond tool-calling architecture. Acceptable for launch.
+
+**Status: PASS**
+
+---
+
+### SECTION 7: PERFORMANCE & RELIABILITY — PASS
+- Vite builds are fast; no heavy blocking operations on load
+- Quotes query has 5000 limit with warning (acceptable for launch)
+- Mobile-first design with responsive breakpoints
+- No broken navigation detected in route audit
+
+**Status: PASS**
+
+---
+
+### SECTION 8: SECURITY & ACCESS — FAIL (CRITICAL BLOCKERS)
+
+This is where the launch stops.
+
+#### BLOCKER 1: `create-invoice` and `create-quote` Edge Functions Are Fully Unauthenticated
+- **Impact**: Any internet user can create invoices or quotes in ANY team's database
+- **Impact**: ILIKE queries with no team filter allow cross-tenant customer enumeration
+- **Impact**: Service role key used with zero auth = full DB write access
+- **Severity**: CRITICAL — data integrity and trust destroyer
+
+#### BLOCKER 2: `job_photos` Table Has Blanket Anonymous Read Access
+- RLS policy `USING (true)` on `anon` role = all job photos publicly readable
+- **Impact**: Competitor or anyone can view all uploaded job site photos
+
+#### BLOCKER 3: `document-emails` Storage Bucket — Any Authenticated User Can Read/Write All Teams' Documents
+- SELECT and INSERT policies only check `bucket_id`, not team ownership
+- **Impact**: Cross-tenant document access (invoices, quotes as PDFs)
+
+#### BLOCKER 4: `team_member_profiles` View Exposes All Users' PII
+- No RLS on view — any authenticated user reads all emails, names, avatars across all teams
+
+#### HIGH (not blocking but must fix soon):
+- Realtime channels have no RLS — any user can subscribe to any team's location pings and notifications
+- `marketing-assets` bucket has no team isolation on uploads/deletes
+
+**Status: FAIL — NO-GO**
+
+---
+
+### SECTION 9: UX CLARITY — PASS
+- Onboarding checklist guides new users
+- Morning briefing provides daily priorities
+- Navigation is clear with sidebar grouping
+- Empty states provide guidance
+
+**Status: PASS**
+
+---
+
+### SECTION 10: TRUST SIGNALS — CONDITIONAL PASS
+- Billing transparency: plan, price, renewal date shown
+- Action confirmations: toasts on all mutations
+- Email branding: now consistent across all outbound
+- Data feels reliable after integrity fixes
+
+**Concern**: The security gaps in Section 8 would destroy trust if discovered. A user finding another team's documents or photos is a product-ending event.
+
+**Status: CONDITIONAL PASS** (dependent on Section 8 fixes)
+
+---
+
+## CRITICAL BLOCKERS (Must Fix Before Launch)
+
+| # | Blocker | Severity | Effort |
+|---|---------|----------|--------|
+| 1 | **`create-invoice` + `create-quote` have zero auth** — anyone on internet can create financial documents in any team | CRITICAL | 1 hour |
+| 2 | **`document-emails` bucket has no team isolation** — cross-tenant PDF access | CRITICAL | 30 min |
+| 3 | **`job_photos` anon read policy `USING(true)`** — all photos publicly accessible | CRITICAL | 15 min |
+| 4 | **`team_member_profiles` view exposes all PII** — no RLS | HIGH | 30 min |
+| 5 | **Realtime channels have no RLS** — location pings and notifications leak cross-tenant | HIGH | 1 hour |
+
+---
+
+## NON-CRITICAL IMPROVEMENTS (Post-Launch)
+
+1. Portal token expiration (currently tokens live forever)
+2. ILIKE wildcard sanitization in george-webhook
+3. Move extensions out of `public` schema
+4. Xero/QuickBooks `(supabase as any)` type casts
+5. Revenue reporting by `paid_at` instead of `issue_date`
+6. Pagination on quotes query (currently 5000 limit)
+7. Email-assets bucket team isolation
+8. Marketing-assets bucket team isolation
+9. Currency rates table: restrict to authenticated users
+10. Early access requests admin policies
+
+---
+
+## TOP 5 FIXES REQUIRED IMMEDIATELY
+
+1. **Add authentication to `create-invoice` and `create-quote` edge functions** — extract user from Authorization header, scope all queries to their `team_id`, reject unauthenticated requests with 401
+2. **Fix `document-emails` storage policies** — add team_id folder scoping to SELECT and INSERT policies so users can only access their own team's documents
+3. **Replace `job_photos` anon policy** — remove `USING(true)` on anon, replace with team-scoped policy for authenticated users (or portal-token-scoped for customer access)
+4. **Secure `team_member_profiles` view** — add RLS policy scoped to same-team membership via `get_user_team_id()`
+5. **Add RLS to Realtime channels** — scope `location_pings` and `notifications` subscriptions to team membership
+
+---
+
+## SUMMARY
+
+| Section | Status |
+|---------|--------|
+| Core Functionality | PASS |
+| Button Integrity | PASS |
+| Billing & Payments | PASS |
+| Data Integrity | PASS |
+| Error Handling | PASS |
+| Foreman AI | PASS |
+| Performance | PASS |
+| **Security & Access** | **FAIL** |
+| UX Clarity | PASS |
+| Trust Signals | CONDITIONAL |
+
+**Decision: NO-GO** until the 5 security blockers are resolved. The product is functionally ready — the billing works, the workflows are solid, the AI layer is differentiated. But shipping with unauthenticated write endpoints and cross-tenant data access would be a company-ending mistake. Fix the 5 items above (estimated 3-4 hours of work), re-audit, then GO.
 
