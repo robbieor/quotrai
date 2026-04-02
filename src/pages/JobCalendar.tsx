@@ -26,6 +26,7 @@ export default function JobCalendar() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
+  const { startHour, endHour, hourSlots, updateHours } = useWorkingHours();
 
   // Slot scheduling state
   const [pickerOpen, setPickerOpen] = useState(false);
