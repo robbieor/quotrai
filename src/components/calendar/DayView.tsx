@@ -14,9 +14,10 @@ interface DayViewProps {
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
   onSlotClick?: (date: Date, hour?: number) => void;
+  hourSlots?: number[];
 }
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
+const DEFAULT_HOURS = Array.from({ length: 15 }, (_, i) => i + 6);
 
 export function DayView({
   currentDate,
@@ -26,6 +27,7 @@ export function DayView({
   onJobDragStart,
   onJobDragEnd,
   onSlotClick,
+  hourSlots = DEFAULT_HOURS,
 }: DayViewProps) {
   const dayJobs = jobs.filter((job) => {
     if (!job.scheduled_date) return false;
@@ -82,7 +84,7 @@ export function DayView({
 
       {/* Time grid */}
       <div className="overflow-auto max-h-[600px]">
-        {HOURS.map((hour) => {
+        {hourSlots.map((hour) => {
           const hourJobs = getJobsForHour(hour);
           const jobCount = busySlots[hour] || 0;
           

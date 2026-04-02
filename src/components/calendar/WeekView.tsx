@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Job } from "@/hooks/useJobs";
 import { DraggableJobCard } from "./DraggableJobCard";
 import { DroppableCell } from "./DroppableCell";
+
 interface WeekViewProps {
   currentDate: Date;
   jobs: Job[];
@@ -13,9 +14,15 @@ interface WeekViewProps {
   onJobDragStart: (job: Job) => void;
   onJobDragEnd: () => void;
   onSlotClick?: (date: Date, hour?: number) => void;
+  hourSlots?: number[];
 }
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
+const formatHourShort = (hour: number) => {
+  const h = hour % 12 || 12;
+  return `${h}${hour < 12 ? "a" : "p"}`;
+};
+
+const DEFAULT_HOURS = Array.from({ length: 15 }, (_, i) => i + 6);
 
 export function WeekView({
   currentDate,
@@ -25,6 +32,7 @@ export function WeekView({
   onJobDragStart,
   onJobDragEnd,
   onSlotClick,
+  hourSlots = DEFAULT_HOURS,
 }: WeekViewProps) {
   const isMobile = useIsMobile();
   const [showWeekends, setShowWeekends] = useState(false);
@@ -130,7 +138,7 @@ export function WeekView({
 
       {/* Time grid */}
       <div className="overflow-auto max-h-[600px]">
-        {HOURS.map((hour) => (
+        {hourSlots.map((hour) => (
           <div
             key={hour}
             className="grid border-b last:border-b-0"
@@ -158,12 +166,17 @@ export function WeekView({
                   id={`week-${dateKey}-${hour}`}
                   date={day}
                   hour={hour}
-                  className={cn("border-r last:border-r-0 p-0.5 md:p-1", isMobile ? "min-h-[48px]" : "min-h-[60px]")}
+                  className={cn("border-r last:border-r-0 p-0.5 md:p-1 relative", isMobile ? "min-h-[48px]" : "min-h-[60px]")}
                   hasJobs={jobCount > 0}
                   jobCount={jobCount}
                   onJobDrop={onJobDrop}
                   onSlotClick={onSlotClick}
                 >
+                  {isMobile && (
+                    <span className="absolute top-0.5 left-0.5 text-[9px] leading-none text-muted-foreground/70 pointer-events-none select-none">
+                      {formatHourShort(hour)}
+                    </span>
+                  )}
                   {[...hourJobs, ...unscheduledJobs].map((job) => (
                     <DraggableJobCard
                       key={job.id}

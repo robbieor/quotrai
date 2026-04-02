@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, MoreHorizontal, Calendar, CalendarCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, Calendar, CalendarCheck, Clock } from "lucide-react";
 import { format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -17,10 +18,22 @@ interface CalendarHeaderProps {
   onDateChange: (date: Date) => void;
   onViewChange: (view: CalendarViewType) => void;
   pendingCount?: number;
+  startHour: number;
+  endHour: number;
+  onWorkingHoursChange: (start: number, end: number) => void;
 }
 
-export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, pendingCount = 0 }: CalendarHeaderProps) {
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => i);
+const formatHour = (h: number) => {
+  if (h === 0) return "12 AM";
+  if (h < 12) return `${h} AM`;
+  if (h === 12) return "12 PM";
+  return `${h - 12} PM`;
+};
+
+export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, pendingCount = 0, startHour, endHour, onWorkingHoursChange }: CalendarHeaderProps) {
   const isMobile = useIsMobile();
+  const [showHoursMenu, setShowHoursMenu] = useState(false);
 
   const navigatePrevious = () => {
     switch (view) {
@@ -124,6 +137,10 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, 
                 Pending jobs {pendingCount > 0 && `(${pendingCount})`}
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem onClick={() => setShowHoursMenu(true)}>
+              <Clock className="h-4 w-4 mr-2" />
+              Working hours ({formatHour(startHour)} – {formatHour(endHour)})
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -139,6 +156,40 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, 
           </span>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={navigateNext}>
             <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      {/* Working hours picker */}
+      {showHoursMenu && (
+        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+          <span className="text-xs text-muted-foreground">From</span>
+          <select
+            value={startHour}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (v < endHour) onWorkingHoursChange(v, endHour);
+            }}
+            className="text-xs bg-background border rounded px-1.5 py-1"
+          >
+            {HOUR_OPTIONS.filter((h) => h < endHour).map((h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-foreground">to</span>
+          <select
+            value={endHour}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (v > startHour) onWorkingHoursChange(startHour, v);
+            }}
+            className="text-xs bg-background border rounded px-1.5 py-1"
+          >
+            {HOUR_OPTIONS.filter((h) => h > startHour).map((h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowHoursMenu(false)}>
+            Done
           </Button>
         </div>
       )}
