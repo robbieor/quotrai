@@ -1,80 +1,87 @@
 
 
-# Foreman AI Agent — Assessment & Improvement Plan
+# Wire `ai_conversations` Table into George Chat System
 
-## Current State
+## What This Does
 
-The agent is **functionally solid** but has significant UX and intelligence gaps that make it feel like a basic chatbot rather than the "AI Operating System" it's positioned as.
+The new `ai_conversations` table acts as a **flat analytics/logging layer** alongside the existing `george_conversations` + `george_messages` tables. It captures every message exchange with token usage and metadata — useful for usage tracking, billing, and AI performance analysis.
 
-### What's Working
-- 59 tool definitions covering quotes, invoices, jobs, expenses, customers, scheduling
-- Confirmation gates before creating records (good safety)
-- SSE streaming for chat responses
-- Memory context system (customer, job, quote, invoice carry-over)
-- Trade-specific expertise prompts (20+ trades with pricing, standards, compliance)
-- Conversation persistence and history
-- Voice agent integration via ElevenLabs
+## Approach
 
-### What's NOT Working / Missing
+After each AI exchange in the `george-chat` edge function, insert both the user message and assistant response into `ai_conversations` using the service client. This is fire-and-forget (non-blocking) so it doesn't slow down chat responses.
 
-**1. The AI model is too weak**
-- Primary chat uses `google/gemini-2.5-flash` — fine for simple queries but lacks reasoning depth
-- Follow-up tool result synthesis uses `google/gemini-2.5-flash-lite` — the weakest available model
-- For a product positioned as an "AI Operating System", this underdelivers on complex multi-step requests
+### Data captured per row:
+- `user_id` — authenticated user
+- `role` — "user" or "assistant"
+- `content` — the message text
+- `tokens_used` — from the AI model response (when available)
+- `metadata` — conversation_id, intent, model used, team_id, tool calls made
 
-**2. No markdown rendering in messages**
-- AI responses come back as raw text with `**bold**` and `\n` markers
-- The `GeorgeMessageList` renders with `whitespace-pre-wrap` — no markdown parsing
-- Makes responses look unpolished compared to ChatGPT/Claude
+## Changes
 
-**3. Empty state is passive**
-- The welcome screen shows quick actions but doesn't proactively surface intelligence
-- Per the product knowledge doc: "Foreman must guide the user, not wait for them"
-- The daily briefing (described as a "mandatory feature") is just a quick action button, not automatic
+### 1. Create the table (migration — already proposed, needs execution)
 
-**4. No typing indicator feedback**
-- When AI is processing, user just sees a spinner with "Thinking..."
-- No indication of what's happening (searching customers, creating quote, etc.)
+```sql
+create table public.ai_conversations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
+  role text not null check (role in ('user', 'assistant', 'system')),
+  content text not null,
+  metadata jsonb default '{}',
+  tokens_used int,
+  created_at timestamptz default now()
+);
 
-**5. Responses lack the Foreman personality**
-- System prompt says "Be concise, professional, and trade-aware"
-- But doesn't enforce the no-nonsense Irish foreman persona described in the product docs
-- Missing the "insight → impact → action" response framework
+create index idx_ai_conversations_user on public.ai_conversations(user_id, created_at desc);
 
-## Improvement Plan
+alter table public.ai_conversations enable row level security;
 
-### Step 1: Upgrade AI model for primary chat
-- Change primary model from `gemini-2.5-flash` to `google/gemini-2.5-pro` for better reasoning
-- Keep `gemini-2.5-flash` for the follow-up tool result synthesis (speed matters there)
-- This single change will noticeably improve response quality
+create policy "Users can read own conversations"
+  on public.ai_conversations for select to authenticated
+  using (user_id = auth.uid());
 
-### Step 2: Add markdown rendering to chat messages
-- Install `react-markdown` and `remark-gfm`
-- Update `GeorgeMessageList` to render assistant messages through `<ReactMarkdown>` with proper prose styling
-- User messages stay as plain text (they're always short)
+create policy "Users can insert own conversations"
+  on public.ai_conversations for insert to authenticated
+  with check (user_id = auth.uid());
+```
 
-### Step 3: Enhance system prompt personality
-- Add the Foreman persona rules: direct, no-nonsense, Irish English, trade-aware
-- Enforce the Insight → Impact → Action response framework
-- Add instruction to avoid corporate AI phrasing ("certainly", "absolutely", "happy to help")
-- Keep responses short and decision-focused
+### 2. Edit `supabase/functions/george-chat/index.ts`
 
-### Step 4: Auto-trigger morning briefing on first visit
-- When the welcome screen loads and insights show urgent items, automatically send a briefing message
-- Use the existing `get_today_summary` tool to populate a proactive daily briefing
-- This makes Foreman feel like it's "always working in the background"
+Add a helper function `logToAiConversations` that inserts user + assistant rows:
 
-### Step 5: Improve streaming UX with step indicators
-- During tool execution, show contextual status ("Searching customers...", "Creating draft quote...") instead of generic "Thinking..."
-- Use the existing `buildActionSteps` labels to drive this
+```typescript
+async function logToAiConversations(
+  supabase: any,
+  userId: string,
+  userMessage: string,
+  assistantMessage: string,
+  metadata: Record<string, any>,
+  tokensUsed?: number
+) {
+  await supabase.from("ai_conversations").insert([
+    { user_id: userId, role: "user", content: userMessage, metadata },
+    { user_id: userId, role: "assistant", content: assistantMessage, metadata, tokens_used: tokensUsed },
+  ]);
+}
+```
+
+Call this function at every response exit point:
+- After direct webhook responses (~line 437)
+- After quick action short-circuits (~line 467)
+- After streaming completion (~end of SSE loop)
+- After JSON fallback responses
+- After tool-call round-trip responses
+
+Metadata will include: `{ conversation_id, team_id, intent, model, tool_calls }`.
+
+Token usage will be extracted from the Lovable AI response when available (from `usage.total_tokens` in the response).
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Edit | `supabase/functions/george-chat/index.ts` — upgrade model, enhance system prompt persona |
-| Edit | `src/components/george/GeorgeMessageList.tsx` — add react-markdown rendering |
-| Edit | `src/components/george/GeorgeWelcome.tsx` — auto-trigger briefing on first load |
+| Migration | Create `ai_conversations` table with RLS |
+| Edit | `supabase/functions/george-chat/index.ts` — add logging at all response exit points |
 
-No database changes. No new edge functions.
+No frontend changes needed — the existing chat UI continues using `george_conversations` / `george_messages`. This table is for analytics and usage tracking.
 
