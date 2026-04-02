@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useWorkingHours } from "@/hooks/useWorkingHours";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Loader2 } from "lucide-react";
