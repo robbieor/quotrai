@@ -63,8 +63,8 @@ export function useGeorgeAccess() {
     enabled: !!profile?.team_id && !!user?.id,
   });
 
-  // TESTING MODE: Grant voice access to all authenticated users
-  const TESTING_MODE = true;
+  // TESTING MODE: Set to true only for local development
+  const TESTING_MODE = false;
   
   const hasVoiceAccess = TESTING_MODE || (profile?.has_george_voice ?? false);
   const georgeVoiceSeats = teamData?.george_voice_seats ?? (TESTING_MODE ? 1 : 0);

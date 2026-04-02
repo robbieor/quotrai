@@ -110,6 +110,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
       const res = await supabase.functions.invoke("weekly-analysis");
+      if (res.error) throw res.error;
       return res.data?.analysis || null;
     },
     staleTime: 3600000, // 1 hour

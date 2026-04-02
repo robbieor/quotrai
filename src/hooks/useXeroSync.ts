@@ -20,6 +20,7 @@ export function useXeroSync() {
         });
       } catch (e) {
         console.warn("[Xero] Contact sync failed:", e);
+        toast.error("Xero contact sync failed");
       }
     },
     [isConnected, teamId]
@@ -34,6 +35,7 @@ export function useXeroSync() {
         });
       } catch (e) {
         console.warn("[Xero] Invoice sync failed:", e);
+        toast.error("Xero invoice sync failed");
       }
     },
     [isConnected, teamId]
@@ -48,6 +50,7 @@ export function useXeroSync() {
         });
       } catch (e) {
         console.warn("[Xero] Payment sync failed:", e);
+        toast.error("Xero payment sync failed");
       }
     },
     [isConnected, teamId]

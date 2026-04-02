@@ -38,6 +38,9 @@ export function useQuickBooksConnection() {
       if (error) throw error;
       return data.auth_url as string;
     },
+    onError: (e: Error) => {
+      toast.error("QuickBooks connection failed: " + e.message);
+    },
   });
 
   const disconnect = useMutation({

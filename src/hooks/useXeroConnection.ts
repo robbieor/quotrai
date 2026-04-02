@@ -38,6 +38,9 @@ export function useXeroConnection() {
       if (error) throw error;
       return data.auth_url as string;
     },
+    onError: (e: Error) => {
+      toast.error("Xero connection failed: " + e.message);
+    },
   });
 
   const disconnect = useMutation({

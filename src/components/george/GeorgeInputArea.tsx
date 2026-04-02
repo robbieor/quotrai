@@ -103,6 +103,10 @@ export function GeorgeInputArea({
 
       // Call the george-chat edge function
       const { data: teamId } = await supabase.rpc("get_user_team_id");
+      if (!teamId) {
+        toast.error("No team found. Please complete onboarding first.");
+        return;
+      }
       const { data: user } = await supabase.auth.getUser();
 
       const response = await supabase.functions.invoke("george-chat", {
