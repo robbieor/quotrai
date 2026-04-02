@@ -163,7 +163,26 @@ export function SubscriptionOverview() {
     } catch (err: any) {
       toast.error(err?.message || "Failed to resume subscription");
     } finally {
-      setIsCancelling(false);
+    setIsCancelling(false);
+    }
+  };
+
+  const handleEndTrialEarly = async () => {
+    setIsEndingTrial(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("end-trial-early");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
+      toast.success("Trial ended — your subscription is now active!", {
+        description: "Your first payment has been processed.",
+        duration: 5000,
+      });
+      setEndTrialDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to end trial");
+    } finally {
+      setIsEndingTrial(false);
     }
   };
 
