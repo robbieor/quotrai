@@ -1,13 +1,18 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, ArrowRight } from "lucide-react";
+import { X, Send, Loader2, ArrowRight, Mic, Volume2, VolumeX } from "lucide-react";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 
 const MAX_DEMO_MESSAGES = 3;
+
+const SpeechRecognitionAPI =
+  typeof window !== "undefined"
+    ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    : null;
 
 interface DemoMessage {
   role: "user" | "assistant";
@@ -30,8 +35,14 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userMessageCount, setUserMessageCount] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const hasSpeechSupport = !!SpeechRecognitionAPI;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,10 +52,52 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading || userMessageCount >= MAX_DEMO_MESSAGES) return;
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
-    const userMessage = input.trim();
+  const speakResponse = useCallback(async (text: string) => {
+    if (!voiceEnabled) return;
+    // Trim to 200 chars for demo TTS cap
+    const trimmed = text.slice(0, 200);
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseKey,
+        },
+        body: JSON.stringify({ text: trimmed, demo: true }),
+      });
+
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.audioContent) return;
+
+      const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => { audioRef.current = null; };
+      await audio.play();
+    } catch {
+      // Silently fail — voice is a nice-to-have in demo
+    }
+  }, [voiceEnabled]);
+
+  const handleSend = useCallback(async (overrideText?: string) => {
+    const userMessage = (overrideText || input).trim();
+    if (!userMessage || isLoading || userMessageCount >= MAX_DEMO_MESSAGES) return;
+
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setUserMessageCount((c) => c + 1);
@@ -69,10 +122,11 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
       });
 
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.message || "I couldn't process that right now. Try signing up for the full experience!" },
-      ]);
+      const reply = data.message || "I couldn't process that right now. Try signing up for the full experience!";
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+
+      // Speak the reply
+      speakResponse(reply);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -81,7 +135,39 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [input, isLoading, userMessageCount, speakResponse]);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    if (!SpeechRecognitionAPI) return;
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "en-GB";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setIsListening(false);
+      if (transcript) {
+        setInput(transcript);
+        // Auto-send after a short delay so user sees the text
+        setTimeout(() => handleSend(transcript), 300);
+      }
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
+    setIsListening(true);
+  }, [isListening, handleSend]);
 
   const hitLimit = userMessageCount >= MAX_DEMO_MESSAGES;
 
@@ -97,11 +183,30 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
             <p className="font-semibold text-sm text-foreground">George — Demo Mode</p>
             <p className="text-xs text-muted-foreground">
               {MAX_DEMO_MESSAGES - userMessageCount} message{MAX_DEMO_MESSAGES - userMessageCount !== 1 ? "s" : ""} remaining
+              {hasSpeechSupport && " · Voice enabled"}
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {hasSpeechSupport && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                    audioRef.current = null;
+                  }
+                  setVoiceEnabled((v) => !v);
+                }}
+              >
+                {voiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -159,10 +264,22 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask George anything..."
-                disabled={isLoading}
+                placeholder={isListening ? "Listening..." : "Ask George anything..."}
+                disabled={isLoading || isListening}
                 className="flex-1"
               />
+              {hasSpeechSupport && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={isListening ? "default" : "outline"}
+                  onClick={toggleListening}
+                  disabled={isLoading}
+                  className={cn(isListening && "animate-pulse")}
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+              )}
               <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
                 <Send className="h-4 w-4" />
               </Button>

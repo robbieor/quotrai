@@ -13,28 +13,46 @@ serve(async (req) => {
   }
 
   try {
-    // Verify JWT authentication
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { text, voiceId = "JBFqnCBsd6RMkjVDRZzb", demo } = await req.json();
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    // Demo mode: skip auth but cap text length
+    if (demo) {
+      if (!text || typeof text !== "string") {
+        return new Response(
+          JSON.stringify({ error: "Text is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (text.length > 200) {
+        return new Response(
+          JSON.stringify({ error: "Demo text too long" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      // Authenticated mode — verify JWT
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
       );
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
@@ -42,8 +60,6 @@ serve(async (req) => {
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ElevenLabs API key not configured");
     }
-
-    const { text, voiceId = "JBFqnCBsd6RMkjVDRZzb" } = await req.json(); // George voice
 
     if (!text) {
       return new Response(
@@ -89,7 +105,7 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error("elevenlabs-tts error:", error);
-    
+
     return new Response(
       JSON.stringify({ error: "An error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
