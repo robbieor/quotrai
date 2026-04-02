@@ -375,10 +375,11 @@ serve(async (req) => {
     const userId = user.id;
 
     // ─── PARALLEL: Profile + Membership + Preferences ───────────
-    const [profileRes, membershipRes, prefsRes] = await Promise.all([
+    const [profileRes, membershipRes, prefsRes, memoryRes] = await Promise.all([
       serviceSupabase.from("profiles").select("team_id, full_name, trade_type, currency").eq("id", userId).single(),
       serviceSupabase.from("team_memberships").select("id").eq("user_id", userId).limit(1).maybeSingle(),
       serviceSupabase.from("foreman_ai_preferences").select("*").eq("user_id", userId).maybeSingle(),
+      serviceSupabase.from("ai_user_memory").select("category, key, value, confidence, source").eq("user_id", userId).order("last_referenced_at", { ascending: false, nullsFirst: false }).limit(30),
     ]);
 
     if (!profileRes.data?.team_id) {
