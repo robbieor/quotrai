@@ -45,6 +45,14 @@ export function GeorgeChatArea({
     }
   };
 
+  const handleChipAction = (message: string) => {
+    window.dispatchEvent(
+      new CustomEvent("foremanai-quick-action", {
+        detail: { message, autoSend: true },
+      })
+    );
+  };
+
   // Mobile layout — header is now rendered by George.tsx, not here
   if (isMobile) {
     return (
