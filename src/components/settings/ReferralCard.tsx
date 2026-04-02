@@ -32,12 +32,13 @@ export function ReferralCard() {
       } else {
         // Generate a new referral code
         const code = `FOREMAN-${user.id.slice(0, 6).toUpperCase()}`;
-        const { error } = await supabase.from("referrals").insert({
+        const { error } = await supabase.from("referrals").insert([{
           referrer_team_id: profile.team_id,
           referrer_user_id: user.id,
           referral_code: code,
+          referred_email: "",
           status: "pending",
-        });
+        }]);
         if (!error) setReferralCode(code);
       }
       setLoading(false);
