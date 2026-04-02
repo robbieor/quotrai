@@ -807,6 +807,10 @@ IMPORTANT RULES:
         conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "no-api-key-fallback",
       });
       return new Response(
+        JSON.stringify({
+          message: fallbackMsg,
+          conversation_id: activeConversationId,
+          action_plan: null,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
