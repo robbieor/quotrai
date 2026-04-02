@@ -303,6 +303,23 @@ function buildMemory(toolCalls: any[], toolResults: any[], existingMemory?: any)
   return memory;
 }
 
+// ─── AI CONVERSATIONS LOGGING (fire-and-forget) ────────────────────
+function logToAiConversations(
+  supabase: any,
+  userId: string,
+  userMessage: string,
+  assistantMessage: string,
+  metadata: Record<string, any>,
+  tokensUsed?: number
+) {
+  supabase.from("ai_conversations").insert([
+    { user_id: userId, role: "user", content: userMessage, metadata },
+    { user_id: userId, role: "assistant", content: assistantMessage, metadata, tokens_used: tokensUsed },
+  ]).then(({ error }: any) => {
+    if (error) console.error("ai_conversations log error (non-fatal):", error);
+  });
+}
+
 // ─── MAIN HANDLER ───────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
