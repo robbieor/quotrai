@@ -147,7 +147,7 @@ export function useDashboardAnalytics() {
         jobsAtRisk: JobAtRisk[];
         invoicesAtRisk: InvoiceAtRisk[];
         revenueByJobType: RevenueByJobTypeData[];
-        drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[] };
+        drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[]; cashCollected: any[]; revenueInvoices: any[] };
         jobsDueThisWeek: any[];
         overdueInvoices: any[];
         insights: any[];
