@@ -88,6 +88,7 @@ interface JobFormDialogProps {
     scheduled_date?: string | null;
     scheduled_time?: string | null;
     estimated_value?: number | null;
+    assigned_to?: string | null;
     location?: JobLocationData;
   }) => void;
   isLoading?: boolean;
