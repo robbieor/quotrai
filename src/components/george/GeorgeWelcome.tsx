@@ -79,6 +79,23 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
 
   const hasUrgentItems = (insights?.overdueCount ?? 0) > 0 || (insights?.draftQuotesCount ?? 0) > 0;
 
+  // Auto-trigger morning briefing on first load if there are urgent items
+  const briefingTriggered = useRef(false);
+  useEffect(() => {
+    if (!briefingTriggered.current && insights && hasUrgentItems && !isProcessing && onQuickAction) {
+      const today = new Date().toISOString().split("T")[0];
+      const briefingKey = `foreman-auto-briefing-${today}`;
+      if (!localStorage.getItem(briefingKey)) {
+        briefingTriggered.current = true;
+        localStorage.setItem(briefingKey, "true");
+        // Small delay so UI renders first
+        setTimeout(() => {
+          onQuickAction("get_today_summary", "Give me my morning briefing — what needs attention today?");
+        }, 800);
+      }
+    }
+  }, [insights, hasUrgentItems, isProcessing, onQuickAction]);
+
   if (isMobile) {
     return (
       <div className="flex-1 overflow-y-auto">
