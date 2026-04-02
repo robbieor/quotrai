@@ -138,6 +138,8 @@ const App = () => {
                 {/* Portal pages */}
                 <Route path="/quote/:token" element={<QuotePortal />} />
                 <Route path="/invoice/:token" element={<InvoicePortal />} />
+                <Route path="/portal/invoice" element={<InvoicePortal />} />
+                <Route path="/portal/quote" element={<QuotePortal />} />
                 <Route path="/customer/login" element={<CustomerLogin />} />
                 <Route path="/customer/dashboard" element={<CustomerDashboard />} />
 

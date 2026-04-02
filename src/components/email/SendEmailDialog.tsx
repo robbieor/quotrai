@@ -87,7 +87,7 @@ export function SendEmailDialog({
         // Include portal payment link
         if (document.portal_token) {
           const origin = window.location.origin;
-          payload.portalUrl = `${origin}/portal/invoice?token=${document.portal_token}`;
+          payload.portalUrl = `${origin}/invoice/${document.portal_token}`;
         }
       } else if (document.valid_until) {
         payload.validUntil = format(new Date(document.valid_until), "MMM d, yyyy");

@@ -274,7 +274,7 @@ export default function CustomerDashboard() {
                             <span className="font-semibold">{formatCurrency(invoice.total)}</span>
                             {(displayStatus === "pending" || displayStatus === "overdue") && (
                               <Link
-                                to={`/portal/invoice?token=${(invoice as any).portal_token || ""}`}
+                                to={`/invoice/${(invoice as any).portal_token || ""}`}
                                 className="shrink-0"
                               >
                                 <Button size="sm" variant="default" className="gap-1.5">
