@@ -293,12 +293,41 @@ export function SubscriptionOverview() {
                 </span>
               </div>
               <Progress value={trialProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                Your trial ends {subscription?.trial_ends_at
-                  ? format(new Date(subscription.trial_ends_at), "MMMM d, yyyy")
-                  : "soon"
-                }. Subscribe to keep full access.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Your trial ends {subscription?.trial_ends_at
+                    ? format(new Date(subscription.trial_ends_at), "MMMM d, yyyy")
+                    : "soon"
+                  }. Subscribe to keep full access.
+                </p>
+                {subscription?.stripe_subscription_id && (
+                  <AlertDialog open={endTrialDialogOpen} onOpenChange={setEndTrialDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-xs shrink-0 ml-3">
+                        Start Paying Now
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>End trial and start paying?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Your free trial will end immediately and your first payment will be processed now. 
+                          Your subscription will become fully active right away.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Trial</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleEndTrialEarly} disabled={isEndingTrial}>
+                          {isEndingTrial ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : null}
+                          Confirm & Pay
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </div>
           )}
 
