@@ -77,6 +77,24 @@ function getQuickActions(content: string): QuickActionChip[] {
   }
   return chips.slice(0, 3);
 }
+// Quick action chips component
+function QuickActionChips({ content, onAction }: { content: string; onAction?: (msg: string) => void }) {
+  const chips = getQuickActions(content);
+  if (chips.length === 0 || !onAction) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mt-2 ml-11">
+      {chips.map((chip) => (
+        <button
+          key={chip.label}
+          onClick={() => onAction(chip.message)}
+          className="text-xs font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 active:scale-[0.97] transition-all"
+        >
+          {chip.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function GeorgeMessageList({ messages, isProcessing, streamingText, lastError, onRetry, onQuickAction }: GeorgeMessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
