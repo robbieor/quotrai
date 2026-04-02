@@ -79,16 +79,48 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
 
   const hasUrgentItems = (insights?.overdueCount ?? 0) > 0 || (insights?.draftQuotesCount ?? 0) > 0;
 
+  // Proactive AI nudges
+  const today = new Date().toISOString().split("T")[0];
+  const [dismissedNudges, setDismissedNudges] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(`nudges-dismissed-${today}`) || "[]");
+    } catch { return []; }
+  });
+
+  const { data: nudges } = useQuery({
+    queryKey: ["foreman-nudges"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      const res = await supabase.functions.invoke("generate-nudges");
+      return res.data?.nudges || [];
+    },
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+
+  const visibleNudges = (nudges || []).filter((n: any) => !dismissedNudges.includes(n.id));
+
+  const dismissNudge = (id: string) => {
+    const updated = [...dismissedNudges, id];
+    setDismissedNudges(updated);
+    localStorage.setItem(`nudges-dismissed-${today}`, JSON.stringify(updated));
+  };
+
+  const urgencyBorder: Record<string, string> = {
+    high: "border-l-destructive",
+    medium: "border-l-[hsl(36,91%,55%)]",
+    low: "border-l-primary",
+  };
+
   // Auto-trigger morning briefing on first load if there are urgent items
   const briefingTriggered = useRef(false);
   useEffect(() => {
     if (!briefingTriggered.current && insights && hasUrgentItems && !isProcessing && onQuickAction) {
-      const today = new Date().toISOString().split("T")[0];
       const briefingKey = `foreman-auto-briefing-${today}`;
       if (!localStorage.getItem(briefingKey)) {
         briefingTriggered.current = true;
         localStorage.setItem(briefingKey, "true");
-        // Small delay so UI renders first
         setTimeout(() => {
           onQuickAction("get_today_summary", "Give me my morning briefing — what needs attention today?");
         }, 800);
