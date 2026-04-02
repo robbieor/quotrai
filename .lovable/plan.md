@@ -1,43 +1,61 @@
 
 
-# Fix Foreman AI Voice Connection — Investor Demo Ready
+# Dashboard Tiles — Unified Click-to-Drill Experience
 
-## Root Cause
+## Problems
 
-The console logs show: `"v1 RTC path not found. Consider upgrading your LiveKit server version"`. The installed `@elevenlabs/react` v0.14.3 bundles a LiveKit WebRTC client that negotiates a signaling path the ElevenLabs servers no longer support. The latest SDK version is **1.0.1** — a major version bump that resolves this exact WebRTC handshake failure.
+1. **ControlHeader tiles** (Overdue, Stale Quotes, Stuck Jobs, Status) are completely static — no click handlers at all
+2. **KPI Strip tiles** are inconsistent — "Outstanding" opens a drawer, "Overdue 30+" and "Jobs" navigate away to a different page, "Cash Collected" has an onClick that does nothing (no handler case), "Revenue" has no onClick
+3. No unified interaction pattern — sometimes drawer, sometimes page navigation, sometimes nothing
 
-The token is being generated successfully (edge function logs confirm `"Got conversation token successfully"`), but the client-side WebRTC negotiation fails every time.
+## Solution
 
-## Fix
+Every tile in both rows opens the same `DrillThroughDrawer` with the relevant records. Each row in the drawer links to the specific record (invoice, job, quote). This is already built — it just needs to be wired up consistently.
 
-### 1. Upgrade `@elevenlabs/react` to v1.0.1
+## Changes
 
-Update `package.json` dependency from `^0.14.3` to `^1.0.1`. The v1.x SDK maintains the same `useConversation` hook API surface — `startSession`, `endSession`, `sendUserMessage`, `sendUserActivity`, `clientTools`, `onConnect`, `onDisconnect`, `onMessage`, `onError` all remain unchanged. No code refactor needed.
+### 1. `ControlHeader.tsx` — Make all 4 tiles clickable
 
-### 2. Increase retry budget for demo reliability
+Add an `onDrillDown` callback prop (same pattern as KPIStrip). Each tile gets a click handler:
+- **Overdue** → `onDrillDown("overdue")` — shows overdue invoices
+- **Stale Quotes** → `onDrillDown("staleQuotes")` — shows quotes needing follow-up
+- **Stuck Jobs** → `onDrillDown("stuckJobs")` — shows jobs with 7+ days no progress
+- **Status** → `onDrillDown("status")` — shows combined issues list
 
-Currently `MAX_RETRIES = 2` with a 500ms initial delay. For an investor demo, bump to `MAX_RETRIES = 3` with a 300ms initial delay — gives one more attempt with faster recovery. Update in `useVoiceConnectionReliability.ts`.
+Add cursor-pointer, hover state, and the "Click to drill ↗" hint (same as KPICard).
 
-### 3. Reduce token pre-warm TTL race window
+### 2. `Dashboard.tsx` — Wire up all drill handlers
 
-The current 45s TTL means a token fetched on FAB expansion could expire before the WebRTC handshake completes (tokens are valid ~60s). Reduce to 30s to guarantee freshness when the user actually taps "Call".
+Add a `handleControlDrillDown` function that opens the DrillThroughDrawer for each ControlHeader metric:
+- **overdue**: columns = Invoice #, Client, Amount, Days Overdue → data from `data?.drillData?.outstanding` filtered to overdue, link to `/invoices`
+- **staleQuotes**: columns = Quote #, Client, Amount, Days Since Sent → data from `data?.drillData?.pendingQuotes`, link to `/quotes`
+- **stuckJobs**: columns = Job Title, Customer, Status, Days Stuck, Value → data from `data?.jobsAtRisk`, link to `/jobs`
 
-## Performance Notes (for investor demo)
+Fix `handleKPIDrillDown` to handle ALL cases:
+- **cash**: show payments collected (from drill data)
+- **outstanding**: already works (keep)
+- **overdue30**: open drawer instead of navigating away
+- **revenue**: show invoices contributing to revenue
+- **jobs**: open drawer with active jobs instead of navigating away
 
-The current architecture is already optimized for speed:
-- Token pre-warming on FAB expansion (eliminates 1 network round-trip)
-- Parallel mic permission + token fetch
-- Deferred DB writes (conversation record created after handshake)
-- Keep-alive interval prevents silence timeouts
-- Webhook calls use `Promise.all` for parallel DB operations
+### 3. `DrillThroughDrawer.tsx` — Minor improvement
 
-The only blocker is the SDK version mismatch — once upgraded, connections should establish in under 3 seconds.
+Add row click behavior: clicking a row navigates to the record (not just the small icon button). Makes touch targets much better on mobile.
 
-## Files Changed
+### 4. Edge function `dashboard-analytics/index.ts` — Ensure drill data is complete
 
-| Action | File | Change |
-|--------|------|--------|
-| Edit | `package.json` | `@elevenlabs/react`: `^0.14.3` → `^1.0.1` |
-| Edit | `src/hooks/useVoiceConnectionReliability.ts` | `MAX_RETRIES` 2→3, `INITIAL_RETRY_DELAY` 500→300 |
-| Edit | `src/contexts/VoiceAgentContext.tsx` | `TOKEN_TTL_MS` 45000→30000 |
+Check that the edge function returns sufficient drill data for all tiles. May need to add:
+- `staleQuotes` array (quotes sent 7+ days ago, no response)
+- `cashCollected` array (payments in period)
+- `overdueInvoices` array (30+ day overdue specifically)
+
+## Files
+
+| Action | File |
+|--------|------|
+| Edit | `src/components/dashboard/ControlHeader.tsx` — add onDrillDown prop + clickable tiles |
+| Edit | `src/components/dashboard/KPIStrip.tsx` — ensure all 5 cards have onClick |
+| Edit | `src/pages/Dashboard.tsx` — wire both handlers with complete drill data |
+| Edit | `src/components/dashboard/DrillThroughDrawer.tsx` — row-click navigation |
+| Edit | `supabase/functions/dashboard-analytics/index.ts` — ensure all drill arrays populated |
 
