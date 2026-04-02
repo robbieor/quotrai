@@ -945,6 +945,10 @@ IMPORTANT RULES:
         sseChunks.push("data: [DONE]\n\n");
 
         const sseBody = sseChunks.join("");
+        // Log to ai_conversations
+        logToAiConversations(serviceSupabase, userId, message, collectedContent, {
+          conversation_id: activeConversationId, team_id: teamId, intent: "chat", model: "google/gemini-2.5-pro",
+        });
         return new Response(encoder.encode(sseBody), {
           headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
         });
