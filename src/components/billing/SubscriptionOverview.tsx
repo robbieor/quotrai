@@ -122,9 +122,11 @@ export function SubscriptionOverview() {
     }
     setIsCancelling(true);
     try {
-      // Store reason
+      // Resolve real org_id for cancellation tracking
+      const resolvedOrgId = subscription?.org_id || "00000000-0000-0000-0000-000000000000";
+
       await supabase.from("cancellation_reasons").insert({
-        org_id: "00000000-0000-0000-0000-000000000000", // placeholder — edge function has org context
+        org_id: resolvedOrgId,
         user_id: user?.id,
         reason: cancelReason,
         detail: cancelDetail || null,
