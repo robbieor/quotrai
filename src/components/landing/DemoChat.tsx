@@ -56,10 +56,7 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+      window.speechSynthesis?.cancel();
     };
   }, []);
 
