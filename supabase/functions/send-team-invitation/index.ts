@@ -90,8 +90,8 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <p style="margin-top: 20px; color: #64748b; font-size: 14px;">If you weren't expecting this invitation, you can safely ignore this email.</p>
           </div>
-          <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-            Powered by <a href="#" style="color: #00E6A0; text-decoration: none;">Foreman</a>
+          <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;">
+            © ${new Date().getFullYear()} Foreman · <a href="mailto:support@foreman.ie" style="color: #94a3b8; text-decoration: none;">support@foreman.ie</a>
           </div>
         </div>
       </body>
