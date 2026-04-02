@@ -137,6 +137,10 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, 
                 Pending jobs {pendingCount > 0 && `(${pendingCount})`}
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem onClick={() => setShowHoursMenu(true)}>
+              <Clock className="h-4 w-4 mr-2" />
+              Working hours ({formatHour(startHour)} – {formatHour(endHour)})
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
