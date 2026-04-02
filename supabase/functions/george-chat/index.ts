@@ -381,8 +381,14 @@ You CANNOT actually create quotes, access real data, or perform actions. You're 
           }),
         });
 
-        const demoData = await demoRes.json();
-        const demoMessage = demoData.choices?.[0]?.message?.content || "I'd love to show you more! Sign up for the full George experience.";
+        const demoText = await demoRes.text();
+        let demoMessage = "I'd love to show you more! Sign up for the full George experience.";
+        try {
+          const demoData = JSON.parse(demoText);
+          demoMessage = demoData.choices?.[0]?.message?.content || demoMessage;
+        } catch {
+          console.error("Demo API returned non-JSON:", demoText.slice(0, 200));
+        }
 
         return new Response(
           JSON.stringify({ message: demoMessage, conversation_id: null, action_plan: null }),
