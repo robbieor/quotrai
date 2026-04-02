@@ -15,7 +15,7 @@ interface AgentContext {
   userName?: string;
 }
 
-type ConnectionStatus = "connected" | "connecting" | "disconnecting" | "disconnected";
+type ConnectionStatus = "connected" | "connecting" | "disconnecting" | "disconnected" | "error";
 
 interface VoiceAgentContextType {
   status: ConnectionStatus;
