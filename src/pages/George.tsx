@@ -463,6 +463,7 @@ export default function George() {
 
           <ResizablePanel defaultSize={sidebarOpen ? 78 : 100} minSize={50}>
             <div className="flex flex-col h-full">
+              <ContextIndicator />
               <div className="px-4 pt-2 flex items-center justify-between">
                 <GeorgeUsageWarning />
                 <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
