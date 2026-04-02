@@ -256,11 +256,11 @@ export function useUpdateQuoteStatus() {
 
           if (quote) {
             // Check if a job already exists for THIS quote
-            const { data: existingJobs } = await supabase
+            const { data: existingJobs } = await (supabase
               .from("jobs")
               .select("id")
-              .eq("quote_id" as any, id)
-              .limit(1);
+              .eq("quote_id", id)
+              .limit(1) as any);
 
             if (existingJobs && existingJobs.length > 0) {
               console.log("Job already exists for this quote, skipping auto-create");
