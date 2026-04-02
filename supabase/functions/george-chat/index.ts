@@ -458,6 +458,11 @@ serve(async (req) => {
         ]);
       }
 
+      // Log to ai_conversations
+      logToAiConversations(serviceSupabase, userId, message, responseMsg, {
+        conversation_id: activeConvId, team_id: teamId, intent: directAction.intent, model: "webhook-shortcircuit",
+      });
+
       return new Response(
         JSON.stringify({
           message: responseMsg,
