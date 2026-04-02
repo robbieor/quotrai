@@ -40,7 +40,7 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasBrowserTTS = typeof window !== "undefined" && !!window.speechSynthesis;
 
   const hasSpeechSupport = !!SpeechRecognitionAPI;
 
@@ -56,42 +56,25 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+      window.speechSynthesis?.cancel();
     };
   }, []);
 
-  const speakResponse = useCallback(async (text: string) => {
-    if (!voiceEnabled) return;
-    // Trim to 200 chars for demo TTS cap
-    const trimmed = text.slice(0, 200);
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const res = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseKey,
-        },
-        body: JSON.stringify({ text: trimmed, demo: true }),
-      });
-
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data.audioContent) return;
-
-      const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-      audio.onended = () => { audioRef.current = null; };
-      await audio.play();
-    } catch {
-      // Silently fail — voice is a nice-to-have in demo
-    }
+  const speakResponse = useCallback((text: string) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    const trimmed = text.slice(0, 300);
+    const utterance = new SpeechSynthesisUtterance(trimmed);
+    utterance.lang = "en-GB";
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    // Pick a British male voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang === "en-GB" && /male/i.test(v.name))
+      || voices.find(v => v.lang.startsWith("en-GB"));
+    if (preferred) utterance.voice = preferred;
+    window.speechSynthesis.speak(utterance);
   }, [voiceEnabled]);
 
   const handleSend = useCallback(async (overrideText?: string) => {
@@ -184,6 +167,9 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
             <p className="text-xs text-muted-foreground">
               {MAX_DEMO_MESSAGES - userMessageCount} message{MAX_DEMO_MESSAGES - userMessageCount !== 1 ? "s" : ""} remaining
               {hasSpeechSupport && " · Voice enabled"}
+              {voiceEnabled && hasBrowserTTS && (
+                <span className="block text-[10px] text-primary/60 italic">Sign up to hear George's real voice</span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -193,10 +179,7 @@ export function DemoChat({ open, onClose }: DemoChatProps) {
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => {
-                  if (audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current = null;
-                  }
+                  window.speechSynthesis?.cancel();
                   setVoiceEnabled((v) => !v);
                 }}
               >
