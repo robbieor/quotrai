@@ -39,15 +39,15 @@ export function useDashboardStats() {
       const weekEnd = addDays(now, 7);
 
       // Fetch all data in parallel
-      const jobsPromise = supabase.from("jobs").select("id, status, scheduled_date");
-      const customersPromise = supabase.from("customers").select("id, created_at");
-      const quotesPromise = supabase.from("quotes").select("id, status, total");
-      const invoicesPromise = supabase.from("invoices").select("id, status, total, issue_date");
-      const paymentsPromise = supabase.from("payments").select("invoice_id, payment_date").eq("status", "completed");
-
-      const [jobsResult, customersResult, quotesResult, invoicesResult, paymentsResult] = await Promise.all([
-        jobsPromise, customersPromise, quotesPromise, invoicesPromise, paymentsPromise,
+      const [jobsResult, customersResult] = await Promise.all([
+        supabase.from("jobs").select("id, status, scheduled_date"),
+        supabase.from("customers").select("id, created_at"),
       ]);
+      const [quotesResult, invoicesResult] = await Promise.all([
+        supabase.from("quotes").select("id, status, total"),
+        supabase.from("invoices").select("id, status, total, issue_date"),
+      ]);
+      const paymentsResult = await supabase.from("payments").select("invoice_id, payment_date").eq("status", "completed");
 
       if (jobsResult.error) throw jobsResult.error;
       if (customersResult.error) throw customersResult.error;
