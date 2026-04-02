@@ -153,7 +153,7 @@ export default function Quotes() {
   const handleDownloadPdf = async (quote: Quote) => { await downloadQuotePdf(quote, branding, currencySymbol); };
   const handleSendEmail = (quote: Quote) => { setSelectedQuote(quote); setEmailOpen(true); };
   const handleCopyPortalLink = (quote: Quote) => {
-    const portalUrl = `${window.location.origin}/portal/quote?token=${quote.portal_token}`;
+    const portalUrl = `${window.location.origin}/quote/${quote.portal_token}`;
     navigator.clipboard.writeText(portalUrl);
     toast.success("Portal link copied to clipboard");
   };
