@@ -1259,6 +1259,30 @@ export type Database = {
         }
         Relationships: []
       }
+      drip_sequences: {
+        Row: {
+          drip_step: number
+          email: string
+          id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          drip_step: number
+          email: string
+          id?: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          drip_step?: number
+          email?: string
+          id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       early_access_requests: {
         Row: {
           company_name: string
