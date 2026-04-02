@@ -125,6 +125,7 @@ export function JobFormDialog({
       scheduled_date: null,
       scheduled_time: "",
       estimated_value: null,
+      assigned_to: null,
     },
   });
 
