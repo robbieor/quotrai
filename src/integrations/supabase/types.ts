@@ -3968,6 +3968,7 @@ export type Database = {
           converted_at: string | null
           created_at: string
           id: string
+          referral_code: string | null
           referred_email: string
           referred_team_id: string | null
           referred_user_id: string | null
@@ -3980,6 +3981,7 @@ export type Database = {
           converted_at?: string | null
           created_at?: string
           id?: string
+          referral_code?: string | null
           referred_email: string
           referred_team_id?: string | null
           referred_user_id?: string | null
@@ -3992,6 +3994,7 @@ export type Database = {
           converted_at?: string | null
           created_at?: string
           id?: string
+          referral_code?: string | null
           referred_email?: string
           referred_team_id?: string | null
           referred_user_id?: string | null
