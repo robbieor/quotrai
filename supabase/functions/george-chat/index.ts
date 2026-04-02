@@ -368,7 +368,7 @@ Your job:
 You CANNOT actually create quotes, access real data, or perform actions. You're demonstrating personality and capability.`;
 
       try {
-        const demoRes = await fetch("https://api.lovable.dev/v1/chat/completions", {
+        const demoRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovableApiKey}` },
           body: JSON.stringify({
