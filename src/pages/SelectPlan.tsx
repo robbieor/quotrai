@@ -313,6 +313,10 @@ function PlanCard({
   const unitPrice = billingInterval === "monthly" ? monthlyPrice : annualMonthly;
   const hasBulkDiscount = quantity >= PRICING.BULK_DISCOUNT_THRESHOLD;
   const discountedUnitPrice = hasBulkDiscount ? Math.round(unitPrice * (1 - PRICING.BULK_DISCOUNT)) : unitPrice;
+  const displayAnnualPrice = hasBulkDiscount
+    ? Math.round(annualPrice * (1 - PRICING.BULK_DISCOUNT) * 100) / 100
+    : annualPrice;
+  const displaySavings = billingInterval === "annual" ? monthlyPrice * 12 - displayAnnualPrice : savings;
   const totalMonthly = discountedUnitPrice * quantity;
 
   return (
