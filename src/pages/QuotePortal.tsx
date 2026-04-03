@@ -113,9 +113,13 @@ export default function QuotePortal() {
         {/* Header with company branding */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl">
-              {quote.team.name?.charAt(0) || "F"}
-            </div>
+            {quote.team.logo_url ? (
+              <img src={quote.team.logo_url} alt={quote.team.name} className="h-12 w-12 rounded-lg object-contain bg-white border" />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl">
+                {quote.team.name?.charAt(0) || "F"}
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold">{quote.team.name}</h1>
               <p className="text-muted-foreground">Quote {quote.display_number}</p>
