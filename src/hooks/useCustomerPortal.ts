@@ -20,6 +20,7 @@ export interface CustomerPortalData {
     display_number: string;
     status: string;
     total: number;
+    balance_due: number;
     due_date: string;
     created_at: string;
     portal_token: string | null;
@@ -56,7 +57,7 @@ export function useCustomerPortalData() {
           .order("created_at", { ascending: false }),
         supabase
           .from("invoices")
-          .select("id, display_number, status, total, due_date, created_at, portal_token")
+          .select("id, display_number, status, total, balance_due, due_date, created_at, portal_token")
           .eq("customer_id", customerId)
           .order("created_at", { ascending: false }),
       ]);
@@ -91,7 +92,7 @@ export function useCustomerPortalData() {
       return {
         customer: account.customers as CustomerPortalData["customer"],
         quotes: (quotesRes.data || []).map((q) => ({ ...q, total: Number(q.total) })),
-        invoices: (invoicesRes.data || []).map((i) => ({ ...i, total: Number(i.total) })),
+        invoices: (invoicesRes.data || []).map((i) => ({ ...i, total: Number(i.total), balance_due: Number((i as any).balance_due ?? i.total) })),
         payments,
       } as CustomerPortalData;
     },

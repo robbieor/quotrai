@@ -21,6 +21,11 @@ export interface PortalQuote {
   };
   team: {
     name: string;
+    logo_url?: string | null;
+    accent_color?: string | null;
+    company_phone?: string | null;
+    company_email?: string | null;
+    company_address?: string | null;
   };
   items: Array<{
     id: string;
@@ -51,7 +56,16 @@ export interface PortalInvoice {
   };
   team: {
     name: string;
+    logo_url?: string | null;
+    accent_color?: string | null;
+    company_phone?: string | null;
+    company_email?: string | null;
+    company_address?: string | null;
+    payment_terms?: string | null;
+    bank_details?: string | null;
   };
+  balance_due: number;
+  team_id: string;
   items: Array<{
     id: string;
     description: string;
