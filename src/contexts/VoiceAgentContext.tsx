@@ -60,7 +60,7 @@ const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_invoice_from_quote: [["invoices"], ["quotes"], ["dashboard"]],
 };
 
-export function VoiceAgentProvider({ children }: { children: ReactNode }) {
+function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
