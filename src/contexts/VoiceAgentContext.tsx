@@ -698,6 +698,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   );
 }
 
+export function VoiceAgentProvider({ children }: { children: ReactNode }) {
+  return (
+    <ConversationProvider>
+      <VoiceAgentProviderInner>{children}</VoiceAgentProviderInner>
+    </ConversationProvider>
+  );
+}
+
 export function useGlobalVoiceAgent() {
   const context = useContext(VoiceAgentContext);
   if (!context) {
