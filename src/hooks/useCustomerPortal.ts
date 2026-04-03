@@ -20,6 +20,7 @@ export interface CustomerPortalData {
     display_number: string;
     status: string;
     total: number;
+    balance_due: number;
     due_date: string;
     created_at: string;
     portal_token: string | null;
