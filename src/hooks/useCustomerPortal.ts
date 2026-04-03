@@ -57,7 +57,7 @@ export function useCustomerPortalData() {
           .order("created_at", { ascending: false }),
         supabase
           .from("invoices")
-          .select("id, display_number, status, total, due_date, created_at, portal_token")
+          .select("id, display_number, status, total, balance_due, due_date, created_at, portal_token")
           .eq("customer_id", customerId)
           .order("created_at", { ascending: false }),
       ]);
