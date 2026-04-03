@@ -23,7 +23,7 @@ export function GeorgeUsageWarning() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => navigate("/settings?tab=billing")}
+            onClick={() => navigate("/settings?tab=team-billing")}
             className="ml-2"
           >
             Add Seats
@@ -45,7 +45,7 @@ export function GeorgeUsageWarning() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => navigate("/settings?tab=billing")}
+            onClick={() => navigate("/settings?tab=team-billing")}
             className="ml-2"
           >
             View Usage
