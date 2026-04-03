@@ -21,6 +21,11 @@ export interface PortalQuote {
   };
   team: {
     name: string;
+    logo_url?: string | null;
+    accent_color?: string | null;
+    company_phone?: string | null;
+    company_email?: string | null;
+    company_address?: string | null;
   };
   items: Array<{
     id: string;
