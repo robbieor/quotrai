@@ -38,7 +38,7 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
     const hasPaid = teamSubscription.subscription_tier === "paid";
 
     // On native, rewrite route & CTA to point to external web
-    const route = isNative ? WEB_BILLING_URL : "/onboarding/select-plan";
+    const route = isNative ? WEB_BILLING_URL : "/select-plan";
     const nativeCta = "Manage on foreman.ie";
 
     // Trial expired — highest urgency
