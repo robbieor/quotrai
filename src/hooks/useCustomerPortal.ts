@@ -92,7 +92,7 @@ export function useCustomerPortalData() {
       return {
         customer: account.customers as CustomerPortalData["customer"],
         quotes: (quotesRes.data || []).map((q) => ({ ...q, total: Number(q.total) })),
-        invoices: (invoicesRes.data || []).map((i) => ({ ...i, total: Number(i.total) })),
+        invoices: (invoicesRes.data || []).map((i) => ({ ...i, total: Number(i.total), balance_due: Number((i as any).balance_due ?? i.total) })),
         payments,
       } as CustomerPortalData;
     },
