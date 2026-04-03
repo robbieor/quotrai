@@ -313,6 +313,10 @@ function PlanCard({
   const unitPrice = billingInterval === "monthly" ? monthlyPrice : annualMonthly;
   const hasBulkDiscount = quantity >= PRICING.BULK_DISCOUNT_THRESHOLD;
   const discountedUnitPrice = hasBulkDiscount ? Math.round(unitPrice * (1 - PRICING.BULK_DISCOUNT)) : unitPrice;
+  const displayAnnualPrice = hasBulkDiscount
+    ? Math.round(annualPrice * (1 - PRICING.BULK_DISCOUNT) * 100) / 100
+    : annualPrice;
+  const displaySavings = billingInterval === "annual" ? monthlyPrice * 12 - displayAnnualPrice : savings;
   const totalMonthly = discountedUnitPrice * quantity;
 
   return (
@@ -339,8 +343,8 @@ function PlanCard({
               )}
               <span className="text-4xl font-bold">{formatCurrency(hasBulkDiscount ? discountedUnitPrice : annualMonthly)}</span>
               <span className="text-muted-foreground">/seat/mo</span>
-              <p className="text-xs text-muted-foreground mt-1">{formatCurrency(annualPrice)}/yr billed annually</p>
-              {savings && <p className="text-xs font-medium text-green-600">Save {formatCurrency(savings)}/seat/yr</p>}
+              <p className="text-xs text-muted-foreground mt-1">{formatCurrency(displayAnnualPrice)}/yr billed annually</p>
+              {displaySavings && displaySavings > 0 && <p className="text-xs font-medium text-green-600">Save {formatCurrency(displaySavings)}/seat/yr</p>}
             </>
           )}
           {hasBulkDiscount && (
