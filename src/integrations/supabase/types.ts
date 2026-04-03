@@ -5820,7 +5820,19 @@ export type Database = {
           total_voice_seats: number
         }[]
       }
-      get_invoice_by_portal_token: { Args: { token: string }; Returns: Json }
+      get_invoice_by_portal_token:
+        | {
+            Args: { token: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.get_invoice_by_portal_token(token => text), public.get_invoice_by_portal_token(token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { token: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.get_invoice_by_portal_token(token => text), public.get_invoice_by_portal_token(token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       get_quote_by_portal_token: { Args: { token: string }; Returns: Json }
       get_team_george_users: {
         Args: { target_team_id: string }
