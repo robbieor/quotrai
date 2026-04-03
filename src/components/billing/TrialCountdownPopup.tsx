@@ -54,7 +54,7 @@ export function TrialCountdownPopup() {
     if (isNative) {
       openExternalUrl(WEB_BILLING_URL);
     } else {
-      navigate("/settings?tab=billing");
+      navigate("/settings?tab=team-billing");
     }
   };
 

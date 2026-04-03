@@ -402,15 +402,9 @@ export default function Settings() {
                   Connect your accounting and business tools.
                 </p>
               </div>
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Plug className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-                  <h3 className="font-semibold text-lg mb-1">Coming Soon</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                    Xero and QuickBooks integrations are on the way. We'll notify you when they're ready.
-                  </p>
-                </CardContent>
-              </Card>
+              <StripeConnectSetup />
+              <XeroConnectionCard />
+              <QuickBooksConnectionCard />
             </TabsContent>
           )}
 
