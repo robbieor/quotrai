@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
-import { useConversation } from "@elevenlabs/react";
+import { useConversation, ConversationProvider } from "@elevenlabs/react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,7 +60,7 @@ const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_invoice_from_quote: [["invoices"], ["quotes"], ["dashboard"]],
 };
 
-export function VoiceAgentProvider({ children }: { children: ReactNode }) {
+function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
@@ -695,6 +695,14 @@ export function VoiceAgentProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </VoiceAgentContext.Provider>
+  );
+}
+
+export function VoiceAgentProvider({ children }: { children: ReactNode }) {
+  return (
+    <ConversationProvider>
+      <VoiceAgentProviderInner>{children}</VoiceAgentProviderInner>
+    </ConversationProvider>
   );
 }
 
