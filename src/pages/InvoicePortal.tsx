@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User, Calendar, AlertCircle, Clock, CreditCard, CheckCircle2 } from "lucide-react";
+import { User, Calendar, AlertCircle, Clock, CreditCard, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 const statusColors: Record<string, string> = {
@@ -108,16 +108,23 @@ export default function InvoicePortal() {
   }
 
   const displayStatus = getDisplayStatus(invoice.status, invoice.due_date);
+  const amountDue = invoice.balance_due ?? invoice.total;
+  const hasPartialPayment = amountDue > 0 && amountDue < invoice.total;
+  const teamLogo = invoice.team.logo_url;
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        {/* Header */}
+        {/* Header with team branding */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl">
-              {invoice.team.name?.charAt(0) || "F"}
-            </div>
+            {teamLogo ? (
+              <img src={teamLogo} alt={invoice.team.name} className="h-12 w-12 rounded-lg object-contain bg-white border" />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl">
+                {invoice.team.name?.charAt(0) || "F"}
+              </div>
+            )}
             <div>
               <h1 className="text-2xl font-bold">{invoice.team.name}</h1>
               <p className="text-muted-foreground">Invoice {invoice.display_number}</p>
@@ -177,12 +184,19 @@ export default function InvoicePortal() {
 
           <CardContent className="space-y-6">
             {/* Amount Due Banner for unpaid invoices */}
-            {displayStatus !== "paid" && (
+            {displayStatus !== "paid" && amountDue > 0 && (
               <div className={`rounded-lg p-6 text-center ${displayStatus === "overdue" ? "bg-destructive/10" : "bg-primary/10"}`}>
-                <p className="text-sm text-muted-foreground mb-1">Amount Due</p>
-                <p className={`text-4xl font-bold ${displayStatus === "overdue" ? "text-destructive" : "text-primary"}`}>
-                  {formatCurrency(invoice.total)}
+                <p className="text-sm text-muted-foreground mb-1">
+                  {hasPartialPayment ? "Remaining Balance" : "Amount Due"}
                 </p>
+                <p className={`text-4xl font-bold ${displayStatus === "overdue" ? "text-destructive" : "text-primary"}`}>
+                  {formatCurrency(amountDue)}
+                </p>
+                {hasPartialPayment && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    of {formatCurrency(invoice.total)} total
+                  </p>
+                )}
                 <Button
                   onClick={handlePayNow}
                   disabled={payLoading}
@@ -193,19 +207,19 @@ export default function InvoicePortal() {
                   {payLoading ? "Redirecting..." : "Pay Now"}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Secure payment via card or Apple/Google Pay
+                  Secure payment via card
                 </p>
               </div>
             )}
 
             {/* Paid Banner */}
-            {displayStatus === "paid" && (
+            {(displayStatus === "paid" || amountDue === 0) && (
               <div className="rounded-lg p-6 text-center bg-primary/10">
                 <p className="text-sm text-muted-foreground mb-1">Amount Paid</p>
                 <p className="text-4xl font-bold text-primary">
                   {formatCurrency(invoice.total)}
                 </p>
-                <p className="text-sm text-primary mt-2">✓ Payment received - Thank you!</p>
+                <p className="text-sm text-primary mt-2">✓ Payment received — Thank you!</p>
               </div>
             )}
 
@@ -247,10 +261,40 @@ export default function InvoicePortal() {
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">{formatCurrency(invoice.total)}</span>
+                  <span>{formatCurrency(invoice.total)}</span>
                 </div>
+                {hasPartialPayment && (
+                  <>
+                    <div className="flex justify-between text-sm text-primary">
+                      <span>Paid</span>
+                      <span>−{formatCurrency(invoice.total - amountDue)}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>Balance Due</span>
+                      <span className="text-destructive">{formatCurrency(amountDue)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
+
+            {/* Payment Terms / Bank Details */}
+            {(invoice.team.payment_terms || invoice.team.bank_details) && (
+              <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                {invoice.team.payment_terms && (
+                  <div>
+                    <p className="text-sm font-medium">Payment Terms</p>
+                    <p className="text-sm text-muted-foreground">{invoice.team.payment_terms}</p>
+                  </div>
+                )}
+                {invoice.team.bank_details && (
+                  <div>
+                    <p className="text-sm font-medium">Bank Details</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{invoice.team.bank_details}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notes */}
             {invoice.notes && (
@@ -262,10 +306,34 @@ export default function InvoicePortal() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <p className="text-center text-sm text-muted-foreground">
-          Powered by Foreman
-        </p>
+        {/* Team Contact Footer */}
+        <div className="text-center space-y-2">
+          {(invoice.team.company_phone || invoice.team.company_email) && (
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              {invoice.team.company_phone && (
+                <span className="flex items-center gap-1">
+                  <Phone className="h-3.5 w-3.5" />
+                  {invoice.team.company_phone}
+                </span>
+              )}
+              {invoice.team.company_email && (
+                <a href={`mailto:${invoice.team.company_email}`} className="flex items-center gap-1 hover:text-foreground">
+                  <Mail className="h-3.5 w-3.5" />
+                  {invoice.team.company_email}
+                </a>
+              )}
+            </div>
+          )}
+          {invoice.team.company_address && (
+            <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="h-3 w-3" />
+              {invoice.team.company_address}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Powered by Foreman
+          </p>
+        </div>
       </div>
     </div>
   );
