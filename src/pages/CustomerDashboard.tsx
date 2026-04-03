@@ -103,10 +103,7 @@ export default function CustomerDashboard() {
   const totalInvoices = portalData?.invoices.length || 0;
   const totalPaid = portalData?.payments.reduce((sum, p) => sum + p.amount, 0) || 0;
   const outstandingInvoices = portalData?.invoices.filter((i) => i.status !== "paid") || [];
-  const outstandingBalance = outstandingInvoices.reduce((sum, i) => {
-    const balanceDue = (i as any).balance_due;
-    return sum + (balanceDue != null ? Number(balanceDue) : i.total);
-  }, 0);
+  const outstandingBalance = outstandingInvoices.reduce((sum, i) => sum + (i.balance_due ?? i.total), 0);
 
   return (
     <div className="min-h-screen bg-background">
