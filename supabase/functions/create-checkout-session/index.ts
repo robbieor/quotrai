@@ -8,8 +8,16 @@ const corsHeaders = {
 };
 
 // New single-plan pricing: €39 base (3 users) + €19/extra seat
-const BASE_PLAN_PRICE = "price_1TIJDeDQETj2awNEWxP4bB43"; // €39/mo
-const EXTRA_SEAT_PRICE = "price_1TIJDzDQETj2awNEtiMhRUPR"; // €19/mo
+const PRICES = {
+  month: {
+    base: "price_1TIJDeDQETj2awNEWxP4bB43",   // €39/mo
+    seat: "price_1TIJDzDQETj2awNEtiMhRUPR",   // €19/mo
+  },
+  year: {
+    base: "price_1TIQvfDQETj2awNEx7bAyHjy",   // €397.80/yr (15% off)
+    seat: "price_1TIQw1DQETj2awNEth2a6E8y",   // €193.80/yr (15% off)
+  },
+};
 const BASE_USERS = 3;
 
 serve(async (req) => {
@@ -45,22 +53,24 @@ serve(async (req) => {
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
     const body = await req.json().catch(() => ({}));
-    const { teamSize = 1, isUpgrade = false } = body;
+    const { teamSize = 1, interval = "month", isUpgrade = false } = body;
     const seatCount = Math.max(1, Number(teamSize) || 1);
+    const billingInterval = interval === "year" ? "year" : "month";
+    const priceSet = PRICES[billingInterval];
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Build line items: 1× base plan + extra seats if > 3 users
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      { price: BASE_PLAN_PRICE, quantity: 1 },
+      { price: priceSet.base, quantity: 1 },
     ];
 
     const extraSeats = Math.max(0, seatCount - BASE_USERS);
     if (extraSeats > 0) {
-      lineItems.push({ price: EXTRA_SEAT_PRICE, quantity: extraSeats });
+      lineItems.push({ price: priceSet.seat, quantity: extraSeats });
     }
 
-    logStep("Line items built", { seatCount, extraSeats, lineItems: lineItems.length });
+    logStep("Line items built", { seatCount, extraSeats, billingInterval, lineItems: lineItems.length });
 
     // Get or create Stripe customer
     let stripeCustomerId: string;
@@ -93,6 +103,7 @@ serve(async (req) => {
           stripe_customer_id: stripeCustomerId,
           status: "pending",
           seat_count: seatCount,
+          billing_period: billingInterval,
         }, { onConflict: "org_id" });
     }
 
@@ -160,7 +171,7 @@ serve(async (req) => {
       customer: stripeCustomerId,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}`,
+      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}&interval=${billingInterval}`,
       cancel_url: `${origin}/select-plan`,
       subscription_data: subscriptionData,
       billing_address_collection: "required",

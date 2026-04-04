@@ -28,7 +28,7 @@ import {
   Download,
 } from "lucide-react";
 import { useSubscription, useOrgMembers } from "@/hooks/useSubscription";
-import { PRICING, type SeatType, LITE_SEAT_DETAILS, CONNECT_SEAT_DETAILS, GROW_SEAT_DETAILS } from "@/hooks/useSubscriptionTier";
+import { PRICING } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

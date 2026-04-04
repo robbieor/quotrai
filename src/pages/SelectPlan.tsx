@@ -3,16 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Check, ArrowRight, ExternalLink, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
 import { track } from "@/utils/analytics";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 import { supabase } from "@/integrations/supabase/client";
-
-const BASE_PRICE = 39;
-const EXTRA_SEAT = 19;
-const BASE_USERS = 3;
+import { PRICING } from "@/hooks/useSubscriptionTier";
 
 const allFeatures = [
   "Unlimited quotes & invoices",
@@ -29,6 +27,7 @@ export default function SelectPlan() {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
   const [teamSize, setTeamSize] = useState(1);
+  const [interval, setInterval] = useState<"month" | "year">("month");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const isNative = useIsNative();
 
@@ -60,19 +59,22 @@ export default function SelectPlan() {
     );
   }
 
-  const extraSeats = Math.max(0, teamSize - BASE_USERS);
-  const totalMonthly = BASE_PRICE + extraSeats * EXTRA_SEAT;
+  const isAnnual = interval === "year";
+  const basePrice = isAnnual ? PRICING.ANNUAL_BASE_PLAN : PRICING.BASE_PLAN;
+  const seatPrice = isAnnual ? PRICING.ANNUAL_EXTRA_SEAT : PRICING.EXTRA_SEAT;
+  const extraSeats = Math.max(0, teamSize - PRICING.BASE_USERS);
+  const total = basePrice + extraSeats * seatPrice;
+  const monthlySavings = isAnnual
+    ? (PRICING.BASE_PLAN * 12 + extraSeats * PRICING.EXTRA_SEAT * 12) - total
+    : 0;
 
   const handleCheckout = async () => {
     try {
       setIsCheckingOut(true);
-      track("checkout_started", { plan: "connect", interval: "month", quantity: teamSize });
+      track("checkout_started", { plan: "foreman", interval, quantity: teamSize });
 
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: {
-          teamSize,
-          interval: "month",
-        },
+        body: { teamSize, interval },
       });
 
       if (error) throw error;
@@ -95,7 +97,6 @@ export default function SelectPlan() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-lg py-12 px-4">
-        {/* Back to Settings */}
         <Button
           variant="ghost"
           size="sm"
@@ -115,8 +116,35 @@ export default function SelectPlan() {
             One plan. Every feature.
           </h1>
           <p className="text-muted-foreground">
-            {formatCurrency(BASE_PRICE)}/month includes {BASE_USERS} users. +{formatCurrency(EXTRA_SEAT)}/mo per extra seat.
+            {formatCurrency(PRICING.BASE_PLAN)}/month includes {PRICING.BASE_USERS} users. +{formatCurrency(PRICING.EXTRA_SEAT)}/mo per extra seat.
           </p>
+        </div>
+
+        {/* Billing toggle */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <button
+            onClick={() => setInterval("month")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              !isAnnual
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setInterval("year")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+              isAnnual
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Annual
+            <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-700 dark:text-green-400 border-0">
+              Save 15%
+            </Badge>
+          </button>
         </div>
 
         {/* Plan Card */}
@@ -125,14 +153,19 @@ export default function SelectPlan() {
             {/* Price */}
             <div className="text-center">
               <div className="flex items-baseline justify-center gap-1 mb-1">
-                <span className="text-4xl font-bold">{formatCurrency(totalMonthly)}</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-4xl font-bold">{formatCurrency(total)}</span>
+                <span className="text-muted-foreground">/{isAnnual ? "year" : "month"}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                {teamSize <= BASE_USERS
+                {teamSize <= PRICING.BASE_USERS
                   ? `${teamSize} ${teamSize === 1 ? "user" : "users"} — included in base plan`
-                  : `${BASE_USERS} included + ${extraSeats} extra ${extraSeats === 1 ? "seat" : "seats"} × ${formatCurrency(EXTRA_SEAT)}`}
+                  : `${PRICING.BASE_USERS} included + ${extraSeats} extra ${extraSeats === 1 ? "seat" : "seats"} × ${formatCurrency(seatPrice)}`}
               </p>
+              {isAnnual && monthlySavings > 0 && (
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
+                  You save {formatCurrency(monthlySavings)} per year
+                </p>
+              )}
             </div>
 
             {/* Team size stepper */}
@@ -198,6 +231,10 @@ export default function SelectPlan() {
           <FaqCard
             q="Can I add or remove seats later?"
             a="Yes — adjust your team size anytime from Settings. Changes are pro-rated automatically."
+          />
+          <FaqCard
+            q="Can I switch between monthly and annual?"
+            a="Yes — you can switch billing frequency anytime from Manage Billing. If you switch to annual, you'll get the 15% discount applied immediately."
           />
         </div>
 
