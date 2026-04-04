@@ -41,17 +41,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const SEAT_PRICES: Record<SeatType, number> = {
-  lite: PRICING.LITE_SEAT,
-  connect: PRICING.CONNECT_SEAT,
-  grow: PRICING.GROW_SEAT,
-};
-
-const SEAT_DISPLAY_NAMES: Record<SeatType, string> = {
-  lite: LITE_SEAT_DETAILS.name,
-  connect: CONNECT_SEAT_DETAILS.name,
-  grow: GROW_SEAT_DETAILS.name,
-};
 
 const CANCEL_REASONS = [
   "Too expensive",
