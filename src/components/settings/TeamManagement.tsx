@@ -32,7 +32,7 @@ import {
 import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
-import type { SeatType } from "@/hooks/useSubscriptionTier";
+import { PRICING } from "@/hooks/useSubscriptionTier";
 
 type InviteRole = "member" | "manager" | "owner";
 
