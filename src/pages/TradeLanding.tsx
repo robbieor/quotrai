@@ -104,7 +104,7 @@ export default function TradeLanding() {
             </Link>
           </div>
           <p className="text-sm text-muted-foreground">
-            7-day free trial · Cancel anytime
+            14-day free trial · Cancel anytime
           </p>
         </div>
       </section>
