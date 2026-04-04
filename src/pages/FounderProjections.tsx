@@ -296,21 +296,16 @@ export default function FounderProjections() {
                 <CardTitle className="text-lg">Revenue Breakdown (MRR)</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground">Lite Seats</p>
-                    <p className="text-xl font-bold text-foreground">{formatCurrency(liteSeats * TIERS.lite.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{liteSeats.toLocaleString()} × €{TIERS.lite.price}</p>
-                  </div>
+                <div className="grid sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                    <p className="text-sm text-muted-foreground">Connect Seats</p>
-                    <p className="text-xl font-bold text-primary">{formatCurrency(connectSeats * TIERS.connect.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{connectSeats.toLocaleString()} × €{TIERS.connect.price}</p>
+                    <p className="text-sm text-muted-foreground">Base Plans</p>
+                    <p className="text-xl font-bold text-primary">{formatCurrency(customers * BASE_PLAN_PRICE * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{customers.toLocaleString()} × €{BASE_PLAN_PRICE}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground">Grow Seats</p>
-                    <p className="text-xl font-bold text-foreground">{formatCurrency(growSeats * TIERS.grow.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{growSeats.toLocaleString()} × €{TIERS.grow.price}</p>
+                    <p className="text-sm text-muted-foreground">Extra Seats</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(customers * extraSeatsPerCustomer * EXTRA_SEAT_PRICE * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{(customers * extraSeatsPerCustomer).toLocaleString()} × €{EXTRA_SEAT_PRICE}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                     <p className="text-sm text-muted-foreground">Platform Fees</p>
