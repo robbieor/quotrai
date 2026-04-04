@@ -1,19 +1,58 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mic, CheckCircle2, Play } from "lucide-react";
-import foremanLogo from "@/assets/foreman-logo.png";
+import { ArrowRight, Mic, Users, Star, Wrench } from "lucide-react";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
+import { useState, useEffect } from "react";
 
 interface HeroSectionProps {
   formatPrice: (eur: number, decimals?: number) => string;
   onTryDemo?: () => void;
 }
 
+const carouselSlides = [
+  {
+    messages: [
+      { role: "user" as const, text: '"Quote for Mrs. Patterson — EV charger, 7kW"' },
+      { role: "ai" as const, text: 'Done. Quote Q-0048 — €1,300.00. Send it to her email?' },
+    ],
+  },
+  {
+    messages: [
+      { role: "user" as const, text: '"Chase the overdue invoices from last week"' },
+      { role: "ai" as const, text: '3 overdue invoices found — €4,200 total. Reminders sent to all three.' },
+    ],
+  },
+  {
+    messages: [
+      { role: "user" as const, text: '"Schedule the boiler install for Thursday 9am"' },
+      { role: "ai" as const, text: 'Booked. Job J-0112 set for Thursday 9:00 AM. Customer notified.' },
+    ],
+  },
+  {
+    messages: [
+      { role: "user" as const, text: '"Log £85 expense for copper pipe — Screwfix"' },
+      { role: "ai" as const, text: 'Expense logged — £85.00, Screwfix, linked to current job.' },
+    ],
+  },
+];
+
 export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % carouselSlides.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const slide = carouselSlides[activeSlide];
+
   return (
-    <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative">
+    <section className="pt-24 sm:pt-32 pb-8 sm:pb-16 px-4 sm:px-6 relative">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-b from-[hsl(160,40%,96%)] to-background" />
         <div className="absolute top-20 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-teal-500/5 rounded-full blur-3xl" />
       </div>
@@ -23,59 +62,32 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
           {/* Left — Copy */}
           <div className="animate-fade-up text-center lg:text-left">
             <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
-              Talk to your business.<br />
+              Talk to your<br />
+              business.{" "}
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                It talks back.
+                It talks<br className="hidden sm:inline" /> back.
               </span>
             </h1>
 
-            <p className="text-base sm:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Foreman runs your quotes, jobs, invoices, and payments — so you don't have to.
+            <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Run your entire trade business by voice — quotes, jobs, expenses, invoices — while you're on the tools.
             </p>
-
-            <p className="text-sm sm:text-base font-semibold text-foreground mb-6 sm:mb-8">
-              Not another app. An operating system for your trade business.
-            </p>
-
-            {/* Value bullets */}
-            <ul className="space-y-2.5 mb-8 sm:mb-10 text-left max-w-md mx-auto lg:mx-0">
-              {[
-                "Quotes created and sent — without lifting a finger",
-                "Overdue invoices chased automatically",
-                "Your next best action — surfaced every morning",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                  <span className="text-sm sm:text-base text-foreground">{item}</span>
-                </li>
-              ))}
-            </ul>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-4 mb-5">
+            <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-5 mb-4">
               <Link to="/signup" className="w-full sm:w-auto">
-                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto">
+                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold btn-hover-lift gap-2 w-full sm:w-auto rounded-full">
                   Start Free Trial
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-base px-6 py-6 sm:py-7 font-medium gap-2 w-full sm:w-auto"
-                onClick={onTryDemo}
-              >
-                <Play className="h-4 w-4" />
-                Try George Now
-              </Button>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                14-day free trial · No card required · Cancel anytime
+              </p>
             </div>
-
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              No credit card required · Cancel anytime
-            </p>
           </div>
 
-          {/* Right — Foreman AI Chat Mockup */}
+          {/* Right — Foreman AI Chat Carousel */}
           <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
               {/* Chat header */}
@@ -83,56 +95,74 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
                 <ForemanAvatar size="md" className="border-2 border-[#059669]/30" />
                 <div className="flex-1">
                   <p className="font-semibold text-sm text-foreground">Foreman AI</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs text-muted-foreground">Online</span>
-                  </div>
+                  <span className="text-xs text-primary">Online</span>
+                </div>
+                <Mic className="h-5 w-5 text-primary" />
+              </div>
+
+              {/* Chat carousel area */}
+              <div className="p-5 min-h-[220px] flex flex-col justify-end">
+                <div className="space-y-3 animate-fade-in" key={activeSlide}>
+                  {slide.messages.map((msg, i) =>
+                    msg.role === "user" ? (
+                      <div key={i} className="flex justify-end">
+                        <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
+                          <p className="text-sm text-foreground">{msg.text}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div key={i} className="flex gap-2.5">
+                        <ForemanAvatar size="sm" className="mt-0.5" />
+                        <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
+                          <p className="text-sm text-foreground">{msg.text}</p>
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
 
-              {/* Chat messages — tight, outcome-focused */}
-              <div className="p-5 space-y-4">
-                {/* User: create quote */}
-                <div className="flex justify-end">
-                  <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
-                    <p className="text-sm text-foreground">"Quote for Mrs. Patterson — EV charger, 7kW"</p>
-                  </div>
-                </div>
-
-                {/* AI: quote created */}
-                <div className="flex gap-2.5">
-                  <ForemanAvatar size="sm" className="mt-0.5" />
-                  <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-                    <p className="text-sm text-foreground mb-2">Done. Quote <span className="font-semibold text-primary">Q-0048</span> — {formatPrice(1300, 2)}</p>
-                    <p className="text-xs text-muted-foreground">Send it to her email?</p>
-                  </div>
-                </div>
-
-                {/* User: send */}
-                <div className="flex justify-end">
-                  <div className="bg-primary/10 border border-primary/20 rounded-2xl rounded-br-md px-4 py-2.5">
-                    <p className="text-sm text-foreground">"Yes, send it"</p>
-                  </div>
-                </div>
-
-                {/* AI: sent */}
-                <div className="flex gap-2.5">
-                  <ForemanAvatar size="sm" className="mt-0.5" />
-                  <div className="bg-muted/50 border border-border rounded-2xl rounded-bl-md px-4 py-2.5">
-                    <p className="text-sm text-foreground">✅ Sent. She can approve with one click.</p>
-                  </div>
-                </div>
+              {/* Carousel dots */}
+              <div className="flex items-center justify-center gap-1.5 pb-3">
+                {carouselSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveSlide(i)}
+                    className={`rounded-full transition-all duration-300 ${
+                      i === activeSlide
+                        ? "w-5 h-2 bg-primary"
+                        : "w-2 h-2 bg-muted-foreground/30"
+                    }`}
+                  />
+                ))}
               </div>
 
               {/* Chat input mock */}
               <div className="px-5 py-3 border-t border-border bg-muted/20">
-                <div className="flex items-center gap-2 bg-background rounded-xl border border-border px-4 py-2.5">
-                  <Mic className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground flex-1">Talk or type to Foreman AI...</span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
+                <div className="flex items-center gap-2 bg-background rounded-full border border-border px-4 py-2.5">
+                  <span className="text-sm text-muted-foreground flex-1">Say something or type...</span>
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <Mic className="h-4 w-4 text-primary-foreground" />
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Social proof stats */}
+        <div className="mt-12 sm:mt-16 flex flex-wrap items-center justify-center gap-8 sm:gap-16 text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">500+ tradespeople</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+            <span className="text-sm font-medium">4.9 average rating</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Wrench className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium">12 trades supported</span>
           </div>
         </div>
       </div>
