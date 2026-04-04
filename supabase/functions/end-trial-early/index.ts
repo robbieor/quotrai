@@ -80,7 +80,7 @@ ${bodyHtml}
       trialEndsAt: subscription.trial_ends_at,
     });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // End trial immediately — Stripe will charge the customer right away
     const updated = await stripe.subscriptions.update(subscription.stripe_subscription_id, {

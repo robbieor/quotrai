@@ -178,9 +178,9 @@ export function SubscriptionOverview() {
         setIsEndingTrial(false);
       }
     } else {
-      // No Stripe subscription yet — send them to checkout
+      // No Stripe subscription yet — send them to checkout with skipTrial
       setEndTrialDialogOpen(false);
-      navigate("/select-plan");
+      navigate("/select-plan?skipTrial=true");
     }
   };
 
