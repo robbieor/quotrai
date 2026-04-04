@@ -21,7 +21,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Users, Loader2, Plus, Info, ChevronDown } from "lucide-react";
-import { useOrgMembers, useUpdateSeatType, useAddSeat } from "@/hooks/useSubscription";
+import { useOrgMembers, useAddSeat } from "@/hooks/useSubscription";
 import { PRICING, type SeatType } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useUserRole } from "@/hooks/useUserRole";
