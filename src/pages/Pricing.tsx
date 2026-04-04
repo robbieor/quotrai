@@ -2,37 +2,55 @@ import { useState } from "react";
 import { SEOHead } from "@/components/shared/SEOHead";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
   Check,
   ArrowRight,
-  Users,
-  Mic,
-  Building2,
   Zap,
   ExternalLink,
+  Calculator,
 } from "lucide-react";
 import foremanLogo from "@/assets/foreman-logo.png";
-import { cn } from "@/lib/utils";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
+
+const BASE_PRICE = 39;
+const EXTRA_SEAT = 19;
+const BASE_USERS = 3;
+const PLATFORM_FEE = 0.025;
+
+const allFeatures = [
+  "Unlimited quotes & invoices",
+  "Job scheduling & calendar",
+  "Customer management & GPS tracking",
+  "Foreman AI — text & voice assistant",
+  "Expense tracking & receipt capture",
+  "Reports, dashboards & recurring invoices",
+  "Xero & QuickBooks sync",
+  "PDF generation, branded emails & team collaboration",
+  "Lead pipeline & advanced reporting",
+  "API access & webhooks",
+];
+
+const teamExamples = [
+  { label: "Solo", users: 1, price: BASE_PRICE },
+  { label: "Team of 3", users: 3, price: BASE_PRICE },
+  { label: "Team of 5", users: 5, price: BASE_PRICE + 2 * EXTRA_SEAT },
+  { label: "Team of 10", users: 10, price: BASE_PRICE + 7 * EXTRA_SEAT },
+];
 
 const faqs = [
   {
     q: "What's included in the 14-day free trial?",
-    a: "Full access to every feature — quotes, invoicing, AI, GPS time tracking. You only pay if you decide to continue after 14 days.",
+    a: "Full access to every feature — quotes, invoicing, AI, GPS time tracking. No credit card required. You only pay if you decide to continue after 14 days.",
   },
   {
-    q: "What's the difference between seat types?",
-    a: "Lite seats are for field crew who need job access, time tracking, and basic quoting. Connect seats add Foreman AI with 60 voice minutes/month. Grow seats include unlimited voice minutes, advanced reporting, and accounting sync.",
+    q: "How does the platform fee work?",
+    a: "Foreman charges 2.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
   },
   {
-    q: "Can I mix seat types on one team?",
-    a: "Absolutely. Give your office manager a Connect seat and your apprentices Lite seats — you only pay for what each person needs.",
-  },
-  {
-    q: "How does annual billing work?",
-    a: "Pay upfront for 12 months and save 15%. You can switch between monthly and annual at any time from your billing settings.",
+    q: "How does pricing work for larger teams?",
+    a: "€39/month includes up to 3 users. Each additional team member is just €19/month. Everyone gets full access to every feature.",
   },
   {
     q: "Can I cancel anytime?",
@@ -46,7 +64,7 @@ const faqs = [
 
 export default function Pricing() {
   const isNative = useIsNative();
-  const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
+  const [monthlyInvoice, setMonthlyInvoice] = useState(5000);
 
   if (isNative) {
     return (
@@ -73,73 +91,18 @@ export default function Pricing() {
     );
   }
 
-  const price = (monthly: number, annual: number) =>
-    interval === "monthly" ? monthly : Math.round(annual / 12);
-
-  const plans = [
-    {
-      name: "Lite",
-      tagline: "Run your business",
-      icon: Users,
-      description: "Everything you need to quote, schedule, and invoice — without the clutter.",
-      features: [
-        "Create and send quotes in seconds",
-        "Schedule jobs with drag-and-drop",
-        "Invoice customers and track payments",
-        "GPS-verified time tracking",
-        "Full customer management",
-      ],
-      monthlyPrice: 19,
-      annualPrice: Math.round(19 * 12 * 0.85),
-      cta: "Start Free Trial",
-      popular: false,
-    },
-    {
-      name: "Connect",
-      tagline: "Automate your business",
-      icon: Mic,
-      description: "Let Foreman AI handle the admin — so you stay on the tools, not the laptop.",
-      features: [
-        "Everything in Lite",
-        "Foreman AI — create quotes and invoices by voice or text",
-        "60 voice minutes/month",
-        "Automated payment reminders",
-        "Snap receipts and track expenses",
-        "Send branded PDFs instantly",
-      ],
-      monthlyPrice: 39,
-      annualPrice: Math.round(39 * 12 * 0.85),
-      cta: "Start Free Trial",
-      popular: true,
-    },
-    {
-      name: "Grow",
-      tagline: "Scale your business",
-      icon: Building2,
-      description: "Full visibility, accounting sync, and the data you need to grow profitably.",
-      features: [
-        "Everything in Connect",
-        "Unlimited voice minutes",
-        "Revenue, P&L, and job profitability reports",
-        "Xero & QuickBooks auto-sync",
-        "Lead pipeline to close more work",
-        "Priority support & onboarding",
-        "API access & webhooks",
-      ],
-      monthlyPrice: 69,
-      annualPrice: Math.round(69 * 12 * 0.85),
-      cta: "Start Free Trial",
-      popular: false,
-    },
-  ];
+  const platformEarnings = monthlyInvoice * PLATFORM_FEE;
+  const breakeven = Math.ceil(BASE_PRICE / PLATFORM_FEE);
+  const coveragePercent = Math.min((platformEarnings / BASE_PRICE) * 100, 100);
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Pricing — Simple Per-Seat Plans"
-        description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 14-day free trial."
+        title="Pricing — One Plan, Every Feature, AI Included"
+        description="€39/month for up to 3 users. Every feature included. Foreman AI built in. 14-day free trial, no credit card required."
         path="/pricing"
       />
+
       {/* Nav */}
       <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
@@ -166,123 +129,124 @@ export default function Pricing() {
         <div className="container mx-auto max-w-4xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-6">
             <Zap className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Simple, transparent pricing</span>
+            <span className="text-sm font-semibold text-foreground">One plan. Every feature. AI included.</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
-            One platform, one price per seat.
+            €{BASE_PRICE}/month for your whole team.
           </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            14-day free trial on every plan. Cancel anytime.
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Up to {BASE_USERS} users included. Just €{EXTRA_SEAT}/mo per extra seat.
+            <br className="hidden sm:block" />
+            14-day free trial · No credit card required · Cancel anytime.
           </p>
+        </div>
+      </section>
 
-          {/* Billing toggle */}
-          <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-muted border border-border">
-            <button
-              onClick={() => setInterval("monthly")}
-              className={cn(
-                "px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                interval === "monthly"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setInterval("annual")}
-              className={cn(
-                "px-4 py-2 rounded-md text-sm font-medium transition-colors relative",
-                interval === "annual"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Annual
-              <Badge className="absolute -top-2.5 -right-5 bg-green-600 text-[10px] px-1.5 py-0">
-                -15%
-              </Badge>
-            </button>
+      {/* Single Plan Card */}
+      <section className="pb-8 px-4 sm:px-6">
+        <div className="container mx-auto max-w-lg">
+          <div className="rounded-2xl border border-primary bg-gradient-to-b from-primary/5 to-transparent shadow-lg p-6 sm:p-8">
+            <div className="text-center mb-6">
+              <div className="flex items-baseline justify-center gap-1 mb-1">
+                <span className="text-5xl font-extrabold">€{BASE_PRICE}</span>
+                <span className="text-muted-foreground text-lg">/month</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Includes {BASE_USERS} team members · +€{EXTRA_SEAT}/mo per extra seat
+              </p>
+            </div>
+
+            <ul className="space-y-3 mb-8">
+              {allFeatures.map((feature, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm">
+                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link to="/signup">
+              <Button className="w-full" size="lg">
+                Start Free Trial
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
+            <p className="text-xs text-center text-muted-foreground mt-3">
+              14-day free trial · No credit card required · Cancel anytime
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="pb-16 sm:pb-24 px-4 sm:px-6">
-        <div className="container mx-auto max-w-5xl">
-          <div className="grid md:grid-cols-3 gap-6">
-            {plans.map((plan) => {
-              const displayPrice = price(plan.monthlyPrice, plan.annualPrice);
-              return (
+      {/* Team Size Examples */}
+      <section className="pb-8 px-4 sm:px-6">
+        <div className="container mx-auto max-w-lg">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            {teamExamples.map((ex) => (
+              <div key={ex.label} className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground mb-1">{ex.label}</p>
+                <p className="text-lg font-bold">€{ex.price}</p>
+                <p className="text-[10px] text-muted-foreground">/month</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Earn-Back Calculator */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6 bg-muted/30 border-t border-b border-border">
+        <div className="container mx-auto max-w-lg">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <Calculator className="h-5 w-5 text-primary" />
+            <h2 className="text-xl sm:text-2xl font-extrabold">Foreman pays for itself</h2>
+          </div>
+
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            How much does your business invoice per month?
+          </p>
+
+          <div className="space-y-4">
+            <div className="text-center">
+              <span className="text-3xl font-bold">€{monthlyInvoice.toLocaleString()}</span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+
+            <Slider
+              value={[monthlyInvoice]}
+              onValueChange={(v) => setMonthlyInvoice(v[0])}
+              min={0}
+              max={50000}
+              step={500}
+              className="w-full"
+            />
+
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Platform fee earned (2.5%)</span>
+                <span className="font-semibold">€{platformEarnings.toFixed(0)}/mo</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subscription cost</span>
+                <span className="font-semibold">€{BASE_PRICE}/mo</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2.5">
                 <div
-                  key={plan.name}
-                  className={cn(
-                    "relative rounded-2xl border p-6 sm:p-8 flex flex-col",
-                    plan.popular
-                      ? "border-primary bg-gradient-to-b from-primary/5 to-transparent shadow-lg scale-[1.02]"
-                      : "border-border bg-card"
-                  )}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3">
-                      Most Popular
-                    </Badge>
-                  )}
-
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={cn(
-                      "p-2.5 rounded-xl",
-                      plan.popular ? "bg-primary/10" : "bg-muted"
-                    )}>
-                      <plan.icon className={cn("h-5 w-5", plan.popular ? "text-primary" : "text-muted-foreground")} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg">{plan.name}</h3>
-                    </div>
-                  </div>
-                  <p className="text-sm font-semibold text-primary mb-4">{plan.tagline}</p>
-
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold">€{displayPrice}</span>
-                      <span className="text-muted-foreground">/seat/mo</span>
-                    </div>
-                    {interval === "annual" && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        €{plan.annualPrice}/seat billed annually
-                      </p>
-                    )}
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{plan.description}</p>
-
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link to="/signup">
-                    <Button
-                      className="w-full"
-                      variant={plan.popular ? "default" : "outline"}
-                      size="lg"
-                    >
-                      {plan.cta}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              );
-            })}
+                  className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${coveragePercent}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                {coveragePercent >= 100
+                  ? "✅ Your subscription is fully covered by platform fee earnings alone."
+                  : `Process just €${breakeven.toLocaleString()} in invoices and your subscription pays for itself.`}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30 border-t border-border">
+      <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="container mx-auto max-w-3xl">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center mb-10">
             Frequently Asked Questions
@@ -300,7 +264,7 @@ export default function Pricing() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 text-center">
+      <section className="py-16 sm:py-20 px-4 sm:px-6 text-center bg-muted/30 border-t border-border">
         <div className="container mx-auto max-w-2xl">
           <h2 className="text-2xl sm:text-4xl font-extrabold mb-4">
             Ready to ditch the paperwork?
@@ -315,7 +279,7 @@ export default function Pricing() {
             </Button>
           </Link>
           <p className="text-xs text-muted-foreground mt-4">
-            7 days free • Cancel anytime
+            14-day free trial · No credit card required · Cancel anytime
           </p>
         </div>
       </section>
