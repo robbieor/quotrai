@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { useAgentTask } from "@/contexts/AgentTaskContext";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
