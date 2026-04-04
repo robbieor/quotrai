@@ -266,7 +266,7 @@ export default function FounderProjections() {
               </div>
               <div className="p-4 rounded-xl border border-border bg-accent/5">
                 <p className="font-semibold text-foreground">Platform Fee</p>
-                <p className="text-2xl font-bold text-foreground">2.5%<span className="text-sm font-normal text-muted-foreground"> per txn</span></p>
+                <p className="text-2xl font-bold text-foreground">1.5%<span className="text-sm font-normal text-muted-foreground"> per txn</span></p>
                 <p className="text-xs text-muted-foreground mt-1">On all invoice payments via Stripe Connect.</p>
                 <Badge variant="secondary" className="mt-2 text-xs">{formatCurrency(platformFeeMRR)}/mo</Badge>
               </div>
