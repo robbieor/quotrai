@@ -602,7 +602,7 @@ export default function FounderProjections() {
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="flex items-start gap-2">
                       <Percent className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span><strong className="text-foreground">2.5% on every "Pay Now" click</strong> — auto-chasers include one-tap payment links via Stripe Connect. More chasers = more on-platform payments = more platform fee revenue.</span>
+                      <span><strong className="text-foreground">1.5% on every "Pay Now" click</strong> — auto-chasers include one-tap payment links via Stripe Connect. More chasers = more on-platform payments = more platform fee revenue.</span>
                     </div>
                     <div className="flex items-start gap-2">
                       <RefreshCcw className="h-4 w-4 text-primary mt-0.5 shrink-0" />
