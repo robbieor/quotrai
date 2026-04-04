@@ -619,7 +619,7 @@ export default function FounderProjections() {
                   <p className="text-sm font-semibold text-foreground mb-1">📊 Revenue Flywheel</p>
                   <p className="text-xs text-muted-foreground">
                     More auto-chasers → faster payments → tradespeople love it → tell their mates → more sign-ups → 
-                    more invoice volume through platform → more 2.5% fees. 
+                    more invoice volume through platform → more 1.5% fees. 
                     At {customers.toLocaleString()} customers × €{avgInvoiceVolume.toLocaleString()}/mo invoiced volume × {PEN_PAPER_STATS.invoicedJobPct}% invoiced jobs 
                     = <strong className="text-primary">{formatCurrency(customers * avgInvoiceVolume * (PEN_PAPER_STATS.invoicedJobPct / 100) * PLATFORM_FEE_RATE)}/mo</strong> in platform fees alone.
                   </p>

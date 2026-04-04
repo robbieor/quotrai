@@ -61,7 +61,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Just talk to Foreman AI — say 'Quote the Murphy boiler service' and it's done. No training needed." },
       { objection: "My lads won't use it", response: "GPS clock-in is one tap. Voice quoting works on-site, even in gloves. Zero typing required." },
-      { objection: "It's another monthly cost", response: "We take 2.5% only when you get paid. No payment, no fee. Your cost is aligned with your cash flow." },
+      { objection: "It's another monthly cost", response: "We take 1.5% only when you get paid. No payment, no fee. Your cost is aligned with your cash flow." },
       { objection: "I've tried software before", response: "Those were digital forms — you still did the admin. Foreman's AI does it for you." },
     ],
     segments: [
@@ -98,7 +98,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote the McCarthy rewire, 3-bed semi' — Foreman AI builds it using your templates. Zero learning curve." },
       { objection: "My apprentices won't use it", response: "One-tap GPS clock-in. They're already on their phones — this is simpler than WhatsApp." },
-      { objection: "It's another monthly cost", response: "2.5% only when you collect payment. We earn when you earn." },
+      { objection: "It's another monthly cost", response: "1.5% only when you collect payment. We earn when you earn." },
       { objection: "I've tried software before", response: "Those tools made you fill in forms. Foreman's AI fills them for you." },
     ],
     segments: [
@@ -135,7 +135,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Tell Foreman AI what you need — it creates the quote. Voice or text, your choice." },
       { objection: "My techs won't use it", response: "GPS clock-in is automatic when they arrive on-site. Nothing to remember." },
-      { objection: "It's another monthly cost", response: "2.5% on payments collected. We literally only cost you money when you're making money." },
+      { objection: "It's another monthly cost", response: "1.5% on payments collected. We literally only cost you money when you're making money." },
       { objection: "I've tried software before", response: "Other tools are digital clipboards. Foreman is an AI employee that costs less than a day's labour per month." },
     ],
     segments: [
@@ -172,7 +172,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice-first: say 'Quote the Dalton extension, groundworks phase' and Foreman AI handles it." },
       { objection: "My subbies won't use it", response: "One-tap clock-in with GPS. Simpler than signing a site sheet." },
-      { objection: "It's another monthly cost", response: "2.5% on collected payments. No payment, no fee — we're aligned with your cash flow." },
+      { objection: "It's another monthly cost", response: "1.5% on collected payments. No payment, no fee — we're aligned with your cash flow." },
       { objection: "I've tried software before", response: "Those were admin tools. Foreman is an AI that runs your office for less than a labourer's day rate." },
     ],
     segments: [
@@ -209,7 +209,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote a weekly clean for the Sullivan house' — done. Voice-first, zero training." },
       { objection: "My cleaners won't use it", response: "One-tap GPS clock-in when they arrive. Simpler than a timesheet." },
-      { objection: "It's another monthly cost", response: "2.5% only when you get paid. No upfront fees, no risk." },
+      { objection: "It's another monthly cost", response: "1.5% only when you get paid. No upfront fees, no risk." },
       { objection: "I've tried software before", response: "Those were booking tools. Foreman quotes, invoices, chases payments, and tracks your team — all in one." },
     ],
     segments: [
@@ -246,7 +246,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quoting from the garden — say what you need, Foreman AI builds the quote." },
       { objection: "My lads won't use it", response: "GPS clock-in on arrival. One tap, done. Works in work gloves." },
-      { objection: "It's another monthly cost", response: "2.5% on collected payments. You only pay when your client pays." },
+      { objection: "It's another monthly cost", response: "1.5% on collected payments. You only pay when your client pays." },
       { objection: "I've tried software before", response: "This isn't another form to fill in. It's an AI that does your office work." },
     ],
     segments: [
@@ -283,7 +283,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote a rodent treatment for O'Reilly's' — Foreman AI handles the rest." },
       { objection: "My techs won't use it", response: "GPS clock-in on arrival. Automatic proof of service for every visit." },
-      { objection: "It's another monthly cost", response: "2.5% on payments collected. Zero risk — we only cost you money when you're earning." },
+      { objection: "It's another monthly cost", response: "1.5% on payments collected. Zero risk — we only cost you money when you're earning." },
       { objection: "I've tried software before", response: "Generic field service tools don't handle recurring contracts well. Foreman does." },
     ],
     segments: [
@@ -320,7 +320,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice-first: say 'Quote the Walsh pool pump replacement' and it's built in seconds." },
       { objection: "My techs won't use it", response: "GPS clock-in at each pool. One tap per visit — faster than a clipboard." },
-      { objection: "It's another monthly cost", response: "2.5% on collected payments only. In the off-season, you pay nothing." },
+      { objection: "It's another monthly cost", response: "1.5% on collected payments only. In the off-season, you pay nothing." },
       { objection: "I've tried software before", response: "Pool software focuses on logs. Foreman handles the whole business — quotes, jobs, invoices, payments." },
     ],
     segments: [
@@ -356,7 +356,7 @@ export const TRADES: Record<string, TradeConfig> = {
       "Pressure washing businesses use Foreman to create instant on-site quotes, schedule jobs, track crew locations, and invoice clients. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quoting on-site — say the job, get the quote. Done in 30 seconds." },
-      { objection: "It's another monthly cost", response: "2.5% on payments. No work, no cost. Simple." },
+      { objection: "It's another monthly cost", response: "1.5% on payments. No work, no cost. Simple." },
       { objection: "I work alone", response: "Perfect — Foreman is your office manager without the salary." },
       { objection: "I've tried software before", response: "Those were scheduling tools. Foreman handles the full job lifecycle — quote to payment." },
     ],
@@ -394,7 +394,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quote from the roof — 'Quote Kelly bungalow, re-felt and ridge tiles.' Done." },
       { objection: "My lads won't use it", response: "GPS clock-in, one tap. Works with gloves on." },
-      { objection: "It's another monthly cost", response: "2.5% on collected payments. No work, no cost." },
+      { objection: "It's another monthly cost", response: "1.5% on collected payments. No work, no cost." },
       { objection: "I've tried software before", response: "Those were digital clipboards. Foreman's AI does the admin for you." },
     ],
     segments: [
@@ -431,7 +431,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote the Davis house, 3 beds and hallway' — Foreman AI does the rest." },
       { objection: "I work alone", response: "Even better — Foreman is your office manager without the overhead." },
-      { objection: "It's another monthly cost", response: "2.5% on payments collected. No jobs, no cost." },
+      { objection: "It's another monthly cost", response: "1.5% on payments collected. No jobs, no cost." },
       { objection: "I've tried software before", response: "Those tools made painting admin digital. Foreman eliminates it." },
     ],
     segments: [
@@ -467,7 +467,7 @@ export const TRADES: Record<string, TradeConfig> = {
       "Fencing contractors use Foreman to quote by the metre, manage schedules, track materials costs, and automate invoicing. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quote on-site: 'Quote 30 metres close-board with gate.' Sorted." },
-      { objection: "It's another monthly cost", response: "2.5% on what you collect. No jobs, zero cost." },
+      { objection: "It's another monthly cost", response: "1.5% on what you collect. No jobs, zero cost." },
       { objection: "I work alone", response: "That's who Foreman is built for — solo operators who need an office in their pocket." },
       { objection: "I've tried software before", response: "Foreman isn't forms. It's an AI that handles your admin." },
     ],
@@ -504,7 +504,7 @@ export const TRADES: Record<string, TradeConfig> = {
       "Appliance repair businesses use Foreman to create instant diagnostic quotes, schedule call-outs, track parts, and invoice on-site. Free 30-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote bearing replacement for Ryan washing machine.' Foreman AI handles it." },
-      { objection: "It's another monthly cost", response: "2.5% on payments. No call-outs, no cost." },
+      { objection: "It's another monthly cost", response: "1.5% on payments. No call-outs, no cost." },
       { objection: "I work alone", response: "Foreman replaces the office you can't afford." },
       { objection: "I've tried software before", response: "This one talks back. Literally." },
     ],
@@ -542,7 +542,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "Most of my work is cash", response: "That's fine — log every job for tax records and business visibility. Know your real numbers." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote lock change, front and back doors.' Done before the kettle boils." },
-      { objection: "It's another monthly cost", response: "2.5% on card payments only. Cash jobs cost you nothing." },
+      { objection: "It's another monthly cost", response: "1.5% on card payments only. Cash jobs cost you nothing." },
       { objection: "I've tried software before", response: "At 2am on a call-out, you need voice commands, not forms." },
     ],
     segments: [
@@ -579,7 +579,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "My jobs are all different", response: "That's Foreman's strength — voice-quote any type of work. No templates needed." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote shelves, tap, and door for Murray.' Foreman AI builds a multi-line quote." },
-      { objection: "It's another monthly cost", response: "2.5% on payments collected. Small jobs, small fees." },
+      { objection: "It's another monthly cost", response: "1.5% on payments collected. Small jobs, small fees." },
       { objection: "I'm not a tech person", response: "If you can talk, you can use Foreman. That's the whole point." },
     ],
     segments: [
@@ -616,7 +616,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I need detailed scope documents", response: "Foreman AI builds itemised quotes with labour/materials split — ready for the loss adjuster." },
       { objection: "My crews are on multiple sites", response: "GPS tracking shows who's where, in real time." },
-      { objection: "It's another monthly cost", response: "2.5% on collected payments. During quiet months, you pay nothing." },
+      { objection: "It's another monthly cost", response: "1.5% on collected payments. During quiet months, you pay nothing." },
       { objection: "Insurance billing is complex", response: "Detailed line items, PDF invoices, and payment tracking — built for the process." },
     ],
     segments: [
@@ -653,7 +653,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "Our quotes are very detailed", response: "Foreman AI builds multi-line itemised quotes — panels, inverter, battery, labour, scaffolding — all broken out." },
       { objection: "We need project stage tracking", response: "Create milestones: survey, install, commission, sign-off. Track and invoice each stage." },
-      { objection: "It's another monthly cost", response: "2.5% on collected payments. On a £10K install, that's less than your scaffolding hire." },
+      { objection: "It's another monthly cost", response: "1.5% on collected payments. On a £10K install, that's less than your scaffolding hire." },
       { objection: "I've tried software before", response: "Generic tools don't handle staged payments or multi-trade scheduling. Foreman does." },
     ],
     segments: [
@@ -690,7 +690,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "I use Instagram for bookings", response: "Keep your socials for marketing — use Foreman for the business side: quotes, invoices, scheduling." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote full detail and ceramic for Collins BMW.' Done in seconds." },
-      { objection: "It's another monthly cost", response: "2.5% on card payments. Cash and transfer jobs cost you nothing extra." },
+      { objection: "It's another monthly cost", response: "1.5% on card payments. Cash and transfer jobs cost you nothing extra." },
       { objection: "I'm mobile — I don't have an office", response: "That's exactly the point. Foreman IS your office." },
     ],
     segments: [
@@ -727,7 +727,7 @@ export const TRADES: Record<string, TradeConfig> = {
     objections: [
       { objection: "Every door is different", response: "Foreman AI builds bespoke quotes — just describe the door and the job." },
       { objection: "I don't have time to learn new software", response: "Voice quoting from the driveway. Say it, send it." },
-      { objection: "It's another monthly cost", response: "2.5% on payments. No installs, no cost." },
+      { objection: "It's another monthly cost", response: "1.5% on payments. No installs, no cost." },
       { objection: "I've tried software before", response: "Generic tools don't understand bespoke product quoting. Foreman adapts to any job." },
     ],
     segments: [
