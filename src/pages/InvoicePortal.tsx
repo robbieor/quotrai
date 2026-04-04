@@ -111,6 +111,7 @@ export default function InvoicePortal() {
   const amountDue = invoice.balance_due ?? invoice.total;
   const hasPartialPayment = amountDue > 0 && amountDue < invoice.total;
   const teamLogo = invoice.team.logo_url;
+  const canPayOnline = invoice.team.stripe_connect_active === true;
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
