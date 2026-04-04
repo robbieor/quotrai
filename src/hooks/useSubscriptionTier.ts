@@ -21,6 +21,8 @@ export interface TeamSubscription {
 // New single-plan model
 export const STRIPE_PRICE_BASE_PLAN = 'price_1TIJDeDQETj2awNEWxP4bB43'; // €39/mo
 export const STRIPE_PRICE_EXTRA_SEAT = 'price_1TIJDzDQETj2awNEtiMhRUPR'; // €19/mo
+export const STRIPE_PRICE_BASE_PLAN_ANNUAL = 'price_1TIQvfDQETj2awNEx7bAyHjy'; // €397.80/yr
+export const STRIPE_PRICE_EXTRA_SEAT_ANNUAL = 'price_1TIQw1DQETj2awNEth2a6E8y'; // €193.80/yr
 
 // Legacy tier prices (kept for backward compat with existing subscribers)
 export const STRIPE_PRICES = {
@@ -40,15 +42,20 @@ export const STRIPE_PRICES = {
 
 // Pricing constants - single source of truth
 export const PRICING = {
+  BASE_PLAN: 39,
+  EXTRA_SEAT: 19,
+  BASE_USERS: 3,
+  ANNUAL_BASE_PLAN: 397.80,
+  ANNUAL_EXTRA_SEAT: 193.80,
   LITE_SEAT: 19,
   CONNECT_SEAT: 39,
   GROW_SEAT: 69,
   ANNUAL_DISCOUNT: 0.15,
-  ANNUAL_LITE_SEAT: 193.80,      // €193.80/year (matches Stripe)
-  ANNUAL_CONNECT_SEAT: 397.80,   // €397.80/year (matches Stripe)
-  ANNUAL_GROW_SEAT: 703.80,      // €703.80/year (matches Stripe)
+  ANNUAL_LITE_SEAT: 193.80,
+  ANNUAL_CONNECT_SEAT: 397.80,
+  ANNUAL_GROW_SEAT: 703.80,
   VOICE_MINUTES_PER_SEAT: 60,
-  GROW_VOICE_MINUTES: -1, // unlimited
+  GROW_VOICE_MINUTES: -1,
   PLATFORM_FEE: 1.5,
   GROW_PLATFORM_FEE: 1.5,
   BULK_DISCOUNT_THRESHOLD: 5,
