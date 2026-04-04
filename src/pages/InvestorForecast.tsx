@@ -14,13 +14,16 @@ import {
   Mic, Smartphone, Mail, Clock, MapPin
 } from "lucide-react";
 
-// Revenue model constants
-const BLENDED_SEAT_PRICE = 0.40 * 19 + 0.45 * 39 + 0.15 * 59; // €34.00
+// Single plan model: €39/mo for 3 users, +€19/extra seat
+const BASE_PLAN = 39;
+const EXTRA_SEAT = 19;
+const INCLUDED_SEATS = 3;
 const AVG_SEATS = 3;
-const AVG_INVOICE_VOLUME = 5000; // €/customer/month
+const AVG_INVOICE_VOLUME = 5000;
 const PLATFORM_FEE_RATE = 0.015;
 const PLATFORM_FEE_PER_CUSTOMER = AVG_INVOICE_VOLUME * PLATFORM_FEE_RATE; // €75
-const BLENDED_ARPU = (BLENDED_SEAT_PRICE * AVG_SEATS) + PLATFORM_FEE_PER_CUSTOMER; // €227
+const PLAN_COST_PER_CUSTOMER = BASE_PLAN + Math.max(0, AVG_SEATS - INCLUDED_SEATS) * EXTRA_SEAT; // €39 at 3 seats
+const BLENDED_ARPU = PLAN_COST_PER_CUSTOMER + PLATFORM_FEE_PER_CUSTOMER; // €114
 
 const MILESTONES = [
   { customers: 50, label: "Launch" },
