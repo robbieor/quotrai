@@ -85,7 +85,7 @@ const GAP_DIMENSIONS = [
   { feature: "AI Voice Agent", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
   { feature: "Photo-to-Quote AI", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
   { feature: "AI Chat Assistant", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
-  { feature: "Built-in Payments (2.5%)", foreman: true, fergus: false, tradify: false, jobber: true, serviceTitan: true },
+  { feature: "Built-in Payments (1.5%)", foreman: true, fergus: false, tradify: false, jobber: true, serviceTitan: true },
   { feature: "Customer Portal", foreman: true, fergus: false, tradify: false, jobber: true, serviceTitan: true },
   { feature: "Multi-Currency", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
   { feature: "GPS Time Tracking", foreman: true, fergus: true, tradify: true, jobber: true, serviceTitan: true },
