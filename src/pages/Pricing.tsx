@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "How does the platform fee work?",
-    a: "Foreman charges 2.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
+    a: "Foreman charges 1.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
   },
   {
     q: "How does pricing work for larger teams?",

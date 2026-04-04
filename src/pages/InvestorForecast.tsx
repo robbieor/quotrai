@@ -159,7 +159,7 @@ export default function InvestorForecast() {
             <CardContent className="p-5 text-center space-y-2">
               <p className="text-sm text-muted-foreground">Platform Fee Revenue</p>
               <p className="text-3xl font-bold text-foreground">€{PLATFORM_FEE_PER_CUSTOMER}/mo</p>
-              <p className="text-xs text-muted-foreground">2.5% on €{AVG_INVOICE_VOLUME.toLocaleString()} avg invoice volume</p>
+              <p className="text-xs text-muted-foreground">1.5% on €{AVG_INVOICE_VOLUME.toLocaleString()} avg invoice volume</p>
               <p className="text-xs text-muted-foreground">Passive, recurring, success-aligned</p>
             </CardContent>
           </Card>

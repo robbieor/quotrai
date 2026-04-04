@@ -26,7 +26,7 @@ const TIERS = {
   grow: { price: 69, label: "Grow Seat", hasAI: true },
 };
 const ANNUAL_DISCOUNT = 0.15;
-const PLATFORM_FEE_RATE = 0.025; // 2.5% on invoice payments
+const PLATFORM_FEE_RATE = 0.015; // 1.5% on invoice payments
 const VOICE_COST_PER_SEAT = 8;
 
 // Valuation multiples

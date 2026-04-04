@@ -149,7 +149,7 @@ export function StripeConnectSetup() {
                 <p className="font-medium text-foreground text-sm">Payments active</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                Your customers can now pay invoices online. Funds are deposited directly to your bank account after a 2.5% platform fee.
+                Your customers can now pay invoices online. Funds are deposited directly to your bank account after a 1.5% platform fee.
               </p>
             </div>
             <Button variant="outline" onClick={handleDashboard} disabled={actionLoading} className="gap-2">
