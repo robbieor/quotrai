@@ -39,7 +39,6 @@ type InviteRole = "member" | "manager" | "owner";
 export function TeamManagement() {
   const [email, setEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<InviteRole>("member");
-  const [inviteSeat, setInviteSeat] = useState<SeatType>("lite");
   
   const { user } = useAuth();
   const { data: team, isLoading: teamLoading } = useTeam();
