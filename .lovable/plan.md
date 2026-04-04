@@ -1,34 +1,57 @@
 
 
-# Update All "7-Day" References to "14-Day" + Extend Existing Trials
+# Landing Page — Single Plan Pricing with Earn-Back Calculator
 
-## Problem
-The database trigger was previously updated to 14 days but the latest migration (`20260330...`) still shows `interval '7 days'`. Multiple landing page sections, the trade landing page, terms page, and request access page all still say "7-day". Existing trial users in the database still have 7-day trial windows.
+## What Changes
 
-## Changes
+Replace the 3-tier pricing grid with a single plan card: **€39/month for up to 3 users, +€19/extra seat**. Add an interactive "earn-back" calculator showing how quickly invoiced payments cover the subscription via the 2.5% platform fee. Remove the comparison table and bulk discount callout.
 
-### 1. Database Migration — Fix trigger + extend existing trials
-One SQL migration that:
-- Recreates `handle_new_user` trigger with `interval '14 days'` (both `teams.trial_ends_at` and `subscriptions_v2.trial_ends_at`)
-- Updates all existing active trial teams: `UPDATE teams SET trial_ends_at = created_at + interval '14 days' WHERE is_trial = true`
-- Updates matching `subscriptions_v2` records: `UPDATE subscriptions_v2 SET trial_ends_at = org_created_at_equivalent + interval '14 days' WHERE status = 'trialing'`
+## File: `src/components/landing/PricingPreviewSection.tsx` — Full Rewrite
 
-### 2. Landing Page Text Updates (6 files)
+**Remove**: 3-tier cards, comparison table, bulk discount callout, billing toggle (keep it simple — monthly only for landing page).
 
-| File | Line | Change |
-|------|------|--------|
-| `src/components/landing/PricingPreviewSection.tsx` | 94 | `"7-day free trial"` → `"14-day free trial"` |
-| `src/components/landing/FinalCTASection.tsx` | 20 | `"7-day free trial"` → `"14-day free trial"` |
-| `src/pages/TradeLanding.tsx` | 107, 188 | Both `"7-day"` → `"14-day"` |
-| `src/pages/RequestAccess.tsx` | 150 | `"7-day free trial"` → `"14-day free trial"` |
-| `src/pages/Terms.tsx` | 60 | `"7-day free trial"` → `"14-day free trial"` |
+**New layout (single column, centered)**:
 
-### 3. Already Correct (no change needed)
-- `src/pages/Signup.tsx` — already updated to "14-day" per prior work
-- `useSubscriptionTier.ts` `startTrialMutation` — verify and update if still 7 days
-- Invoice reminder "7 days" reference and calendar "7 days" label — these are functional, not trial-related
+1. **Header**: "One plan. Every feature. AI included." with subline "€39/month for your team of up to 3. Just €19/mo per extra seat."
 
-## Scope
-- 1 database migration (trigger + backfill)
-- 6 UI files, 1-line change each
+2. **Single Plan Card** (centered, max-w-lg):
+   - Price: €39/mo prominent, "+€19/extra seat" secondary
+   - "Includes 3 team members" callout
+   - Feature list (combined from all current tiers — everything included):
+     - Unlimited quotes & invoices
+     - Job scheduling & calendar
+     - Customer management & GPS tracking
+     - Foreman AI — text & voice assistant
+     - Expense tracking & documents
+     - Reports, dashboards & recurring invoices
+     - Xero & QuickBooks sync
+     - PDF generation, email & team collaboration
+   - "14-day free trial · No credit card required · Cancel anytime"
+   - CTA: "Start Free Trial →"
+
+3. **Earn-Back Calculator** (below the card):
+   - Headline: "Foreman pays for itself"
+   - Interactive slider or simple input: "How much do you invoice per month?"
+   - Default value: €5,000
+   - Output: "At €5,000/mo invoiced through Foreman, you earn back €125/mo in time saved on admin — your €39 subscription pays for itself after just €1,560 in payments."
+   - The math: subscription ÷ 0.025 = break-even invoice volume. Display: "Process just {formatPrice(breakeven)} in invoices and your subscription is covered by the platform fee alone."
+   - Visual: simple progress bar showing subscription cost vs platform fee earned
+
+4. **Team size examples** (small grid below calculator):
+   - Solo: €39/mo
+   - Team of 3: €39/mo
+   - Team of 5: €39 + 2×€19 = €77/mo
+   - Team of 10: €39 + 7×€19 = €172/mo
+
+## Props Change
+The component receives `formatPrice` — keep that interface unchanged.
+
+## No changes to `useSubscriptionTier.ts`
+The existing PRICING constants remain (they're used elsewhere for actual billing). This is purely a landing page presentation change.
+
+## Files
+
+| Action | File |
+|--------|------|
+| Rewrite | `src/components/landing/PricingPreviewSection.tsx` |
 
