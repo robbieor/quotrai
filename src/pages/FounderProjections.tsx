@@ -226,28 +226,22 @@ export default function FounderProjections() {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
-              Revenue Model — 3 Tiers + Platform Fee
+              Revenue Model — Single Plan + Platform Fee
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl border border-border bg-muted/50">
-                <p className="font-semibold text-foreground">Lite Seat</p>
-                <p className="text-2xl font-bold text-foreground">€{TIERS.lite.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Jobs, quotes, invoices, calendar, time tracking. No AI.</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.lite}% of seats</Badge>
-              </div>
+            <div className="grid sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl border-2 border-primary/30 bg-primary/5">
-                <p className="font-semibold text-primary">Connect Seat</p>
-                <p className="text-2xl font-bold text-primary">€{TIERS.connect.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Everything + Foreman AI voice agent & chat.</p>
-                <Badge className="mt-2 text-xs bg-primary">{tierMix.connect}% of seats</Badge>
+                <p className="font-semibold text-primary">Base Plan</p>
+                <p className="text-2xl font-bold text-primary">€{BASE_PLAN_PRICE}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Up to {INCLUDED_SEATS} users included. Every feature + Foreman AI.</p>
+                <Badge className="mt-2 text-xs bg-primary">{customers.toLocaleString()} accounts</Badge>
               </div>
               <div className="p-4 rounded-xl border border-border bg-muted/50">
-                <p className="font-semibold text-foreground">Grow Seat</p>
-                <p className="text-2xl font-bold text-foreground">€{TIERS.grow.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Unlimited AI, advanced reports, accounting sync, priority support.</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.grow}% of seats</Badge>
+                <p className="font-semibold text-foreground">Extra Seats</p>
+                <p className="text-2xl font-bold text-foreground">€{EXTRA_SEAT_PRICE}<span className="text-sm font-normal text-muted-foreground">/seat/mo</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Each additional user beyond {INCLUDED_SEATS}.</p>
+                <Badge variant="secondary" className="mt-2 text-xs">{Math.max(0, totalSeats - customers * INCLUDED_SEATS).toLocaleString()} extra seats</Badge>
               </div>
               <div className="p-4 rounded-xl border border-border bg-accent/5">
                 <p className="font-semibold text-foreground">Platform Fee</p>
