@@ -283,9 +283,12 @@ export default function InvoicePortal() {
               </div>
             </div>
 
-            {/* Payment Terms / Bank Details */}
+            {/* Payment Terms / Bank Details — secondary when online payments available */}
             {(invoice.team.payment_terms || invoice.team.bank_details) && (
               <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                {canPayOnline && (
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Other Payment Options</p>
+                )}
                 {invoice.team.payment_terms && (
                   <div>
                     <p className="text-sm font-medium">Payment Terms</p>
