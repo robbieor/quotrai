@@ -1,42 +1,54 @@
 
 
-# Fix Pricing Inconsistencies Across All Pages
-
-## Problem
-The landing page `PricingPreviewSection` component was updated to the single-plan model (€39/mo, 3 users included, +€19/seat), but three other pages still show the old 3-tier (Lite/Connect/Grow) structure:
-
-1. **`/pricing` page** — still shows Lite €19, Connect €39, Grow €69 as separate tiers with billing toggle
-2. **`/select-plan` page** — still shows the old tier selection (visible from Settings → "View Plans")
-3. **`/pricing` line 318** — still says "7 days free" instead of "14 days"
-
-The Settings subscription section shows "Grow Seats: 1 × €69/mo" because the user's existing subscription is on the old tier — that's data-driven and correct for their current plan. The error in the second screenshot needs investigation (likely the same `list-invoices` org issue from earlier).
+# Update Platform Fee from 2.5% to 1.5%
 
 ## Changes
 
-### 1. `/pricing` page — Rewrite to single plan (`src/pages/Pricing.tsx`)
-- Remove the 3-tier `plans` array and billing toggle
-- Replace with single plan card matching landing page style: €39/mo, all features, earn-back calculator
-- Update FAQs to remove tier-comparison questions
-- Fix "7 days free" → "14-day free trial" on line 318
-- Update SEO meta title/description
+### Frontend — Constants & Calculators (6 files)
 
-### 2. `/select-plan` page — Simplify (`src/pages/SelectPlan.tsx`)
-- Remove tier selection (Lite/Connect/Grow cards)
-- Show single plan: €39/mo for 3 users, +€19/extra seat
-- Keep seat quantity selector for teams needing more than 3
-- Keep the Stripe checkout flow but only for the single plan
+| File | Change |
+|------|--------|
+| `src/components/landing/PricingPreviewSection.tsx` | `PLATFORM_FEE = 0.025` → `0.015` |
+| `src/pages/Pricing.tsx` | `PLATFORM_FEE = 0.025` → `0.015`; FAQ text `2.5%` → `1.5%`; label `"Platform fee earned (2.5%)"` → `"(1.5%)"` |
+| `src/pages/SelectPlan.tsx` | FAQ text `2.5%` → `1.5%` |
+| `src/hooks/useSubscriptionTier.ts` | `PLATFORM_FEE: 2.5` → `1.5`; `GROW_PLATFORM_FEE: 1.5` → `1.5` (now same across all tiers) |
+| `src/pages/FounderProjections.tsx` | `PLATFORM_FEE_RATE = 0.025` → `0.015` |
+| `src/pages/InvestorForecast.tsx` | `PLATFORM_FEE_RATE = 0.025` → `0.015`; update comment `€125` → `€75`; update display text `2.5%` → `1.5%` |
 
-### 3. Fix remaining "7 days" reference
-- `src/pages/Pricing.tsx` line 318: "7 days free" → "14-day free trial"
+### Frontend — Marketing Copy (4 files)
 
-## Files
+| File | Change |
+|------|--------|
+| `src/pages/InvestorProduct.tsx` | `"2.5% platform fee"` → `"1.5% platform fee"` |
+| `src/pages/InvestorPitch.tsx` | `"2.5% platform fee"` → `"1.5%"`; revenue model card `"2.5%"` → `"1.5%"` |
+| `src/pages/InvestorMarket.tsx` | `"2.5% platform fees"` → `"1.5%"` |
+| `src/components/settings/StripeConnectSetup.tsx` | Two instances of `"2.5%"` → `"1.5%"` |
 
-| Action | File |
-|--------|------|
-| Rewrite | `src/pages/Pricing.tsx` — single plan + earn-back calculator + updated FAQs |
-| Rewrite | `src/pages/SelectPlan.tsx` — single plan with seat quantity selector |
+### Frontend — Trade Landing Pages (1 file)
 
-## Notes
-- The Settings page showing "Grow Seats: 1" is correct — it reflects the user's actual subscription data. Existing subscribers keep their plan; this change only affects new signups and the public pricing pages.
-- The error dialog in the Settings screenshot appears to be the `list-invoices` edge function issue that was already fixed earlier. If it persists, it's a separate bug.
+| File | Change |
+|------|--------|
+| `src/components/landing/trade/TradeConfig.ts` | `"We take 2.5% only when you get paid"` → `"1.5%"` |
+
+### Backend — Edge Function (1 file)
+
+| File | Change |
+|------|--------|
+| `supabase/functions/create-invoice-payment/index.ts` | Default fallback `team.platform_fee_percent || 2.5` → `|| 1.5` |
+
+### Database — Update existing teams
+
+Migration to set default platform fee for all teams:
+```sql
+UPDATE public.teams SET platform_fee_percent = 1.5 WHERE platform_fee_percent = 2.5 OR platform_fee_percent IS NULL;
+ALTER TABLE public.teams ALTER COLUMN platform_fee_percent SET DEFAULT 1.5;
+```
+
+## Impact
+- Earn-back break-even rises from €1,560 → €2,600/mo (still very achievable)
+- Total customer cost drops from ~4% to ~3% (Stripe fees + platform fee), competitive with Jobber/Square
+- All investor pages update automatically with new unit economics
+
+## Scope
+12 frontend files (1-line changes each), 1 edge function, 1 database migration.
 
