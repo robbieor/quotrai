@@ -194,20 +194,19 @@ export function SubscriptionOverview() {
   const isPastDue = status === "past_due";
   const isExpired = status === "expired";
 
-  const seatCounts: Record<SeatType, number> = { lite: 0, connect: 0, grow: 0 };
-  members?.forEach((m) => {
-    if (seatCounts[m.seat_type] !== undefined) seatCounts[m.seat_type]++;
-  });
-  const totalMonthly = Object.entries(seatCounts).reduce(
-    (sum, [type, count]) => sum + SEAT_PRICES[type as SeatType] * count,
-    0
-  );
+  const memberCount = members?.length || 0;
+  const isAnnual = subscription?.billing_period === "year";
+  const basePrice = isAnnual ? PRICING.ANNUAL_BASE_PLAN : PRICING.BASE_PLAN;
+  const seatPrice = isAnnual ? PRICING.ANNUAL_EXTRA_SEAT : PRICING.EXTRA_SEAT;
+  const extraSeats = Math.max(0, memberCount - PRICING.BASE_USERS);
+  const totalCost = basePrice + extraSeats * seatPrice;
+  const periodLabel = isAnnual ? "/year" : "/mo";
 
   const trialDaysRemaining = subscription?.trial_ends_at
     ? Math.max(0, differenceInDays(new Date(subscription.trial_ends_at), new Date()))
     : 0;
   const trialProgress = isTrialing && subscription?.trial_ends_at
-    ? Math.max(0, ((7 - trialDaysRemaining) / 7) * 100)
+    ? Math.max(0, ((14 - trialDaysRemaining) / 14) * 100)
     : 0;
 
   const getStatusBadge = () => {
@@ -284,40 +283,38 @@ export function SubscriptionOverview() {
                 </span>
               </div>
               <Progress value={trialProgress} className="h-2" />
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
                   Your trial ends {subscription?.trial_ends_at
                     ? format(new Date(subscription.trial_ends_at), "MMMM d, yyyy")
                     : "soon"
                   }. Subscribe to keep full access.
                 </p>
-                {subscription?.stripe_subscription_id && (
-                  <AlertDialog open={endTrialDialogOpen} onOpenChange={setEndTrialDialogOpen}>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-xs shrink-0 ml-3">
-                        Start Paying Now
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>End trial and start paying?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Your free trial will end immediately and your first payment will be processed now. 
-                          Your subscription will become fully active right away.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Keep Trial</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleEndTrialEarly} disabled={isEndingTrial}>
-                          {isEndingTrial ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          ) : null}
-                          Confirm & Pay
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
+                <AlertDialog open={endTrialDialogOpen} onOpenChange={setEndTrialDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs shrink-0">
+                      Start Paying Now
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>End trial and start paying?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Your free trial will end immediately and your first payment will be processed now. 
+                        Your subscription will become fully active right away.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep Trial</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleEndTrialEarly} disabled={isEndingTrial}>
+                        {isEndingTrial ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : null}
+                        Confirm & Pay
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           )}
@@ -343,26 +340,31 @@ export function SubscriptionOverview() {
             </div>
           )}
 
-          {(isActive || isTrialing) && members && members.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-3">
-              {(["lite", "connect", "grow"] as SeatType[]).map((type) => (
-                seatCounts[type] > 0 && (
-                  <div key={type} className="p-3 rounded-lg bg-muted/50 space-y-1">
-                    <p className="text-xs text-muted-foreground">{SEAT_DISPLAY_NAMES[type]} Seats</p>
-                    <p className="text-lg font-bold">{seatCounts[type]}</p>
-                    <p className="text-xs text-muted-foreground">
-                      × {formatCurrency(SEAT_PRICES[type])}/mo
-                    </p>
-                  </div>
-                )
-              ))}
+          {(isActive || isTrialing) && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Team Members</p>
+                <p className="text-lg font-bold">{memberCount}</p>
+                <p className="text-xs text-muted-foreground">
+                  {memberCount <= PRICING.BASE_USERS
+                    ? `${PRICING.BASE_USERS} included in base plan`
+                    : `${PRICING.BASE_USERS} included + ${extraSeats} extra`}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                <p className="text-xs text-muted-foreground">Billing</p>
+                <p className="text-lg font-bold">{isAnnual ? "Annual" : "Monthly"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isAnnual ? "15% discount applied" : "Switch to annual to save 15%"}
+                </p>
+              </div>
             </div>
           )}
 
-          {(isActive || isTrialing) && totalMonthly > 0 && (
+          {(isActive || isTrialing) && totalCost > 0 && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5">
-              <span className="text-sm font-medium">Total Monthly</span>
-              <span className="text-lg font-bold text-primary">{formatCurrency(totalMonthly)}</span>
+              <span className="text-sm font-medium">Total {isAnnual ? "Annual" : "Monthly"}</span>
+              <span className="text-lg font-bold text-primary">{formatCurrency(totalCost)}{periodLabel}</span>
             </div>
           )}
 
