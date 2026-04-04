@@ -336,7 +336,7 @@ export default function FounderProjections() {
                   <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                     <p className="text-sm text-muted-foreground">Platform Fees</p>
                     <p className="text-xl font-bold text-foreground">{formatCurrency(platformFeeMRR)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">2.5% × {formatCurrency(customers * avgInvoiceVolume)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">1.5% × {formatCurrency(customers * avgInvoiceVolume)}</p>
                   </div>
                 </div>
               </CardContent>
