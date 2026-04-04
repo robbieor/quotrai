@@ -53,7 +53,7 @@ serve(async (req) => {
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
     const body = await req.json().catch(() => ({}));
-    const { teamSize = 1, interval = "month", isUpgrade = false } = body;
+    const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false } = body;
     const seatCount = Math.max(1, Number(teamSize) || 1);
     const billingInterval = interval === "year" ? "year" : "month";
     const priceSet = PRICES[billingInterval];
