@@ -140,12 +140,8 @@ export default function FounderProjections() {
   // Growth projections (12 months)
   const projections = Array.from({ length: 13 }, (_, month) => {
     const custAtMonth = Math.round(customers * Math.pow(1 + growthRate / 100, month));
-    const seatsAtMonth = custAtMonth * avgSeats;
-    const seatRev = (
-      Math.round(seatsAtMonth * (tierMix.lite / 100)) * TIERS.lite.price +
-      Math.round(seatsAtMonth * (tierMix.connect / 100)) * TIERS.connect.price +
-      Math.round(seatsAtMonth * (tierMix.grow / 100)) * TIERS.grow.price
-    ) * monthlyBillingFactor;
+    const extraPerCust = Math.max(0, avgSeats - INCLUDED_SEATS);
+    const seatRev = custAtMonth * (BASE_PLAN_PRICE + extraPerCust * EXTRA_SEAT_PRICE) * monthlyBillingFactor;
     const feeRev = custAtMonth * avgInvoiceVolume * PLATFORM_FEE_RATE;
     const mrr = seatRev + feeRev;
     return { month, customers: custAtMonth, mrr, arr: mrr * 12 };
