@@ -38,7 +38,7 @@ const MILESTONES = [
 ];
 
 const computeRevenue = (customers: number) => {
-  const seatMRR = customers * AVG_SEATS * BLENDED_SEAT_PRICE;
+  const seatMRR = customers * PLAN_COST_PER_CUSTOMER;
   const platformMRR = customers * PLATFORM_FEE_PER_CUSTOMER;
   const totalMRR = seatMRR + platformMRR;
   const totalARR = totalMRR * 12;
