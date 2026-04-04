@@ -75,8 +75,8 @@ export function FloatingTomButton() {
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
   // Hide on Foreman AI page (the page has its own controls)
-  // Keep showing on other pages even during calls for quick end-call access
-  if (location.pathname === "/foreman-ai") {
+  // Hide completely for Team Seat (member) users
+  if (location.pathname === "/foreman-ai" || isTeamSeat) {
     return null;
   }
 
