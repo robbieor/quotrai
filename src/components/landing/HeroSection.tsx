@@ -149,21 +149,6 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Social proof stats */}
-        <div className="mt-12 sm:mt-16 flex flex-wrap items-center justify-center gap-8 sm:gap-16 text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">500+ tradespeople</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
-            <span className="text-sm font-medium">4.9 average rating</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Wrench className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">12 trades supported</span>
-          </div>
-        </div>
       </div>
     </section>
   );
