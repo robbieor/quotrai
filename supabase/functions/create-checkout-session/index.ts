@@ -53,7 +53,7 @@ serve(async (req) => {
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
     const body = await req.json().catch(() => ({}));
-    const { teamSize = 1, interval = "month", isUpgrade = false } = body;
+    const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false } = body;
     const seatCount = Math.max(1, Number(teamSize) || 1);
     const billingInterval = interval === "year" ? "year" : "month";
     const priceSet = PRICES[billingInterval];
@@ -134,8 +134,8 @@ serve(async (req) => {
       metadata: { org_id: orgMember.org_id },
     };
 
-    // Preserve any remaining in-app trial
-    if (!isUpgrade && subscription?.trial_ends_at) {
+    // Preserve any remaining in-app trial (unless user explicitly wants to start paying)
+    if (!isUpgrade && !skipTrial && subscription?.trial_ends_at) {
       const trialEnd = new Date(subscription.trial_ends_at);
       if (!Number.isNaN(trialEnd.getTime()) && trialEnd.getTime() > Date.now()) {
         subscriptionData.trial_end = Math.floor(trialEnd.getTime() / 1000);
@@ -144,8 +144,11 @@ serve(async (req) => {
         trialDays = 0;
         logStep("Previous trial already expired", { trial_ends_at: subscription.trial_ends_at });
       }
-    } else if (!isUpgrade && trialDays > 0) {
+    } else if (!isUpgrade && !skipTrial && trialDays > 0) {
       subscriptionData.trial_period_days = trialDays;
+    } else if (skipTrial) {
+      trialDays = 0;
+      logStep("Trial skipped — user chose to start paying now");
     }
 
     // If upgrading with existing subscription, go to portal

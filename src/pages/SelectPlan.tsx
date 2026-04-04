@@ -73,8 +73,11 @@ export default function SelectPlan() {
       setIsCheckingOut(true);
       track("checkout_started", { plan: "foreman", interval, quantity: teamSize });
 
+      const searchParams = new URLSearchParams(window.location.search);
+      const skipTrial = searchParams.get("skipTrial") === "true";
+
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { teamSize, interval },
+        body: { teamSize, interval, skipTrial },
       });
 
       if (error) throw error;
