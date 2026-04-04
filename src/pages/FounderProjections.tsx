@@ -19,12 +19,10 @@ const UK_TRADE_BUSINESSES = 300_000;
 const GLOBAL_TRADE_BUSINESSES = 5_000_000;
 const MARKET_CAGR = 0.18;
 
-// 3-tier pricing: Lite, Connect, Grow
-const TIERS = {
-  lite: { price: 19, label: "Lite Seat", hasAI: false },
-  connect: { price: 39, label: "Connect Seat", hasAI: true },
-  grow: { price: 69, label: "Grow Seat", hasAI: true },
-};
+// Single plan pricing: €39/mo for up to 3 users, +€19/extra seat
+const BASE_PLAN_PRICE = 39; // includes up to 3 users
+const EXTRA_SEAT_PRICE = 19;
+const INCLUDED_SEATS = 3;
 const ANNUAL_DISCOUNT = 0.15;
 const PLATFORM_FEE_RATE = 0.015; // 1.5% on invoice payments
 const VOICE_COST_PER_SEAT = 8;
