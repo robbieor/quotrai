@@ -21,6 +21,8 @@ export interface TeamSubscription {
 // New single-plan model
 export const STRIPE_PRICE_BASE_PLAN = 'price_1TIJDeDQETj2awNEWxP4bB43'; // €39/mo
 export const STRIPE_PRICE_EXTRA_SEAT = 'price_1TIJDzDQETj2awNEtiMhRUPR'; // €19/mo
+export const STRIPE_PRICE_BASE_PLAN_ANNUAL = 'price_1TIQvfDQETj2awNEx7bAyHjy'; // €397.80/yr
+export const STRIPE_PRICE_EXTRA_SEAT_ANNUAL = 'price_1TIQw1DQETj2awNEth2a6E8y'; // €193.80/yr
 
 // Legacy tier prices (kept for backward compat with existing subscribers)
 export const STRIPE_PRICES = {
