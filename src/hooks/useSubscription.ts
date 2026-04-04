@@ -105,40 +105,28 @@ export function useOrgMembers() {
   });
 }
 
-/** Update a member's seat type and sync to Stripe */
-export function useUpdateSeatType() {
+/** Sync seat count to Stripe (used after member changes) */
+export function useSyncSeatsToStripe() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ memberId, seatType }: { memberId: string; seatType: SeatType }) => {
-      // Update seat type in DB
-      const { error } = await supabase
-        .from("org_members_v2")
-        .update({ seat_type: seatType })
-        .eq("id", memberId);
-
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("sync-seat-to-stripe");
       if (error) throw error;
-
-      // Sync to Stripe
-      const { data, error: syncError } = await supabase.functions.invoke("sync-seat-to-stripe");
-      if (syncError) throw syncError;
       if (data?.error) throw new Error(data.error);
-
-      return { ...data, seatType };
+      return data;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-members-v2"] });
       queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
-      queryClient.invalidateQueries({ queryKey: ["user-seat-type"] });
       queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
-      const label = variables.seatType.charAt(0).toUpperCase() + variables.seatType.slice(1);
-      toast.success(`Seat updated to ${label}`, {
-        description: "The change has been synced to your billing. It will take effect immediately.",
+      toast.success("Billing synced", {
+        description: "Seat count has been updated in your billing.",
         duration: 5000,
       });
     },
     onError: (error: Error) => {
-      toast.error("Failed to update seat type", {
+      toast.error("Failed to sync billing", {
         description: error.message || "Please try again or contact support.",
         duration: 5000,
       });

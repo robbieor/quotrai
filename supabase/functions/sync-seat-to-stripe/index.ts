@@ -7,29 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Stripe Price IDs — must match create-checkout-session
-const STRIPE_PRICES: Record<string, Record<string, string>> = {
-  lite: {
-    month: "price_1TEa4dDQETj2awNErpoa1vHM",
-    year: "price_1TEa57DQETj2awNEESev15XR",
-  },
-  connect: {
-    month: "price_1TEa5SDQETj2awNE4qhL4fa7",
-    year: "price_1TEa5tDQETj2awNE2zfrsMkY",
-  },
-  grow: {
-    month: "price_1TEa6HDQETj2awNEycXwPCfc",
-    year: "price_1TEa6oDQETj2awNEHSl42OYl",
-  },
-};
-
-// Reverse lookup: price_id → seat_type
-const PRICE_TO_SEAT: Record<string, string> = {};
-for (const [seatType, intervals] of Object.entries(STRIPE_PRICES)) {
-  for (const priceId of Object.values(intervals)) {
-    PRICE_TO_SEAT[priceId] = seatType;
-  }
-}
+// New single-plan pricing
+const BASE_PLAN_PRICE = "price_1TIJDeDQETj2awNEWxP4bB43"; // €39/mo
+const EXTRA_SEAT_PRICE = "price_1TIJDzDQETj2awNEtiMhRUPR"; // €19/mo
+const BASE_USERS = 3;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -61,7 +42,6 @@ serve(async (req) => {
       .single();
 
     if (!orgMember?.org_id) throw new Error("User not in an organization");
-
     const orgId = orgMember.org_id;
 
     // Get subscription
@@ -78,32 +58,22 @@ serve(async (req) => {
       );
     }
 
-    // Count seats by type
-    const { data: members } = await supabaseClient
+    // Count total active members
+    const { data: members, count } = await supabaseClient
       .from("org_members_v2")
-      .select("seat_type")
+      .select("id", { count: "exact" })
       .eq("org_id", orgId)
       .eq("status", "active");
 
-    const desiredCounts: Record<string, number> = {};
-    (members || []).forEach((m: { seat_type: string }) => {
-      desiredCounts[m.seat_type] = (desiredCounts[m.seat_type] || 0) + 1;
-    });
+    const totalMembers = count || (members?.length ?? 0);
+    const desiredExtraSeats = Math.max(0, totalMembers - BASE_USERS);
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get current subscription from Stripe
     const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
-    const billingInterval = stripeSub.items.data[0]?.plan?.interval || "month";
 
-    // Build desired items map: priceId → quantity
-    const desiredItems: Record<string, number> = {};
-    for (const [seatType, count] of Object.entries(desiredCounts)) {
-      const priceId = STRIPE_PRICES[seatType]?.[billingInterval];
-      if (priceId) desiredItems[priceId] = count;
-    }
-
-    // Build current items map from Stripe
+    // Find current items by price
     const currentItems: Record<string, { id: string; quantity: number }> = {};
     for (const item of stripeSub.items.data) {
       currentItems[item.price.id] = { id: item.id, quantity: item.quantity || 0 };
@@ -112,20 +82,32 @@ serve(async (req) => {
     // Calculate updates
     const items: Stripe.SubscriptionUpdateParams.Item[] = [];
 
-    // Update existing or add new
-    for (const [priceId, quantity] of Object.entries(desiredItems)) {
-      if (currentItems[priceId]) {
-        if (currentItems[priceId].quantity !== quantity) {
-          items.push({ id: currentItems[priceId].id, quantity });
-        }
-      } else {
-        items.push({ price: priceId, quantity });
+    // Ensure base plan exists with quantity 1
+    if (currentItems[BASE_PLAN_PRICE]) {
+      if (currentItems[BASE_PLAN_PRICE].quantity !== 1) {
+        items.push({ id: currentItems[BASE_PLAN_PRICE].id, quantity: 1 });
       }
+    } else {
+      items.push({ price: BASE_PLAN_PRICE, quantity: 1 });
     }
 
-    // Remove items no longer needed
+    // Sync extra seats
+    if (desiredExtraSeats > 0) {
+      if (currentItems[EXTRA_SEAT_PRICE]) {
+        if (currentItems[EXTRA_SEAT_PRICE].quantity !== desiredExtraSeats) {
+          items.push({ id: currentItems[EXTRA_SEAT_PRICE].id, quantity: desiredExtraSeats });
+        }
+      } else {
+        items.push({ price: EXTRA_SEAT_PRICE, quantity: desiredExtraSeats });
+      }
+    } else if (currentItems[EXTRA_SEAT_PRICE]) {
+      // Remove extra seat line item if no longer needed
+      items.push({ id: currentItems[EXTRA_SEAT_PRICE].id, deleted: true });
+    }
+
+    // Remove any legacy tier items that aren't the new prices
     for (const [priceId, item] of Object.entries(currentItems)) {
-      if (!desiredItems[priceId]) {
+      if (priceId !== BASE_PLAN_PRICE && priceId !== EXTRA_SEAT_PRICE) {
         items.push({ id: item.id, deleted: true });
       }
     }
@@ -139,20 +121,19 @@ serve(async (req) => {
     }
 
     // Update local subscription record
-    const totalSeats = Object.values(desiredCounts).reduce((a, b) => a + b, 0);
     await supabaseClient
       .from("subscriptions_v2")
-      .update({ 
-        seat_count: totalSeats,
+      .update({
+        seat_count: totalMembers,
         updated_at: new Date().toISOString(),
       })
       .eq("org_id", orgId);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        seats: desiredCounts, 
-        total: totalSeats,
+      JSON.stringify({
+        success: true,
+        total_members: totalMembers,
+        extra_seats: desiredExtraSeats,
         changes: items.length,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
