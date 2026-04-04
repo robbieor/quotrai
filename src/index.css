@@ -11,7 +11,7 @@
 
 @layer base {
   :root {
-    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
     
     /* Light Theme — warm off-white canvas, white cards */
     --background: 220 14% 96%;
