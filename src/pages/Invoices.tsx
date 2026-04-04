@@ -204,6 +204,7 @@ export default function Invoices() {
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
+        <StripeConnectNudge />
         <UpgradePromptBanner />
 
         {/* Header */}
