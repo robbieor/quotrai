@@ -198,18 +198,22 @@ export default function InvoicePortal() {
                     of {formatCurrency(invoice.total)} total
                   </p>
                 )}
-                <Button
-                  onClick={handlePayNow}
-                  disabled={payLoading}
-                  size="lg"
-                  className="mt-4 gap-2"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  {payLoading ? "Redirecting..." : "Pay Now"}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Secure payment via card
-                </p>
+                {canPayOnline && (
+                  <>
+                    <Button
+                      onClick={handlePayNow}
+                      disabled={payLoading}
+                      size="lg"
+                      className="mt-4 gap-2 w-full max-w-xs"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      {payLoading ? "Redirecting..." : "Pay Now"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Secure payment via card, Apple Pay or Google Pay
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
