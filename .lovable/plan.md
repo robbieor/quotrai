@@ -1,57 +1,42 @@
 
 
-# Landing Page — Single Plan Pricing with Earn-Back Calculator
+# Fix Pricing Inconsistencies Across All Pages
 
-## What Changes
+## Problem
+The landing page `PricingPreviewSection` component was updated to the single-plan model (€39/mo, 3 users included, +€19/seat), but three other pages still show the old 3-tier (Lite/Connect/Grow) structure:
 
-Replace the 3-tier pricing grid with a single plan card: **€39/month for up to 3 users, +€19/extra seat**. Add an interactive "earn-back" calculator showing how quickly invoiced payments cover the subscription via the 2.5% platform fee. Remove the comparison table and bulk discount callout.
+1. **`/pricing` page** — still shows Lite €19, Connect €39, Grow €69 as separate tiers with billing toggle
+2. **`/select-plan` page** — still shows the old tier selection (visible from Settings → "View Plans")
+3. **`/pricing` line 318** — still says "7 days free" instead of "14 days"
 
-## File: `src/components/landing/PricingPreviewSection.tsx` — Full Rewrite
+The Settings subscription section shows "Grow Seats: 1 × €69/mo" because the user's existing subscription is on the old tier — that's data-driven and correct for their current plan. The error in the second screenshot needs investigation (likely the same `list-invoices` org issue from earlier).
 
-**Remove**: 3-tier cards, comparison table, bulk discount callout, billing toggle (keep it simple — monthly only for landing page).
+## Changes
 
-**New layout (single column, centered)**:
+### 1. `/pricing` page — Rewrite to single plan (`src/pages/Pricing.tsx`)
+- Remove the 3-tier `plans` array and billing toggle
+- Replace with single plan card matching landing page style: €39/mo, all features, earn-back calculator
+- Update FAQs to remove tier-comparison questions
+- Fix "7 days free" → "14-day free trial" on line 318
+- Update SEO meta title/description
 
-1. **Header**: "One plan. Every feature. AI included." with subline "€39/month for your team of up to 3. Just €19/mo per extra seat."
+### 2. `/select-plan` page — Simplify (`src/pages/SelectPlan.tsx`)
+- Remove tier selection (Lite/Connect/Grow cards)
+- Show single plan: €39/mo for 3 users, +€19/extra seat
+- Keep seat quantity selector for teams needing more than 3
+- Keep the Stripe checkout flow but only for the single plan
 
-2. **Single Plan Card** (centered, max-w-lg):
-   - Price: €39/mo prominent, "+€19/extra seat" secondary
-   - "Includes 3 team members" callout
-   - Feature list (combined from all current tiers — everything included):
-     - Unlimited quotes & invoices
-     - Job scheduling & calendar
-     - Customer management & GPS tracking
-     - Foreman AI — text & voice assistant
-     - Expense tracking & documents
-     - Reports, dashboards & recurring invoices
-     - Xero & QuickBooks sync
-     - PDF generation, email & team collaboration
-   - "14-day free trial · No credit card required · Cancel anytime"
-   - CTA: "Start Free Trial →"
-
-3. **Earn-Back Calculator** (below the card):
-   - Headline: "Foreman pays for itself"
-   - Interactive slider or simple input: "How much do you invoice per month?"
-   - Default value: €5,000
-   - Output: "At €5,000/mo invoiced through Foreman, you earn back €125/mo in time saved on admin — your €39 subscription pays for itself after just €1,560 in payments."
-   - The math: subscription ÷ 0.025 = break-even invoice volume. Display: "Process just {formatPrice(breakeven)} in invoices and your subscription is covered by the platform fee alone."
-   - Visual: simple progress bar showing subscription cost vs platform fee earned
-
-4. **Team size examples** (small grid below calculator):
-   - Solo: €39/mo
-   - Team of 3: €39/mo
-   - Team of 5: €39 + 2×€19 = €77/mo
-   - Team of 10: €39 + 7×€19 = €172/mo
-
-## Props Change
-The component receives `formatPrice` — keep that interface unchanged.
-
-## No changes to `useSubscriptionTier.ts`
-The existing PRICING constants remain (they're used elsewhere for actual billing). This is purely a landing page presentation change.
+### 3. Fix remaining "7 days" reference
+- `src/pages/Pricing.tsx` line 318: "7 days free" → "14-day free trial"
 
 ## Files
 
 | Action | File |
 |--------|------|
-| Rewrite | `src/components/landing/PricingPreviewSection.tsx` |
+| Rewrite | `src/pages/Pricing.tsx` — single plan + earn-back calculator + updated FAQs |
+| Rewrite | `src/pages/SelectPlan.tsx` — single plan with seat quantity selector |
+
+## Notes
+- The Settings page showing "Grow Seats: 1" is correct — it reflects the user's actual subscription data. Existing subscribers keep their plan; this change only affects new signups and the public pricing pages.
+- The error dialog in the Settings screenshot appears to be the `list-invoices` edge function issue that was already fixed earlier. If it persists, it's a separate bug.
 
