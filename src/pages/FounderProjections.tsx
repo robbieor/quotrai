@@ -562,7 +562,7 @@ export default function FounderProjections() {
                   <p className="text-sm font-semibold text-foreground mb-1">💡 Cash Jobs Reality Check</p>
                   <p className="text-xs text-muted-foreground">
                     ~{PEN_PAPER_STATS.cashJobPct}% of trade work is cash-in-hand — we won't capture platform fees on those. 
-                    But {PEN_PAPER_STATS.invoicedJobPct}% is invoiced, and that's where our 2.5% payment fee + automated chasers 
+                    But {PEN_PAPER_STATS.invoicedJobPct}% is invoiced, and that's where our 1.5% payment fee + automated chasers 
                     create massive value. Even cash-heavy businesses need quotes, scheduling, and job tracking — 
                     the €12 seat fee captures them regardless.
                   </p>
