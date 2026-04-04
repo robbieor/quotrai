@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Users, Loader2, Plus, Info, ChevronDown } from "lucide-react";
 import { useOrgMembers, useAddSeat } from "@/hooks/useSubscription";
-import { PRICING, type SeatType } from "@/hooks/useSubscriptionTier";
+import { PRICING } from "@/hooks/useSubscriptionTier";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
