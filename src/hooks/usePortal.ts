@@ -63,6 +63,7 @@ export interface PortalInvoice {
     company_address?: string | null;
     payment_terms?: string | null;
     bank_details?: string | null;
+    stripe_connect_active?: boolean;
   };
   balance_due: number;
   team_id: string;

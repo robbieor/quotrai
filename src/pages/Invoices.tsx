@@ -34,6 +34,7 @@ import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useInvoiceInsights } from "@/hooks/usePageInsights";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { StripeConnectNudge } from "@/components/invoices/StripeConnectNudge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -203,6 +204,7 @@ export default function Invoices() {
   return (
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
+        <StripeConnectNudge />
         <UpgradePromptBanner />
 
         {/* Header */}

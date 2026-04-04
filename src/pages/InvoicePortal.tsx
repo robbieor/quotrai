@@ -111,6 +111,7 @@ export default function InvoicePortal() {
   const amountDue = invoice.balance_due ?? invoice.total;
   const hasPartialPayment = amountDue > 0 && amountDue < invoice.total;
   const teamLogo = invoice.team.logo_url;
+  const canPayOnline = invoice.team.stripe_connect_active === true;
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-8">
@@ -197,18 +198,22 @@ export default function InvoicePortal() {
                     of {formatCurrency(invoice.total)} total
                   </p>
                 )}
-                <Button
-                  onClick={handlePayNow}
-                  disabled={payLoading}
-                  size="lg"
-                  className="mt-4 gap-2"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  {payLoading ? "Redirecting..." : "Pay Now"}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Secure payment via card
-                </p>
+                {canPayOnline && (
+                  <>
+                    <Button
+                      onClick={handlePayNow}
+                      disabled={payLoading}
+                      size="lg"
+                      className="mt-4 gap-2 w-full max-w-xs"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      {payLoading ? "Redirecting..." : "Pay Now"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Secure payment via card, Apple Pay or Google Pay
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
@@ -278,9 +283,12 @@ export default function InvoicePortal() {
               </div>
             </div>
 
-            {/* Payment Terms / Bank Details */}
+            {/* Payment Terms / Bank Details — secondary when online payments available */}
             {(invoice.team.payment_terms || invoice.team.bank_details) && (
               <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                {canPayOnline && (
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Other Payment Options</p>
+                )}
                 {invoice.team.payment_terms && (
                   <div>
                     <p className="text-sm font-medium">Payment Terms</p>
