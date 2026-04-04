@@ -1,73 +1,102 @@
 
 
-# Full Button & Navigation Audit — Findings & Fixes
+# Make Stripe Connect the Default Invoice Payment Method
 
-## Audit Scope
-Every page, every clickable element, every navigation path. Checked: route existence, tab names, handler completeness, edge function availability, Stripe price IDs.
+## Current State
+- "Pay Now" button exists on the customer portal (`InvoicePortal.tsx`) and in email reminders
+- It calls `create-invoice-payment` edge function which creates a Stripe Checkout session via Connect
+- **BUT**: if the team hasn't completed Stripe Connect onboarding, the button throws an error: "This business hasn't set up online payments yet"
+- Stripe Connect setup is buried in Settings → Integrations tab — most users never find it
+- There's no prompt during onboarding or after first invoice creation to set up Connect
+- Bank details (manual transfer) are shown equally prominently alongside the Pay Now button
+
+## What This Plan Does
+Make online payment the primary, default, and prominently featured payment method — pushing every invoice through Stripe Connect to generate platform revenue automatically.
 
 ---
 
-## CRITICAL FIXES (will cause user confusion or errors)
+## Changes
 
-### 1. Wrong Settings Tab Name — 3 Files
-`?tab=billing` does not exist. The actual tab is `?tab=team-billing`. Users clicking billing CTAs from these components land on the default "Profile" tab instead of billing.
+### 1. Add Stripe Connect Setup Prompt to Onboarding (Step 5 or dedicated nudge)
+**File**: `src/components/onboarding/OnboardingModal.tsx`
 
-| File | Current | Should Be |
-|------|---------|-----------|
-| `src/components/george/GeorgeUsageWarning.tsx` (lines 26, 48) | `/settings?tab=billing` | `/settings?tab=team-billing` |
-| `src/components/billing/TrialBanner.tsx` (line 32) | `/settings?tab=billing` | `/settings?tab=team-billing` |
-| `src/components/billing/TrialCountdownPopup.tsx` (line 57) | `/settings?tab=billing` | `/settings?tab=team-billing` |
+Add a "Get Paid Online" step or card within an existing step that:
+- Explains "Accept card, Apple Pay & Google Pay — funds go directly to your bank"
+- Shows a "Connect Bank Account" CTA that triggers the `stripe-connect` onboard action
+- Has a "Skip for now" secondary option
+- Stores skip state so we can nudge again later
 
-**3 files, 4 line changes. All simple string replacements.**
+### 2. Add Post-Invoice-Creation Nudge
+**New file**: `src/components/invoices/StripeConnectNudge.tsx`
 
-### 2. Integrations Tab Shows "Coming Soon" Despite Built Components
-`Settings.tsx` line 405-413 shows a static "Coming Soon" card for Xero/QuickBooks, but `XeroConnectionCard.tsx`, `QuickBooksConnectionCard.tsx`, and `StripeConnectSetup.tsx` components are imported (lines 18-20) and never rendered. The Stripe Connect setup is especially important for invoice payments.
+A dismissable banner/card that appears on the Invoices page when the team has NOT completed Stripe Connect onboarding. Message: "Your customers can't pay online yet — connect your bank account to get paid faster and earn platform revenue."
 
-**Fix**: Replace the "Coming Soon" card with the actual connection components:
+**File**: `src/pages/Invoices.tsx` (or wherever the invoice list renders) — render the nudge at top.
+
+### 3. Elevate "Pay Now" Button in Portal — Demote Bank Details
+**File**: `src/pages/InvoicePortal.tsx`
+
+- When team has Stripe Connect active: make "Pay Now" the dominant full-width CTA at top of amount section, move bank details into a collapsed "Other payment options" accordion below
+- When team does NOT have Connect: show bank details prominently as fallback (current behavior minus the broken Pay Now button)
+
+**File**: `supabase/functions/create-invoice-payment/index.ts` — change the error when Connect isn't set up from a throw to a graceful JSON response so the portal can conditionally hide the button instead of showing it and erroring.
+
+### 4. Add Connect Status to Portal Invoice Data
+**File**: The RPC or query that serves `usePortalInvoice` needs to return `stripe_connect_onboarding_complete` from the team, so the portal can conditionally show/hide the Pay Now button.
+
+Search for `get_invoice_by_portal_token` or the portal query to add this field.
+
+### 5. Surface Connect Status on Dashboard
+**File**: `src/components/dashboard/ControlHeader.tsx` or a new `ConnectSetupCard`
+
+If Connect is not set up, show an action tile: "Enable Online Payments" with one-click to start onboarding. This appears alongside the other proactive prompt tiles.
+
+---
+
+## Technical Details
+
+### Portal Invoice Query Update
+The `get_invoice_by_portal_token` RPC (or equivalent) currently returns team branding/contact info. Add `stripe_connect_onboarding_complete` boolean to the response so the portal can conditionally render the Pay Now button.
+
+### Edge Function Graceful Degradation
+```typescript
+// create-invoice-payment/index.ts — change from throw to response
+if (!team?.stripe_connect_account_id || !team?.stripe_connect_onboarding_complete) {
+  return new Response(
+    JSON.stringify({ error: "online_payments_not_configured" }),
+    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
 ```
-<StripeConnectSetup />
-<XeroConnectionCard />
-<QuickBooksConnectionCard />
+
+### Portal Conditional Rendering
+```typescript
+// InvoicePortal.tsx — hide Pay Now when Connect not active
+{invoice.team.stripe_connect_active && displayStatus !== "paid" && amountDue > 0 && (
+  <Button onClick={handlePayNow}>Pay Now</Button>
+)}
+```
+
+### Nudge Component Pattern
+```typescript
+// StripeConnectNudge.tsx — queries stripe-connect status, shows banner if not onboarded
+// Dismissed state stored in localStorage with team_id key
 ```
 
 ---
 
-## IMPORTANT UX FIXES
+## Files Changed
 
-### 3. SubscriptionPricing.tsx Missing Bulk Discount Logic
-The `SubscriptionPricing` component (used in Settings billing tab) does not apply the bulk discount display logic that was added to `SelectPlan.tsx`. It always shows 1 seat with no quantity selector. This is a secondary subscription UI and less critical, but creates pricing inconsistency.
+| Action | File |
+|--------|------|
+| Edit | `src/components/onboarding/OnboardingModal.tsx` — add Connect setup step |
+| Create | `src/components/invoices/StripeConnectNudge.tsx` — nudge banner |
+| Edit | `src/pages/InvoicePortal.tsx` — conditional Pay Now, demote bank details |
+| Edit | `supabase/functions/create-invoice-payment/index.ts` — graceful error |
+| Edit | Portal invoice query/RPC — add Connect status field |
+| Edit | Invoice list page — render nudge banner |
+| Edit | Dashboard — add Connect setup tile if not onboarded |
 
-**Fix**: Low priority — this component always subscribes with `quantity: 1`, so bulk discount doesn't apply here. No code change needed unless multi-seat checkout is added.
+## Outcome
+Every team is pushed toward enabling Stripe Connect through multiple touchpoints (onboarding, dashboard, invoice page). Once enabled, every customer invoice defaults to online payment, automatically generating 2.5% platform fee revenue per transaction. Bank details become a secondary fallback, not the primary option.
 
----
-
-## VERIFIED WORKING (No Issues Found)
-
-| Area | Status |
-|------|--------|
-| `/select-plan` checkout → `create-checkout-session` edge function | ✅ Works — all 6 Stripe price IDs verified |
-| Upgrade prompts → `/select-plan` route | ✅ Fixed in prior session |
-| Dashboard drill-through drawer | ✅ Handlers wired |
-| Morning briefing quick actions (Jobs, Invoices, Quotes, AI) | ✅ All navigate correctly |
-| Notification center links | ✅ Routes exist |
-| Sidebar sign-out | ✅ Handler exists |
-| Invoice portal "Pay Now" → `create-invoice-payment` | ✅ Edge function exists |
-| Cancel subscription flow | ✅ Edge function exists, reason capture works |
-| "Manage Billing" → `create-customer-portal-session` | ✅ Edge function exists |
-| "End Trial Early" → `end-trial-early` | ✅ Edge function exists |
-| Back button on SelectPlan → `/settings?tab=team-billing` | ✅ Correct tab name |
-| ReadOnlyBanner → `/select-plan` | ✅ Route exists |
-| SeatGuard → `/settings?tab=team-billing` | ✅ Correct tab name |
-| PlanGate → `/settings?tab=team-billing` | ✅ Correct tab name |
-| All edge functions referenced in UI | ✅ All 55 functions exist in `supabase/functions/` |
-
----
-
-## Summary
-
-| Priority | Issue | Files | Effort |
-|----------|-------|-------|--------|
-| **P0** | Wrong tab name `billing` → `team-billing` | 3 files, 4 lines | 2 min |
-| **P1** | Integrations tab shows "Coming Soon" instead of real components | 1 file, ~10 lines | 5 min |
-
-Two real bugs. Everything else verified working.
