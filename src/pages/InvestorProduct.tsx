@@ -13,7 +13,7 @@ import FadeInOnScroll from "@/components/investor/FadeInOnScroll";
 const KEY_WORKFLOWS = [
   { icon: Bot, title: "AI Voice Agent", desc: "Talk to Foreman while driving — book jobs, create quotes, update statuses. Fully hands-free.", tag: "AI" },
   { icon: Camera, title: "Photo-to-Quote", desc: "Snap a photo of the job. AI identifies components, estimates materials & labour, generates a quote in 30 seconds.", tag: "AI" },
-  { icon: CreditCard, title: "Stripe Connect Payments", desc: "Customers pay online via branded portal. 2.5% platform fee on every transaction. Passive revenue.", tag: "Revenue" },
+  { icon: CreditCard, title: "Stripe Connect Payments", desc: "Customers pay online via branded portal. 1.5% platform fee on every transaction. Passive revenue.", tag: "Revenue" },
   { icon: Mail, title: "Auto Payment Chasers", desc: "Escalating reminder emails for overdue invoices. Reduces avg payment time from 23 to 9 days.", tag: "Automation" },
   { icon: Clock, title: "GPS Time Tracking", desc: "Geofenced clock-in/out. Staff arrive on-site, phone auto-prompts. Live map for managers.", tag: "Operations" },
 ];

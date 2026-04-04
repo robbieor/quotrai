@@ -17,7 +17,7 @@ interface PricingPreviewSectionProps {
 
 const BASE_PRICE = 39;
 const EXTRA_SEAT = 19;
-const PLATFORM_FEE = 0.025;
+const PLATFORM_FEE = 0.015;
 
 const features = [
   "Unlimited quotes & invoices",

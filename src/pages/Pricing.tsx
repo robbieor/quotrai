@@ -17,7 +17,7 @@ import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 const BASE_PRICE = 39;
 const EXTRA_SEAT = 19;
 const BASE_USERS = 3;
-const PLATFORM_FEE = 0.025;
+const PLATFORM_FEE = 0.015;
 
 const allFeatures = [
   "Unlimited quotes & invoices",
@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "How does the platform fee work?",
-    a: "Foreman charges 2.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
+    a: "Foreman charges 1.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
   },
   {
     q: "How does pricing work for larger teams?",
@@ -222,7 +222,7 @@ export default function Pricing() {
 
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Platform fee earned (2.5%)</span>
+                <span className="text-muted-foreground">Platform fee earned (1.5%)</span>
                 <span className="font-semibold">€{platformEarnings.toFixed(0)}/mo</span>
               </div>
               <div className="flex justify-between text-sm">

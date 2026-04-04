@@ -21,7 +21,7 @@ const MARKET_DRIVERS = [
   { title: "Late Payment Crisis", desc: "50,000 SMBs close annually from late payments — digital invoicing is now survival", icon: Clock },
   { title: "Post-COVID Permanence", desc: "Trades are only 35% digitised — the largest remaining vertical to convert", icon: TrendingUp },
   { title: "Labour Shortage", desc: "350K unfilled trade roles in the UK — every admin hour is a billing hour lost", icon: Users },
-  { title: "Embedded Finance", desc: "Stripe Connect & open banking make 2.5% platform fees trivial to implement", icon: DollarSign },
+  { title: "Embedded Finance", desc: "Stripe Connect & open banking make 1.5% platform fees trivial to implement", icon: DollarSign },
 ];
 
 const COMPETITORS = [

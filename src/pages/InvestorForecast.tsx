@@ -18,8 +18,8 @@ import {
 const BLENDED_SEAT_PRICE = 0.40 * 19 + 0.45 * 39 + 0.15 * 59; // €34.00
 const AVG_SEATS = 3;
 const AVG_INVOICE_VOLUME = 5000; // €/customer/month
-const PLATFORM_FEE_RATE = 0.025;
-const PLATFORM_FEE_PER_CUSTOMER = AVG_INVOICE_VOLUME * PLATFORM_FEE_RATE; // €125
+const PLATFORM_FEE_RATE = 0.015;
+const PLATFORM_FEE_PER_CUSTOMER = AVG_INVOICE_VOLUME * PLATFORM_FEE_RATE; // €75
 const BLENDED_ARPU = (BLENDED_SEAT_PRICE * AVG_SEATS) + PLATFORM_FEE_PER_CUSTOMER; // €227
 
 const MILESTONES = [
@@ -85,7 +85,7 @@ const GAP_DIMENSIONS = [
   { feature: "AI Voice Agent", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
   { feature: "Photo-to-Quote AI", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
   { feature: "AI Chat Assistant", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
-  { feature: "Built-in Payments (2.5%)", foreman: true, fergus: false, tradify: false, jobber: true, serviceTitan: true },
+  { feature: "Built-in Payments (1.5%)", foreman: true, fergus: false, tradify: false, jobber: true, serviceTitan: true },
   { feature: "Customer Portal", foreman: true, fergus: false, tradify: false, jobber: true, serviceTitan: true },
   { feature: "Multi-Currency", foreman: true, fergus: false, tradify: false, jobber: false, serviceTitan: false },
   { feature: "GPS Time Tracking", foreman: true, fergus: true, tradify: true, jobber: true, serviceTitan: true },
@@ -159,7 +159,7 @@ export default function InvestorForecast() {
             <CardContent className="p-5 text-center space-y-2">
               <p className="text-sm text-muted-foreground">Platform Fee Revenue</p>
               <p className="text-3xl font-bold text-foreground">€{PLATFORM_FEE_PER_CUSTOMER}/mo</p>
-              <p className="text-xs text-muted-foreground">2.5% on €{AVG_INVOICE_VOLUME.toLocaleString()} avg invoice volume</p>
+              <p className="text-xs text-muted-foreground">1.5% on €{AVG_INVOICE_VOLUME.toLocaleString()} avg invoice volume</p>
               <p className="text-xs text-muted-foreground">Passive, recurring, success-aligned</p>
             </CardContent>
           </Card>

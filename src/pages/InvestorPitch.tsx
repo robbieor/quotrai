@@ -19,7 +19,7 @@ const PROBLEM_STATS = [
 const SOLUTION_PILLARS = [
   { title: "All-in-One Platform", desc: "Jobs, quotes, invoices, scheduling, expenses, time tracking — replaces 5+ tools", icon: Smartphone },
   { title: "AI-First Approach", desc: "Foreman AI handles calls, generates quotes from photos, automates admin hands-free", icon: Bot },
-  { title: "Built-In Payments", desc: "Stripe Connect with automated chasers — 2.5% platform fee turns every invoice into revenue", icon: DollarSign },
+  { title: "Built-In Payments", desc: "Stripe Connect with automated chasers — 1.5% platform fee turns every invoice into revenue", icon: DollarSign },
   { title: "Multi-Market Ready", desc: "20+ currencies, GDPR-compliant, launched for UK, Ireland, ANZ & North America", icon: Globe },
 ];
 
@@ -137,7 +137,7 @@ export default function InvestorPitch() {
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { value: "€19–69", unit: "/seat/mo", label: "Seat Revenue", sub: "3 tiers: Lite, Connect & Grow" },
-            { value: "2.5%", unit: " per txn", label: "Platform Fee", sub: "On all Stripe Connect payments" },
+            { value: "1.5%", unit: " per txn", label: "Platform Fee", sub: "On all Stripe Connect payments" },
             { value: "80%+", unit: "", label: "Gross Margin", sub: "AI COGS ~€8/seat, SaaS-standard" },
           ].map((item, i) => (
             <FadeInOnScroll key={item.label} delay={i * 150}>

@@ -189,7 +189,7 @@ export default function SelectPlan() {
           <h3 className="text-lg font-semibold text-center">Common Questions</h3>
           <FaqCard
             q="What's the platform fee?"
-            a="Foreman charges 2.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn."
+            a="Foreman charges 1.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn."
           />
           <FaqCard
             q="What's included in the free trial?"
