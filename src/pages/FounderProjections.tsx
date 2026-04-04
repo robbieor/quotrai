@@ -113,34 +113,25 @@ const GROWTH_LEVERS = [
 export default function FounderProjections() {
   const [customers, setCustomers] = useState(500);
   const [avgSeats, setAvgSeats] = useState(3);
-  const [tierMix, setTierMix] = useState({ lite: 40, connect: 45, grow: 15 }); // %
   const [churnRate, setChurnRate] = useState(3);
   const [growthRate, setGrowthRate] = useState(12);
   const [stage, setStage] = useState("early");
   const [equityOwned, setEquityOwned] = useState(80);
-  const [annualBillingPct, setAnnualBillingPct] = useState(30); // % on annual
-  const [avgInvoiceVolume, setAvgInvoiceVolume] = useState(5000); // €/customer/month
+  const [annualBillingPct, setAnnualBillingPct] = useState(30);
+  const [avgInvoiceVolume, setAvgInvoiceVolume] = useState(5000);
 
-  // Revenue calculations
+  // Revenue calculations — single plan model
   const totalSeats = customers * avgSeats;
-  const liteSeats = Math.round(totalSeats * (tierMix.lite / 100));
-  const connectSeats = Math.round(totalSeats * (tierMix.connect / 100));
-  const growSeats = Math.round(totalSeats * (tierMix.grow / 100));
-
+  const extraSeatsPerCustomer = Math.max(0, avgSeats - INCLUDED_SEATS);
   const monthlyBillingFactor = 1 - (annualBillingPct / 100) * ANNUAL_DISCOUNT;
-  const seatMRR = (
-    liteSeats * TIERS.lite.price +
-    connectSeats * TIERS.connect.price +
-    growSeats * TIERS.grow.price
-  ) * monthlyBillingFactor;
+  const seatMRR = customers * (BASE_PLAN_PRICE + extraSeatsPerCustomer * EXTRA_SEAT_PRICE) * monthlyBillingFactor;
 
   const platformFeeMRR = customers * avgInvoiceVolume * PLATFORM_FEE_RATE;
   const totalMRR = seatMRR + platformFeeMRR;
   const totalARR = totalMRR * 12;
 
   // Costs
-  const aiSeats = connectSeats + growSeats;
-  const voiceCOGS = aiSeats * VOICE_COST_PER_SEAT;
+  const voiceCOGS = totalSeats * VOICE_COST_PER_SEAT;
   const grossMargin = totalMRR > 0 ? ((totalMRR - voiceCOGS) / totalMRR) * 100 : 0;
 
   // Churn
