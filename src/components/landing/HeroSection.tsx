@@ -61,11 +61,10 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left — Copy */}
           <div className="animate-fade-up text-center lg:text-left">
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.1]">
-              Talk to your<br />
-              business.{" "}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.08]">
+              Talk to your business.{" "}
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                It talks<br className="hidden sm:inline" /> back.
+                It talks back.
               </span>
             </h1>
 
