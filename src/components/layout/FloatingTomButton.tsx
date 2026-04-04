@@ -23,8 +23,8 @@ export function FloatingTomButton() {
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const { profile } = useProfile();
-  const { hasVoiceAccess, canUseVoice } = useGeorgeAccess();
-  const { isTeamSeat } = useUserRole();
+  const { hasVoiceAccess, canUseVoice, isLoading: georgeLoading } = useGeorgeAccess();
+  const { isTeamSeat, isLoading: roleLoading } = useUserRole();
   const { startTask } = useAgentTask();
   
   const { 
@@ -75,8 +75,8 @@ export function FloatingTomButton() {
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
   // Hide on Foreman AI page (the page has its own controls)
-  // Hide completely for Team Seat (member) users
-  if (location.pathname === "/foreman-ai" || isTeamSeat) {
+  // Hide completely for Team Seat (member) users — but wait for role to load
+  if (location.pathname === "/foreman-ai" || (!roleLoading && isTeamSeat)) {
     return null;
   }
 
@@ -147,26 +147,28 @@ export function FloatingTomButton() {
       {/* Quick Actions Menu */}
       {isExpanded && !isConnected && (
         <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-2 animate-fade-in">
-          {/* Voice Call Button */}
-          {hasVoiceAccess && canUseVoice && (
+          {/* Voice Call Button — show for owners/managers, loading state while checking access */}
+          {(georgeLoading || (hasVoiceAccess && canUseVoice)) && (
             <button
               onClick={handleStartCall}
-              disabled={isConnecting}
+              disabled={isConnecting || georgeLoading}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-full",
                 "bg-primary text-primary-foreground shadow-lg",
                 "hover:bg-primary/90 active:scale-95",
                 "transition-all duration-200",
-                isConnecting && "opacity-50 cursor-not-allowed"
+                (isConnecting || georgeLoading) && "opacity-50 cursor-not-allowed"
               )}
             >
               <Phone className="h-5 w-5" />
               <span className="font-medium pr-2">
-                {isRetrying 
-                  ? `Retrying (${retryAttempt}/${maxRetries})...` 
-                  : isConnecting 
-                    ? "Connecting..." 
-                    : "Call Foreman AI"}
+                {georgeLoading
+                  ? "Loading..."
+                  : isRetrying 
+                    ? `Retrying (${retryAttempt}/${maxRetries})...` 
+                    : isConnecting 
+                      ? "Connecting..." 
+                      : "Call Foreman AI"}
               </span>
             </button>
           )}
