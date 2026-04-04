@@ -30,12 +30,14 @@ serve(async (req) => {
     const userId = user.id;
 
     // Get org membership (v2)
-    const { data: orgMember } = await supabaseClient
+    const { data: orgMembers } = await supabaseClient
       .from("org_members_v2")
       .select("org_id, role, seat_type")
       .eq("user_id", userId)
       .eq("status", "active")
-      .single();
+      .limit(1);
+
+    const orgMember = orgMembers?.[0];
 
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 

@@ -28,12 +28,14 @@ serve(async (req) => {
     if (authError || !user) throw new Error("Unauthorized");
 
     // Get org membership
-    const { data: orgMember } = await supabaseClient
+    const { data: orgMembers } = await supabaseClient
       .from("org_members_v2")
       .select("org_id")
       .eq("user_id", user.id)
       .eq("status", "active")
-      .single();
+      .limit(1);
+
+    const orgMember = orgMembers?.[0];
 
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
