@@ -7,21 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Stripe Price IDs (already configured in Stripe)
-const STRIPE_PRICES: Record<string, Record<string, string>> = {
-  lite: {
-    month: "price_1TEa4dDQETj2awNErpoa1vHM",
-    year: "price_1TEa57DQETj2awNEESev15XR",
-  },
-  connect: {
-    month: "price_1TEa5SDQETj2awNE4qhL4fa7",
-    year: "price_1TEa5tDQETj2awNE2zfrsMkY",
-  },
-  grow: {
-    month: "price_1TEa6HDQETj2awNEycXwPCfc",
-    year: "price_1TEa6oDQETj2awNEHSl42OYl",
-  },
-};
+// New single-plan pricing: €39 base (3 users) + €19/extra seat
+const BASE_PLAN_PRICE = "price_1TIJDeDQETj2awNEWxP4bB43"; // €39/mo
+const EXTRA_SEAT_PRICE = "price_1TIJDzDQETj2awNEtiMhRUPR"; // €19/mo
+const BASE_USERS = 3;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -45,7 +34,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
-    // Get user's org via v2
+    // Get user's org
     const { data: orgMember } = await supabaseClient
       .from("org_members_v2")
       .select("org_id, role")
@@ -56,52 +45,22 @@ serve(async (req) => {
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
     const body = await req.json().catch(() => ({}));
-    const { seatCounts, interval = "month", isUpgrade = false } = body;
-    const billingInterval: "month" | "year" = interval === "year" ? "year" : "month";
+    const { teamSize = 1, isUpgrade = false } = body;
+    const seatCount = Math.max(1, Number(teamSize) || 1);
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Build line items from seat counts, or from org members if not provided
-    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    // Build line items: 1× base plan + extra seats if > 3 users
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      { price: BASE_PLAN_PRICE, quantity: 1 },
+    ];
 
-    if (seatCounts && typeof seatCounts === "object") {
-      // Explicit seat counts from checkout (e.g., first subscription)
-      for (const [seatType, qty] of Object.entries(seatCounts)) {
-        const count = Number(qty);
-        if (count <= 0) continue;
-        const priceId = STRIPE_PRICES[seatType]?.[billingInterval];
-        if (!priceId) continue;
-        lineItems.push({ price: priceId, quantity: count });
-      }
-    } else {
-      // Default: count seats from org_members_v2
-      const { data: members } = await supabaseClient
-        .from("org_members_v2")
-        .select("seat_type")
-        .eq("org_id", orgMember.org_id)
-        .eq("status", "active");
-
-      const counts: Record<string, number> = {};
-      (members || []).forEach((m: { seat_type: string }) => {
-        counts[m.seat_type] = (counts[m.seat_type] || 0) + 1;
-      });
-
-      // Default to at least 1 connect seat if no members
-      if (Object.keys(counts).length === 0) {
-        counts["connect"] = 1;
-      }
-
-      for (const [seatType, count] of Object.entries(counts)) {
-        const priceId = STRIPE_PRICES[seatType]?.[billingInterval];
-        if (!priceId) continue;
-        lineItems.push({ price: priceId, quantity: count });
-      }
+    const extraSeats = Math.max(0, seatCount - BASE_USERS);
+    if (extraSeats > 0) {
+      lineItems.push({ price: EXTRA_SEAT_PRICE, quantity: extraSeats });
     }
 
-    if (lineItems.length === 0) {
-      // Fallback: 1 connect seat
-      lineItems = [{ price: STRIPE_PRICES.connect[billingInterval], quantity: 1 }];
-    }
+    logStep("Line items built", { seatCount, extraSeats, lineItems: lineItems.length });
 
     // Get or create Stripe customer
     let stripeCustomerId: string;
@@ -114,7 +73,6 @@ serve(async (req) => {
     if (subscription?.stripe_customer_id) {
       stripeCustomerId = subscription.stripe_customer_id;
     } else {
-      // Check Stripe for existing customer by email before creating a new one
       const existingCustomers = await stripe.customers.list({ email: user.email!, limit: 1 });
       if (existingCustomers.data.length > 0) {
         stripeCustomerId = existingCustomers.data[0].id;
@@ -128,22 +86,20 @@ serve(async (req) => {
         logStep("Created new Stripe customer", { customerId: stripeCustomerId });
       }
 
-      // Upsert subscription record with customer ID
       await supabaseClient
         .from("subscriptions_v2")
         .upsert({
           org_id: orgMember.org_id,
           stripe_customer_id: stripeCustomerId,
           status: "pending",
-          seat_count: lineItems.reduce((sum, li) => sum + (li.quantity || 1), 0),
+          seat_count: seatCount,
         }, { onConflict: "org_id" });
     }
 
     const origin = req.headers.get("origin") || "http://localhost:5173";
 
-
     // Check burned_accounts for repeat trial abuse
-    let trialDays = 7;
+    let trialDays = 14;
     if (!isUpgrade && user.email) {
       const encoder = new TextEncoder();
       const data = encoder.encode(user.email.toLowerCase().trim());
@@ -167,7 +123,7 @@ serve(async (req) => {
       metadata: { org_id: orgMember.org_id },
     };
 
-    // Preserve any remaining in-app trial for pre-card signups instead of sending Stripe an invalid 0-day trial
+    // Preserve any remaining in-app trial
     if (!isUpgrade && subscription?.trial_ends_at) {
       const trialEnd = new Date(subscription.trial_ends_at);
       if (!Number.isNaN(trialEnd.getTime()) && trialEnd.getTime() > Date.now()) {
@@ -193,25 +149,18 @@ serve(async (req) => {
       );
     }
 
-    // Create checkout session with multi-line items
-    // Determine the primary seat code for the success page
-    const primarySeatCode = seatCounts
-      ? Object.entries(seatCounts).find(([, qty]) => Number(qty) > 0)?.[0] || "connect"
-      : "connect";
-
     // Apply bulk discount coupon for 5+ seats
-    const totalSeats = lineItems.reduce((sum, li) => sum + (li.quantity || 1), 0);
     const discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
-    if (totalSeats >= 5) {
-      discounts.push({ coupon: "wuUUykGN" }); // BULK_5_SEATS 10% off
-      logStep("Bulk discount applied", { totalSeats });
+    if (seatCount >= 5) {
+      discounts.push({ coupon: "wuUUykGN" });
+      logStep("Bulk discount applied", { seatCount });
     }
 
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/subscription-confirmed?plan=${primarySeatCode}&interval=${billingInterval}`,
+      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}`,
       cancel_url: `${origin}/select-plan`,
       subscription_data: subscriptionData,
       billing_address_collection: "required",

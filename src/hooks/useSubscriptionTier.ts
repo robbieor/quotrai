@@ -18,6 +18,11 @@ export interface TeamSubscription {
 }
 
 // Stripe Price ID Map — single source of truth
+// New single-plan model
+export const STRIPE_PRICE_BASE_PLAN = 'price_1TIJDeDQETj2awNEWxP4bB43'; // €39/mo
+export const STRIPE_PRICE_EXTRA_SEAT = 'price_1TIJDzDQETj2awNEtiMhRUPR'; // €19/mo
+
+// Legacy tier prices (kept for backward compat with existing subscribers)
 export const STRIPE_PRICES = {
   lite: {
     monthly: 'price_1TEa4dDQETj2awNErpoa1vHM',

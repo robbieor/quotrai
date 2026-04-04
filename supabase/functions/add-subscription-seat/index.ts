@@ -8,6 +8,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const EXTRA_SEAT_PRICE = "price_1TIJDzDQETj2awNEtiMhRUPR"; // €19/mo
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +25,6 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Get auth user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
 
@@ -31,11 +32,11 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
-    // Get user's org via RPC
+    // Get user's org
     const { data: orgId } = await supabaseClient.rpc("get_user_org_id_v2");
     if (!orgId) throw new Error("User not in an organisation");
 
-    // Verify user is an owner of their team
+    // Verify owner role
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("team_id")
@@ -58,7 +59,7 @@ serve(async (req) => {
       }
     }
 
-    // Get subscription from subscriptions_v2
+    // Get subscription
     const { data: subscription } = await supabaseClient
       .from("subscriptions_v2")
       .select("*")
@@ -69,36 +70,43 @@ serve(async (req) => {
       throw new Error("No active subscription found. Please subscribe first.");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get current subscription from Stripe
-    const stripeSubscription = await stripe.subscriptions.retrieve(
-      subscription.stripe_subscription_id
+    const stripeSub = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+
+    // Find the extra seat line item
+    const extraSeatItem = stripeSub.items.data.find(
+      (item) => item.price.id === EXTRA_SEAT_PRICE
     );
 
-    // Update quantity (add one seat)
-    const currentQuantity = stripeSubscription.items.data[0].quantity || 1;
-    const newQuantity = currentQuantity + 1;
+    if (extraSeatItem) {
+      // Increment existing extra seat quantity
+      const newQuantity = (extraSeatItem.quantity || 0) + 1;
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        items: [{ id: extraSeatItem.id, quantity: newQuantity }],
+        proration_behavior: "create_prorations",
+      });
+    } else {
+      // Add extra seat line item with quantity 1
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        items: [{ price: EXTRA_SEAT_PRICE, quantity: 1 }],
+        proration_behavior: "create_prorations",
+      });
+    }
 
-    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-      items: [{
-        id: stripeSubscription.items.data[0].id,
-        quantity: newQuantity,
-      }],
-      proration_behavior: "create_prorations",
-    });
-
-    // Update local subscription record
+    // Update local seat count
+    const newSeatCount = (subscription.seat_count || 0) + 1;
     await supabaseClient
       .from("subscriptions_v2")
       .update({
-        seat_count: newQuantity,
+        seat_count: newSeatCount,
         updated_at: new Date().toISOString(),
       })
       .eq("org_id", orgId);
 
     return new Response(
-      JSON.stringify({ success: true, new_seat_count: newQuantity }),
+      JSON.stringify({ success: true, new_seat_count: newSeatCount }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {

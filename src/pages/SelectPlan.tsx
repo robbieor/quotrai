@@ -70,7 +70,7 @@ export default function SelectPlan() {
 
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
         body: {
-          seatCounts: { connect: teamSize },
+          teamSize,
           interval: "month",
         },
       });
