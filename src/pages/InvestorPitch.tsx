@@ -136,7 +136,7 @@ export default function InvestorPitch() {
         </FadeInOnScroll>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { value: "€19–69", unit: "/seat/mo", label: "Seat Revenue", sub: "3 tiers: Lite, Connect & Grow" },
+            { value: "€39", unit: "/mo", label: "One Plan", sub: "Up to 3 users included, +€19/extra seat" },
             { value: "1.5%", unit: " per txn", label: "Platform Fee", sub: "On all Stripe Connect payments" },
             { value: "80%+", unit: "", label: "Gross Margin", sub: "AI COGS ~€8/seat, SaaS-standard" },
           ].map((item, i) => (

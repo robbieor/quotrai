@@ -14,13 +14,16 @@ import {
   Mic, Smartphone, Mail, Clock, MapPin
 } from "lucide-react";
 
-// Revenue model constants
-const BLENDED_SEAT_PRICE = 0.40 * 19 + 0.45 * 39 + 0.15 * 59; // €34.00
+// Single plan model: €39/mo for 3 users, +€19/extra seat
+const BASE_PLAN = 39;
+const EXTRA_SEAT = 19;
+const INCLUDED_SEATS = 3;
 const AVG_SEATS = 3;
-const AVG_INVOICE_VOLUME = 5000; // €/customer/month
+const AVG_INVOICE_VOLUME = 5000;
 const PLATFORM_FEE_RATE = 0.015;
 const PLATFORM_FEE_PER_CUSTOMER = AVG_INVOICE_VOLUME * PLATFORM_FEE_RATE; // €75
-const BLENDED_ARPU = (BLENDED_SEAT_PRICE * AVG_SEATS) + PLATFORM_FEE_PER_CUSTOMER; // €227
+const PLAN_COST_PER_CUSTOMER = BASE_PLAN + Math.max(0, AVG_SEATS - INCLUDED_SEATS) * EXTRA_SEAT; // €39 at 3 seats
+const BLENDED_ARPU = PLAN_COST_PER_CUSTOMER + PLATFORM_FEE_PER_CUSTOMER; // €114
 
 const MILESTONES = [
   { customers: 50, label: "Launch" },
@@ -35,7 +38,7 @@ const MILESTONES = [
 ];
 
 const computeRevenue = (customers: number) => {
-  const seatMRR = customers * AVG_SEATS * BLENDED_SEAT_PRICE;
+  const seatMRR = customers * PLAN_COST_PER_CUSTOMER;
   const platformMRR = customers * PLATFORM_FEE_PER_CUSTOMER;
   const totalMRR = seatMRR + platformMRR;
   const totalARR = totalMRR * 12;
@@ -149,10 +152,10 @@ export default function InvestorForecast() {
         <div className="grid md:grid-cols-3 gap-4">
           <Card className="border-primary/30 bg-primary/5">
             <CardContent className="p-5 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">Seat Revenue</p>
-              <p className="text-3xl font-bold text-foreground">€{(BLENDED_SEAT_PRICE * AVG_SEATS).toFixed(0)}/mo</p>
-              <p className="text-xs text-muted-foreground">€{BLENDED_SEAT_PRICE.toFixed(0)} blended × {AVG_SEATS} seats avg</p>
-              <p className="text-xs text-muted-foreground">(40% Lite €19 + 45% Connect €39 + 15% Grow €59)</p>
+              <p className="text-sm text-muted-foreground">Subscription Revenue</p>
+              <p className="text-3xl font-bold text-foreground">€{PLAN_COST_PER_CUSTOMER}/mo</p>
+              <p className="text-xs text-muted-foreground">€{BASE_PLAN} base (3 users included) + €{EXTRA_SEAT}/extra</p>
+              <p className="text-xs text-muted-foreground">One plan, every feature, AI included</p>
             </CardContent>
           </Card>
           <Card className="border-primary/30 bg-primary/5">

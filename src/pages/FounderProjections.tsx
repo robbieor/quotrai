@@ -19,12 +19,10 @@ const UK_TRADE_BUSINESSES = 300_000;
 const GLOBAL_TRADE_BUSINESSES = 5_000_000;
 const MARKET_CAGR = 0.18;
 
-// 3-tier pricing: Lite, Connect, Grow
-const TIERS = {
-  lite: { price: 19, label: "Lite Seat", hasAI: false },
-  connect: { price: 39, label: "Connect Seat", hasAI: true },
-  grow: { price: 69, label: "Grow Seat", hasAI: true },
-};
+// Single plan pricing: €39/mo for up to 3 users, +€19/extra seat
+const BASE_PLAN_PRICE = 39; // includes up to 3 users
+const EXTRA_SEAT_PRICE = 19;
+const INCLUDED_SEATS = 3;
 const ANNUAL_DISCOUNT = 0.15;
 const PLATFORM_FEE_RATE = 0.015; // 1.5% on invoice payments
 const VOICE_COST_PER_SEAT = 8;
@@ -115,34 +113,25 @@ const GROWTH_LEVERS = [
 export default function FounderProjections() {
   const [customers, setCustomers] = useState(500);
   const [avgSeats, setAvgSeats] = useState(3);
-  const [tierMix, setTierMix] = useState({ lite: 40, connect: 45, grow: 15 }); // %
   const [churnRate, setChurnRate] = useState(3);
   const [growthRate, setGrowthRate] = useState(12);
   const [stage, setStage] = useState("early");
   const [equityOwned, setEquityOwned] = useState(80);
-  const [annualBillingPct, setAnnualBillingPct] = useState(30); // % on annual
-  const [avgInvoiceVolume, setAvgInvoiceVolume] = useState(5000); // €/customer/month
+  const [annualBillingPct, setAnnualBillingPct] = useState(30);
+  const [avgInvoiceVolume, setAvgInvoiceVolume] = useState(5000);
 
-  // Revenue calculations
+  // Revenue calculations — single plan model
   const totalSeats = customers * avgSeats;
-  const liteSeats = Math.round(totalSeats * (tierMix.lite / 100));
-  const connectSeats = Math.round(totalSeats * (tierMix.connect / 100));
-  const growSeats = Math.round(totalSeats * (tierMix.grow / 100));
-
+  const extraSeatsPerCustomer = Math.max(0, avgSeats - INCLUDED_SEATS);
   const monthlyBillingFactor = 1 - (annualBillingPct / 100) * ANNUAL_DISCOUNT;
-  const seatMRR = (
-    liteSeats * TIERS.lite.price +
-    connectSeats * TIERS.connect.price +
-    growSeats * TIERS.grow.price
-  ) * monthlyBillingFactor;
+  const seatMRR = customers * (BASE_PLAN_PRICE + extraSeatsPerCustomer * EXTRA_SEAT_PRICE) * monthlyBillingFactor;
 
   const platformFeeMRR = customers * avgInvoiceVolume * PLATFORM_FEE_RATE;
   const totalMRR = seatMRR + platformFeeMRR;
   const totalARR = totalMRR * 12;
 
   // Costs
-  const aiSeats = connectSeats + growSeats;
-  const voiceCOGS = aiSeats * VOICE_COST_PER_SEAT;
+  const voiceCOGS = totalSeats * VOICE_COST_PER_SEAT;
   const grossMargin = totalMRR > 0 ? ((totalMRR - voiceCOGS) / totalMRR) * 100 : 0;
 
   // Churn
@@ -151,12 +140,8 @@ export default function FounderProjections() {
   // Growth projections (12 months)
   const projections = Array.from({ length: 13 }, (_, month) => {
     const custAtMonth = Math.round(customers * Math.pow(1 + growthRate / 100, month));
-    const seatsAtMonth = custAtMonth * avgSeats;
-    const seatRev = (
-      Math.round(seatsAtMonth * (tierMix.lite / 100)) * TIERS.lite.price +
-      Math.round(seatsAtMonth * (tierMix.connect / 100)) * TIERS.connect.price +
-      Math.round(seatsAtMonth * (tierMix.grow / 100)) * TIERS.grow.price
-    ) * monthlyBillingFactor;
+    const extraPerCust = Math.max(0, avgSeats - INCLUDED_SEATS);
+    const seatRev = custAtMonth * (BASE_PLAN_PRICE + extraPerCust * EXTRA_SEAT_PRICE) * monthlyBillingFactor;
     const feeRev = custAtMonth * avgInvoiceVolume * PLATFORM_FEE_RATE;
     const mrr = seatRev + feeRev;
     return { month, customers: custAtMonth, mrr, arr: mrr * 12 };
@@ -241,28 +226,22 @@ export default function FounderProjections() {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
-              Revenue Model — 3 Tiers + Platform Fee
+              Revenue Model — Single Plan + Platform Fee
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl border border-border bg-muted/50">
-                <p className="font-semibold text-foreground">Lite Seat</p>
-                <p className="text-2xl font-bold text-foreground">€{TIERS.lite.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Jobs, quotes, invoices, calendar, time tracking. No AI.</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.lite}% of seats</Badge>
-              </div>
+            <div className="grid sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl border-2 border-primary/30 bg-primary/5">
-                <p className="font-semibold text-primary">Connect Seat</p>
-                <p className="text-2xl font-bold text-primary">€{TIERS.connect.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Everything + Foreman AI voice agent & chat.</p>
-                <Badge className="mt-2 text-xs bg-primary">{tierMix.connect}% of seats</Badge>
+                <p className="font-semibold text-primary">Base Plan</p>
+                <p className="text-2xl font-bold text-primary">€{BASE_PLAN_PRICE}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Up to {INCLUDED_SEATS} users included. Every feature + Foreman AI.</p>
+                <Badge className="mt-2 text-xs bg-primary">{customers.toLocaleString()} accounts</Badge>
               </div>
               <div className="p-4 rounded-xl border border-border bg-muted/50">
-                <p className="font-semibold text-foreground">Grow Seat</p>
-                <p className="text-2xl font-bold text-foreground">€{TIERS.grow.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                <p className="text-xs text-muted-foreground mt-1">Unlimited AI, advanced reports, accounting sync, priority support.</p>
-                <Badge variant="secondary" className="mt-2 text-xs">{tierMix.grow}% of seats</Badge>
+                <p className="font-semibold text-foreground">Extra Seats</p>
+                <p className="text-2xl font-bold text-foreground">€{EXTRA_SEAT_PRICE}<span className="text-sm font-normal text-muted-foreground">/seat/mo</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Each additional user beyond {INCLUDED_SEATS}.</p>
+                <Badge variant="secondary" className="mt-2 text-xs">{Math.max(0, totalSeats - customers * INCLUDED_SEATS).toLocaleString()} extra seats</Badge>
               </div>
               <div className="p-4 rounded-xl border border-border bg-accent/5">
                 <p className="font-semibold text-foreground">Platform Fee</p>
@@ -317,21 +296,16 @@ export default function FounderProjections() {
                 <CardTitle className="text-lg">Revenue Breakdown (MRR)</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground">Lite Seats</p>
-                    <p className="text-xl font-bold text-foreground">{formatCurrency(liteSeats * TIERS.lite.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{liteSeats.toLocaleString()} × €{TIERS.lite.price}</p>
-                  </div>
+                <div className="grid sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                    <p className="text-sm text-muted-foreground">Connect Seats</p>
-                    <p className="text-xl font-bold text-primary">{formatCurrency(connectSeats * TIERS.connect.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{connectSeats.toLocaleString()} × €{TIERS.connect.price}</p>
+                    <p className="text-sm text-muted-foreground">Base Plans</p>
+                    <p className="text-xl font-bold text-primary">{formatCurrency(customers * BASE_PLAN_PRICE * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{customers.toLocaleString()} × €{BASE_PLAN_PRICE}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground">Grow Seats</p>
-                    <p className="text-xl font-bold text-foreground">{formatCurrency(growSeats * TIERS.grow.price * monthlyBillingFactor)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{growSeats.toLocaleString()} × €{TIERS.grow.price}</p>
+                    <p className="text-sm text-muted-foreground">Extra Seats</p>
+                    <p className="text-xl font-bold text-foreground">{formatCurrency(customers * extraSeatsPerCustomer * EXTRA_SEAT_PRICE * monthlyBillingFactor)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{(customers * extraSeatsPerCustomer).toLocaleString()} × €{EXTRA_SEAT_PRICE}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                     <p className="text-sm text-muted-foreground">Platform Fees</p>
@@ -687,7 +661,7 @@ export default function FounderProjections() {
                       { label: "Month 2", data: LAUNCH_SCENARIO.month2, spend: LAUNCH_SCENARIO.adSpendMonth2 },
                       { label: "Month 3", data: LAUNCH_SCENARIO.month3, spend: LAUNCH_SCENARIO.adSpendMonth3 },
                     ].map((m) => {
-                      const avgSeatRev = (TIERS.lite.price * 0.4 + TIERS.connect.price * 0.45 + TIERS.grow.price * 0.15);
+                      const avgSeatRev = BASE_PLAN_PRICE / INCLUDED_SEATS; // per-seat equivalent
                       const mrrAtMonth = m.data.paidCustomers * avgSeats * avgSeatRev;
                       const cac = m.spend / m.data.paidCustomers;
                       return (
