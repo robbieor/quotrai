@@ -23,8 +23,8 @@ export function FloatingTomButton() {
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const { profile } = useProfile();
-  const { hasVoiceAccess, canUseVoice } = useGeorgeAccess();
-  const { isTeamSeat } = useUserRole();
+  const { hasVoiceAccess, canUseVoice, isLoading: georgeLoading } = useGeorgeAccess();
+  const { isTeamSeat, isLoading: roleLoading } = useUserRole();
   const { startTask } = useAgentTask();
   
   const { 
