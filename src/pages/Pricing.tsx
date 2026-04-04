@@ -17,7 +17,7 @@ import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 const BASE_PRICE = 39;
 const EXTRA_SEAT = 19;
 const BASE_USERS = 3;
-const PLATFORM_FEE = 0.025;
+const PLATFORM_FEE = 0.015;
 
 const allFeatures = [
   "Unlimited quotes & invoices",
