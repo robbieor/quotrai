@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { useAgentTask } from "@/contexts/AgentTaskContext";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
@@ -23,6 +24,7 @@ export function FloatingTomButton() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { profile } = useProfile();
   const { hasVoiceAccess, canUseVoice } = useGeorgeAccess();
+  const { isTeamSeat } = useUserRole();
   const { startTask } = useAgentTask();
   
   const { 
@@ -73,8 +75,8 @@ export function FloatingTomButton() {
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
   // Hide on Foreman AI page (the page has its own controls)
-  // Keep showing on other pages even during calls for quick end-call access
-  if (location.pathname === "/foreman-ai") {
+  // Hide completely for Team Seat (member) users
+  if (location.pathname === "/foreman-ai" || isTeamSeat) {
     return null;
   }
 
