@@ -164,7 +164,7 @@ const App = () => {
 
                 {/* Connect+ seat required */}
                 <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />
-                <Route path="/foreman-ai" element={<SeatGuard requiredSeat="connect"><George /></SeatGuard>} />
+                <Route path="/foreman-ai" element={<RoleGuard><SeatGuard requiredSeat="connect"><George /></SeatGuard></RoleGuard>} />
                 <Route path="/george" element={<Navigate to="/foreman-ai" replace />} />
                 <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
                 <Route path="/reports" element={<RoleGuard><SeatGuard requiredSeat="connect"><Reports /></SeatGuard></RoleGuard>} />
