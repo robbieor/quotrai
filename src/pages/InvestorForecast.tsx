@@ -152,10 +152,10 @@ export default function InvestorForecast() {
         <div className="grid md:grid-cols-3 gap-4">
           <Card className="border-primary/30 bg-primary/5">
             <CardContent className="p-5 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">Seat Revenue</p>
-              <p className="text-3xl font-bold text-foreground">€{(BLENDED_SEAT_PRICE * AVG_SEATS).toFixed(0)}/mo</p>
-              <p className="text-xs text-muted-foreground">€{BLENDED_SEAT_PRICE.toFixed(0)} blended × {AVG_SEATS} seats avg</p>
-              <p className="text-xs text-muted-foreground">(40% Lite €19 + 45% Connect €39 + 15% Grow €59)</p>
+              <p className="text-sm text-muted-foreground">Subscription Revenue</p>
+              <p className="text-3xl font-bold text-foreground">€{PLAN_COST_PER_CUSTOMER}/mo</p>
+              <p className="text-xs text-muted-foreground">€{BASE_PLAN} base (3 users included) + €{EXTRA_SEAT}/extra</p>
+              <p className="text-xs text-muted-foreground">One plan, every feature, AI included</p>
             </CardContent>
           </Card>
           <Card className="border-primary/30 bg-primary/5">
