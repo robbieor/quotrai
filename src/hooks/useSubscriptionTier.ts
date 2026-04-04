@@ -150,7 +150,7 @@ export function useSubscriptionTier() {
         .from('teams')
         .update({
           is_trial: true,
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .eq('id', teamSubscription.id);
 

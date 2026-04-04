@@ -258,7 +258,7 @@ export default function SelectPlan() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          All plans include 7-day free trial · Cancel anytime · VAT may apply
+          All plans include 14-day free trial · Cancel anytime · VAT may apply
         </p>
       </div>
     </div>

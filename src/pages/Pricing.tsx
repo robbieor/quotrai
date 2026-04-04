@@ -172,7 +172,7 @@ export default function Pricing() {
             One platform, one price per seat.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            7-day free trial on every plan. Cancel anytime.
+            14-day free trial on every plan. Cancel anytime.
           </p>
 
           {/* Billing toggle */}
