@@ -133,41 +133,26 @@ export function TeamManagement() {
                 </div>
               </div>
 
-              {/* Role & Seat selectors */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Role</Label>
-                  <Select value={inviteRole} onValueChange={(v: InviteRole) => setInviteRole(v)}>
-                    <SelectTrigger className="h-10 sm:h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Team Member</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="owner">Owner</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[11px] text-muted-foreground hidden sm:block">
-                    {inviteRole === "member" ? "Jobs, calendar, time tracking" : inviteRole === "manager" ? "Full access, no billing" : "Full access including billing"}
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Seat Type</Label>
-                  <Select value={inviteSeat} onValueChange={(v: SeatType) => setInviteSeat(v)}>
-                    <SelectTrigger className="h-10 sm:h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lite">Lite — €19/mo</SelectItem>
-                      <SelectItem value="connect">Connect — €39/mo</SelectItem>
-                      <SelectItem value="grow">Grow — €69/mo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Role selector */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Role</Label>
+                <Select value={inviteRole} onValueChange={(v: InviteRole) => setInviteRole(v)}>
+                  <SelectTrigger className="h-10 sm:h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">Team Member</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="owner">Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  {inviteRole === "member" ? "Jobs, calendar & time tracking only" : inviteRole === "manager" ? "Full access, no billing" : "Full access including billing"}
+                </p>
               </div>
-              {inviteRole === "member" && inviteSeat !== "lite" && (
+              {inviteRole === "member" && (
                 <p className="text-xs text-muted-foreground">
-                  💡 Team Members only access Jobs, Calendar & Time Tracking regardless of seat type. Consider a Lite seat to save costs.
+                  💡 Team Members only access Jobs, Calendar & Time Tracking. Foreman AI is available to Owners & Managers.
                 </p>
               )}
             </form>
