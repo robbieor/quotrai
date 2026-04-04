@@ -245,6 +245,64 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Fee Comparison */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6">
+        <div className="container mx-auto max-w-3xl">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-center mb-2">
+            How do payment fees compare?
+          </h2>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            Total cost when your customer pays a €1,000 invoice online.
+          </p>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-semibold">Provider</TableHead>
+                  <TableHead className="font-semibold">Processing</TableHead>
+                  <TableHead className="font-semibold">Platform</TableHead>
+                  <TableHead className="font-semibold">Total</TableHead>
+                  <TableHead className="font-semibold hidden sm:table-cell">Includes Software</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow className="bg-primary/5 border-l-2 border-l-primary font-medium">
+                  <TableCell className="font-bold">Foreman</TableCell>
+                  <TableCell>~1.5%</TableCell>
+                  <TableCell>1.5%</TableCell>
+                  <TableCell className="font-bold text-primary">~3.0%</TableCell>
+                  <TableCell className="hidden sm:table-cell">✅ Full platform + AI</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Jobber</TableCell>
+                  <TableCell>2.5% + 25¢</TableCell>
+                  <TableCell>—</TableCell>
+                  <TableCell>~3.1%</TableCell>
+                  <TableCell className="hidden sm:table-cell">Paid separately ($49–$249/mo)</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Square</TableCell>
+                  <TableCell>2.6% + 10¢</TableCell>
+                  <TableCell>—</TableCell>
+                  <TableCell>~2.7%</TableCell>
+                  <TableCell className="hidden sm:table-cell">Basic POS only</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Bank Transfer</TableCell>
+                  <TableCell>Free</TableCell>
+                  <TableCell>—</TableCell>
+                  <TableCell>0%</TableCell>
+                  <TableCell className="hidden sm:table-cell">❌ No tracking or automation</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            Foreman is the only option where your payment fees include full job management, invoicing, and AI — no separate software subscription needed to break even.
+          </p>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="container mx-auto max-w-3xl">
