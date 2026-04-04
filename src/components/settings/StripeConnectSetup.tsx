@@ -114,7 +114,7 @@ export function StripeConnectSetup() {
           <>
             <p className="text-sm text-muted-foreground">
               Connect your bank account to receive payments directly when customers pay invoices online.
-              Foreman charges a small 2.5% platform fee per transaction.
+              Foreman charges a small 1.5% platform fee per transaction.
             </p>
             <Button onClick={handleOnboard} disabled={actionLoading} className="gap-2">
               {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Building2 className="h-4 w-4" />}
