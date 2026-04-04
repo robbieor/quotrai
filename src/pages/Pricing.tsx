@@ -19,8 +19,8 @@ import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 const faqs = [
   {
-    q: "What's included in the 7-day free trial?",
-    a: "Full access to every feature — quotes, invoicing, AI, GPS time tracking. You only pay if you decide to continue after 7 days.",
+    q: "What's included in the 14-day free trial?",
+    a: "Full access to every feature — quotes, invoicing, AI, GPS time tracking. You only pay if you decide to continue after 14 days.",
   },
   {
     q: "What's the difference between seat types?",
@@ -137,7 +137,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Pricing — Simple Per-Seat Plans"
-        description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 7-day free trial."
+        description="Transparent pricing for field service businesses. Lite, Connect, and Grow seats from €19/mo. 14-day free trial."
         path="/pricing"
       />
       {/* Nav */}
@@ -172,7 +172,7 @@ export default function Pricing() {
             One platform, one price per seat.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            7-day free trial on every plan. Cancel anytime.
+            14-day free trial on every plan. Cancel anytime.
           </p>
 
           {/* Billing toggle */}

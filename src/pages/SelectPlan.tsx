@@ -153,9 +153,9 @@ export default function SelectPlan() {
         {/* CTA Section */}
         <Card className="bg-primary/5 border-primary/20 mb-12">
           <CardContent className="py-8 text-center space-y-4">
-            <h2 className="text-2xl font-bold">Start your 7-day free trial</h2>
+            <h2 className="text-2xl font-bold">Start your 14-day free trial</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Choose a plan above to start your 7-day free trial. Cancel anytime.
+              Choose a plan above to start your 14-day free trial. Cancel anytime.
             </p>
           </CardContent>
         </Card>
@@ -258,7 +258,7 @@ export default function SelectPlan() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          All plans include 7-day free trial · Cancel anytime · VAT may apply
+          All plans include 14-day free trial · Cancel anytime · VAT may apply
         </p>
       </div>
     </div>

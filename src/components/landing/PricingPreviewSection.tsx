@@ -91,7 +91,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
             </span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Start at {formatPrice(PRICING.LITE_SEAT)}/seat. Add AI when you're ready. 7-day free trial on all plans.
+            Start at {formatPrice(PRICING.LITE_SEAT)}/seat. Add AI when you're ready. 14-day free trial on all plans.
           </p>
         </div>
 

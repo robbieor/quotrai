@@ -17,7 +17,7 @@ export function FinalCTASection() {
           </span>
         </h2>
         <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-          7-day free trial · Cancel anytime
+          14-day free trial · Cancel anytime
         </p>
         <Link to="/signup">
           <Button size="lg" className="text-base sm:text-xl px-8 sm:px-12 py-6 sm:py-8 font-bold btn-hover-lift gap-2">
