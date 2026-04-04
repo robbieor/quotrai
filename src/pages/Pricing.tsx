@@ -222,7 +222,7 @@ export default function Pricing() {
 
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Platform fee earned (2.5%)</span>
+                <span className="text-muted-foreground">Platform fee earned (1.5%)</span>
                 <span className="font-semibold">€{platformEarnings.toFixed(0)}/mo</span>
               </div>
               <div className="flex justify-between text-sm">

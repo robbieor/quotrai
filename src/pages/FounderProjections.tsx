@@ -94,7 +94,7 @@ const FEATURES_SHIPPED = [
   { icon: Mail, label: "Automated Payment Chasers", detail: "Escalating reminders for overdue invoices" },
   { icon: CalendarDays, label: "Job Calendar & Reminders", detail: "Drag-drop scheduling, customer SMS/email alerts" },
   { icon: Clock, label: "GPS Time Tracking", detail: "Geofenced clock-in/out, staff location map" },
-  { icon: CreditCard, label: "Stripe Connect Payments", detail: "2.5% platform fee on invoice payments" },
+  { icon: CreditCard, label: "Stripe Connect Payments", detail: "1.5% platform fee on invoice payments" },
   { icon: BarChart, label: "Advanced Reports", detail: "Revenue, expenses, quote conversion, job trends" },
   { icon: Megaphone, label: "Lead Management", detail: "Pipeline tracking, source attribution, follow-ups" },
   { icon: Users, label: "Team Management", detail: "Role-based access, seat invitations, activity feed" },
