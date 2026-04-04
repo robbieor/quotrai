@@ -63,11 +63,10 @@ export function TeamManagement() {
       email: email.trim(),
       baseUrl: window.location.origin,
       role: inviteRole,
-      seatType: inviteSeat,
+      seatType: inviteRole === "member" ? "lite" : "connect",
     });
     setEmail("");
     setInviteRole("member");
-    setInviteSeat("lite");
   };
 
   const getInitials = (name: string | null, email: string | null) => {
