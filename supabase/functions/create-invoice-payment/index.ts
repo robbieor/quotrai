@@ -45,7 +45,10 @@ serve(async (req) => {
       .single();
 
     if (!team?.stripe_connect_account_id || !team?.stripe_connect_onboarding_complete) {
-      throw new Error("This business hasn't set up online payments yet. Please contact them directly.");
+      return new Response(
+        JSON.stringify({ error: "online_payments_not_configured" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Get currency from team profile
