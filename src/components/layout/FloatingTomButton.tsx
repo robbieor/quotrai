@@ -210,35 +210,43 @@ export function FloatingTomButton() {
       )}
 
       {/* Main Floating Button */}
-      <button
-        onClick={handleMainButtonClick}
-        className={cn(
-          "fixed bottom-6 right-6 z-50",
-          "h-14 w-14 rounded-full",
-          "shadow-[0_4px_12px_rgba(13,155,106,0.3)]",
-          "flex items-center justify-center",
-          "hover:scale-110 hover:shadow-xl",
-          "active:scale-95",
-          "transition-all duration-200",
-          // Safe area for mobile devices
-          "mb-safe-area-inset-bottom mr-safe-area-inset-right",
-          // State-based colors
-          isConnected 
-            ? "bg-destructive text-destructive-foreground shadow-destructive/25 hover:shadow-destructive/30" 
-            : isExpanded
-              ? "bg-muted text-foreground border border-border"
-              : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
+      <div className="fixed bottom-6 right-6 z-50 mb-safe-area-inset-bottom mr-safe-area-inset-right">
+        {/* Pulsing rings when connecting */}
+        {isConnecting && (
+          <>
+            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ring-pulse" />
+            <span className="absolute inset-0 rounded-full bg-primary/20 animate-ring-pulse-delay-1" />
+            <span className="absolute inset-0 rounded-full bg-primary/10 animate-ring-pulse-delay-2" />
+          </>
         )}
-        aria-label={isConnected ? "End call with Foreman AI" : "Talk to Foreman AI"}
-      >
-        {isConnected ? (
-          <PhoneOff className="h-6 w-6" />
-        ) : isExpanded ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <Phone className="h-6 w-6" />
-        )}
-      </button>
+        <button
+          onClick={handleMainButtonClick}
+          className={cn(
+            "relative h-14 w-14 rounded-full",
+            "shadow-[0_4px_12px_rgba(13,155,106,0.3)]",
+            "flex items-center justify-center",
+            "hover:scale-110 hover:shadow-xl",
+            "active:scale-95",
+            "transition-all duration-200",
+            isConnected 
+              ? "bg-destructive text-destructive-foreground shadow-destructive/25 hover:shadow-destructive/30 animate-breathe" 
+              : isConnecting
+                ? "bg-primary text-primary-foreground animate-pulse"
+                : isExpanded
+                  ? "bg-muted text-foreground border border-border"
+                  : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
+          )}
+          aria-label={isConnected ? "End call with Foreman AI" : "Talk to Foreman AI"}
+        >
+          {isConnected ? (
+            <PhoneOff className="h-6 w-6" />
+          ) : isExpanded ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Phone className="h-6 w-6" />
+          )}
+        </button>
+      </div>
 
       {/* Voice Activity Indicator */}
       {isConnected && (
@@ -249,10 +257,7 @@ export function FloatingTomButton() {
           "flex items-center gap-2",
           "animate-fade-in"
         )}>
-          <div className={cn(
-            "h-2 w-2 rounded-full bg-primary",
-            isSpeaking && "animate-pulse"
-          )} />
+          <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
           <span className="text-sm font-medium">
             {isSpeaking ? "Foreman AI is speaking..." : "Listening..."}
           </span>

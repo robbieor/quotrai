@@ -256,28 +256,36 @@ export function GeorgeMobileInput({
             )}
           </Button>
         ) : (
-          <Button
-            variant={isConnected ? "default" : "ghost"}
-            size="icon"
-            className={cn(
-              "h-11 w-11 rounded-full shrink-0",
-              isConnected 
-                ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" 
-                : "bg-primary hover:bg-primary/90 text-primary-foreground"
+          <div className="relative flex items-center justify-center h-11 w-11 shrink-0">
+            {isConnecting && (
+              <>
+                <span className="absolute inset-0 rounded-full bg-primary/30 animate-ring-pulse" />
+                <span className="absolute inset-0 rounded-full bg-primary/20 animate-ring-pulse-delay-1" />
+                <span className="absolute inset-0 rounded-full bg-primary/10 animate-ring-pulse-delay-2" />
+              </>
             )}
-            onClick={toggleConnection}
-            disabled={voiceDisabled}
-          >
-            {isConnecting ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : showVoiceLock ? (
-              <Lock className="h-5 w-5" />
-            ) : isConnected ? (
-              <PhoneOff className="h-5 w-5" />
-            ) : (
-              <Phone className="h-5 w-5" />
-            )}
-          </Button>
+            <Button
+              variant={isConnected ? "default" : "ghost"}
+              size="icon"
+              className={cn(
+                "h-11 w-11 rounded-full shrink-0 relative z-10",
+                isConnected 
+                  ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-breathe" 
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground",
+                isConnecting && "animate-pulse"
+              )}
+              onClick={toggleConnection}
+              disabled={voiceDisabled}
+            >
+              {showVoiceLock ? (
+                <Lock className="h-5 w-5" />
+              ) : isConnected ? (
+                <PhoneOff className="h-5 w-5" />
+              ) : (
+                <Phone className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         )}
       </div>
     </div>

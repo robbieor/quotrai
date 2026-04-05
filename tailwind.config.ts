@@ -117,6 +117,14 @@ export default {
           from: { transform: "translateX(100%)" },
           to: { transform: "translateX(0)" },
         },
+        "ring-pulse": {
+          "0%": { transform: "scale(1)", opacity: "0.4" },
+          "100%": { transform: "scale(2.2)", opacity: "0" },
+        },
+        "breathe": {
+          "0%, 100%": { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(34,197,94,0.4)" },
+          "50%": { transform: "scale(1.05)", boxShadow: "0 0 20px 4px rgba(34,197,94,0.25)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -125,6 +133,10 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
+        "ring-pulse": "ring-pulse 1.2s ease-out infinite",
+        "ring-pulse-delay-1": "ring-pulse 1.2s ease-out 0.3s infinite",
+        "ring-pulse-delay-2": "ring-pulse 1.2s ease-out 0.6s infinite",
+        "breathe": "breathe 2s ease-in-out infinite",
       },
       transitionDuration: {
         '250': '250ms',
