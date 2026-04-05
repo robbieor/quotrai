@@ -1,65 +1,51 @@
 
 
-# Align Stripe Checkout and Billing to New Single-Plan Pricing
+# Add Voice Connection Visual Feedback (Pulse + Connected Indicator)
 
 ## Problem
-The entire Stripe billing backend still operates on the old 3-tier model (Lite €19, Connect €39, Grow €69 per seat). The new pricing is **€39/mo base** (includes 3 users) + **€19/mo per extra seat**. This means:
+1. When tapping the phone icon to connect to Foreman AI, there's no pulsing/ringing animation — it just shows a static spinner
+2. When connected, there's no strong visual confirmation (like ChatGPT's glowing orb effect)
+3. The connection may also be failing silently on some devices
 
-- `create-checkout-session` builds line items from old tier price IDs
-- `sync-seat-to-stripe` syncs per-tier seat counts using old prices
-- `add-subscription-seat` increments quantity on whatever the first line item is (wrong model)
-- `SelectPlan.tsx` sends `{ connect: teamSize }` which charges €39 × teamSize (wrong — should be €39 + extras × €19)
-- `SubscriptionPricing.tsx` still references the 3-tier feature matrix
-- `useSubscriptionTier.ts` still exports 3 plan detail objects
+## Changes
 
-## Solution
+### 1. Add Pulsing Ring Animation to Phone Button While Connecting
+**Files:** `src/components/george/GeorgeMobileInput.tsx`, `src/components/layout/FloatingTomButton.tsx`
 
-### Step 1 — Create Two New Stripe Products and Prices
-Using the Stripe tool:
-- **Foreman Base Plan**: €39/mo recurring (covers up to 3 users)
-- **Foreman Extra Seat**: €19/mo recurring (each additional user beyond 3)
+- Replace the static `Loader2` spinner with the Phone icon wrapped in animated pulsing rings (like a phone ringing)
+- Use concentric ring animations (`animate-ping` with staggered delays) around the button during `isConnecting` state
+- The button itself gets a subtle scale-pulse animation
 
-### Step 2 — Rewrite `create-checkout-session` Edge Function
-Replace the 3-tier price map with the two new price IDs. Accept `{ teamSize: number, interval: "month" | "year" }` from the frontend. Build line items:
-- 1× Base Plan
-- `max(0, teamSize - 3)` × Extra Seat
+### 2. Add Connected State Glow Effect
+**Files:** `src/components/george/GeorgeMobileInput.tsx`, `src/components/layout/FloatingTomButton.tsx`
 
-Keep existing logic for: customer lookup/creation, trial preservation, burned account check, bulk discount.
+- When `isConnected`, add a green glowing ring around the phone/end-call button
+- Add a subtle breathing animation to the connected indicator bar
+- Show a brief "Connected" toast/badge that fades after 2 seconds
 
-### Step 3 — Rewrite `sync-seat-to-stripe` Edge Function
-Instead of mapping seat types to tier prices, count total active members, then ensure the Stripe subscription has:
-- 1× Base Plan price
-- `max(0, members - 3)` × Extra Seat price
+### 3. Add Tailwind Keyframes for Ring Pulse
+**File:** `tailwind.config.ts`
 
-### Step 4 — Rewrite `add-subscription-seat` Edge Function
-Find the Extra Seat line item on the subscription and increment its quantity by 1. If no Extra Seat item exists yet (team was ≤3), add one with quantity 1.
+- Add `ring-pulse` keyframe: concentric circles expanding outward from the button
+- Add `breathe` keyframe: subtle scale oscillation for connected state
 
-### Step 5 — Update `SelectPlan.tsx` Frontend
-Change the checkout body from `{ seatCounts: { connect: teamSize } }` to `{ teamSize, interval: "month" }`.
+### 4. Floating Button Enhancements
+**File:** `src/components/layout/FloatingTomButton.tsx`
 
-### Step 6 — Update `useSubscriptionTier.ts` Constants
-Add the new Stripe Price IDs for Base Plan and Extra Seat. The old tier constants can remain for backward compatibility with existing subscribers but add the new canonical IDs.
+- During connecting: show pulsing rings radiating from the FAB (like an incoming call animation)
+- When connected: change the voice activity indicator to include a green pulsing dot + "Connected to Foreman AI" initial state before switching to "Listening..."
 
-### Step 7 — Update `SubscriptionPricing.tsx`
-Replace the 3-tier card grid with the single-plan card matching the landing page and pricing page design. This component is used in the settings/billing area.
+## Technical Details
 
-### Step 8 — Update `useSubscription.ts` Frontend Hook
-The `useUpdateSeatType` mutation still references the old seat-type model. Simplify it since there's now only one seat type.
+```text
+Button States:
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Idle      │ ──▶ │  Connecting      │ ──▶ │   Connected     │
+│  Phone icon │     │  Phone + rings   │     │  Green glow     │
+│  Static     │     │  Pulsing outward │     │  PhoneOff icon  │
+└─────────────┘     └──────────────────┘     └─────────────────┘
+```
 
-## Files Changed
-
-| Action | File |
-|--------|------|
-| Create (Stripe) | "Foreman Base Plan" product + €39/mo price |
-| Create (Stripe) | "Foreman Extra Seat" product + €19/mo price |
-| Rewrite | `supabase/functions/create-checkout-session/index.ts` |
-| Rewrite | `supabase/functions/sync-seat-to-stripe/index.ts` |
-| Rewrite | `supabase/functions/add-subscription-seat/index.ts` |
-| Edit | `src/pages/SelectPlan.tsx` — change checkout body format |
-| Edit | `src/hooks/useSubscriptionTier.ts` — add new price IDs |
-| Edit | `src/components/billing/SubscriptionPricing.tsx` — single plan card |
-| Edit | `src/hooks/useSubscription.ts` — simplify seat type mutation |
-
-## Backward Compatibility
-The `create-customer-portal-session`, `cancel-subscription`, `end-trial-early`, and `stripe-webhook` functions work at the subscription level (not price level) so they need no changes. Existing subscribers with old tier prices will continue to work via the Stripe portal until they naturally migrate.
+- Connecting: 3 concentric rings using `animate-ping` with opacity 0.3/0.2/0.1 and staggered animation-delay (0s, 0.3s, 0.6s)
+- Connected: `box-shadow` glow animation cycling green intensity, plus a brief "Connected ✓" indicator
 
