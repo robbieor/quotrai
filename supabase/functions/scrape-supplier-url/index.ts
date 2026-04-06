@@ -120,18 +120,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch the page
-    const pageRes = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; ForemanBot/1.0)" },
+    // Fetch the page via Firecrawl (handles JS rendering + bot protection)
+    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+    if (!firecrawlKey) {
+      return new Response(JSON.stringify({ error: "Firecrawl connector not configured. Please connect Firecrawl in Settings." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${firecrawlKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),
     });
-    if (!pageRes.ok) {
-      return new Response(JSON.stringify({ error: `Failed to fetch page: ${pageRes.status}` }), {
+
+    const fcData = await fcRes.json();
+    if (!fcRes.ok) {
+      console.error("Firecrawl error:", JSON.stringify(fcData));
+      return new Response(JSON.stringify({ error: `Firecrawl scrape failed: ${fcData.error || fcRes.status}` }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const html = await pageRes.text();
+    const html = fcData.data?.html || fcData.html || "";
     const product = supplier.parser(html, url);
 
     if (!product.product_name) {
