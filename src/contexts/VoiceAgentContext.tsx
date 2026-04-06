@@ -447,21 +447,39 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     },
   });
 
-  // Core connection logic (extracted for retry wrapper)
+  // Core connection logic — tries WebRTC first, falls back to WebSocket
   const attemptConnection = useCallback(async (
     token: string,
+    signedUrl: string | undefined,
     dynamicVariables: Record<string, string>
   ) => {
-    console.log("[VoiceAgent] 🚀 Starting session with conversation token...");
-    
-    await conversation.startSession({
-      conversationToken: token,
-      connectionType: "webrtc",
-      dynamicVariables,
-    });
-    
-    console.log("[VoiceAgent] ✅ Session started successfully");
-    resetRetryState();
+    // Try WebRTC with token first
+    try {
+      console.log("[VoiceAgent] 🚀 Trying WebRTC connection...");
+      await conversation.startSession({
+        conversationToken: token,
+        dynamicVariables,
+      });
+      console.log("[VoiceAgent] ✅ WebRTC session started successfully");
+      resetRetryState();
+      return;
+    } catch (webrtcErr) {
+      console.warn("[VoiceAgent] ⚠️ WebRTC failed:", webrtcErr);
+    }
+
+    // Fallback: WebSocket with signed URL
+    if (signedUrl) {
+      console.log("[VoiceAgent] 🔄 Falling back to WebSocket...");
+      await conversation.startSession({
+        signedUrl,
+        dynamicVariables,
+      });
+      console.log("[VoiceAgent] ✅ WebSocket session started successfully");
+      resetRetryState();
+      return;
+    }
+
+    throw new Error("Both WebRTC and WebSocket connection attempts failed");
   }, [conversation, resetRetryState]);
 
   // Pre-warm: fetch token in background so it's ready when user taps "Call"
