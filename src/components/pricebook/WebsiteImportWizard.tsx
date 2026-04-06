@@ -93,7 +93,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
 
     try {
       const { data, error } = await supabase.functions.invoke("discover-supplier-products", {
-        body: { domain: domain.trim(), limit: 20 },
+        body: { domain: domain.trim(), limit: 100 },
       });
 
       if (error) throw new Error(error.message || "Discovery failed");
