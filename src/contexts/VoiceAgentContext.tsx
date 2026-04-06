@@ -69,7 +69,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
-  const cachedTokenRef = useRef<{ token: string; fetchedAt: number } | null>(null);
+  const cachedTokenRef = useRef<{ token: string; signedUrl?: string; fetchedAt: number } | null>(null);
   const TOKEN_TTL_MS = 30_000; // tokens valid ~60s, use within 30s for freshness
 
   // Webhook caller that invalidates relevant React Query caches after mutations
@@ -447,21 +447,39 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     },
   });
 
-  // Core connection logic (extracted for retry wrapper)
+  // Core connection logic — tries WebRTC first, falls back to WebSocket
   const attemptConnection = useCallback(async (
     token: string,
+    signedUrl: string | undefined,
     dynamicVariables: Record<string, string>
   ) => {
-    console.log("[VoiceAgent] 🚀 Starting session with conversation token...");
-    
-    await conversation.startSession({
-      conversationToken: token,
-      connectionType: "webrtc",
-      dynamicVariables,
-    });
-    
-    console.log("[VoiceAgent] ✅ Session started successfully");
-    resetRetryState();
+    // Try WebRTC with token first
+    try {
+      console.log("[VoiceAgent] 🚀 Trying WebRTC connection...");
+      await conversation.startSession({
+        conversationToken: token,
+        dynamicVariables,
+      });
+      console.log("[VoiceAgent] ✅ WebRTC session started successfully");
+      resetRetryState();
+      return;
+    } catch (webrtcErr) {
+      console.warn("[VoiceAgent] ⚠️ WebRTC failed:", webrtcErr);
+    }
+
+    // Fallback: WebSocket with signed URL
+    if (signedUrl) {
+      console.log("[VoiceAgent] 🔄 Falling back to WebSocket...");
+      await conversation.startSession({
+        signedUrl,
+        dynamicVariables,
+      });
+      console.log("[VoiceAgent] ✅ WebSocket session started successfully");
+      resetRetryState();
+      return;
+    }
+
+    throw new Error("Both WebRTC and WebSocket connection attempts failed");
   }, [conversation, resetRetryState]);
 
   // Pre-warm: fetch token in background so it's ready when user taps "Call"
@@ -475,7 +493,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     supabase.functions.invoke("elevenlabs-agent-token", { body: {} })
       .then(({ data, error }) => {
         if (!error && data?.token) {
-          cachedTokenRef.current = { token: data.token, fetchedAt: Date.now() };
+          cachedTokenRef.current = { token: data.token, signedUrl: data.signed_url, fetchedAt: Date.now() };
           console.log("[VoiceAgent] ✅ Token pre-warmed");
         } else {
           const errMsg = data?.error || error?.message || "Unknown error";
@@ -542,12 +560,15 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       // Get conversation token — REQUIRED, no silent fallback
       let token: string | null = null;
+      let signedUrl: string | undefined = undefined;
       
       if (!needsToken && cachedTokenRef.current?.token) {
         token = cachedTokenRef.current.token;
+        signedUrl = cachedTokenRef.current.signedUrl;
         console.log("[VoiceAgent] ✅ Using pre-warmed token");
       } else if (tokenFetchResult.status === "fulfilled" && tokenFetchResult.value?.data?.token) {
         token = tokenFetchResult.value.data.token;
+        signedUrl = tokenFetchResult.value.data.signed_url;
         console.log("[VoiceAgent] ✅ Got fresh conversation token");
       } else {
         // Extract error details
@@ -588,7 +609,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       // Attempt connection with retry
       const { success, error } = await withRetry(
-        () => attemptConnection(token, dynamicVariables),
+        () => attemptConnection(token, signedUrl, dynamicVariables),
         "ElevenLabs connection",
         (attempt) => {
           setRetryAttempt(attempt);
