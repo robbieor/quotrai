@@ -22,7 +22,7 @@ interface CsvColumnMapperProps {
   mapping: Record<string, string>;
   onChange: (mapping: Record<string, string>) => void;
   rowCount: number;
-  sampleRow?: string[];
+  sampleRow?: Record<string, string>;
 }
 
 export function CsvColumnMapper({ csvHeaders, mapping, onChange, rowCount, sampleRow }: CsvColumnMapperProps) {
