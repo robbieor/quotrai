@@ -42,6 +42,8 @@ import { useCreateInvoice, useUpdateInvoice, Invoice } from "@/hooks/useInvoices
 import { useXeroSync } from "@/hooks/useXeroSync";
 import { InvoiceLineItems, LineItem } from "./InvoiceLineItems";
 import { Constants } from "@/integrations/supabase/types";
+import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
+import type { PricingDisplayMode } from "@/types/pricingDisplay";
 import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
 
 const invoiceStatuses = Constants.public.Enums.invoice_status;
@@ -71,8 +73,9 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
   const isEditing = !!invoice;
 
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0 },
+    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
   ]);
+  const [displayMode, setDisplayMode] = useState<PricingDisplayMode>("detailed");
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -129,8 +132,11 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
           description: item.description,
           quantity: Number(item.quantity),
           unit_price: Number(item.unit_price),
+          line_group: (item as any).line_group || "Materials",
+          visible: (item as any).visible !== false,
         }))
       );
+      setDisplayMode((invoice as any).pricing_display_mode || "detailed");
     } else {
       form.reset({
         customer_id: "",
@@ -141,8 +147,9 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
         notes: "",
       });
       setLineItems([
-        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0 },
+        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
       ]);
+      setDisplayMode("detailed");
     }
   }, [invoice, form]);
 
@@ -173,12 +180,15 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
       due_date: format(values.due_date, "yyyy-MM-dd"),
       tax_rate: values.tax_rate,
       notes: values.notes || null,
+      pricing_display_mode: displayMode,
     };
 
     const itemsData = validItems.map((item) => ({
       description: item.description,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      line_group: item.line_group || "Materials",
+      visible: item.visible !== false,
     }));
 
     if (isEditing) {
@@ -361,7 +371,10 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
 
             <div>
               <h3 className="text-sm font-medium mb-4">Line Items</h3>
-              <InvoiceLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+              <PricingDisplayModeSelector value={displayMode} onChange={setDisplayMode} />
+              <div className="mt-4">
+                <InvoiceLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+              </div>
             </div>
 
             <Separator />
