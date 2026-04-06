@@ -22,54 +22,63 @@ function extractText(html: string, pattern: RegExp): string {
 }
 
 function parseWesco(html: string, url: string): Record<string, any> {
-  // Product name from h1
-  const productName = extractText(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  // Product name from h1 > span
+  const productName = extractText(html, /<h1[^>]*>\s*<span>([\s\S]*?)<\/span>\s*<\/h1>/i)
+    || extractText(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i);
 
-  // SKU - look for "Code:" pattern
+  // SKU - "Code: " pattern in product-info-sku div
   let sku = "";
-  const skuMatch = html.match(/Code:\s*<[^>]*>([^<]+)/i) || html.match(/product-info-sku[^>]*>[^<]*Code:\s*([A-Z0-9\-]+)/i);
+  const skuMatch = html.match(/product-info-sku[^>]*>[\s\S]*?Code:\s*<\/span>\s*([A-Z0-9\-]+)/i)
+    || html.match(/Code:\s*<\/span>\s*([A-Z0-9\-]+)/i)
+    || html.match(/Code:\s*([A-Z0-9\-]+)/i);
   if (skuMatch) sku = skuMatch[1].trim();
 
-  // Price - look for local-price or price patterns
+  // Price - Wesco uses: <span class="local-price"><span class="price__currency">€</span><span class="price__digit">699</span><span class="price__decimal">.00</span>
   let price: number | null = null;
-  const priceMatch = html.match(/local-price[^>]*>[\s\S]*?([€£\$])\s*([\d,]+\.?\d*)/i)
-    || html.match(/price__amount[^>]*>[\s\S]*?([€£\$])\s*([\d,]+\.?\d*)/i)
-    || html.match(/itemprop="price"[^>]*content="([\d.]+)"/i);
-  if (priceMatch) {
-    const raw = priceMatch.length === 2 ? priceMatch[1] : priceMatch[2];
-    price = parseFloat(raw.replace(/,/g, ""));
+  const priceDigit = html.match(/price__digit[^>]*>([\d,]+)<\/span>/i);
+  const priceDecimal = html.match(/price__decimal[^>]*>\.([\d]+)<\/span>/i);
+  if (priceDigit) {
+    const whole = priceDigit[1].replace(/,/g, "");
+    const dec = priceDecimal ? priceDecimal[1] : "00";
+    price = parseFloat(`${whole}.${dec}`);
+  }
+  // Fallback: itemprop price
+  if (!price) {
+    const fallback = html.match(/itemprop="price"[^>]*content="([\d.]+)"/i);
+    if (fallback) price = parseFloat(fallback[1]);
   }
 
   // VAT mode
   let vatMode = "ex_vat";
-  if (/inc.*vat|incl.*vat|including.*vat/i.test(html)) vatMode = "inc_vat";
+  if (/price__vat[^>]*>\s*Inc/i.test(html)) vatMode = "inc_vat";
 
-  // Image
+  // Image - first altimg thumbnail
   let imageUrl = "";
-  const imgMatch = html.match(/mainimg[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i)
-    || html.match(/product-image[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i);
+  const imgMatch = html.match(/<a[^>]*id="altimg-1"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i)
+    || html.match(/imggallery[\s\S]*?<img[^>]*src="([^"]+)"/i);
   if (imgMatch) imageUrl = imgMatch[1].startsWith("http") ? imgMatch[1] : `https://www.wesco.ie${imgMatch[1]}`;
 
-  // Description
-  const description = extractText(html, /product-tabs-description[\s\S]*?accordion-inner[^>]*>([\s\S]*?)<\/div>/i)
-    || extractText(html, /itemprop="description"[^>]*>([\s\S]*?)<\/(?:div|span)/i);
+  // Description from accordion-inner
+  const description = extractText(html, /accordion-inner-wrap[^>]*>([\s\S]*?)<\/div>/i)
+    || extractText(html, /accordion-inner[^>]*>([\s\S]*?)<\/div>/i);
 
-  // Breadcrumbs for category
+  // Breadcrumbs: <a class="breadcrumb__link">Category</a>
   let category = "";
   let subcategory = "";
   const breadcrumbs: string[] = [];
-  const bcRegex = /breadcrumbs[\s\S]*?<li[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/gi;
+  const bcRegex = /breadcrumb__link[^>]*>([^<]+)<\/a>/gi;
   let bcMatch;
   while ((bcMatch = bcRegex.exec(html)) !== null) {
     const t = bcMatch[1].trim();
-    if (t && t.toLowerCase() !== "home") breadcrumbs.push(t);
+    if (t && t.toLowerCase() !== "home" && t.toLowerCase() !== "shop") breadcrumbs.push(t);
   }
   if (breadcrumbs.length > 0) category = breadcrumbs[0];
   if (breadcrumbs.length > 1) subcategory = breadcrumbs[breadcrumbs.length - 1];
 
-  // Manufacturer
+  // Manufacturer - from l-products__intro or brand
   let manufacturer = "";
-  const mfgMatch = html.match(/brand[^>]*>([^<]+)/i) || html.match(/manufacturer[^>]*>([^<]+)/i);
+  const mfgMatch = html.match(/l-products__intro[\s\S]*?stockists of\s+(\w+)/i)
+    || html.match(/brand[^>]*>([^<]+)/i);
   if (mfgMatch) manufacturer = mfgMatch[1].trim();
 
   return {
