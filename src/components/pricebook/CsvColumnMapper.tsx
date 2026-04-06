@@ -63,7 +63,7 @@ export function CsvColumnMapper({ csvHeaders, mapping, onChange, rowCount, sampl
               {field.required && <span className="text-destructive ml-1 text-xs">*</span>}
               {mapping[field.key] && sampleRow && (
                 <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  e.g. "{sampleRow[headerIndex(mapping[field.key])] || "—"}"
+                  e.g. "{getSample(field.key)}"
                 </p>
               )}
             </div>
@@ -84,7 +84,7 @@ export function CsvColumnMapper({ csvHeaders, mapping, onChange, rowCount, sampl
               </Select>
             </div>
             {mapping[field.key] && (
-              <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
             )}
           </div>
         ))}
