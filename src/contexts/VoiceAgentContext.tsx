@@ -493,7 +493,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     supabase.functions.invoke("elevenlabs-agent-token", { body: {} })
       .then(({ data, error }) => {
         if (!error && data?.token) {
-          cachedTokenRef.current = { token: data.token, fetchedAt: Date.now() };
+          cachedTokenRef.current = { token: data.token, signedUrl: data.signed_url, fetchedAt: Date.now() };
           console.log("[VoiceAgent] ✅ Token pre-warmed");
         } else {
           const errMsg = data?.error || error?.message || "Unknown error";
