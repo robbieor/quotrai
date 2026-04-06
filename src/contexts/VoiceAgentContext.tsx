@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
-import { useConversation, ConversationProvider } from "@elevenlabs/react";
+import { VoiceConversation } from "@elevenlabs/client";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -103,6 +103,7 @@ const MUTATION_QUERY_MAP: Record<string, string[][]> = {
 };
 
 function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
+  const conversationRef = useRef<VoiceConversation | null>(null);
   const [connectionPhase, setConnectionPhase] = useState<ConnectionPhase>("idle");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
@@ -210,8 +211,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     else toast.info(message, opts);
   }, []);
 
-  const conversation = useConversation({
-    onConnect: () => {
+  const handleConnect = useCallback(() => {
       console.log("[VoiceAgent] ✅ onConnect fired — transport is truly live");
       addDebugEvent("✅ onConnect fired — session truly connected");
       updateDebug({ sessionConnected: true, onConnectFired: true, connectionPhase: "connected" });
@@ -224,18 +224,20 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         onConnectRejectRef.current = null;
       }
 
-      try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
+      try { conversationRef.current?.sendUserActivity(); } catch (_) { /* noop */ }
 
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
       keepAliveRef.current = setInterval(() => {
-        try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
+        try { conversationRef.current?.sendUserActivity(); } catch (_) { /* noop */ }
       }, 15_000);
-    },
-    onDisconnect: () => {
+    }, [addDebugEvent, updateDebug, debouncedToast]);
+
+  const handleDisconnect = useCallback(() => {
       console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
       addDebugEvent("🔌 Disconnected");
       updateDebug({ sessionConnected: false, onConnectFired: false, connectionPhase: "idle" });
       setConnectionPhase("idle");
+      conversationRef.current = null;
       debouncedToast('info', "Call ended", { duration: 2000 });
       conversationIdRef.current = null;
       setCurrentConversationId(null);
@@ -250,8 +252,9 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         clearInterval(keepAliveRef.current);
         keepAliveRef.current = null;
       }
-    },
-    onMessage: (message: any) => {
+    }, [addDebugEvent, updateDebug, debouncedToast]);
+
+  const handleMessage = useCallback((message: any) => {
       if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
         const transcript = message.user_transcription_event.user_transcript;
         addDebugEvent(`🗣️ User transcript: "${transcript.substring(0, 60)}"`);
@@ -266,8 +269,9 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (message.type === "conversation_initiation_metadata") {
         addDebugEvent("📋 conversation_initiation_metadata received");
       }
-    },
-    onError: (error) => {
+    }, [addDebugEvent, updateDebug, saveMessage]);
+
+  const handleSdkError = useCallback((error: unknown) => {
       console.error("[VoiceAgent] ❌ Error:", error);
       const errMsg = error instanceof Error ? error.message : String(error);
       addDebugEvent(`❌ SDK Error: ${errMsg}`);
@@ -278,110 +282,9 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         onConnectResolveRef.current = null;
         onConnectRejectRef.current = null;
       }
-    },
-    clientTools: {
-      // Summaries & Overview
-      get_today_summary: async () => await callGeorgeWebhook("get_today_summary", {}, contextRef.current),
-      get_week_ahead_summary: async () => await callGeorgeWebhook("get_week_ahead_summary", {}, contextRef.current),
-      get_todays_jobs: async () => await callGeorgeWebhook("get_todays_jobs", {}, contextRef.current),
-      get_upcoming_jobs: async (params: { days?: number }) => await callGeorgeWebhook("get_upcoming_jobs", params, contextRef.current),
-      get_financial_summary: async (params: { period?: string }) => await callGeorgeWebhook("get_financial_summary", params, contextRef.current),
+    }, [addDebugEvent, updateDebug]);
 
-      // Jobs
-      create_job: async (params: { customer_name: string; title: string; description?: string; scheduled_date?: string; scheduled_time?: string; estimated_value?: number }) =>
-        await callGeorgeWebhook("create_job", params, contextRef.current),
-      list_jobs: async (params: { status?: string; customer_name?: string; search?: string; date_from?: string; date_to?: string; limit?: number }) =>
-        await callGeorgeWebhook("list_jobs", params, contextRef.current),
-      reschedule_job: async (params: { job_title?: string; client_name?: string; new_date: string; new_time?: string }) =>
-        await callGeorgeWebhook("reschedule_job", params, contextRef.current),
-      update_job_status: async (params: { job_title: string; new_status: string }) =>
-        await callGeorgeWebhook("update_job_status", params, contextRef.current),
-      delete_job: async (params: { job_id?: string; job_title?: string; client_name?: string }) =>
-        await callGeorgeWebhook("delete_job", params, contextRef.current),
-
-      // Customers
-      list_customers: async (params: { search?: string; limit?: number }) =>
-        await callGeorgeWebhook("list_customers", params, contextRef.current),
-      search_customer: async (params: { query: string }) =>
-        await callGeorgeWebhook("search_customer", params, contextRef.current),
-      get_client_info: async (params: { client_name: string }) =>
-        await callGeorgeWebhook("get_client_info", params, contextRef.current),
-      create_customer: async (params: { name: string; email?: string; phone?: string; address?: string; contact_person?: string; notes?: string }) =>
-        await callGeorgeWebhook("create_customer", params, contextRef.current),
-      update_customer: async (params: { customer_name?: string; customer_id?: string; name?: string; email?: string; phone?: string; address?: string; contact_person?: string; notes?: string }) =>
-        await callGeorgeWebhook("update_customer", params, contextRef.current),
-      delete_customer: async (params: { customer_name?: string; customer_id?: string }) =>
-        await callGeorgeWebhook("delete_customer", params, contextRef.current),
-
-      // Quotes
-      create_quote: async (params: { customer_name: string; items: Array<{ description: string; quantity: number; unit_price: number }>; notes?: string; valid_days?: number; job_id?: string }) =>
-        await callGeorgeWebhook("create_quote", params, contextRef.current),
-      list_quotes: async (params: { status?: string; customer_name?: string; search?: string; limit?: number }) =>
-        await callGeorgeWebhook("list_quotes", params, contextRef.current),
-      get_pending_quotes: async () => await callGeorgeWebhook("get_pending_quotes", {}, contextRef.current),
-      update_quote_status: async (params: { quote_id?: string; display_number?: string; new_status: string }) =>
-        await callGeorgeWebhook("update_quote_status", params, contextRef.current),
-      delete_quote: async (params: { quote_id?: string; display_number?: string }) =>
-        await callGeorgeWebhook("delete_quote", params, contextRef.current),
-
-      // Invoices
-      create_invoice: async (params: { customer_name: string; items: Array<{ description: string; quantity: number; unit_price: number }>; notes?: string; due_days?: number; job_id?: string; tax_rate?: number }) =>
-        await callGeorgeWebhook("create_invoice", params, contextRef.current),
-      list_invoices: async (params: { status?: string; customer_name?: string; search?: string; limit?: number }) =>
-        await callGeorgeWebhook("list_invoices", params, contextRef.current),
-      get_outstanding_invoices: async () => await callGeorgeWebhook("get_outstanding_invoices", {}, contextRef.current),
-      get_overdue_invoices: async () => await callGeorgeWebhook("get_overdue_invoices", {}, contextRef.current),
-      update_invoice_status: async (params: { invoice_id?: string; display_number?: string; new_status: string }) =>
-        await callGeorgeWebhook("update_invoice_status", params, contextRef.current),
-      send_invoice_reminder: async (params: { display_number?: string; invoice_id?: string }) =>
-        await callGeorgeWebhook("send_invoice_reminder", params, contextRef.current),
-      delete_invoice: async (params: { invoice_id?: string; display_number?: string }) =>
-        await callGeorgeWebhook("delete_invoice", params, contextRef.current),
-
-      // Expenses
-      log_expense: async (params: { description: string; amount: number; category?: string; vendor?: string; job_title?: string }) =>
-        await callGeorgeWebhook("log_expense", params, contextRef.current),
-      list_expenses: async (params: { category?: string; vendor?: string; job_id?: string; date_from?: string; date_to?: string; limit?: number }) =>
-        await callGeorgeWebhook("list_expenses", params, contextRef.current),
-      delete_expense: async (params: { expense_id?: string; vendor?: string; amount?: number }) =>
-        await callGeorgeWebhook("delete_expense", params, contextRef.current),
-
-      // Templates
-      get_templates: async (params?: { category?: string; search?: string }) =>
-        await callGeorgeWebhook("get_templates", params || {}, contextRef.current),
-      use_template_for_quote: async (params: { template_name?: string; template_id?: string; customer_name: string; notes?: string; quantity_overrides?: Record<string, number>; job_id?: string; job_title?: string; create_job?: boolean; scheduled_date?: string; scheduled_time?: string }) =>
-        await callGeorgeWebhook("use_template_for_quote", params, contextRef.current),
-      create_invoice_from_template: async (params: { template_name?: string; template_id?: string; customer_name: string; notes?: string; due_days?: number; quantity_overrides?: Record<string, number>; job_id?: string; job_title?: string; create_job?: boolean; scheduled_date?: string; scheduled_time?: string }) =>
-        await callGeorgeWebhook("create_invoice_from_template", params, contextRef.current),
-      suggest_template: async (params: { job_description: string }) =>
-        await callGeorgeWebhook("suggest_template", params, contextRef.current),
-
-      // Additional
-      create_invoice_from_quote: async (params: { quote_id?: string; display_number?: string; due_days?: number }) =>
-        await callGeorgeWebhook("create_invoice_from_quote", params, contextRef.current),
-      get_jobs_for_date: async (params: { date: string }) =>
-        await callGeorgeWebhook("get_jobs_for_date", params, contextRef.current),
-      check_availability: async (params: { date: string; preferred_time?: string }) =>
-        await callGeorgeWebhook("check_availability", params, contextRef.current),
-      get_week_schedule: async (params: { start_date?: string }) =>
-        await callGeorgeWebhook("get_week_schedule", params, contextRef.current),
-      get_monthly_summary: async (params: { month?: number; year?: number }) =>
-        await callGeorgeWebhook("get_monthly_summary", params, contextRef.current),
-      get_outstanding_balance: async (params: { customer_name?: string }) =>
-        await callGeorgeWebhook("get_outstanding_balance", params, contextRef.current),
-      record_payment: async (params: { display_number?: string; invoice_id?: string; amount: number; payment_method?: string; notes?: string }) =>
-        await callGeorgeWebhook("record_payment", params, contextRef.current),
-      get_payment_history: async (params: { display_number?: string; invoice_id?: string; customer_name?: string; limit?: number }) =>
-        await callGeorgeWebhook("get_payment_history", params, contextRef.current),
-      get_template_details: async (params: { template_name?: string; template_id?: string }) =>
-        await callGeorgeWebhook("get_template_details", params, contextRef.current),
-      search_templates: async (params: { query: string; category?: string }) =>
-        await callGeorgeWebhook("search_templates", params, contextRef.current),
-      list_template_categories: async () =>
-        await callGeorgeWebhook("list_template_categories", {}, contextRef.current),
-    },
-  });
-
+  const clientTools = {
   /**
    * Start a single session attempt and wait for onConnect with timeout.
    * Returns only when onConnect fires OR throws on timeout/error.
@@ -407,7 +310,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       onConnectRejectRef.current = wrappedReject;
 
       try {
-        conversation.startSession({ ...sessionOpts, dynamicVariables });
+        VoiceConversation.startSession({ ...sessionOpts, dynamicVariables, onConnect: () => handleConnect(), onDisconnect: () => handleDisconnect(), onMessage: (message) => handleMessage(message), onError: (message) => handleSdkError(message), clientTools }).then((conv) => { conversationRef.current = conv; }).catch((err) => { throw err; });
       } catch (err: unknown) {
         clearTimeout(timeout);
         onConnectResolveRef.current = null;
@@ -415,7 +318,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         reject(err instanceof Error ? err : new Error(String(err)));
       }
     });
-  }, [conversation]);
+  }, [handleConnect, handleDisconnect, handleMessage, handleSdkError]);
 
   // Pre-warm: fetch token in background
   const preWarmToken = useCallback(() => {
@@ -457,7 +360,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     }
 
     // Best-effort teardown
-    try { conversation.endSession(); } catch (_) { /* noop */ }
+    try { conversationRef.current?.endSession(); } catch (_) { /* noop */ }
   }, [conversation, addDebugEvent, updateDebug]);
 
   const startConversation = useCallback(async (context?: AgentContext) => {
@@ -585,7 +488,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       // 4. Teardown stale session and wait for SDK lock to clear
       addDebugEvent("🔄 Tearing down before fallback...");
-      try { await conversation.endSession(); } catch (_) { /* noop */ }
+      try { await conversationRef.current?.endSession(); } catch (_) { /* noop */ }
       await new Promise(r => setTimeout(r, SESSION_TEARDOWN_DELAY_MS));
 
       // 5. WebSocket fallback
@@ -625,7 +528,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         const errMsg = wsErr instanceof Error ? wsErr.message : String(wsErr);
         addDebugEvent(`❌ WebSocket also failed: ${errMsg}`);
         updateDebug({ lastError: errMsg });
-        try { await conversation.endSession(); } catch (_) { /* noop */ }
+        try { await conversationRef.current?.endSession(); } catch (_) { /* noop */ }
       }
 
       // Both failed
@@ -657,15 +560,15 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const stopConversation = useCallback(async () => {
     try {
       addDebugEvent("🛑 Ending session...");
-      await conversation.endSession();
+      await conversationRef.current?.endSession();
     } catch (error) {
       console.error("[VoiceAgent] Error stopping conversation:", error);
     }
   }, [conversation, addDebugEvent]);
 
   const sendTextMessage = useCallback((text: string) => {
-    if (conversation.status === "connected") {
-      conversation.sendUserMessage(text);
+    if (conversationRef.current && connectionPhase === "connected") {
+      conversationRef.current.sendUserMessage(text);
     }
   }, [conversation]);
 
@@ -691,8 +594,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   return (
     <VoiceAgentContext.Provider
       value={{
-        status: conversation.status as "connected" | "disconnected",
-        isSpeaking: conversation.isSpeaking,
+        status: connectionPhase === "connected" ? "connected" : "disconnected",
+        isSpeaking: false,
         isConnecting,
         connectionPhase,
         currentConversationId,
@@ -716,11 +619,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 }
 
 export function VoiceAgentProvider({ children }: { children: ReactNode }) {
-  return (
-    <ConversationProvider>
-      <VoiceAgentProviderInner>{children}</VoiceAgentProviderInner>
-    </ConversationProvider>
-  );
+  return <VoiceAgentProviderInner>{children}</VoiceAgentProviderInner>;
 }
 
 export function useGlobalVoiceAgent() {
