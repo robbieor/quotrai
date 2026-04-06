@@ -41,13 +41,13 @@ serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
 
     if (!ELEVENLABS_API_KEY) {
-      console.error("ElevenLabs API key not configured");
+      console.error("ELEVENLABS_API_KEY is missing from secrets");
       return new Response(
         JSON.stringify({ 
-          agentId: ELEVENLABS_AGENT_ID,
-          usePublicAgent: true 
+          error: "Voice service not configured: API key missing",
+          code: "missing_api_key"
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -68,13 +68,17 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error("ElevenLabs token error:", response.status, errorText);
       
+      const code = response.status === 401 || response.status === 403 
+        ? "invalid_api_key" 
+        : "token_fetch_failed";
+      
       return new Response(
         JSON.stringify({ 
-          agentId: ELEVENLABS_AGENT_ID,
-          usePublicAgent: true,
-          error: `Token fetch failed: ${response.status}` 
+          error: `Voice service error: ${response.status}`,
+          code,
+          detail: errorText.substring(0, 200)
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -94,11 +98,11 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        agentId: ELEVENLABS_AGENT_ID,
-        usePublicAgent: true,
-        error: String(error)
+        error: "Internal voice service error",
+        code: "internal_error",
+        detail: String(error).substring(0, 200)
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
