@@ -580,16 +580,18 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
           origReject(err);
         };
 
-        // Start the session
-        conversation.startSession({
-          ...sessionOpts,
-          dynamicVariables,
-        }).catch((err: unknown) => {
+        // Start the session — startSession returns void, errors surface via onError
+        try {
+          conversation.startSession({
+            ...sessionOpts,
+            dynamicVariables,
+          });
+        } catch (err: unknown) {
           clearTimeout(timeout);
           onConnectResolveRef.current = null;
           onConnectRejectRef.current = null;
           reject(err instanceof Error ? err : new Error(String(err)));
-        });
+        }
       });
     };
 
