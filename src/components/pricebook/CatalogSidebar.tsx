@@ -1,8 +1,8 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 import type { CatalogFilters } from "@/hooks/useTeamCatalog";
+import { getCategoriesForTrade, getSubcategoriesForCategory } from "@/data/tradeCategoryMap";
 
 interface CatalogSidebarProps {
   filters: CatalogFilters;
@@ -18,6 +18,33 @@ interface CatalogSidebarProps {
 export function CatalogSidebar({ filters, onFiltersChange, options }: CatalogSidebarProps) {
   const set = (key: keyof CatalogFilters, value: any) =>
     onFiltersChange({ ...filters, [key]: value });
+
+  // Cascading: categories depend on selected trade type
+  const availableCategories = filters.trade_type
+    ? getCategoriesForTrade(filters.trade_type).filter((c) => options.categories.includes(c))
+    : options.categories;
+
+  const availableSubcategories = filters.trade_type && filters.category
+    ? getSubcategoriesForCategory(filters.trade_type, filters.category).filter((s) => options.subcategories.includes(s))
+    : filters.category
+      ? options.subcategories
+      : [];
+
+  const handleTradeSelect = (v: string) => {
+    if (v === filters.trade_type) {
+      onFiltersChange({ ...filters, trade_type: undefined, category: undefined, subcategory: undefined });
+    } else {
+      onFiltersChange({ ...filters, trade_type: v, category: undefined, subcategory: undefined });
+    }
+  };
+
+  const handleCategorySelect = (v: string) => {
+    if (v === filters.category) {
+      onFiltersChange({ ...filters, category: undefined, subcategory: undefined });
+    } else {
+      onFiltersChange({ ...filters, category: v, subcategory: undefined });
+    }
+  };
 
   return (
     <div className="space-y-6 text-sm">
@@ -39,25 +66,25 @@ export function CatalogSidebar({ filters, onFiltersChange, options }: CatalogSid
           title="Trade Type"
           items={options.trade_types}
           selected={filters.trade_type}
-          onSelect={(v) => set("trade_type", v === filters.trade_type ? undefined : v)}
+          onSelect={handleTradeSelect}
         />
       )}
 
-      {/* Category */}
-      {options.categories.length > 0 && (
+      {/* Category — cascaded from trade */}
+      {availableCategories.length > 0 && (
         <FilterSection
           title="Category"
-          items={options.categories}
+          items={availableCategories}
           selected={filters.category}
-          onSelect={(v) => set("category", v === filters.category ? undefined : v)}
+          onSelect={handleCategorySelect}
         />
       )}
 
-      {/* Subcategory */}
-      {options.subcategories.length > 0 && (
+      {/* Subcategory — cascaded from category */}
+      {availableSubcategories.length > 0 && (
         <FilterSection
           title="Subcategory"
-          items={options.subcategories}
+          items={availableSubcategories}
           selected={filters.subcategory}
           onSelect={(v) => set("subcategory", v === filters.subcategory ? undefined : v)}
         />

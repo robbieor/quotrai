@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { getAllTradeTypes, getCategoriesForTrade, getSubcategoriesForCategory } from "@/data/tradeCategoryMap";
 import type { CatalogItem } from "@/hooks/useTeamCatalog";
 
-const CATEGORIES = ["Lighting", "Cable", "Switches", "Sockets", "Distribution", "Trunking", "Fire Safety", "Labour", "Materials", "Plumbing", "Carpentry", "Painting", "Roofing", "General", "Other"];
 const UNITS = ["each", "metre", "sqm", "hour", "day", "box", "roll", "litre", "kg", "set"];
-const TRADE_TYPES = ["Electrical", "Plumbing", "Carpentry", "Painting", "Roofing", "General"];
 
 interface CatalogItemFormProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface CatalogItemFormProps {
 }
 
 export function CatalogItemForm({ open, onOpenChange, item, onSubmit }: CatalogItemFormProps) {
+  const [showAdvanced, setShowAdvanced] = useState(!!item);
   const [form, setForm] = useState({
     item_name: item?.item_name || "",
     supplier_name: item?.supplier_name || "",
@@ -39,7 +41,6 @@ export function CatalogItemForm({ open, onOpenChange, item, onSubmit }: CatalogI
     ? (((parseFloat(form.sell_price) - parseFloat(form.cost_price)) / parseFloat(form.sell_price)) * 100).toFixed(1)
     : null;
 
-  // Auto-calc cost from web price + discount
   const recalcCost = (webPrice: string, discount: string) => {
     const wp = parseFloat(webPrice) || 0;
     const d = parseFloat(discount) || 0;
@@ -52,130 +53,168 @@ export function CatalogItemForm({ open, onOpenChange, item, onSubmit }: CatalogI
     return c > 0 ? (c * (1 + m / 100)).toFixed(2) : form.sell_price;
   };
 
+  const categories = getCategoriesForTrade(form.trade_type);
+  const subcategories = getSubcategoriesForCategory(form.trade_type, form.category);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{item ? "Edit Catalog Item" : "Add Catalog Item"}</DialogTitle>
+          <DialogTitle>{item ? "Edit Item" : "Quick Add Item"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-1 max-h-[60vh] overflow-y-auto">
+          {/* Essential fields only */}
           <div>
             <Label>Item Name *</Label>
-            <Input value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} placeholder="10W LED Floodlight" />
+            <Input value={form.item_name} onChange={(e) => setForm({ ...form, item_name: e.target.value })} placeholder="e.g. 10W LED Floodlight" />
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Supplier</Label>
-              <Input value={form.supplier_name} onChange={(e) => setForm({ ...form, supplier_name: e.target.value })} placeholder="Wesco" />
+              <Label>Cost Price *</Label>
+              <Input
+                type="number" step="0.01" placeholder="0.00"
+                value={form.cost_price}
+                onChange={(e) => {
+                  const newSell = recalcSell(e.target.value, form.markup_percent);
+                  setForm({ ...form, cost_price: e.target.value, sell_price: newSell });
+                }}
+              />
             </div>
             <div>
-              <Label>SKU</Label>
-              <Input value={form.supplier_sku} onChange={(e) => setForm({ ...form, supplier_sku: e.target.value })} placeholder="PH12345" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Manufacturer</Label>
-              <Input value={form.manufacturer} onChange={(e) => setForm({ ...form, manufacturer: e.target.value })} placeholder="Philips" />
-            </div>
-            <div>
-              <Label>Trade Type</Label>
-              <Select value={form.trade_type} onValueChange={(v) => setForm({ ...form, trade_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TRADE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Subcategory</Label>
-              <Input value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} placeholder="Optional" />
-            </div>
-            <div>
-              <Label>Unit</Label>
-              <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>Sell Price</Label>
+              <Input
+                type="number" step="0.01" placeholder="0.00"
+                value={form.sell_price}
+                onChange={(e) => setForm({ ...form, sell_price: e.target.value })}
+              />
             </div>
           </div>
 
-          <div className="border-t border-border pt-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">PRICING</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Website/List Price</Label>
-                <Input
-                  type="number" step="0.01"
-                  value={form.website_price}
-                  onChange={(e) => {
-                    const newCost = recalcCost(e.target.value, form.discount_percent);
-                    const newSell = recalcSell(newCost, form.markup_percent);
-                    setForm({ ...form, website_price: e.target.value, cost_price: newCost, sell_price: newSell });
-                  }}
-                />
-              </div>
-              <div>
-                <Label>Discount %</Label>
-                <Input
-                  type="number" step="0.1"
-                  value={form.discount_percent}
-                  onChange={(e) => {
-                    const newCost = recalcCost(form.website_price, e.target.value);
-                    const newSell = recalcSell(newCost, form.markup_percent);
-                    setForm({ ...form, discount_percent: e.target.value, cost_price: newCost, sell_price: newSell });
-                  }}
-                />
-              </div>
+          {margin && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Margin:</span>
+              <Badge variant={parseFloat(margin) >= 20 ? "default" : "destructive"} className="text-xs">{margin}%</Badge>
             </div>
-            <div className="grid grid-cols-3 gap-3 mt-3">
+          )}
+
+          {/* Advanced / optional fields */}
+          <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground text-xs">
+                {showAdvanced ? "Hide details" : "More details (supplier, category, pricing...)"}
+                {showAdvanced ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Supplier</Label>
+                  <Input value={form.supplier_name} onChange={(e) => setForm({ ...form, supplier_name: e.target.value })} placeholder="Wesco" />
+                </div>
+                <div>
+                  <Label>SKU</Label>
+                  <Input value={form.supplier_sku} onChange={(e) => setForm({ ...form, supplier_sku: e.target.value })} placeholder="PH12345" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Manufacturer</Label>
+                  <Input value={form.manufacturer} onChange={(e) => setForm({ ...form, manufacturer: e.target.value })} placeholder="Philips" />
+                </div>
+                <div>
+                  <Label>Unit</Label>
+                  <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Cascading trade → category → subcategory */}
               <div>
-                <Label>Cost Price</Label>
-                <Input
-                  type="number" step="0.01"
-                  value={form.cost_price}
-                  onChange={(e) => {
-                    const newSell = recalcSell(e.target.value, form.markup_percent);
-                    setForm({ ...form, cost_price: e.target.value, sell_price: newSell });
-                  }}
-                />
+                <Label>Trade Type</Label>
+                <Select value={form.trade_type} onValueChange={(v) => setForm({ ...form, trade_type: v, category: "", subcategory: "" })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {getAllTradeTypes().map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
-                <Label>Markup %</Label>
-                <Input
-                  type="number" step="0.1"
-                  value={form.markup_percent}
-                  onChange={(e) => {
-                    const newSell = recalcSell(form.cost_price, e.target.value);
-                    setForm({ ...form, markup_percent: e.target.value, sell_price: newSell });
-                  }}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Category</Label>
+                  <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v, subcategory: "" })}>
+                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Subcategory</Label>
+                  <Select value={form.subcategory} onValueChange={(v) => setForm({ ...form, subcategory: v })} disabled={subcategories.length === 0}>
+                    <SelectTrigger><SelectValue placeholder={subcategories.length ? "Select..." : "Pick category first"} /></SelectTrigger>
+                    <SelectContent>
+                      {subcategories.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label>Sell Price</Label>
-                <Input type="number" step="0.01" value={form.sell_price} onChange={(e) => setForm({ ...form, sell_price: e.target.value })} />
+
+              {/* Website price / discount */}
+              <div className="border-t border-border pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">SUPPLIER PRICING</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Website Price</Label>
+                    <Input
+                      type="number" step="0.01"
+                      value={form.website_price}
+                      onChange={(e) => {
+                        const newCost = recalcCost(e.target.value, form.discount_percent);
+                        const newSell = recalcSell(newCost, form.markup_percent);
+                        setForm({ ...form, website_price: e.target.value, cost_price: newCost, sell_price: newSell });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label>Discount %</Label>
+                    <Input
+                      type="number" step="0.1"
+                      value={form.discount_percent}
+                      onChange={(e) => {
+                        const newCost = recalcCost(form.website_price, e.target.value);
+                        const newSell = recalcSell(newCost, form.markup_percent);
+                        setForm({ ...form, discount_percent: e.target.value, cost_price: newCost, sell_price: newSell });
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div>
+                    <Label>Markup %</Label>
+                    <Input
+                      type="number" step="0.1"
+                      value={form.markup_percent}
+                      onChange={(e) => {
+                        const newSell = recalcSell(form.cost_price, e.target.value);
+                        setForm({ ...form, markup_percent: e.target.value, sell_price: newSell });
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    {margin && (
+                      <Badge variant={parseFloat(margin) >= 20 ? "default" : "destructive"} className="text-xs mb-2">{margin}% margin</Badge>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            {margin && (
-              <div className="flex items-center gap-2 text-sm mt-2">
-                <span className="text-muted-foreground">Margin:</span>
-                <Badge variant={parseFloat(margin) >= 20 ? "default" : "destructive"} className="text-xs">{margin}%</Badge>
-              </div>
-            )}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
