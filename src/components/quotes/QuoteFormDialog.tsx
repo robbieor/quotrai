@@ -43,6 +43,8 @@ import { useCreateQuote, useUpdateQuote, Quote } from "@/hooks/useQuotes";
 import { QuoteLineItems, LineItem } from "./QuoteLineItems";
 import { TemplatePicker } from "./TemplatePicker";
 import { Constants } from "@/integrations/supabase/types";
+import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
+import type { PricingDisplayMode } from "@/types/pricingDisplay";
 import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
 
 const quoteStatuses = Constants.public.Enums.quote_status;
@@ -73,8 +75,9 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
 
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0 },
+    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
   ]);
+  const [displayMode, setDisplayMode] = useState<PricingDisplayMode>("detailed");
 
   const form = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
@@ -137,8 +140,11 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
           description: item.description,
           quantity: Number(item.quantity),
           unit_price: Number(item.unit_price),
+          line_group: (item as any).line_group || "Materials",
+          visible: (item as any).visible !== false,
         }))
       );
+      setDisplayMode((quote as any).pricing_display_mode || "detailed");
     } else {
       form.reset({
         customer_id: "",
@@ -149,8 +155,9 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
         notes: "",
       });
       setLineItems([
-        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0 },
+        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
       ]);
+      setDisplayMode("detailed");
     }
   }, [quote, form]);
 
@@ -181,12 +188,15 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
       valid_until: values.valid_until ? format(values.valid_until, "yyyy-MM-dd") : null,
       tax_rate: values.tax_rate,
       notes: values.notes || null,
+      pricing_display_mode: displayMode,
     };
 
     const itemsData = validItems.map((item) => ({
       description: item.description,
       quantity: item.quantity,
       unit_price: item.unit_price,
+      line_group: item.line_group || "Materials",
+      visible: item.visible !== false,
     }));
 
     if (isEditing) {
@@ -380,7 +390,10 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
                   Use Template
                 </Button>
               </div>
-              <QuoteLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+              <PricingDisplayModeSelector value={displayMode} onChange={setDisplayMode} />
+              <div className="mt-4">
+                <QuoteLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+              </div>
             </div>
 
             <Separator />
