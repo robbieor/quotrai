@@ -132,8 +132,26 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
         last_synced_at: new Date().toISOString(),
       });
 
+      const pricebookId = (pb as any)?.id;
+
+      // Create import job
+      const { data: importJob } = await supabase
+        .from("pricebook_import_jobs" as any)
+        .insert({
+          team_id: profile.team_id,
+          pricebook_id: pricebookId,
+          source_type: "website",
+          status: "running",
+          started_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      const jobId = (importJob as any)?.id;
+
+      let itemsImported = 0;
+
       // If we have a scraped product, add it
-      if (scrapedProduct && pb) {
+      if (scrapedProduct && pricebookId) {
         const setting = getSettingForSupplier(detectedSupplier);
         const discount = setting?.discount_percent ?? 0;
         const markup = setting?.default_markup_percent ?? 30;
@@ -141,30 +159,45 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
         const costPrice = webPrice > 0 ? +(webPrice * (1 - discount / 100)).toFixed(2) : 0;
         const sellPrice = costPrice > 0 ? +(costPrice * (1 + markup / 100)).toFixed(2) : 0;
 
-        await addItem.mutateAsync({
-          item_name: scrapedProduct.product_name,
-          supplier_name: detectedSupplier,
-          supplier_sku: scrapedProduct.supplier_sku || null,
-          manufacturer: scrapedProduct.manufacturer || null,
-          category: scrapedProduct.category || null,
-          subcategory: scrapedProduct.subcategory || null,
-          trade_type: tradeType,
-          unit: scrapedProduct.unit_of_measure || "each",
-          website_price: webPrice || null,
-          discount_percent: discount,
-          cost_price: costPrice,
-          markup_percent: markup,
-          sell_price: sellPrice,
-          image_url: scrapedProduct.image_url || null,
-          source_id: null,
-          pricebook_id: (pb as any).id,
-        } as any);
-        setImportCount(1);
+        const { error: itemErr } = await supabase
+          .from("team_catalog_items" as any)
+          .insert({
+            team_id: profile.team_id,
+            pricebook_id: pricebookId,
+            item_name: scrapedProduct.product_name,
+            supplier_name: detectedSupplier,
+            supplier_sku: scrapedProduct.supplier_sku || null,
+            manufacturer: scrapedProduct.manufacturer || null,
+            category: scrapedProduct.category || null,
+            subcategory: scrapedProduct.subcategory || null,
+            trade_type: tradeType,
+            unit: scrapedProduct.unit_of_measure || "each",
+            website_price: webPrice || null,
+            discount_percent: discount,
+            cost_price: costPrice,
+            markup_percent: markup,
+            sell_price: sellPrice,
+            image_url: scrapedProduct.image_url || null,
+          });
+        if (!itemErr) itemsImported = 1;
+        setImportCount(itemsImported);
       }
 
-      if (pb) {
-        await updateItemCount((pb as any).id);
+      // Update import job
+      if (jobId) {
+        await supabase
+          .from("pricebook_import_jobs" as any)
+          .update({
+            status: "completed",
+            items_found: scrapedProduct ? 1 : 0,
+            items_imported: itemsImported,
+            items_failed: scrapedProduct ? 1 - itemsImported : 0,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", jobId);
       }
+
+      if (pricebookId) await updateItemCount(pricebookId);
 
       setStep("done");
       if (pb) {
