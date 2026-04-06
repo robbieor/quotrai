@@ -11,7 +11,7 @@
 
 @layer base {
   :root {
-    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     
     /* Light Theme — warm off-white canvas, white cards */
     --background: 220 14% 96%;
@@ -111,13 +111,11 @@
   }
 
   html {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased font-sans;
     font-size: 15px;
     line-height: 1.5;
   }
