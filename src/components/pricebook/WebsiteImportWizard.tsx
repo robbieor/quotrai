@@ -100,10 +100,10 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
 
       // Set some default categories based on trade
       if (!data?.product?.category) {
-        const trades = Object.keys(TRADE_CATEGORY_MAP);
+        const trades = getAllTradeTypes();
         const defaultTrade = trades.includes("Electrical") ? "Electrical" : trades[0] || "General";
         setTradeType(defaultTrade);
-        const cats = Object.keys(TRADE_CATEGORY_MAP[defaultTrade as keyof typeof TRADE_CATEGORY_MAP] || {});
+        const cats = getCategoriesForTrade(defaultTrade);
         setDetectedCategories(cats.slice(0, 8));
         setSelectedCategories(cats.slice(0, 8));
       }
