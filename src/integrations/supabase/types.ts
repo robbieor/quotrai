@@ -1919,30 +1919,36 @@ export type Database = {
           description: string
           id: string
           invoice_id: string
+          line_group: string
           quantity: number
           tax_rate: number | null
           total_price: number | null
           unit_price: number
+          visible: boolean
         }
         Insert: {
           created_at?: string
           description: string
           id?: string
           invoice_id: string
+          line_group?: string
           quantity?: number
           tax_rate?: number | null
           total_price?: number | null
           unit_price?: number
+          visible?: boolean
         }
         Update: {
           created_at?: string
           description?: string
           id?: string
           invoice_id?: string
+          line_group?: string
           quantity?: number
           tax_rate?: number | null
           total_price?: number | null
           unit_price?: number
+          visible?: boolean
         }
         Relationships: [
           {
@@ -1979,6 +1985,7 @@ export type Database = {
           notes: string | null
           portal_token: string | null
           portal_token_expires_at: string | null
+          pricing_display_mode: string
           quote_id: string | null
           ref: string
           status: Database["public"]["Enums"]["invoice_status"]
@@ -2006,6 +2013,7 @@ export type Database = {
           notes?: string | null
           portal_token?: string | null
           portal_token_expires_at?: string | null
+          pricing_display_mode?: string
           quote_id?: string | null
           ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -2033,6 +2041,7 @@ export type Database = {
           notes?: string | null
           portal_token?: string | null
           portal_token_expires_at?: string | null
+          pricing_display_mode?: string
           quote_id?: string | null
           ref?: string
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -3621,31 +3630,37 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          line_group: string
           quantity: number
           quote_id: string
           tax_rate: number | null
           total_price: number | null
           unit_price: number
+          visible: boolean
         }
         Insert: {
           created_at?: string
           description: string
           id?: string
+          line_group?: string
           quantity?: number
           quote_id: string
           tax_rate?: number | null
           total_price?: number | null
           unit_price?: number
+          visible?: boolean
         }
         Update: {
           created_at?: string
           description?: string
           id?: string
+          line_group?: string
           quantity?: number
           quote_id?: string
           tax_rate?: number | null
           total_price?: number | null
           unit_price?: number
+          visible?: boolean
         }
         Relationships: [
           {
@@ -3673,6 +3688,7 @@ export type Database = {
           notes: string | null
           portal_token: string | null
           portal_token_expires_at: string | null
+          pricing_display_mode: string
           ref: string
           reminders_enabled: boolean | null
           signature_url: string | null
@@ -3701,6 +3717,7 @@ export type Database = {
           notes?: string | null
           portal_token?: string | null
           portal_token_expires_at?: string | null
+          pricing_display_mode?: string
           ref?: string
           reminders_enabled?: boolean | null
           signature_url?: string | null
@@ -3729,6 +3746,7 @@ export type Database = {
           notes?: string | null
           portal_token?: string | null
           portal_token_expires_at?: string | null
+          pricing_display_mode?: string
           ref?: string
           reminders_enabled?: boolean | null
           signature_url?: string | null
@@ -4871,6 +4889,7 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["trade_category"]
           created_at: string
+          default_display_mode: string
           description: string | null
           estimated_duration: number | null
           id: string
@@ -4885,6 +4904,7 @@ export type Database = {
         Insert: {
           category?: Database["public"]["Enums"]["trade_category"]
           created_at?: string
+          default_display_mode?: string
           description?: string | null
           estimated_duration?: number | null
           id?: string
@@ -4899,6 +4919,7 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["trade_category"]
           created_at?: string
+          default_display_mode?: string
           description?: string | null
           estimated_duration?: number | null
           id?: string
