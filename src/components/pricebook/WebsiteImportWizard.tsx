@@ -12,7 +12,7 @@ import { useSupplierSettings } from "@/hooks/useSupplierSettings";
 import { usePricebooks, type Pricebook } from "@/hooks/usePricebooks";
 import { useTeamCatalog } from "@/hooks/useTeamCatalog";
 import { useProfile } from "@/hooks/useProfile";
-import { TRADE_CATEGORY_MAP } from "@/data/tradeCategoryMap";
+import { TRADE_CATEGORY_MAP, getAllTradeTypes, getCategoriesForTrade } from "@/data/tradeCategoryMap";
 
 interface WebsiteImportWizardProps {
   open: boolean;
@@ -100,10 +100,10 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
 
       // Set some default categories based on trade
       if (!data?.product?.category) {
-        const trades = Object.keys(TRADE_CATEGORY_MAP);
+        const trades = getAllTradeTypes();
         const defaultTrade = trades.includes("Electrical") ? "Electrical" : trades[0] || "General";
         setTradeType(defaultTrade);
-        const cats = Object.keys(TRADE_CATEGORY_MAP[defaultTrade as keyof typeof TRADE_CATEGORY_MAP] || {});
+        const cats = getCategoriesForTrade(defaultTrade);
         setDetectedCategories(cats.slice(0, 8));
         setSelectedCategories(cats.slice(0, 8));
       }
@@ -280,7 +280,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(TRADE_CATEGORY_MAP).map((t) => (
+                    {getAllTradeTypes().map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
