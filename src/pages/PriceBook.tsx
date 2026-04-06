@@ -48,18 +48,24 @@ export default function PriceBook() {
               <Settings2 className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Supplier Settings</span>
             </Button>
+
+            {/* PRIMARY ACTION: Import from URL */}
+            <Button size="sm" onClick={() => setShowUrlImport(true)}>
+              <Globe className="h-4 w-4 mr-1.5" />
+              Import from URL
+            </Button>
+
+            {/* Secondary actions dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-1.5" />Add<ChevronDown className="h-3.5 w-3.5 ml-1" />
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => { setEditItem(null); setShowForm(true); }}>
                   <Plus className="h-4 w-4 mr-2" />Manual Entry
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowUrlImport(true)}>
-                  <Globe className="h-4 w-4 mr-2" />From Supplier URL
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowCsvImport(true)}>
                   <Upload className="h-4 w-4 mr-2" />Import CSV
@@ -111,9 +117,9 @@ export default function PriceBook() {
               <EmptyState
                 icon={Package}
                 title="No items in your catalog"
-                description="Add materials and labour rates from supplier URLs, CSV imports, or manual entry."
-                actionLabel="Add First Item"
-                onAction={() => { setEditItem(null); setShowForm(true); }}
+                description="Import products from supplier URLs, upload a CSV price list, or add items manually."
+                actionLabel="Import from Supplier URL"
+                onAction={() => setShowUrlImport(true)}
               />
             ) : (
               <div className="space-y-2">
