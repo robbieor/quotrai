@@ -647,12 +647,9 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       handleFailure({ reason, error });
       setVoiceUnavailable(true);
     } finally {
-      if (!isStale() && connectionPhase !== "connected") {
-        // Only reset if this attempt is still current and didn't connect
-        if (currentAttemptRef.current === attemptId && connectionPhase !== "connected") {
-          setRetryAttempt(0);
-          toast.dismiss("voice-retry");
-        }
+      if (!isStale()) {
+        setRetryAttempt(0);
+        toast.dismiss("voice-retry");
       }
     }
   }, [connectionPhase, conversation, handleFailure, getFailureReason, startAndWaitForConnect, addDebugEvent, updateDebug]);
