@@ -7,7 +7,8 @@ import { useVoiceFailureHandler } from "@/hooks/useVoiceFailureHandler";
 import { useVoiceConnectionReliability } from "@/hooks/useVoiceConnectionReliability";
 
 const ELEVENLABS_AGENT_ID = "agent_2701kffwpjhvf4gvt2cxpsx6j3rb";
-const TOAST_DEBOUNCE_MS = 10000; // Suppress duplicate toasts within 10s
+const TOAST_DEBOUNCE_MS = 10000;
+const WEBRTC_CONNECT_TIMEOUT_MS = 8000; // Wait up to 8s for onConnect
 
 interface AgentContext {
   userId?: string;
@@ -17,6 +18,33 @@ interface AgentContext {
 
 type ConnectionStatus = "connected" | "connecting" | "disconnecting" | "disconnected" | "error";
 
+// Debug state for the voice debug panel
+export interface VoiceDebugState {
+  micPermission: "idle" | "requesting" | "granted" | "denied" | "error";
+  tokenFetch: "idle" | "pending" | "success" | "failed";
+  transportPath: "none" | "webrtc" | "websocket";
+  sessionConnected: boolean;
+  onConnectFired: boolean;
+  lastTranscript: string;
+  lastToolCall: string;
+  lastWebhookStatus: string;
+  lastError: string;
+  timeline: Array<{ time: string; event: string }>;
+}
+
+const initialDebugState: VoiceDebugState = {
+  micPermission: "idle",
+  tokenFetch: "idle",
+  transportPath: "none",
+  sessionConnected: false,
+  onConnectFired: false,
+  lastTranscript: "",
+  lastToolCall: "",
+  lastWebhookStatus: "",
+  lastError: "",
+  timeline: [],
+};
+
 interface VoiceAgentContextType {
   status: ConnectionStatus;
   isSpeaking: boolean;
@@ -25,6 +53,7 @@ interface VoiceAgentContextType {
   voiceUnavailable: boolean;
   retryAttempt: number;
   maxRetries: number;
+  debugState: VoiceDebugState;
   startConversation: (context?: AgentContext) => Promise<void>;
   stopConversation: () => Promise<void>;
   sendTextMessage: (text: string) => void;
@@ -65,19 +94,40 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [debugState, setDebugState] = useState<VoiceDebugState>(initialDebugState);
   const contextRef = useRef<AgentContext>({});
   const queryClient = useQueryClient();
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
   const cachedTokenRef = useRef<{ token: string; signedUrl?: string; fetchedAt: number } | null>(null);
-  const TOKEN_TTL_MS = 30_000; // tokens valid ~60s, use within 30s for freshness
+  const TOKEN_TTL_MS = 30_000;
 
-  // Webhook caller that invalidates relevant React Query caches after mutations
+  // onConnect promise resolution refs
+  const onConnectResolveRef = useRef<(() => void) | null>(null);
+  const onConnectRejectRef = useRef<((err: Error) => void) | null>(null);
+
+  const addDebugEvent = useCallback((event: string) => {
+    const time = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    console.log(`[VoiceDebug] ${event}`);
+    setDebugState(prev => ({
+      ...prev,
+      timeline: [...prev.timeline.slice(-29), { time, event }],
+    }));
+  }, []);
+
+  const updateDebug = useCallback((partial: Partial<VoiceDebugState>) => {
+    setDebugState(prev => ({ ...prev, ...partial }));
+  }, []);
+
+  // Webhook caller with debug instrumentation
   const callGeorgeWebhook = useCallback(async (
     functionName: string,
     parameters: Record<string, unknown>,
     context: AgentContext
   ): Promise<string> => {
+    addDebugEvent(`🔧 Tool call: ${functionName}`);
+    updateDebug({ lastToolCall: functionName, lastWebhookStatus: "sending..." });
+
     try {
       const { data, error } = await supabase.functions.invoke("george-webhook", {
         body: {
@@ -91,30 +141,37 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error("[VoiceAgent] Webhook error:", error);
+        const errMsg = `Webhook error: ${error.message}`;
+        addDebugEvent(`❌ ${errMsg}`);
+        updateDebug({ lastWebhookStatus: `FAILED: ${error.message}` });
         return `Sorry, I encountered an error: ${error.message}`;
       }
+
+      const resultMsg = data?.message || data?.result || "Action completed successfully";
+      addDebugEvent(`✅ Webhook success: ${functionName}`);
+      updateDebug({ lastWebhookStatus: `OK: ${resultMsg.substring(0, 80)}` });
 
       // Invalidate relevant queries after successful mutations
       const queriesToInvalidate = MUTATION_QUERY_MAP[functionName];
       if (queriesToInvalidate && data?.success !== false) {
-        console.log(`[VoiceAgent] Invalidating queries for ${functionName}:`, queriesToInvalidate);
         for (const queryKey of queriesToInvalidate) {
           queryClient.invalidateQueries({ queryKey });
         }
       }
 
-      return data?.message || data?.result || "Action completed successfully";
+      return resultMsg;
     } catch (err) {
-      console.error("[VoiceAgent] Webhook exception:", err);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      addDebugEvent(`❌ Webhook exception: ${errMsg}`);
+      updateDebug({ lastWebhookStatus: `EXCEPTION: ${errMsg}` });
       return "Sorry, something went wrong. Please try again.";
     }
-  }, [queryClient]);
+  }, [queryClient, addDebugEvent, updateDebug]);
+
   const conversationIdRef = useRef<string | null>(null);
   const pendingContextRef = useRef<AgentContext | undefined>(undefined);
   const { handleFailure, getFailureReason } = useVoiceFailureHandler();
   
-  // Initialize reliability hook (no health monitoring — ElevenLabs SDK manages connection state)
   const {
     withRetry,
     resetRetryState,
@@ -132,7 +189,6 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         content: content.trim(),
       });
       
-      // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ["george-messages", conversationIdRef.current] });
       queryClient.invalidateQueries({ queryKey: ["george-conversations"] });
     } catch (error) {
@@ -150,11 +206,19 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log("[VoiceAgent] ✅ Connected to Foreman AI");
+      console.log("[VoiceAgent] ✅ onConnect fired — transport is truly live");
+      addDebugEvent("✅ onConnect fired — session truly connected");
+      updateDebug({ sessionConnected: true, onConnectFired: true });
       debouncedToast('success', "Connected to Foreman AI", { duration: 2000 });
 
-      // Send immediate activity signal so agent knows user is present
-      // (mobile mic can take 1-2s to start flowing audio)
+      // Resolve the connection promise so attemptConnection knows it worked
+      if (onConnectResolveRef.current) {
+        onConnectResolveRef.current();
+        onConnectResolveRef.current = null;
+        onConnectRejectRef.current = null;
+      }
+
+      // Send immediate activity signal
       try { conversation.sendUserActivity(); } catch (_) { /* noop */ }
 
       // Start keep-alive interval to prevent silence-based disconnection
@@ -165,11 +229,19 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     },
     onDisconnect: () => {
       console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
+      addDebugEvent("🔌 Disconnected");
+      updateDebug({ sessionConnected: false, onConnectFired: false });
       debouncedToast('info', "Call ended", { duration: 2000 });
       conversationIdRef.current = null;
       setCurrentConversationId(null);
 
-      // Clear keep-alive interval
+      // If we were waiting for onConnect, reject it
+      if (onConnectRejectRef.current) {
+        onConnectRejectRef.current(new Error("Disconnected before onConnect fired"));
+        onConnectResolveRef.current = null;
+        onConnectRejectRef.current = null;
+      }
+
       if (keepAliveRef.current) {
         clearInterval(keepAliveRef.current);
         keepAliveRef.current = null;
@@ -178,17 +250,36 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     onMessage: (message: any) => {
       // Save user transcripts
       if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
-        saveMessage("user", message.user_transcription_event.user_transcript);
+        const transcript = message.user_transcription_event.user_transcript;
+        addDebugEvent(`🗣️ User transcript: "${transcript.substring(0, 60)}"`);
+        updateDebug({ lastTranscript: transcript });
+        saveMessage("user", transcript);
       }
       // Save agent responses
       if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
-        saveMessage("assistant", message.agent_response_event.agent_response);
+        const response = message.agent_response_event.agent_response;
+        addDebugEvent(`🤖 Agent response: "${response.substring(0, 60)}"`);
+        saveMessage("assistant", response);
+      }
+      // Log other message types for debugging
+      if (message.type === "conversation_initiation_metadata") {
+        addDebugEvent("📋 conversation_initiation_metadata received");
       }
     },
     onError: (error) => {
       console.error("[VoiceAgent] ❌ Error:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      addDebugEvent(`❌ SDK Error: ${errMsg}`);
+      updateDebug({ lastError: errMsg });
       const reason = getFailureReason(error);
       handleFailure({ reason, error });
+
+      // If we were waiting for onConnect, reject it
+      if (onConnectRejectRef.current) {
+        onConnectRejectRef.current(error instanceof Error ? error : new Error(errMsg));
+        onConnectResolveRef.current = null;
+        onConnectRejectRef.current = null;
+      }
     },
     clientTools: {
       // ============================================
@@ -409,7 +500,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       },
 
       // ============================================
-      // Additional Skills (wired from backend)
+      // Additional Skills
       // ============================================
       create_invoice_from_quote: async (params: { quote_id?: string; display_number?: string; due_days?: number }) => {
         return await callGeorgeWebhook("create_invoice_from_quote", params, contextRef.current);
@@ -447,86 +538,144 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     },
   });
 
-  // Core connection logic — tries WebRTC first, falls back to WebSocket
+  /**
+   * Core connection logic — tries WebRTC first, then WebSocket fallback.
+   * CRITICAL FIX: We now wait for the onConnect callback to actually fire
+   * before declaring success. startSession() resolving is NOT enough —
+   * the transport can fail asynchronously right after.
+   */
   const attemptConnection = useCallback(async (
     token: string,
     signedUrl: string | undefined,
     dynamicVariables: Record<string, string>
   ) => {
+    // Helper: start session and wait for onConnect with timeout
+    const startAndWaitForConnect = (
+      sessionOpts: Record<string, unknown>,
+      label: string
+    ): Promise<void> => {
+      return new Promise<void>((resolve, reject) => {
+        // Set up onConnect resolution refs
+        onConnectResolveRef.current = resolve;
+        onConnectRejectRef.current = reject;
+
+        // Timeout — if onConnect doesn't fire, reject
+        const timeout = setTimeout(() => {
+          if (onConnectResolveRef.current === resolve) {
+            onConnectResolveRef.current = null;
+            onConnectRejectRef.current = null;
+            reject(new Error(`${label} timed out waiting for onConnect (${WEBRTC_CONNECT_TIMEOUT_MS}ms)`));
+          }
+        }, WEBRTC_CONNECT_TIMEOUT_MS);
+
+        // Wrap resolve/reject to clear timeout
+        const origResolve = resolve;
+        const origReject = reject;
+        onConnectResolveRef.current = () => {
+          clearTimeout(timeout);
+          origResolve();
+        };
+        onConnectRejectRef.current = (err: Error) => {
+          clearTimeout(timeout);
+          origReject(err);
+        };
+
+        // Start the session
+        conversation.startSession({
+          ...sessionOpts,
+          dynamicVariables,
+        }).catch((err: unknown) => {
+          clearTimeout(timeout);
+          onConnectResolveRef.current = null;
+          onConnectRejectRef.current = null;
+          reject(err instanceof Error ? err : new Error(String(err)));
+        });
+      });
+    };
+
     // Try WebRTC with token first
     try {
-      console.log("[VoiceAgent] 🚀 Trying WebRTC connection...");
-      await conversation.startSession({
-        conversationToken: token,
-        dynamicVariables,
-      });
-      console.log("[VoiceAgent] ✅ WebRTC session started successfully");
+      addDebugEvent("🚀 Trying WebRTC connection...");
+      updateDebug({ transportPath: "webrtc" });
+      await startAndWaitForConnect({ conversationToken: token }, "WebRTC");
+      addDebugEvent("✅ WebRTC connected (onConnect confirmed)");
       resetRetryState();
       return;
     } catch (webrtcErr) {
-      console.warn("[VoiceAgent] ⚠️ WebRTC failed:", webrtcErr);
+      const errMsg = webrtcErr instanceof Error ? webrtcErr.message : String(webrtcErr);
+      addDebugEvent(`⚠️ WebRTC failed: ${errMsg}`);
+      updateDebug({ lastError: errMsg });
+      console.warn("[VoiceAgent] WebRTC failed:", errMsg);
+
+      // Try to tear down any stale session
+      try { await conversation.endSession(); } catch (_) { /* noop */ }
     }
 
     // Fallback: WebSocket with signed URL
     if (signedUrl) {
-      console.log("[VoiceAgent] 🔄 Falling back to WebSocket...");
-      await conversation.startSession({
-        signedUrl,
-        dynamicVariables,
-      });
-      console.log("[VoiceAgent] ✅ WebSocket session started successfully");
-      resetRetryState();
-      return;
+      try {
+        addDebugEvent("🔄 Falling back to WebSocket...");
+        updateDebug({ transportPath: "websocket" });
+        await startAndWaitForConnect({ signedUrl }, "WebSocket");
+        addDebugEvent("✅ WebSocket connected (onConnect confirmed)");
+        resetRetryState();
+        return;
+      } catch (wsErr) {
+        const errMsg = wsErr instanceof Error ? wsErr.message : String(wsErr);
+        addDebugEvent(`❌ WebSocket also failed: ${errMsg}`);
+        updateDebug({ lastError: errMsg });
+        // Try to tear down
+        try { await conversation.endSession(); } catch (_) { /* noop */ }
+      }
     }
 
-    throw new Error("Both WebRTC and WebSocket connection attempts failed");
-  }, [conversation, resetRetryState]);
+    throw new Error("Both WebRTC and WebSocket connection attempts failed — onConnect never fired");
+  }, [conversation, resetRetryState, addDebugEvent, updateDebug]);
 
-  // Pre-warm: fetch token in background so it's ready when user taps "Call"
+  // Pre-warm: fetch token in background
   const preWarmToken = useCallback(() => {
-    // Skip if we already have a fresh token
     if (cachedTokenRef.current && Date.now() - cachedTokenRef.current.fetchedAt < TOKEN_TTL_MS) {
-      console.log("[VoiceAgent] Token already cached, skipping pre-warm");
       return;
     }
-    console.log("[VoiceAgent] 🔥 Pre-warming conversation token...");
+    addDebugEvent("🔥 Pre-warming token...");
     supabase.functions.invoke("elevenlabs-agent-token", { body: {} })
       .then(({ data, error }) => {
         if (!error && data?.token) {
           cachedTokenRef.current = { token: data.token, signedUrl: data.signed_url, fetchedAt: Date.now() };
-          console.log("[VoiceAgent] ✅ Token pre-warmed");
+          addDebugEvent("✅ Token pre-warmed");
         } else {
-          const errMsg = data?.error || error?.message || "Unknown error";
-          console.error("[VoiceAgent] ❌ Token pre-warm failed:", errMsg);
+          addDebugEvent(`❌ Token pre-warm failed: ${data?.error || error?.message}`);
           cachedTokenRef.current = null;
         }
       })
       .catch((err) => {
-        console.error("[VoiceAgent] ❌ Token pre-warm exception:", err);
+        addDebugEvent(`❌ Token pre-warm exception: ${err}`);
         cachedTokenRef.current = null;
       });
-  }, []);
+  }, [addDebugEvent]);
 
   const startConversation = useCallback(async (context?: AgentContext) => {
     if (isConnecting || conversation.status === "connected") return;
 
+    // Reset debug state for new attempt
+    setDebugState({ ...initialDebugState, timeline: [] });
     setIsConnecting(true);
     setRetryAttempt(0);
     pendingContextRef.current = context;
-    console.log("[VoiceAgent] 🎙️ Starting voice connection...");
+    addDebugEvent("🎙️ Starting voice connection...");
 
     try {
-      // Use pre-loaded context if provided (from FloatingTomButton's profile)
       if (context) {
-        contextRef.current = {
-          ...contextRef.current,
-          ...context,
-        };
+        contextRef.current = { ...contextRef.current, ...context };
       }
 
-      // Parallel: mic permission + token (only if not pre-warmed)
+      // Mic permission
+      updateDebug({ micPermission: "requesting" });
+      addDebugEvent("🎤 Requesting microphone permission...");
+
       const needsToken = !cachedTokenRef.current || Date.now() - cachedTokenRef.current.fetchedAt > TOKEN_TTL_MS;
-      
+      if (needsToken) updateDebug({ tokenFetch: "pending" });
+
       const [micResult, tokenFetchResult] = await Promise.allSettled([
         navigator.mediaDevices.getUserMedia({ audio: true }),
         needsToken
@@ -534,49 +683,54 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
           : Promise.resolve(null),
       ]);
 
-      // Check mic permission (hard failure)
+      // Check mic permission
       if (micResult.status === "rejected") {
-        console.error("[VoiceAgent] ❌ Microphone error:", micResult.reason);
         const reason = (micResult.reason as Error).name === "NotAllowedError" 
           ? "microphone_denied" 
           : "microphone_unavailable";
+        addDebugEvent(`❌ Mic ${reason}: ${micResult.reason}`);
+        updateDebug({ micPermission: "denied", lastError: `Microphone: ${reason}` });
         handleFailure({ reason, error: micResult.reason });
         setIsConnecting(false);
         return;
       }
-      // Resume AudioContext on mobile (browsers often start it suspended)
+
+      updateDebug({ micPermission: "granted" });
+      addDebugEvent("✅ Microphone permission granted");
+
+      // Resume AudioContext on mobile
       const micStream = micResult.value;
       try {
         const audioCtx = new AudioContext();
         if (audioCtx.state === "suspended") {
           await audioCtx.resume();
-          console.log("[VoiceAgent] ✅ AudioContext resumed for mobile");
+          addDebugEvent("✅ AudioContext resumed for mobile");
         }
-        audioCtx.close(); // We only needed to unblock the global audio policy
+        audioCtx.close();
       } catch (_) { /* best-effort */ }
-      // Stop the mic stream we requested (ElevenLabs SDK will request its own)
       micStream.getTracks().forEach(t => t.stop());
-      console.log("[VoiceAgent] ✅ Microphone permission granted");
 
-      // Get conversation token — REQUIRED, no silent fallback
+      // Get conversation token
       let token: string | null = null;
       let signedUrl: string | undefined = undefined;
       
       if (!needsToken && cachedTokenRef.current?.token) {
         token = cachedTokenRef.current.token;
         signedUrl = cachedTokenRef.current.signedUrl;
-        console.log("[VoiceAgent] ✅ Using pre-warmed token");
+        updateDebug({ tokenFetch: "success" });
+        addDebugEvent("✅ Using pre-warmed token");
       } else if (tokenFetchResult.status === "fulfilled" && tokenFetchResult.value?.data?.token) {
         token = tokenFetchResult.value.data.token;
         signedUrl = tokenFetchResult.value.data.signed_url;
-        console.log("[VoiceAgent] ✅ Got fresh conversation token");
+        updateDebug({ tokenFetch: "success" });
+        addDebugEvent("✅ Got fresh conversation token");
       } else {
-        // Extract error details
         const errorData = tokenFetchResult.status === "fulfilled" 
           ? tokenFetchResult.value?.data 
           : null;
         const errorMsg = errorData?.error || "Could not authenticate with voice service";
-        console.error("[VoiceAgent] ❌ Token fetch failed:", errorMsg, errorData?.code);
+        addDebugEvent(`❌ Token fetch failed: ${errorMsg}`);
+        updateDebug({ tokenFetch: "failed", lastError: errorMsg });
         
         toast.error("Voice Service Unavailable", {
           description: errorMsg,
@@ -586,10 +740,9 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         setVoiceUnavailable(true);
         return;
       }
-      // Clear cached token after use (single-use)
       cachedTokenRef.current = null;
 
-      // Build dynamic variables from already-loaded context
+      // Build dynamic variables
       const dynamicVariables: Record<string, string> = {};
       if (contextRef.current.userName) dynamicVariables.user_name = contextRef.current.userName;
       if (contextRef.current.teamId) dynamicVariables.team_id = contextRef.current.teamId;
@@ -607,12 +760,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         minute: "2-digit",
       });
 
-      // Attempt connection with retry
+      // Attempt connection with retry — now waits for onConnect
+      addDebugEvent("📡 Attempting connection with retry...");
       const { success, error } = await withRetry(
-        () => attemptConnection(token, signedUrl, dynamicVariables),
+        () => attemptConnection(token!, signedUrl, dynamicVariables),
         "ElevenLabs connection",
         (attempt) => {
           setRetryAttempt(attempt);
+          addDebugEvent(`🔄 Connection attempt ${attempt}/${MAX_RETRIES}`);
           if (attempt > 1) {
             toast.loading(`Reconnecting... (attempt ${attempt}/${MAX_RETRIES})`, { id: "voice-retry" });
           }
@@ -620,7 +775,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       );
 
       if (success) {
-        // Defer DB conversation creation
+        addDebugEvent("🎉 Voice connection fully established!");
+        // Only create DB conversation AFTER confirmed connection
         const userId = contextRef.current.userId;
         const teamId = contextRef.current.teamId;
         if (teamId && userId) {
@@ -637,20 +793,24 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               if (!dbError && newConversation) {
                 conversationIdRef.current = newConversation.id;
                 setCurrentConversationId(newConversation.id);
-                console.log("[VoiceAgent] Created conversation:", newConversation.id);
+                addDebugEvent(`📝 DB conversation created: ${newConversation.id.substring(0, 8)}`);
               }
             });
         }
       } else {
-        console.error("[VoiceAgent] ❌ Connection failed after retries:", error);
+        const errMsg = error instanceof Error ? error.message : String(error);
+        addDebugEvent(`❌ Connection failed after all retries: ${errMsg}`);
+        updateDebug({ lastError: errMsg });
         toast.dismiss("voice-retry");
-        toast.error("Unable to connect after multiple attempts", {
-          description: "Please try again later or use text chat",
+        toast.error("Unable to connect to Foreman AI", {
+          description: "Both WebRTC and WebSocket paths failed. Please try again later or use text chat.",
         });
         setVoiceUnavailable(true);
       }
     } catch (error: unknown) {
-      console.error("[VoiceAgent] ❌ Failed to start conversation:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      addDebugEvent(`❌ Unexpected error: ${errMsg}`);
+      updateDebug({ lastError: errMsg });
       
       const reason = getFailureReason(error);
       const { showFallback } = handleFailure({ reason, error });
@@ -663,15 +823,16 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setRetryAttempt(0);
       toast.dismiss("voice-retry");
     }
-  }, [conversation, isConnecting, handleFailure, getFailureReason, withRetry, attemptConnection, MAX_RETRIES]);
+  }, [conversation, isConnecting, handleFailure, getFailureReason, withRetry, attemptConnection, MAX_RETRIES, addDebugEvent, updateDebug]);
 
   const stopConversation = useCallback(async () => {
     try {
+      addDebugEvent("🛑 Ending session...");
       await conversation.endSession();
     } catch (error) {
       console.error("[VoiceAgent] Error stopping conversation:", error);
     }
-  }, [conversation]);
+  }, [conversation, addDebugEvent]);
 
   const sendTextMessage = useCallback((text: string) => {
     if (conversation.status === "connected") {
@@ -694,7 +855,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     setVoiceUnavailable(false);
   }, []);
 
-  // Cleanup keep-alive on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
@@ -711,6 +872,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         voiceUnavailable,
         retryAttempt,
         maxRetries: MAX_RETRIES,
+        debugState,
         startConversation,
         stopConversation,
         sendTextMessage,
