@@ -28,9 +28,10 @@ function parseWesco(html: string, url: string): Record<string, any> {
 
   // SKU - "Code: " pattern in product-info-sku div
   let sku = "";
-  const skuMatch = html.match(/product-info-sku[^>]*>[\s\S]*?Code:\s*<\/span>\s*([A-Z0-9\-]+)/i)
-    || html.match(/Code:\s*<\/span>\s*([A-Z0-9\-]+)/i)
-    || html.match(/Code:\s*([A-Z0-9\-]+)/i);
+  const skuMatch = html.match(/product-info-sku[^>]*>[\s\S]*?Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i)
+    || html.match(/Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i)
+    || html.match(/l-product__code__label[^>]*>Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i)
+    || html.match(/Code:\s*([A-Za-z0-9\-]+)/i);
   if (skuMatch) sku = skuMatch[1].trim();
 
   // Price - Wesco uses: <span class="local-price"><span class="price__currency">€</span><span class="price__digit">699</span><span class="price__decimal">.00</span>
