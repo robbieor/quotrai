@@ -12,7 +12,7 @@ import { useSupplierSettings } from "@/hooks/useSupplierSettings";
 import { usePricebooks, type Pricebook } from "@/hooks/usePricebooks";
 import { useTeamCatalog } from "@/hooks/useTeamCatalog";
 import { useProfile } from "@/hooks/useProfile";
-import { TRADE_CATEGORY_MAP, getAllTradeTypes } from "@/data/tradeCategoryMap";
+import { TRADE_CATEGORY_MAP, getAllTradeTypes, getCategoriesForTrade } from "@/data/tradeCategoryMap";
 
 interface WebsiteImportWizardProps {
   open: boolean;
