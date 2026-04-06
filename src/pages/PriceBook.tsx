@@ -1,172 +1,108 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Upload, Globe, Settings2, ChevronDown, Package, Filter } from "lucide-react";
-import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
+import { Plus, Settings2, BookOpen } from "lucide-react";
+import { usePricebooks } from "@/hooks/usePricebooks";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { CatalogSidebar } from "@/components/pricebook/CatalogSidebar";
-import { CatalogProductCard } from "@/components/pricebook/CatalogProductCard";
-import { CatalogItemForm } from "@/components/pricebook/CatalogItemForm";
-import { ImportFromUrlDialog } from "@/components/pricebook/ImportFromUrlDialog";
-import { SupplierSettingsDialog } from "@/components/pricebook/SupplierSettingsDialog";
+import { PricebookCard } from "@/components/pricebook/PricebookCard";
+import { AddPriceSourceDialog } from "@/components/pricebook/AddPriceSourceDialog";
+import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
+import { ManualCatalogDialog } from "@/components/pricebook/ManualCatalogDialog";
 import { CsvImportDialog } from "@/components/pricebook/CsvImportDialog";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SupplierSettingsDialog } from "@/components/pricebook/SupplierSettingsDialog";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function PriceBook() {
-  const [filters, setFilters] = useState<CatalogFilters>({});
-  const { items, isLoading, filterOptions, addItem, updateItem, deleteItem, toggleFavourite } = useTeamCatalog(filters);
+  const { pricebooks, isLoading, deletePricebook } = usePricebooks();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [showForm, setShowForm] = useState(false);
-  const [editItem, setEditItem] = useState<CatalogItem | null>(null);
-  const [showUrlImport, setShowUrlImport] = useState(false);
+  const [showAddSource, setShowAddSource] = useState(false);
+  const [showWebsiteWizard, setShowWebsiteWizard] = useState(false);
+  const [showManualDialog, setShowManualDialog] = useState(false);
   const [showCsvImport, setShowCsvImport] = useState(false);
   const [showSupplierSettings, setShowSupplierSettings] = useState(false);
 
-  const handleSearch = (q: string) => setFilters({ ...filters, search: q });
-
-  const sidebar = (
-    <CatalogSidebar
-      filters={filters}
-      onFiltersChange={setFilters}
-      options={filterOptions}
-    />
-  );
+  const handleSourceSelect = (type: "website" | "csv" | "manual") => {
+    if (type === "website") setShowWebsiteWizard(true);
+    else if (type === "csv") setShowCsvImport(true);
+    else setShowManualDialog(true);
+  };
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-[28px] font-bold tracking-[-0.02em]">Price Book</h1>
+          <div>
+            <h1 className="text-[28px] font-bold tracking-[-0.02em]">Price Book</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Your supplier catalogs and pricing libraries
+            </p>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowSupplierSettings(true)}>
               <Settings2 className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Supplier Settings</span>
             </Button>
-
-            {/* PRIMARY ACTION: Import from URL */}
-            <Button size="sm" onClick={() => setShowUrlImport(true)}>
-              <Globe className="h-4 w-4 mr-1.5" />
-              Import from URL
+            <Button size="sm" onClick={() => setShowAddSource(true)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Price Source
             </Button>
-
-            {/* Secondary actions dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => { setEditItem(null); setShowForm(true); }}>
-                  <Plus className="h-4 w-4 mr-2" />Manual Entry
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowCsvImport(true)}>
-                  <Upload className="h-4 w-4 mr-2" />Import CSV
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
-        {/* Search + Mobile filter */}
-        <div className="flex gap-2">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products, SKU, manufacturer..."
-              value={filters.search || ""}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="sm:hidden h-11 w-11">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-4 pt-8">
-              {sidebar}
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* Content: sidebar + product list */}
-        <div className="flex gap-6">
-          {/* Desktop sidebar */}
-          <div className="hidden sm:block w-48 flex-shrink-0">
-            <Card>
-              <CardContent className="p-4">
-                {sidebar}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Product list */}
-          <div className="flex-1 min-w-0">
-            {isLoading ? (
-              <Card><CardContent className="p-8 text-center text-muted-foreground">Loading catalog...</CardContent></Card>
-            ) : items.length === 0 ? (
-              <EmptyState
-                icon={Package}
-                title="No items in your catalog"
-                description="Import products from supplier URLs, upload a CSV price list, or add items manually."
-                actionLabel="Import from Supplier URL"
-                onAction={() => setShowUrlImport(true)}
+        {/* Pricebook grid */}
+        {isLoading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading catalogs...</div>
+        ) : pricebooks.length === 0 ? (
+          <EmptyState
+            icon={BookOpen}
+            title="No price sources yet"
+            description="Import products from supplier websites, upload CSV price lists, or create manual catalogs. Paste a URL → detect source → select categories → save as a named pricebook."
+            actionLabel="Add Price Source"
+            onAction={() => setShowAddSource(true)}
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pricebooks.map((pb) => (
+              <PricebookCard
+                key={pb.id}
+                pricebook={pb}
+                onClick={() => navigate(`/price-book/${pb.id}`)}
+                onDelete={() => deletePricebook.mutate(pb.id)}
               />
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
-                {items.map((item) => (
-                  <CatalogProductCard
-                    key={item.id}
-                    item={item}
-                    onEdit={(i) => { setEditItem(i); setShowForm(true); }}
-                    onDelete={(id) => deleteItem.mutate(id)}
-                    onToggleFav={(id, fav) => toggleFavourite.mutate({ id, is_favourite: fav })}
-                  />
-                ))}
-              </div>
-            )}
+            ))}
           </div>
-        </div>
+        )}
 
         <div className="pb-24" />
       </div>
 
       {/* Dialogs */}
-      {showForm && (
-        <CatalogItemForm
-          open={showForm}
-          onOpenChange={setShowForm}
-          item={editItem}
-          onSubmit={(vals) => {
-            if (editItem) {
-              updateItem.mutate({ id: editItem.id, ...vals });
-            } else {
-              addItem.mutate(vals);
-            }
-          }}
-        />
-      )}
+      <AddPriceSourceDialog
+        open={showAddSource}
+        onOpenChange={setShowAddSource}
+        onSelect={handleSourceSelect}
+      />
 
-      <ImportFromUrlDialog
-        open={showUrlImport}
-        onOpenChange={setShowUrlImport}
-        onImport={(product) => addItem.mutate(product)}
+      <WebsiteImportWizard
+        open={showWebsiteWizard}
+        onOpenChange={setShowWebsiteWizard}
+        onComplete={() => queryClient.invalidateQueries({ queryKey: ["pricebooks"] })}
+      />
+
+      <ManualCatalogDialog
+        open={showManualDialog}
+        onOpenChange={setShowManualDialog}
+        onComplete={() => queryClient.invalidateQueries({ queryKey: ["pricebooks"] })}
       />
 
       <CsvImportDialog
         open={showCsvImport}
         onOpenChange={setShowCsvImport}
-        onComplete={() => queryClient.invalidateQueries({ queryKey: ["team-catalog"] })}
+        onComplete={() => queryClient.invalidateQueries({ queryKey: ["pricebooks"] })}
       />
 
       <SupplierSettingsDialog

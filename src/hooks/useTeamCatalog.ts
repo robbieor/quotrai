@@ -57,6 +57,7 @@ export function useTeamCatalog(filters: CatalogFilters = {}) {
       if (filters.subcategory) q = q.eq("subcategory", filters.subcategory);
       if (filters.supplier_name) q = q.eq("supplier_name", filters.supplier_name);
       if (filters.favourites_only) q = q.eq("is_favourite", true);
+      if (filters.pricebook_id) q = q.eq("pricebook_id", filters.pricebook_id);
       if (filters.search && filters.search.length >= 2) {
         q = q.or(`item_name.ilike.%${filters.search}%,supplier_sku.ilike.%${filters.search}%,manufacturer.ilike.%${filters.search}%`);
       }
