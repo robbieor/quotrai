@@ -112,54 +112,45 @@ export default function Templates() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="animate-fade-up">
-            <h1 className="text-display font-bold tracking-tight text-foreground">
-              Templates
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Create reusable templates for quick quote and invoice generation.
-            </p>
+      <div className="space-y-3">
+        {/* Compact Header Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <h1 className="text-lg font-bold tracking-tight text-foreground shrink-0">
+            Templates
+          </h1>
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 text-sm"
+            />
           </div>
-          <div className="flex gap-2 animate-fade-up">
-            <Button variant="outline" onClick={handleExportAll} disabled={!filteredTemplates?.length} className="hidden sm:flex">
-              <Download className="mr-2 h-4 w-4" />
-              Export All
+          <div className="flex gap-2 ml-auto">
+            <Button variant="outline" size="sm" onClick={handleExportAll} disabled={!filteredTemplates?.length} className="hidden sm:flex h-8 text-xs">
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Export
             </Button>
-            <Button onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button size="sm" className="h-8 text-xs" onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
+              <Plus className="h-3.5 w-3.5 mr-1" />
               New Template
             </Button>
           </div>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{ animationDelay: "50ms" }}>
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as TradeCategory | "all")}>
-          <TabsList className="overflow-x-auto flex-nowrap h-auto gap-1 bg-muted/50 p-1 justify-start w-full">
-            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+          <TabsList className="overflow-x-auto flex-nowrap h-auto gap-0.5 bg-muted/50 p-0.5 justify-start w-full">
+            <TabsTrigger value="all" className="text-xs h-7 px-2.5">All</TabsTrigger>
             {visibleCategories.map((cat) => (
-              <TabsTrigger key={cat} value={cat} className="text-xs">
+              <TabsTrigger key={cat} value={cat} className="text-xs h-7 px-2.5">
                 {getTradeCategoryLabel(cat)}
               </TabsTrigger>
             ))}
           </TabsList>
 
-          <TabsContent value={selectedCategory} className="mt-6">
+          <TabsContent value={selectedCategory} className="mt-3">
             {isLoading ? (
               <div className="space-y-2">
                 {[...Array(6)].map((_, i) => (

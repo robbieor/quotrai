@@ -101,25 +101,25 @@ export default function TemplatesTab() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-3">
+      {/* Compact Actions Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-8 h-8 text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportAll} disabled={!filteredTemplates?.length} className="hidden sm:flex">
-            <Download className="mr-2 h-4 w-4" />
-            Export All
+        <div className="flex gap-2 ml-auto">
+          <Button variant="outline" size="sm" onClick={handleExportAll} disabled={!filteredTemplates?.length} className="hidden sm:flex h-8 text-xs">
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Export
           </Button>
-          <Button onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="h-8 text-xs" onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
             New Template
           </Button>
         </div>
@@ -127,16 +127,16 @@ export default function TemplatesTab() {
 
       {/* Category Tabs */}
       <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as TradeCategory | "all")}>
-        <TabsList className="flex-wrap h-auto gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+        <TabsList className="flex-wrap h-auto gap-0.5 bg-muted/50 p-0.5">
+          <TabsTrigger value="all" className="text-xs h-7 px-2.5">All</TabsTrigger>
           {TRADE_CATEGORIES.map((cat) => (
-            <TabsTrigger key={cat} value={cat} className="text-xs">
+            <TabsTrigger key={cat} value={cat} className="text-xs h-7 px-2.5">
               {getTradeCategoryLabel(cat)}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <TabsContent value={selectedCategory} className="mt-6">
+        <TabsContent value={selectedCategory} className="mt-3">
           {isLoading ? (
             <div className="space-y-2">
               {[...Array(6)].map((_, i) => (

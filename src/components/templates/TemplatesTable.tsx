@@ -75,168 +75,263 @@ export function TemplatesTable({
         onExport={handleExport}
       />
 
-      <ScrollArea className="w-full">
-        <div className="min-w-[700px]">
-          <table className="w-full text-sm border-collapse">
-            <thead className="sticky top-0 z-10 bg-card">
-              <tr className="border-b border-border/50">
-                <th className="w-10 h-10 px-3 text-center bg-muted/60 border-r border-border/30">
-                  <Checkbox
-                    checked={allSelected}
-                    onCheckedChange={handleSelectAll}
-                    className="h-4 w-4"
-                    aria-label="Select all"
-                    {...(someSelected ? { "data-state": "indeterminate" } : {})}
-                  />
-                </th>
-                <th className="w-10 h-10 px-2 bg-muted/60 border-r border-border/30"></th>
-                <SortableHeader
-                  sortDirection={getSortDirection("name")}
-                  onSort={() => handleSort("name")}
-                >
-                  Name
-                </SortableHeader>
-                <SortableHeader
-                  sortDirection={getSortDirection("category")}
-                  onSort={() => handleSort("category")}
-                  className="w-28"
-                >
-                  Category
-                </SortableHeader>
-                <th className="h-10 px-3 py-2 text-xs font-semibold text-foreground/80 bg-muted/60 border-r border-border/30 hidden md:table-cell">
-                  Description
-                </th>
-                <SortableHeader
-                  sortDirection={getSortDirection("labour_rate_default")}
-                  onSort={() => handleSort("labour_rate_default")}
-                  align="right"
-                  className="w-24 hidden sm:table-cell"
-                >
-                  Rate
-                </SortableHeader>
-                <SortableHeader
-                  sortDirection={getSortDirection("estimated_duration")}
-                  onSort={() => handleSort("estimated_duration")}
-                  align="right"
-                  className="w-24 hidden sm:table-cell"
-                >
-                  Duration
-                </SortableHeader>
-                <th className="w-32 h-10 px-2 bg-muted/60 text-right text-xs font-semibold text-foreground/80">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {sortedData.map((template, rowIdx) => (
-                <tr
-                  key={template.id}
-                  className={cn(
-                    "border-b border-border/30 transition-colors cursor-pointer",
-                    selectedRows.has(rowIdx)
-                      ? "bg-primary/10 hover:bg-primary/15"
-                      : "hover:bg-muted/50"
-                  )}
-                  onClick={(e) => handleRowClick(rowIdx, e)}
-                >
-                  <td className="px-3 py-2 text-center border-r border-border/20">
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <ScrollArea className="w-full">
+          <div className="min-w-[700px]">
+            <table className="w-full text-sm border-collapse">
+              <thead className="sticky top-0 z-10 bg-card">
+                <tr className="border-b border-border/50">
+                  <th className="w-8 h-8 px-2 text-center bg-muted/60 border-r border-border/30">
                     <Checkbox
-                      checked={selectedRows.has(rowIdx)}
-                      onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4"
+                      checked={allSelected}
+                      onCheckedChange={handleSelectAll}
+                      className="h-3.5 w-3.5"
+                      aria-label="Select all"
+                      {...(someSelected ? { "data-state": "indeterminate" } : {})}
                     />
-                  </td>
-                  <td className="px-2 py-2 text-center border-r border-border/20">
-                    <button
-                      onClick={(e) => handleToggleFavorite(e, template)}
-                      className="p-1 hover:bg-muted rounded transition-colors"
-                    >
-                      <Star
-                        className={cn(
-                          "h-4 w-4",
-                          template.is_favorite
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-muted-foreground"
-                        )}
-                      />
-                    </button>
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20">
-                    <span className="font-medium text-sm">{template.name}</span>
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20">
-                    <Badge variant="secondary" className="text-xs">
-                      {getTradeCategoryLabel(template.category)}
-                    </Badge>
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20 hidden md:table-cell">
-                    <span className="text-xs text-muted-foreground truncate block max-w-[200px]">
-                      {template.description || "—"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right border-r border-border/20 hidden sm:table-cell">
-                    <span className="text-sm">
-                      {template.labour_rate_default
-                        ? formatRate(template.labour_rate_default, "hr")
-                        : "—"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right border-r border-border/20 hidden sm:table-cell">
-                    <span className="text-sm">
-                      {template.estimated_duration ? `${template.estimated_duration}h` : "—"}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(template);
-                        }}
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(template);
-                        }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="h-7 text-xs px-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUse(template);
-                        }}
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Use
-                      </Button>
-                    </div>
-                  </td>
+                  </th>
+                  <th className="w-8 h-8 px-1.5 bg-muted/60 border-r border-border/30"></th>
+                  <SortableHeader
+                    sortDirection={getSortDirection("name")}
+                    onSort={() => handleSort("name")}
+                  >
+                    Name
+                  </SortableHeader>
+                  <SortableHeader
+                    sortDirection={getSortDirection("category")}
+                    onSort={() => handleSort("category")}
+                    className="w-28"
+                  >
+                    Category
+                  </SortableHeader>
+                  <th className="h-8 px-2 py-1 text-xs font-semibold text-foreground/80 bg-muted/60 border-r border-border/30">
+                    Description
+                  </th>
+                  <SortableHeader
+                    sortDirection={getSortDirection("labour_rate_default")}
+                    onSort={() => handleSort("labour_rate_default")}
+                    align="right"
+                    className="w-20"
+                  >
+                    Rate
+                  </SortableHeader>
+                  <SortableHeader
+                    sortDirection={getSortDirection("estimated_duration")}
+                    onSort={() => handleSort("estimated_duration")}
+                    align="right"
+                    className="w-20"
+                  >
+                    Duration
+                  </SortableHeader>
+                  <th className="w-28 h-8 px-1.5 bg-muted/60 text-right text-xs font-semibold text-foreground/80">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <ScrollBar orientation="horizontal" className="h-2.5" />
-      </ScrollArea>
+              </thead>
 
-      <div className="md:hidden px-4 py-2 text-xs text-muted-foreground bg-muted/30 border-t border-border/30 flex items-center gap-2">
-        <span>←→</span>
-        <span>Swipe to see more columns</span>
+              <tbody>
+                {sortedData.map((template, rowIdx) => (
+                  <tr
+                    key={template.id}
+                    className={cn(
+                      "border-b border-border/30 transition-colors cursor-pointer",
+                      selectedRows.has(rowIdx)
+                        ? "bg-primary/10 hover:bg-primary/15"
+                        : "hover:bg-muted/50"
+                    )}
+                    onClick={(e) => handleRowClick(rowIdx, e)}
+                  >
+                    <td className="px-2 py-1.5 text-center border-r border-border/20">
+                      <Checkbox
+                        checked={selectedRows.has(rowIdx)}
+                        onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-3.5 w-3.5"
+                      />
+                    </td>
+                    <td className="px-1.5 py-1.5 text-center border-r border-border/20">
+                      <button
+                        onClick={(e) => handleToggleFavorite(e, template)}
+                        className="p-0.5 hover:bg-muted rounded transition-colors"
+                      >
+                        <Star
+                          className={cn(
+                            "h-3.5 w-3.5",
+                            template.is_favorite
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted-foreground"
+                          )}
+                        />
+                      </button>
+                    </td>
+                    <td className="px-2 py-1.5 border-r border-border/20">
+                      <span className="font-medium text-sm leading-tight">{template.name}</span>
+                    </td>
+                    <td className="px-2 py-1.5 border-r border-border/20">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        {getTradeCategoryLabel(template.category)}
+                      </Badge>
+                    </td>
+                    <td className="px-2 py-1.5 border-r border-border/20">
+                      <span className="text-xs text-muted-foreground truncate block max-w-[200px]">
+                        {template.description || "—"}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1.5 text-right border-r border-border/20">
+                      <span className="text-xs">
+                        {template.labour_rate_default
+                          ? formatRate(template.labour_rate_default, "hr")
+                          : "—"}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1.5 text-right border-r border-border/20">
+                      <span className="text-xs">
+                        {template.estimated_duration ? `${template.estimated_duration}h` : "—"}
+                      </span>
+                    </td>
+                    <td className="px-1.5 py-1.5">
+                      <div className="flex items-center justify-end gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(template);
+                          }}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(template);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-6 text-[10px] px-1.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUse(template);
+                          }}
+                        >
+                          <Copy className="h-2.5 w-2.5 mr-0.5" />
+                          Use
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <ScrollBar orientation="horizontal" className="h-2" />
+        </ScrollArea>
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="md:hidden divide-y divide-border/30">
+        {sortedData.map((template, rowIdx) => (
+          <div
+            key={template.id}
+            className={cn(
+              "px-3 py-2.5 transition-colors cursor-pointer",
+              selectedRows.has(rowIdx)
+                ? "bg-primary/10"
+                : "hover:bg-muted/50"
+            )}
+            onClick={(e) => handleRowClick(rowIdx, e)}
+          >
+            <div className="flex items-start gap-2">
+              <div className="flex items-center gap-1.5 pt-0.5 shrink-0">
+                <Checkbox
+                  checked={selectedRows.has(rowIdx)}
+                  onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-3.5 w-3.5"
+                />
+                <button
+                  onClick={(e) => handleToggleFavorite(e, template)}
+                  className="p-0.5 hover:bg-muted rounded transition-colors"
+                >
+                  <Star
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      template.is_favorite
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-muted-foreground"
+                    )}
+                  />
+                </button>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm truncate">{template.name}</span>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+                    {getTradeCategoryLabel(template.category)}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                  {template.labour_rate_default && (
+                    <span>{formatRate(template.labour_rate_default, "hr")}</span>
+                  )}
+                  {template.estimated_duration && (
+                    <span>{template.estimated_duration}h</span>
+                  )}
+                  {template.description && (
+                    <span className="truncate">{template.description}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(template);
+                  }}
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-destructive hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(template);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-6 text-[10px] px-1.5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUse(template);
+                  }}
+                >
+                  <Copy className="h-2.5 w-2.5 mr-0.5" />
+                  Use
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
