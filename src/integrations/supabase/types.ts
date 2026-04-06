@@ -1915,6 +1915,7 @@ export type Database = {
       }
       invoice_items: {
         Row: {
+          catalog_item_id: string | null
           created_at: string
           description: string
           id: string
@@ -1927,6 +1928,7 @@ export type Database = {
           visible: boolean
         }
         Insert: {
+          catalog_item_id?: string | null
           created_at?: string
           description: string
           id?: string
@@ -1939,6 +1941,7 @@ export type Database = {
           visible?: boolean
         }
         Update: {
+          catalog_item_id?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -1951,6 +1954,13 @@ export type Database = {
           visible?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "invoice_items_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "team_catalog_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoice_items_invoice_id_fkey"
             columns: ["invoice_id"]
@@ -3445,6 +3455,73 @@ export type Database = {
         }
         Relationships: []
       }
+      pricebook_import_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_log: Json | null
+          id: string
+          items_failed: number
+          items_found: number
+          items_imported: number
+          pricebook_id: string | null
+          source_type: string
+          started_at: string | null
+          status: string
+          team_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          id?: string
+          items_failed?: number
+          items_found?: number
+          items_imported?: number
+          pricebook_id?: string | null
+          source_type?: string
+          started_at?: string | null
+          status?: string
+          team_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          id?: string
+          items_failed?: number
+          items_found?: number
+          items_imported?: number
+          pricebook_id?: string | null
+          source_type?: string
+          started_at?: string | null
+          status?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricebook_import_jobs_pricebook_id_fkey"
+            columns: ["pricebook_id"]
+            isOneToOne: false
+            referencedRelation: "team_pricebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricebook_import_jobs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricebook_import_jobs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           auto_clock_mode: string
@@ -3627,6 +3704,7 @@ export type Database = {
       }
       quote_items: {
         Row: {
+          catalog_item_id: string | null
           created_at: string
           description: string
           id: string
@@ -3639,6 +3717,7 @@ export type Database = {
           visible: boolean
         }
         Insert: {
+          catalog_item_id?: string | null
           created_at?: string
           description: string
           id?: string
@@ -3651,6 +3730,7 @@ export type Database = {
           visible?: boolean
         }
         Update: {
+          catalog_item_id?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -3663,6 +3743,13 @@ export type Database = {
           visible?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "quote_items_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "team_catalog_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quote_items_quote_id_fkey"
             columns: ["quote_id"]

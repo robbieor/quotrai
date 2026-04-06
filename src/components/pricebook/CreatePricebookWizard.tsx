@@ -257,31 +257,53 @@ export function CreatePricebookWizard({ open, onOpenChange, onComplete }: Create
       const disc = parseFloat(discountPercent) || 0;
       const mkup = parseFloat(markupPercent) || 30;
 
+      // Create import job
+      const { data: importJob } = await supabase
+        .from("pricebook_import_jobs" as any)
+        .insert({
+          team_id: profile.team_id,
+          pricebook_id: pricebookId,
+          source_type: sourceType,
+          status: "running",
+          started_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      const jobId = (importJob as any)?.id;
+
+      let itemsFound = 0;
+      let itemsImported = 0;
+      let itemsFailed = 0;
+
       // Import items based on source
       if (sourceType === "website" && scrapedProduct) {
+        itemsFound = 1;
         const webPrice = scrapedProduct.website_price || 0;
         const costPrice = webPrice > 0 ? +(webPrice * (1 - disc / 100)).toFixed(2) : 0;
         const sellPrice = costPrice > 0 ? +(costPrice * (1 + mkup / 100)).toFixed(2) : 0;
 
-        await addItem.mutateAsync({
-          item_name: scrapedProduct.product_name,
-          supplier_name: supplierName,
-          supplier_sku: scrapedProduct.supplier_sku || null,
-          manufacturer: scrapedProduct.manufacturer || null,
-          category: scrapedProduct.category || null,
-          subcategory: scrapedProduct.subcategory || null,
-          trade_type: tradeType,
-          unit: scrapedProduct.unit_of_measure || "each",
-          website_price: webPrice || null,
-          discount_percent: disc,
-          cost_price: costPrice,
-          markup_percent: mkup,
-          sell_price: sellPrice,
-          image_url: scrapedProduct.image_url || null,
-          source_id: null,
-          pricebook_id: pricebookId,
-        } as any);
-        setImportCount(1);
+        const { error: itemErr } = await supabase
+          .from("team_catalog_items" as any)
+          .insert({
+            team_id: profile.team_id,
+            pricebook_id: pricebookId,
+            item_name: scrapedProduct.product_name,
+            supplier_name: supplierName,
+            supplier_sku: scrapedProduct.supplier_sku || null,
+            manufacturer: scrapedProduct.manufacturer || null,
+            category: scrapedProduct.category || null,
+            subcategory: scrapedProduct.subcategory || null,
+            trade_type: tradeType,
+            unit: scrapedProduct.unit_of_measure || "each",
+            website_price: webPrice || null,
+            discount_percent: disc,
+            cost_price: costPrice,
+            markup_percent: mkup,
+            sell_price: sellPrice,
+            image_url: scrapedProduct.image_url || null,
+          });
+        if (itemErr) { itemsFailed = 1; } else { itemsImported = 1; }
+        setImportCount(itemsImported);
       } else if (sourceType === "csv" && csvRows.length > 0) {
         const reverseMap: Record<string, string> = {};
         Object.entries(columnMapping).forEach(([csvCol, dbField]) => {
@@ -318,11 +340,28 @@ export function CreatePricebookWizard({ open, onOpenChange, onComplete }: Create
           };
         }).filter(Boolean);
 
+        itemsFound = csvRows.length;
         if (items.length > 0) {
           const { error } = await supabase.from("team_catalog_items" as any).insert(items);
           if (error) throw error;
-          setImportCount(items.length);
+          itemsImported = items.length;
+          itemsFailed = itemsFound - itemsImported;
         }
+        setImportCount(itemsImported);
+      }
+
+      // Update import job status
+      if (jobId) {
+        await supabase
+          .from("pricebook_import_jobs" as any)
+          .update({
+            status: "completed",
+            items_found: itemsFound,
+            items_imported: itemsImported,
+            items_failed: itemsFailed,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", jobId);
       }
 
       if (pricebookId) await updateItemCount(pricebookId);
