@@ -51,30 +51,31 @@ serve(async (req) => {
       );
     }
 
-    console.log("Requesting conversation token for agent:", ELEVENLABS_AGENT_ID);
+    console.log("Requesting conversation token + signed URL for agent:", ELEVENLABS_AGENT_ID);
 
-    // Get a conversation token for WebRTC (faster than signed URL for WebSocket)
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${ELEVENLABS_AGENT_ID}`,
-      {
-        method: "GET",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-      }
-    );
+    // Fetch both token (for WebRTC) and signed URL (for WebSocket fallback) in parallel
+    const [tokenRes, signedUrlRes] = await Promise.all([
+      fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${ELEVENLABS_AGENT_ID}`,
+        { headers: { "xi-api-key": ELEVENLABS_API_KEY } }
+      ),
+      fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${ELEVENLABS_AGENT_ID}`,
+        { headers: { "xi-api-key": ELEVENLABS_API_KEY } }
+      ),
+    ]);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("ElevenLabs token error:", response.status, errorText);
+    if (!tokenRes.ok && !signedUrlRes.ok) {
+      const errorText = await tokenRes.text();
+      console.error("ElevenLabs both endpoints failed:", tokenRes.status, errorText);
       
-      const code = response.status === 401 || response.status === 403 
+      const code = tokenRes.status === 401 || tokenRes.status === 403 
         ? "invalid_api_key" 
         : "token_fetch_failed";
       
       return new Response(
         JSON.stringify({ 
-          error: `Voice service error: ${response.status}`,
+          error: `Voice service error: ${tokenRes.status}`,
           code,
           detail: errorText.substring(0, 200)
         }),
@@ -82,14 +83,26 @@ serve(async (req) => {
       );
     }
 
-    const { token } = await response.json();
-    console.log("Got conversation token successfully");
+    const result: Record<string, unknown> = { agentId: ELEVENLABS_AGENT_ID };
+
+    if (tokenRes.ok) {
+      const { token } = await tokenRes.json();
+      result.token = token;
+      console.log("Got conversation token successfully");
+    } else {
+      console.warn("Token endpoint failed, using signed URL only");
+    }
+
+    if (signedUrlRes.ok) {
+      const { signed_url } = await signedUrlRes.json();
+      result.signed_url = signed_url;
+      console.log("Got signed URL successfully");
+    } else {
+      console.warn("Signed URL endpoint failed, using token only");
+    }
 
     return new Response(
-      JSON.stringify({ 
-        token,
-        agentId: ELEVENLABS_AGENT_ID 
-      }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
