@@ -280,7 +280,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(TRADE_CATEGORY_MAP).map((t) => (
+                    {getAllTradeTypes().map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
