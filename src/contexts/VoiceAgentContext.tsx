@@ -449,26 +449,16 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
   // Core connection logic (extracted for retry wrapper)
   const attemptConnection = useCallback(async (
-    tokenResult: { token?: string; usePublicAgent?: boolean },
+    token: string,
     dynamicVariables: Record<string, string>
   ) => {
-    console.log("[VoiceAgent] 🚀 Starting session...");
+    console.log("[VoiceAgent] 🚀 Starting session with conversation token...");
     
-    if (tokenResult.token) {
-      console.log("[VoiceAgent] Using conversation token for WebRTC");
-      await conversation.startSession({
-        conversationToken: tokenResult.token,
-        connectionType: "webrtc",
-        dynamicVariables,
-      });
-    } else {
-      console.log("[VoiceAgent] Using public agent, agentId:", ELEVENLABS_AGENT_ID);
-      await conversation.startSession({
-        agentId: ELEVENLABS_AGENT_ID,
-        connectionType: "webrtc",
-        dynamicVariables,
-      });
-    }
+    await conversation.startSession({
+      conversationToken: token,
+      connectionType: "webrtc",
+      dynamicVariables,
+    });
     
     console.log("[VoiceAgent] ✅ Session started successfully");
     resetRetryState();
@@ -488,12 +478,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
           cachedTokenRef.current = { token: data.token, fetchedAt: Date.now() };
           console.log("[VoiceAgent] ✅ Token pre-warmed");
         } else {
-          cachedTokenRef.current = { usePublicAgent: true, fetchedAt: Date.now() };
-          console.warn("[VoiceAgent] Token pre-warm fell back to public agent");
+          const errMsg = data?.error || error?.message || "Unknown error";
+          console.error("[VoiceAgent] ❌ Token pre-warm failed:", errMsg);
+          cachedTokenRef.current = null;
         }
       })
-      .catch(() => {
-        cachedTokenRef.current = { usePublicAgent: true, fetchedAt: Date.now() };
+      .catch((err) => {
+        console.error("[VoiceAgent] ❌ Token pre-warm exception:", err);
+        cachedTokenRef.current = null;
       });
   }, []);
 
