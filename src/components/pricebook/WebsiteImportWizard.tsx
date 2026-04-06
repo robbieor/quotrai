@@ -18,6 +18,8 @@ interface WebsiteImportWizardProps {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onComplete: (pricebook: Pricebook) => void;
+  /** If provided, import into this existing pricebook instead of creating a new one */
+  existingPricebook?: Pricebook | null;
 }
 
 type Step = "domain" | "mapping" | "categories" | "scraping" | "importing" | "done";
@@ -40,7 +42,7 @@ interface ScrapedProduct {
   unit_of_measure?: string;
 }
 
-export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteImportWizardProps) {
+export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPricebook }: WebsiteImportWizardProps) {
   const [step, setStep] = useState<Step>("domain");
   const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,15 +57,19 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
   const [scrapedProducts, setScrapedProducts] = useState<ScrapedProduct[]>([]);
   const [scrapeProgress, setScrapeProgress] = useState({ done: 0, total: 0 });
 
-  // Import phase
+  // Config (only used when creating new pricebook)
   const [pricebookName, setPricebookName] = useState("");
-  const [tradeType, setTradeType] = useState("Electrical");
+  const [tradeType, setTradeType] = useState(existingPricebook?.trade_type || "Electrical");
+
+  // Import progress
   const [importProgress, setImportProgress] = useState(0);
   const [importCount, setImportCount] = useState(0);
 
   const { getSettingForSupplier } = useSupplierSettings();
   const { createPricebook, updateItemCount } = usePricebooks();
   const { profile } = useProfile();
+
+  const isAddingToExisting = !!existingPricebook;
 
   const selectedUrlCount = useMemo(() => {
     return categories
@@ -80,7 +86,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
     setScrapedProducts([]);
     setScrapeProgress({ done: 0, total: 0 });
     setPricebookName("");
-    setTradeType("Electrical");
+    setTradeType(existingPricebook?.trade_type || "Electrical");
     setImportProgress(0);
     setImportCount(0);
     setError("");
@@ -97,7 +103,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
     return clean.charAt(0).toUpperCase() + clean.slice(1);
   };
 
-  // Phase 1: Map the site to discover categories
   const handleMap = async () => {
     if (!domain) return;
     setLoading(true);
@@ -120,10 +125,11 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
         setError("No product pages found. Try a different supplier domain.");
         setStep("domain");
       } else {
-        // Pre-select all categories
         setSelectedCategories(new Set(cats.map((c) => c.name)));
-        const supplier = detectSupplierName(domain);
-        setPricebookName(`${supplier} Pricebook`);
+        if (!isAddingToExisting) {
+          const supplier = detectSupplierName(domain);
+          setPricebookName(`${supplier} Pricebook`);
+        }
         setStep("categories");
       }
     } catch (e: any) {
@@ -152,14 +158,12 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
     }
   };
 
-  // Phase 2: Scrape selected categories then import
   const handleScrapeAndImport = async () => {
     if (!profile?.team_id || selectedCategories.size === 0) return;
     setStep("scraping");
     setLoading(true);
 
     try {
-      // Collect all URLs from selected categories
       const allUrls = categories
         .filter((c) => selectedCategories.has(c.name))
         .flatMap((c) => c.urls);
@@ -167,7 +171,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
       const totalToScrape = allUrls.length;
       setScrapeProgress({ done: 0, total: totalToScrape });
 
-      // Scrape in batches of 200
       const allProducts: ScrapedProduct[] = [];
       for (let offset = 0; offset < allUrls.length; offset += 200) {
         const batch = allUrls.slice(offset, offset + 200);
@@ -197,16 +200,21 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
       setStep("importing");
 
       const supplier = detectSupplierName(domain);
-      const pb = await createPricebook.mutateAsync({
-        name: pricebookName,
-        supplier_name: supplier,
-        source_type: "website",
-        source_url: domain.startsWith("http") ? domain : `https://${domain}`,
-        trade_type: tradeType,
-        last_synced_at: new Date().toISOString(),
-      });
+      let pricebookId: string;
 
-      const pricebookId = (pb as any)?.id;
+      if (isAddingToExisting) {
+        pricebookId = existingPricebook!.id;
+      } else {
+        const pb = await createPricebook.mutateAsync({
+          name: pricebookName,
+          supplier_name: null, // Multi-supplier: don't lock to one supplier
+          source_type: "website",
+          source_url: domain.startsWith("http") ? domain : `https://${domain}`,
+          trade_type: tradeType,
+          last_synced_at: new Date().toISOString(),
+        });
+        pricebookId = (pb as any)?.id;
+      }
 
       // Create import job
       const { data: importJob } = await supabase
@@ -223,6 +231,8 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
       const jobId = (importJob as any)?.id;
 
       let imported = 0;
+      const activeTradeType = isAddingToExisting ? (existingPricebook!.trade_type || tradeType) : tradeType;
+
       for (let i = 0; i < allProducts.length; i++) {
         const product = allProducts[i];
         const setting = getSettingForSupplier(supplier);
@@ -243,7 +253,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
             manufacturer: product.manufacturer || null,
             category: product.category || null,
             subcategory: product.subcategory || null,
-            trade_type: tradeType,
+            trade_type: activeTradeType,
             unit: product.unit_of_measure || "each",
             website_price: webPrice || null,
             discount_percent: discount,
@@ -258,7 +268,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
         setImportCount(imported);
       }
 
-      // Update import job
       if (jobId) {
         await supabase
           .from("pricebook_import_jobs" as any)
@@ -272,10 +281,21 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           .eq("id", jobId);
       }
 
-      if (pricebookId) await updateItemCount(pricebookId);
-
+      await updateItemCount(pricebookId);
       setStep("done");
-      if (pb) onComplete(pb as unknown as Pricebook);
+
+      // Return the pricebook for navigation
+      if (!isAddingToExisting) {
+        // Refetch to get the created pricebook
+        const { data: freshPb } = await supabase
+          .from("team_pricebooks" as any)
+          .select("*")
+          .eq("id", pricebookId)
+          .single();
+        if (freshPb) onComplete(freshPb as unknown as Pricebook);
+      } else {
+        onComplete(existingPricebook!);
+      }
     } catch (e: any) {
       toast.error(e.message || "Import failed");
       setStep("categories");
@@ -284,13 +304,17 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
     }
   };
 
+  const title = isAddingToExisting
+    ? `Add Products to "${existingPricebook!.name}"`
+    : "Import from Supplier Website";
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
-            {step === "domain" && "Import from Supplier Website"}
+            {step === "domain" && title}
             {step === "mapping" && "Scanning Supplier..."}
             {step === "categories" && "Select Product Categories"}
             {step === "scraping" && "Scraping Products..."}
@@ -299,14 +323,13 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           </DialogTitle>
         </DialogHeader>
 
-        {/* Step 1: Enter domain */}
         {step === "domain" && (
           <div className="space-y-4">
             <div>
               <Label>Supplier Domain</Label>
               <div className="flex gap-2 mt-1.5">
                 <Input
-                  placeholder="e.g. wesco.ie"
+                  placeholder="e.g. wesco.ie, cef.ie, screwfix.ie"
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleMap()}
@@ -317,7 +340,9 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Foreman will map the site, find product categories, and let you choose what to import.
+                {isAddingToExisting
+                  ? "Add products from another supplier to this pricebook."
+                  : "Foreman will map the site, find product categories, and let you choose what to import."}
               </p>
             </div>
             {error && (
@@ -329,7 +354,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           </div>
         )}
 
-        {/* Step 2: Mapping */}
         {step === "mapping" && (
           <div className="flex flex-col items-center justify-center py-12 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -342,7 +366,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           </div>
         )}
 
-        {/* Step 3: Select categories */}
         {step === "categories" && (
           <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
             <div className="flex items-center justify-between">
@@ -377,34 +400,35 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
               ))}
             </div>
 
-            {/* Inline config */}
-            <div className="border-t pt-3 grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Pricebook Name</Label>
-                <Input
-                  value={pricebookName}
-                  onChange={(e) => setPricebookName(e.target.value)}
-                  className="mt-1 h-9 text-sm"
-                />
+            {/* Config — only show pricebook name/trade when creating new */}
+            {!isAddingToExisting && (
+              <div className="border-t pt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Pricebook Name</Label>
+                  <Input
+                    value={pricebookName}
+                    onChange={(e) => setPricebookName(e.target.value)}
+                    className="mt-1 h-9 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Trade Type</Label>
+                  <Select value={tradeType} onValueChange={setTradeType}>
+                    <SelectTrigger className="mt-1 h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAllTradeTypes().map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Trade Type</Label>
-                <Select value={tradeType} onValueChange={setTradeType}>
-                  <SelectTrigger className="mt-1 h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAllTradeTypes().map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Step 4: Scraping */}
         {step === "scraping" && (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -425,24 +449,26 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           </div>
         )}
 
-        {/* Step 5: Importing */}
         {step === "importing" && (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
             <Package className="h-8 w-8 text-primary animate-pulse" />
             <div className="w-full max-w-xs space-y-2">
               <Progress value={importProgress} className="h-2" />
               <p className="text-sm text-muted-foreground text-center">
-                Saving {importCount} of {scrapedProducts.length} products to catalog...
+                Saving {importCount} of {scrapedProducts.length} products...
               </p>
             </div>
           </div>
         )}
 
-        {/* Step 6: Done */}
         {step === "done" && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <CheckCircle2 className="h-10 w-10 text-primary" />
-            <p className="font-medium">"{pricebookName}" created</p>
+            <p className="font-medium">
+              {isAddingToExisting
+                ? `${importCount} products added to "${existingPricebook!.name}"`
+                : `"${pricebookName}" created`}
+            </p>
             <p className="text-sm text-muted-foreground">
               {importCount} product{importCount !== 1 ? "s" : ""} imported successfully
             </p>
@@ -456,7 +482,10 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           {step === "categories" && (
             <>
               <Button variant="outline" onClick={() => { setStep("domain"); setCategories([]); }}>Back</Button>
-              <Button onClick={handleScrapeAndImport} disabled={selectedCategories.size === 0 || !pricebookName}>
+              <Button
+                onClick={handleScrapeAndImport}
+                disabled={selectedCategories.size === 0 || (!isAddingToExisting && !pricebookName)}
+              >
                 Import {selectedUrlCount.toLocaleString()} Products
               </Button>
             </>
