@@ -4469,6 +4469,7 @@ export type Database = {
           last_used_at: string | null
           manufacturer: string | null
           markup_percent: number | null
+          pricebook_id: string | null
           sell_price: number | null
           source_id: string | null
           subcategory: string | null
@@ -4492,6 +4493,7 @@ export type Database = {
           last_used_at?: string | null
           manufacturer?: string | null
           markup_percent?: number | null
+          pricebook_id?: string | null
           sell_price?: number | null
           source_id?: string | null
           subcategory?: string | null
@@ -4515,6 +4517,7 @@ export type Database = {
           last_used_at?: string | null
           manufacturer?: string | null
           markup_percent?: number | null
+          pricebook_id?: string | null
           sell_price?: number | null
           source_id?: string | null
           subcategory?: string | null
@@ -4526,6 +4529,13 @@ export type Database = {
           website_price?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "team_catalog_items_pricebook_id_fkey"
+            columns: ["pricebook_id"]
+            isOneToOne: false
+            referencedRelation: "team_pricebooks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "team_catalog_items_source_id_fkey"
             columns: ["source_id"]
@@ -4635,6 +4645,63 @@ export type Database = {
           },
           {
             foreignKeyName: "team_memberships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_pricebooks: {
+        Row: {
+          created_at: string
+          id: string
+          item_count: number
+          last_synced_at: string | null
+          name: string
+          source_type: string
+          source_url: string | null
+          supplier_name: string | null
+          team_id: string
+          trade_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_count?: number
+          last_synced_at?: string | null
+          name: string
+          source_type?: string
+          source_url?: string | null
+          supplier_name?: string | null
+          team_id: string
+          trade_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_count?: number
+          last_synced_at?: string | null
+          name?: string
+          source_type?: string
+          source_url?: string | null
+          supplier_name?: string | null
+          team_id?: string
+          trade_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_pricebooks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_pricebooks_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
