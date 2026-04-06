@@ -560,12 +560,15 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       // Get conversation token — REQUIRED, no silent fallback
       let token: string | null = null;
+      let signedUrl: string | undefined = undefined;
       
       if (!needsToken && cachedTokenRef.current?.token) {
         token = cachedTokenRef.current.token;
+        signedUrl = cachedTokenRef.current.signedUrl;
         console.log("[VoiceAgent] ✅ Using pre-warmed token");
       } else if (tokenFetchResult.status === "fulfilled" && tokenFetchResult.value?.data?.token) {
         token = tokenFetchResult.value.data.token;
+        signedUrl = tokenFetchResult.value.data.signed_url;
         console.log("[VoiceAgent] ✅ Got fresh conversation token");
       } else {
         // Extract error details
