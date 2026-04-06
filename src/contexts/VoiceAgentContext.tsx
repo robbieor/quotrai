@@ -5,16 +5,13 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoiceFailureHandler } from "@/hooks/useVoiceFailureHandler";
 
-const ELEVENLABS_AGENT_ID = "agent_2701kffwpjhvf4gvt2cxpsx6j3rb";
-const TOAST_DEBOUNCE_MS = 10000;
-const WEBRTC_CONNECT_TIMEOUT_MS = 8000;
-const SESSION_TEARDOWN_DELAY_MS = 500; // Wait for SDK to clear internal lock
-
 interface AgentContext {
   userId?: string;
   teamId?: string;
   userName?: string;
 }
+
+type ConnectionStatus = "connected" | "connecting" | "disconnecting" | "disconnected" | "error";
 
 export type ConnectionPhase =
   | "idle"
@@ -25,7 +22,6 @@ export type ConnectionPhase =
   | "connected"
   | "failed";
 
-// Debug state for the voice debug panel
 export interface VoiceDebugState {
   micPermission: "idle" | "requesting" | "granted" | "denied" | "error";
   tokenFetch: "idle" | "pending" | "success" | "failed";
@@ -57,7 +53,7 @@ const initialDebugState: VoiceDebugState = {
 };
 
 interface VoiceAgentContextType {
-  status: "connected" | "disconnected";
+  status: ConnectionStatus;
   isSpeaking: boolean;
   isConnecting: boolean;
   connectionPhase: ConnectionPhase;
@@ -78,7 +74,11 @@ interface VoiceAgentContextType {
 
 const VoiceAgentContext = createContext<VoiceAgentContextType | null>(null);
 
-// Mutation function names that modify data and need cache invalidation
+const TOAST_DEBOUNCE_MS = 10000;
+const CONNECT_TIMEOUT_MS = 8000;
+const TOKEN_TTL_MS = 30_000;
+const SESSION_TEARDOWN_DELAY_MS = 500;
+
 const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
   reschedule_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
@@ -103,43 +103,75 @@ const MUTATION_QUERY_MAP: Record<string, string[][]> = {
 };
 
 function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
-  const conversationRef = useRef<VoiceConversation | null>(null);
+  const [status, setStatus] = useState<ConnectionStatus>("disconnected");
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [connectionPhase, setConnectionPhase] = useState<ConnectionPhase>("idle");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [debugState, setDebugState] = useState<VoiceDebugState>(initialDebugState);
-  const contextRef = useRef<AgentContext>({});
+
   const queryClient = useQueryClient();
+  const { handleFailure, getFailureReason } = useVoiceFailureHandler();
+
+  const contextRef = useRef<AgentContext>({});
+  const phaseRef = useRef<ConnectionPhase>("idle");
+  const conversationRef = useRef<VoiceConversation | null>(null);
+  const conversationIdRef = useRef<string | null>(null);
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
+  const currentAttemptRef = useRef(0);
   const cachedTokenRef = useRef<{ token: string; signedUrl?: string; fetchedAt: number } | null>(null);
-  const TOKEN_TTL_MS = 30_000;
-
-  // Attempt guard — bumped on cancel to invalidate stale callbacks
-  const currentAttemptRef = useRef<number>(0);
-
-  // onConnect promise resolution refs
   const onConnectResolveRef = useRef<(() => void) | null>(null);
   const onConnectRejectRef = useRef<((err: Error) => void) | null>(null);
 
   const addDebugEvent = useCallback((event: string) => {
-    const time = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const time = new Date().toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
     console.log(`[VoiceDebug] ${event}`);
-    setDebugState(prev => ({
+    setDebugState((prev) => ({
       ...prev,
       timeline: [...prev.timeline.slice(-29), { time, event }],
     }));
   }, []);
 
   const updateDebug = useCallback((partial: Partial<VoiceDebugState>) => {
-    setDebugState(prev => ({ ...prev, ...partial }));
+    setDebugState((prev) => ({ ...prev, ...partial }));
   }, []);
 
-  const conversationIdRef = useRef<string | null>(null);
-  const { handleFailure, getFailureReason } = useVoiceFailureHandler();
+  const setPhase = useCallback((phase: ConnectionPhase) => {
+    phaseRef.current = phase;
+    setConnectionPhase(phase);
+    updateDebug({ connectionPhase: phase });
+  }, [updateDebug]);
 
-  // Webhook caller with debug instrumentation
+  const debouncedToast = useCallback((type: "success" | "info", message: string, opts?: any) => {
+    const now = Date.now();
+    if (now - lastToastRef.current < TOAST_DEBOUNCE_MS) return;
+    lastToastRef.current = now;
+    if (type === "success") toast.success(message, opts);
+    else toast.info(message, opts);
+  }, []);
+
+  const saveMessage = useCallback(async (role: "user" | "assistant", content: string) => {
+    if (!conversationIdRef.current || !content.trim()) return;
+    try {
+      await supabase.from("george_messages").insert({
+        conversation_id: conversationIdRef.current,
+        role,
+        content: content.trim(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["george-messages", conversationIdRef.current] });
+      queryClient.invalidateQueries({ queryKey: ["george-conversations"] });
+    } catch (error) {
+      console.error("[VoiceAgent] Failed to save message:", error);
+    }
+  }, [queryClient]);
+
   const callGeorgeWebhook = useCallback(async (
     functionName: string,
     parameters: Record<string, unknown>,
@@ -161,8 +193,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        const errMsg = `Webhook error: ${error.message}`;
-        addDebugEvent(`❌ ${errMsg}`);
+        addDebugEvent(`❌ Webhook error: ${error.message}`);
         updateDebug({ lastWebhookStatus: `FAILED: ${error.message}` });
         return `Sorry, I encountered an error: ${error.message}`;
       }
@@ -187,142 +218,250 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     }
   }, [queryClient, addDebugEvent, updateDebug]);
 
-  // Save message to database
-  const saveMessage = useCallback(async (role: "user" | "assistant", content: string) => {
-    if (!conversationIdRef.current || !content.trim()) return;
-    try {
-      await supabase.from("george_messages").insert({
-        conversation_id: conversationIdRef.current,
-        role,
-        content: content.trim(),
-      });
-      queryClient.invalidateQueries({ queryKey: ["george-messages", conversationIdRef.current] });
-      queryClient.invalidateQueries({ queryKey: ["george-conversations"] });
-    } catch (error) {
-      console.error("[VoiceAgent] Failed to save message:", error);
-    }
-  }, [queryClient]);
+  const createConversationRecord = useCallback(async () => {
+    const userId = contextRef.current.userId;
+    const teamId = contextRef.current.teamId;
+    if (!userId || !teamId) return;
 
-  const debouncedToast = useCallback((type: 'success' | 'info', message: string, opts?: any) => {
-    const now = Date.now();
-    if (now - lastToastRef.current < TOAST_DEBOUNCE_MS) return;
-    lastToastRef.current = now;
-    if (type === 'success') toast.success(message, opts);
-    else toast.info(message, opts);
+    const { data } = await supabase
+      .from("george_conversations")
+      .insert({
+        team_id: teamId,
+        user_id: userId,
+        title: `Voice call - ${new Date().toLocaleString()}`,
+      })
+      .select()
+      .single();
+
+    if (data) {
+      conversationIdRef.current = data.id;
+      setCurrentConversationId(data.id);
+      addDebugEvent(`📝 DB conversation created: ${data.id.substring(0, 8)}`);
+    }
+  }, [addDebugEvent]);
+
+  const handleConnectedCleanup = useCallback(() => {
+    if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+    keepAliveRef.current = setInterval(() => {
+      try {
+        conversationRef.current?.sendUserActivity();
+      } catch {
+        // noop
+      }
+    }, 15_000);
   }, []);
 
-  const handleConnect = useCallback(() => {
-      console.log("[VoiceAgent] ✅ onConnect fired — transport is truly live");
-      addDebugEvent("✅ onConnect fired — session truly connected");
-      updateDebug({ sessionConnected: true, onConnectFired: true, connectionPhase: "connected" });
-      setConnectionPhase("connected");
-      debouncedToast('success', "Connected to Foreman AI", { duration: 2000 });
-
-      if (onConnectResolveRef.current) {
-        onConnectResolveRef.current();
-        onConnectResolveRef.current = null;
-        onConnectRejectRef.current = null;
-      }
-
-      try { conversationRef.current?.sendUserActivity(); } catch (_) { /* noop */ }
-
-      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
-      keepAliveRef.current = setInterval(() => {
-        try { conversationRef.current?.sendUserActivity(); } catch (_) { /* noop */ }
-      }, 15_000);
-    }, [addDebugEvent, updateDebug, debouncedToast]);
-
-  const handleDisconnect = useCallback(() => {
-      console.log("[VoiceAgent] 🔌 Disconnected from Foreman AI");
-      addDebugEvent("🔌 Disconnected");
-      updateDebug({ sessionConnected: false, onConnectFired: false, connectionPhase: "idle" });
-      setConnectionPhase("idle");
-      conversationRef.current = null;
-      debouncedToast('info', "Call ended", { duration: 2000 });
-      conversationIdRef.current = null;
-      setCurrentConversationId(null);
-
-      if (onConnectRejectRef.current) {
-        onConnectRejectRef.current(new Error("Disconnected before onConnect fired"));
-        onConnectResolveRef.current = null;
-        onConnectRejectRef.current = null;
-      }
-
-      if (keepAliveRef.current) {
-        clearInterval(keepAliveRef.current);
-        keepAliveRef.current = null;
-      }
-    }, [addDebugEvent, updateDebug, debouncedToast]);
-
-  const handleMessage = useCallback((message: any) => {
-      if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
-        const transcript = message.user_transcription_event.user_transcript;
-        addDebugEvent(`🗣️ User transcript: "${transcript.substring(0, 60)}"`);
-        updateDebug({ lastTranscript: transcript });
-        saveMessage("user", transcript);
-      }
-      if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
-        const response = message.agent_response_event.agent_response;
-        addDebugEvent(`🤖 Agent response: "${response.substring(0, 60)}"`);
-        saveMessage("assistant", response);
-      }
-      if (message.type === "conversation_initiation_metadata") {
-        addDebugEvent("📋 conversation_initiation_metadata received");
-      }
-    }, [addDebugEvent, updateDebug, saveMessage]);
-
-  const handleSdkError = useCallback((error: unknown) => {
-      console.error("[VoiceAgent] ❌ Error:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      addDebugEvent(`❌ SDK Error: ${errMsg}`);
-      updateDebug({ lastError: errMsg });
-
-      if (onConnectRejectRef.current) {
-        onConnectRejectRef.current(error instanceof Error ? error : new Error(errMsg));
-        onConnectResolveRef.current = null;
-        onConnectRejectRef.current = null;
-      }
-    }, [addDebugEvent, updateDebug]);
-
   const clientTools = {
-  /**
-   * Start a single session attempt and wait for onConnect with timeout.
-   * Returns only when onConnect fires OR throws on timeout/error.
-   */
-  const startAndWaitForConnect = useCallback((
+    get_today_summary: async () => await callGeorgeWebhook("get_today_summary", {}, contextRef.current),
+    get_week_ahead_summary: async () => await callGeorgeWebhook("get_week_ahead_summary", {}, contextRef.current),
+    get_todays_jobs: async () => await callGeorgeWebhook("get_todays_jobs", {}, contextRef.current),
+    get_upcoming_jobs: async (params: { days?: number }) => await callGeorgeWebhook("get_upcoming_jobs", params, contextRef.current),
+    get_financial_summary: async (params: { period?: string }) => await callGeorgeWebhook("get_financial_summary", params, contextRef.current),
+
+    create_job: async (params: { customer_name: string; title: string; description?: string; scheduled_date?: string; scheduled_time?: string; estimated_value?: number }) =>
+      await callGeorgeWebhook("create_job", params, contextRef.current),
+    list_jobs: async (params: { status?: string; customer_name?: string; search?: string; date_from?: string; date_to?: string; limit?: number }) =>
+      await callGeorgeWebhook("list_jobs", params, contextRef.current),
+    reschedule_job: async (params: { job_title?: string; client_name?: string; new_date: string; new_time?: string }) =>
+      await callGeorgeWebhook("reschedule_job", params, contextRef.current),
+    update_job_status: async (params: { job_title: string; new_status: string }) =>
+      await callGeorgeWebhook("update_job_status", params, contextRef.current),
+    delete_job: async (params: { job_id?: string; job_title?: string; client_name?: string }) =>
+      await callGeorgeWebhook("delete_job", params, contextRef.current),
+
+    list_customers: async (params: { search?: string; limit?: number }) =>
+      await callGeorgeWebhook("list_customers", params, contextRef.current),
+    search_customer: async (params: { query: string }) =>
+      await callGeorgeWebhook("search_customer", params, contextRef.current),
+    get_client_info: async (params: { client_name: string }) =>
+      await callGeorgeWebhook("get_client_info", params, contextRef.current),
+    create_customer: async (params: { name: string; email?: string; phone?: string; address?: string; contact_person?: string; notes?: string }) =>
+      await callGeorgeWebhook("create_customer", params, contextRef.current),
+    update_customer: async (params: { customer_name?: string; customer_id?: string; name?: string; email?: string; phone?: string; address?: string; contact_person?: string; notes?: string }) =>
+      await callGeorgeWebhook("update_customer", params, contextRef.current),
+    delete_customer: async (params: { customer_name?: string; customer_id?: string }) =>
+      await callGeorgeWebhook("delete_customer", params, contextRef.current),
+
+    create_quote: async (params: { customer_name: string; items: Array<{ description: string; quantity: number; unit_price: number }>; notes?: string; valid_days?: number; job_id?: string }) =>
+      await callGeorgeWebhook("create_quote", params, contextRef.current),
+    list_quotes: async (params: { status?: string; customer_name?: string; search?: string; limit?: number }) =>
+      await callGeorgeWebhook("list_quotes", params, contextRef.current),
+    get_pending_quotes: async () => await callGeorgeWebhook("get_pending_quotes", {}, contextRef.current),
+    update_quote_status: async (params: { quote_id?: string; display_number?: string; new_status: string }) =>
+      await callGeorgeWebhook("update_quote_status", params, contextRef.current),
+    delete_quote: async (params: { quote_id?: string; display_number?: string }) =>
+      await callGeorgeWebhook("delete_quote", params, contextRef.current),
+
+    create_invoice: async (params: { customer_name: string; items: Array<{ description: string; quantity: number; unit_price: number }>; notes?: string; due_days?: number; job_id?: string; tax_rate?: number }) =>
+      await callGeorgeWebhook("create_invoice", params, contextRef.current),
+    list_invoices: async (params: { status?: string; customer_name?: string; search?: string; limit?: number }) =>
+      await callGeorgeWebhook("list_invoices", params, contextRef.current),
+    get_outstanding_invoices: async () => await callGeorgeWebhook("get_outstanding_invoices", {}, contextRef.current),
+    get_overdue_invoices: async () => await callGeorgeWebhook("get_overdue_invoices", {}, contextRef.current),
+    update_invoice_status: async (params: { invoice_id?: string; display_number?: string; new_status: string }) =>
+      await callGeorgeWebhook("update_invoice_status", params, contextRef.current),
+    send_invoice_reminder: async (params: { display_number?: string; invoice_id?: string }) =>
+      await callGeorgeWebhook("send_invoice_reminder", params, contextRef.current),
+    delete_invoice: async (params: { invoice_id?: string; display_number?: string }) =>
+      await callGeorgeWebhook("delete_invoice", params, contextRef.current),
+
+    log_expense: async (params: { description: string; amount: number; category?: string; vendor?: string; job_title?: string }) =>
+      await callGeorgeWebhook("log_expense", params, contextRef.current),
+    list_expenses: async (params: { category?: string; vendor?: string; job_id?: string; date_from?: string; date_to?: string; limit?: number }) =>
+      await callGeorgeWebhook("list_expenses", params, contextRef.current),
+    delete_expense: async (params: { expense_id?: string; vendor?: string; amount?: number }) =>
+      await callGeorgeWebhook("delete_expense", params, contextRef.current),
+
+    get_templates: async (params?: { category?: string; search?: string }) =>
+      await callGeorgeWebhook("get_templates", params || {}, contextRef.current),
+    use_template_for_quote: async (params: { template_name?: string; template_id?: string; customer_name: string; notes?: string; quantity_overrides?: Record<string, number>; job_id?: string; job_title?: string; create_job?: boolean; scheduled_date?: string; scheduled_time?: string }) =>
+      await callGeorgeWebhook("use_template_for_quote", params, contextRef.current),
+    create_invoice_from_template: async (params: { template_name?: string; template_id?: string; customer_name: string; notes?: string; due_days?: number; quantity_overrides?: Record<string, number>; job_id?: string; job_title?: string; create_job?: boolean; scheduled_date?: string; scheduled_time?: string }) =>
+      await callGeorgeWebhook("create_invoice_from_template", params, contextRef.current),
+    suggest_template: async (params: { job_description: string }) =>
+      await callGeorgeWebhook("suggest_template", params, contextRef.current),
+
+    create_invoice_from_quote: async (params: { quote_id?: string; display_number?: string; due_days?: number }) =>
+      await callGeorgeWebhook("create_invoice_from_quote", params, contextRef.current),
+    get_jobs_for_date: async (params: { date: string }) =>
+      await callGeorgeWebhook("get_jobs_for_date", params, contextRef.current),
+    check_availability: async (params: { date: string; preferred_time?: string }) =>
+      await callGeorgeWebhook("check_availability", params, contextRef.current),
+    get_week_schedule: async (params: { start_date?: string }) =>
+      await callGeorgeWebhook("get_week_schedule", params, contextRef.current),
+    get_monthly_summary: async (params: { month?: number; year?: number }) =>
+      await callGeorgeWebhook("get_monthly_summary", params, contextRef.current),
+    get_outstanding_balance: async (params: { customer_name?: string }) =>
+      await callGeorgeWebhook("get_outstanding_balance", params, contextRef.current),
+    record_payment: async (params: { display_number?: string; invoice_id?: string; amount: number; payment_method?: string; notes?: string }) =>
+      await callGeorgeWebhook("record_payment", params, contextRef.current),
+    get_payment_history: async (params: { display_number?: string; invoice_id?: string; customer_name?: string; limit?: number }) =>
+      await callGeorgeWebhook("get_payment_history", params, contextRef.current),
+    get_template_details: async (params: { template_name?: string; template_id?: string }) =>
+      await callGeorgeWebhook("get_template_details", params, contextRef.current),
+    search_templates: async (params: { query: string; category?: string }) =>
+      await callGeorgeWebhook("search_templates", params, contextRef.current),
+    list_template_categories: async () =>
+      await callGeorgeWebhook("list_template_categories", {}, contextRef.current),
+  };
+
+  const startAndWaitForConnect = useCallback(async (
     sessionOpts: Record<string, unknown>,
     dynamicVariables: Record<string, string>,
-    label: string
-  ): Promise<void> => {
+    label: string,
+    attemptId: number
+  ) => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        if (onConnectResolveRef.current === wrappedResolve) {
-          onConnectResolveRef.current = null;
-          onConnectRejectRef.current = null;
-          reject(new Error(`${label} timed out (${WEBRTC_CONNECT_TIMEOUT_MS}ms)`));
-        }
-      }, WEBRTC_CONNECT_TIMEOUT_MS);
+      let settled = false;
 
-      const wrappedResolve = () => { clearTimeout(timeout); resolve(); };
-      const wrappedReject = (err: Error) => { clearTimeout(timeout); reject(err); };
-
-      onConnectResolveRef.current = wrappedResolve;
-      onConnectRejectRef.current = wrappedReject;
-
-      try {
-        VoiceConversation.startSession({ ...sessionOpts, dynamicVariables, onConnect: () => handleConnect(), onDisconnect: () => handleDisconnect(), onMessage: (message) => handleMessage(message), onError: (message) => handleSdkError(message), clientTools }).then((conv) => { conversationRef.current = conv; }).catch((err) => { throw err; });
-      } catch (err: unknown) {
+      const finishResolve = () => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timeout);
         onConnectResolveRef.current = null;
         onConnectRejectRef.current = null;
-        reject(err instanceof Error ? err : new Error(String(err)));
-      }
-    });
-  }, [handleConnect, handleDisconnect, handleMessage, handleSdkError]);
+        resolve();
+      };
 
-  // Pre-warm: fetch token in background
+      const finishReject = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        onConnectResolveRef.current = null;
+        onConnectRejectRef.current = null;
+        reject(error);
+      };
+
+      const timeout = setTimeout(() => {
+        finishReject(new Error(`${label} timed out waiting for onConnect (${CONNECT_TIMEOUT_MS}ms)`));
+      }, CONNECT_TIMEOUT_MS);
+
+      onConnectResolveRef.current = finishResolve;
+      onConnectRejectRef.current = finishReject;
+
+      void (async () => {
+        try {
+          const conv = await VoiceConversation.startSession({
+            ...sessionOpts,
+            dynamicVariables,
+            clientTools,
+            connectionType: "signedUrl" in sessionOpts ? "websocket" : "webrtc",
+            onConnect: () => {
+              if (currentAttemptRef.current !== attemptId) return;
+              addDebugEvent("✅ onConnect fired — session truly connected");
+              updateDebug({ sessionConnected: true, onConnectFired: true });
+              setStatus("connected");
+              setPhase("connected");
+              debouncedToast("success", "Connected to Foreman AI", { duration: 2000 });
+              handleConnectedCleanup();
+              finishResolve();
+            },
+            onDisconnect: () => {
+              if (currentAttemptRef.current !== attemptId && phaseRef.current !== "connected") return;
+              addDebugEvent("🔌 Disconnected");
+              updateDebug({ sessionConnected: false, onConnectFired: false });
+              setStatus("disconnected");
+              setIsSpeaking(false);
+              if (phaseRef.current === "connected") setPhase("idle");
+              conversationRef.current = null;
+              conversationIdRef.current = null;
+              setCurrentConversationId(null);
+              if (keepAliveRef.current) {
+                clearInterval(keepAliveRef.current);
+                keepAliveRef.current = null;
+              }
+            },
+            onError: (message, context) => {
+              if (currentAttemptRef.current !== attemptId) return;
+              const errMsg = context ? `${message}: ${JSON.stringify(context)}` : message;
+              addDebugEvent(`❌ SDK Error: ${errMsg}`);
+              updateDebug({ lastError: errMsg });
+              setStatus("error");
+              finishReject(new Error(errMsg));
+            },
+            onModeChange: ({ mode }) => {
+              if (currentAttemptRef.current !== attemptId) return;
+              setIsSpeaking(mode === "speaking");
+            },
+            onStatusChange: ({ status: sdkStatus }) => {
+              if (currentAttemptRef.current !== attemptId) return;
+              setStatus(sdkStatus as ConnectionStatus);
+            },
+            onMessage: (message: any) => {
+              if (currentAttemptRef.current !== attemptId) return;
+              if (message.type === "user_transcript" && message.user_transcription_event?.user_transcript) {
+                const transcript = message.user_transcription_event.user_transcript;
+                addDebugEvent(`🗣️ User transcript: "${transcript.substring(0, 60)}"`);
+                updateDebug({ lastTranscript: transcript });
+                saveMessage("user", transcript);
+              }
+              if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
+                const response = message.agent_response_event.agent_response;
+                addDebugEvent(`🤖 Agent response: "${response.substring(0, 60)}"`);
+                saveMessage("assistant", response);
+              }
+              if (message.type === "conversation_initiation_metadata") {
+                addDebugEvent("📋 conversation_initiation_metadata received");
+              }
+            },
+          });
+
+          if (currentAttemptRef.current !== attemptId) {
+            await conv.endSession();
+            return;
+          }
+
+          conversationRef.current = conv;
+        } catch (error) {
+          finishReject(error instanceof Error ? error : new Error(String(error)));
+        }
+      })();
+    });
+  }, [addDebugEvent, clientTools, debouncedToast, handleConnectedCleanup, saveMessage, setPhase, updateDebug]);
+
   const preWarmToken = useCallback(() => {
     if (cachedTokenRef.current && Date.now() - cachedTokenRef.current.fetchedAt < TOKEN_TTL_MS) return;
+
     addDebugEvent("🔥 Pre-warming token...");
     supabase.functions.invoke("elevenlabs-agent-token", { body: {} })
       .then(({ data, error }) => {
@@ -335,54 +474,57 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         }
       })
       .catch((err) => {
-        addDebugEvent(`❌ Token pre-warm exception: ${err}`);
+        addDebugEvent(`❌ Token pre-warm exception: ${String(err)}`);
         cachedTokenRef.current = null;
       });
   }, [addDebugEvent]);
 
-  /**
-   * Cancel an in-progress connection attempt.
-   * Bumps attemptId so any async callbacks from the old attempt are ignored.
-   */
   const cancelConnection = useCallback(() => {
     currentAttemptRef.current++;
     addDebugEvent("🚫 Connection cancelled by user");
-    updateDebug({ connectionPhase: "idle", attemptCancelled: true });
-    setConnectionPhase("idle");
+    updateDebug({ attemptCancelled: true });
+    setStatus("disconnected");
+    setIsSpeaking(false);
     setRetryAttempt(0);
+    setPhase("idle");
     toast.dismiss("voice-retry");
 
-    // Clear pending onConnect promises
     if (onConnectRejectRef.current) {
       onConnectRejectRef.current(new Error("Cancelled by user"));
       onConnectResolveRef.current = null;
       onConnectRejectRef.current = null;
     }
 
-    // Best-effort teardown
-    try { conversationRef.current?.endSession(); } catch (_) { /* noop */ }
-  }, [conversation, addDebugEvent, updateDebug]);
+    if (keepAliveRef.current) {
+      clearInterval(keepAliveRef.current);
+      keepAliveRef.current = null;
+    }
+
+    void conversationRef.current?.endSession();
+    conversationRef.current = null;
+  }, [addDebugEvent, setPhase, updateDebug]);
 
   const startConversation = useCallback(async (context?: AgentContext) => {
-    if (connectionPhase !== "idle" && connectionPhase !== "failed") return;
+    if (phaseRef.current !== "idle" && phaseRef.current !== "failed") return;
 
     const attemptId = ++currentAttemptRef.current;
     const isStale = () => currentAttemptRef.current !== attemptId;
 
-    // Reset
     setDebugState({ ...initialDebugState, timeline: [] });
-    setConnectionPhase("requesting_mic");
-    updateDebug({ connectionPhase: "requesting_mic", attemptCancelled: false });
-    setRetryAttempt(0);
     setVoiceUnavailable(false);
+    setRetryAttempt(0);
+    setStatus("connecting");
+    setIsSpeaking(false);
+    setPhase("requesting_mic");
     addDebugEvent("🎙️ Starting voice connection...");
 
-    if (context) contextRef.current = { ...contextRef.current, ...context };
+    if (context) {
+      contextRef.current = { ...contextRef.current, ...context };
+    }
 
     try {
-      // 1. Mic permission
+      updateDebug({ micPermission: "requesting", attemptCancelled: false });
       addDebugEvent("🎤 Requesting microphone...");
-      updateDebug({ micPermission: "requesting" });
 
       let micStream: MediaStream;
       try {
@@ -391,29 +533,33 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         if (isStale()) return;
         const reason = (micErr as Error).name === "NotAllowedError" ? "microphone_denied" : "microphone_unavailable";
         addDebugEvent(`❌ Mic ${reason}`);
-        updateDebug({ micPermission: "denied", lastError: `Microphone: ${reason}`, connectionPhase: "failed" });
-        setConnectionPhase("failed");
+        updateDebug({ micPermission: "denied", lastError: `Microphone: ${reason}` });
+        setStatus("error");
+        setPhase("failed");
         handleFailure({ reason, error: micErr });
         return;
       }
 
-      if (isStale()) { micStream.getTracks().forEach(t => t.stop()); return; }
+      if (isStale()) {
+        micStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
 
       updateDebug({ micPermission: "granted" });
       addDebugEvent("✅ Microphone granted");
 
-      // Resume AudioContext on mobile
       try {
         const audioCtx = new AudioContext();
         if (audioCtx.state === "suspended") await audioCtx.resume();
-        audioCtx.close();
-      } catch (_) { /* best-effort */ }
-      micStream.getTracks().forEach(t => t.stop());
+        await audioCtx.close();
+      } catch {
+        // noop
+      }
+      micStream.getTracks().forEach((track) => track.stop());
 
-      // 2. Fetch token
       if (isStale()) return;
-      setConnectionPhase("fetching_token");
-      updateDebug({ connectionPhase: "fetching_token", tokenFetch: "pending" });
+      setPhase("fetching_token");
+      updateDebug({ tokenFetch: "pending" });
       addDebugEvent("🔑 Fetching token...");
 
       let token: string;
@@ -431,10 +577,11 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         if (error || !data?.token) {
           const errorMsg = data?.error || error?.message || "Token fetch failed";
           addDebugEvent(`❌ Token failed: ${errorMsg}`);
-          updateDebug({ tokenFetch: "failed", lastError: errorMsg, connectionPhase: "failed" });
-          setConnectionPhase("failed");
-          toast.error("Voice Service Unavailable", { description: errorMsg, duration: 6000 });
+          updateDebug({ tokenFetch: "failed", lastError: errorMsg });
+          setStatus("error");
+          setPhase("failed");
           setVoiceUnavailable(true);
+          toast.error("Voice Service Unavailable", { description: errorMsg, duration: 6000 });
           return;
         }
 
@@ -445,7 +592,6 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       }
       cachedTokenRef.current = null;
 
-      // Build dynamic variables
       const dynamicVariables: Record<string, string> = {};
       if (contextRef.current.userName) dynamicVariables.user_name = contextRef.current.userName;
       if (contextRef.current.teamId) dynamicVariables.team_id = contextRef.current.teamId;
@@ -453,32 +599,26 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       dynamicVariables.current_date = now.toISOString().split("T")[0];
       dynamicVariables.current_time = now.toTimeString().slice(0, 5);
       dynamicVariables.current_day = now.toLocaleDateString("en-US", { weekday: "long" });
-      dynamicVariables.current_datetime = now.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+      dynamicVariables.current_datetime = now.toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
 
-      // 3. WebRTC attempt
       if (isStale()) return;
-      setConnectionPhase("dialing_webrtc");
-      updateDebug({ connectionPhase: "dialing_webrtc", transportPath: "webrtc" });
       setRetryAttempt(1);
+      setPhase("dialing_webrtc");
+      updateDebug({ transportPath: "webrtc" });
       addDebugEvent("🚀 Trying WebRTC...");
 
       try {
-        await startAndWaitForConnect({ conversationToken: token }, dynamicVariables, "WebRTC");
+        await startAndWaitForConnect({ conversationToken: token, connectionType: "webrtc" }, dynamicVariables, "WebRTC", attemptId);
         if (isStale()) return;
-        addDebugEvent("✅ WebRTC connected!");
-
-        // Create DB conversation
-        const userId = contextRef.current.userId;
-        const teamId2 = contextRef.current.teamId;
-        if (teamId2 && userId) {
-          supabase.from("george_conversations")
-            .insert({ team_id: teamId2, user_id: userId, title: `Voice call - ${new Date().toLocaleString()}` })
-            .select().single()
-            .then(({ data: conv }) => {
-              if (conv) { conversationIdRef.current = conv.id; setCurrentConversationId(conv.id); }
-            });
-        }
-        return; // SUCCESS
+        await createConversationRecord();
+        return;
       } catch (webrtcErr) {
         if (isStale()) return;
         const errMsg = webrtcErr instanceof Error ? webrtcErr.message : String(webrtcErr);
@@ -486,91 +626,87 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         updateDebug({ lastError: errMsg });
       }
 
-      // 4. Teardown stale session and wait for SDK lock to clear
       addDebugEvent("🔄 Tearing down before fallback...");
-      try { await conversationRef.current?.endSession(); } catch (_) { /* noop */ }
-      await new Promise(r => setTimeout(r, SESSION_TEARDOWN_DELAY_MS));
+      try {
+        await conversationRef.current?.endSession();
+      } catch {
+        // noop
+      }
+      conversationRef.current = null;
+      await new Promise((resolve) => setTimeout(resolve, SESSION_TEARDOWN_DELAY_MS));
 
-      // 5. WebSocket fallback
       if (isStale()) return;
       if (!signedUrl) {
-        addDebugEvent("❌ No signed URL for WebSocket fallback");
-        updateDebug({ connectionPhase: "failed", lastError: "No WebSocket fallback available" });
-        setConnectionPhase("failed");
-        toast.error("Unable to connect to Foreman AI", { description: "WebRTC failed and no fallback available." });
+        addDebugEvent("❌ No signed URL for fallback");
+        updateDebug({ lastError: "No WebSocket fallback available" });
+        setStatus("error");
+        setPhase("failed");
         setVoiceUnavailable(true);
+        toast.error("Unable to connect to Foreman AI", { description: "WebRTC failed and no fallback is available." });
         return;
       }
 
-      setConnectionPhase("dialing_websocket");
-      updateDebug({ connectionPhase: "dialing_websocket", transportPath: "websocket" });
       setRetryAttempt(2);
+      setPhase("dialing_websocket");
+      updateDebug({ transportPath: "websocket" });
       addDebugEvent("🔄 Trying WebSocket fallback...");
 
       try {
-        await startAndWaitForConnect({ signedUrl }, dynamicVariables, "WebSocket");
+        await startAndWaitForConnect({ signedUrl, connectionType: "websocket" }, dynamicVariables, "WebSocket", attemptId);
         if (isStale()) return;
-        addDebugEvent("✅ WebSocket connected!");
-
-        const userId = contextRef.current.userId;
-        const teamId2 = contextRef.current.teamId;
-        if (teamId2 && userId) {
-          supabase.from("george_conversations")
-            .insert({ team_id: teamId2, user_id: userId, title: `Voice call - ${new Date().toLocaleString()}` })
-            .select().single()
-            .then(({ data: conv }) => {
-              if (conv) { conversationIdRef.current = conv.id; setCurrentConversationId(conv.id); }
-            });
-        }
-        return; // SUCCESS
+        await createConversationRecord();
+        return;
       } catch (wsErr) {
         if (isStale()) return;
         const errMsg = wsErr instanceof Error ? wsErr.message : String(wsErr);
         addDebugEvent(`❌ WebSocket also failed: ${errMsg}`);
         updateDebug({ lastError: errMsg });
-        try { await conversationRef.current?.endSession(); } catch (_) { /* noop */ }
       }
 
-      // Both failed
       if (isStale()) return;
-      setConnectionPhase("failed");
-      updateDebug({ connectionPhase: "failed" });
+      setStatus("error");
+      setPhase("failed");
+      setVoiceUnavailable(true);
       toast.error("Unable to connect to Foreman AI", {
         description: "Both WebRTC and WebSocket failed. Please try again or use text chat.",
       });
-      setVoiceUnavailable(true);
-
-    } catch (error: unknown) {
+    } catch (error) {
       if (isStale()) return;
       const errMsg = error instanceof Error ? error.message : String(error);
       addDebugEvent(`❌ Unexpected error: ${errMsg}`);
-      updateDebug({ lastError: errMsg, connectionPhase: "failed" });
-      setConnectionPhase("failed");
-      const reason = getFailureReason(error);
-      handleFailure({ reason, error });
+      updateDebug({ lastError: errMsg });
+      setStatus("error");
+      setPhase("failed");
       setVoiceUnavailable(true);
+      handleFailure({ reason: getFailureReason(error), error });
     } finally {
       if (!isStale()) {
         setRetryAttempt(0);
         toast.dismiss("voice-retry");
       }
     }
-  }, [connectionPhase, conversation, handleFailure, getFailureReason, startAndWaitForConnect, addDebugEvent, updateDebug]);
+  }, [addDebugEvent, createConversationRecord, getFailureReason, handleFailure, setPhase, startAndWaitForConnect, updateDebug]);
 
   const stopConversation = useCallback(async () => {
     try {
       addDebugEvent("🛑 Ending session...");
+      setStatus("disconnecting");
       await conversationRef.current?.endSession();
     } catch (error) {
       console.error("[VoiceAgent] Error stopping conversation:", error);
+    } finally {
+      conversationRef.current = null;
+      setIsSpeaking(false);
+      setStatus("disconnected");
+      setPhase("idle");
     }
-  }, [conversation, addDebugEvent]);
+  }, [addDebugEvent, setPhase]);
 
   const sendTextMessage = useCallback((text: string) => {
-    if (conversationRef.current && connectionPhase === "connected") {
+    if (conversationRef.current && phaseRef.current === "connected") {
       conversationRef.current.sendUserMessage(text);
     }
-  }, [conversation]);
+  }, []);
 
   const callWebhook = useCallback(async (functionName: string, parameters: Record<string, unknown> = {}) => {
     return callGeorgeWebhook(functionName, parameters, contextRef.current);
@@ -582,20 +718,24 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
   const resetVoiceAvailability = useCallback(() => {
     setVoiceUnavailable(false);
-    setConnectionPhase("idle");
-  }, []);
+    setStatus("disconnected");
+    setPhase("idle");
+  }, [setPhase]);
 
   useEffect(() => {
-    return () => { if (keepAliveRef.current) clearInterval(keepAliveRef.current); };
+    return () => {
+      if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      void conversationRef.current?.endSession();
+    };
   }, []);
 
-  const isConnecting = connectionPhase === "requesting_mic" || connectionPhase === "fetching_token" || connectionPhase === "dialing_webrtc" || connectionPhase === "dialing_websocket";
+  const isConnecting = ["requesting_mic", "fetching_token", "dialing_webrtc", "dialing_websocket"].includes(connectionPhase);
 
   return (
     <VoiceAgentContext.Provider
       value={{
-        status: connectionPhase === "connected" ? "connected" : "disconnected",
-        isSpeaking: false,
+        status,
+        isSpeaking,
         isConnecting,
         connectionPhase,
         currentConversationId,
