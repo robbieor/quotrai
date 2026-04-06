@@ -34,6 +34,7 @@ export interface CatalogFilters {
   subcategory?: string;
   supplier_name?: string;
   favourites_only?: boolean;
+  pricebook_id?: string;
 }
 
 export function useTeamCatalog(filters: CatalogFilters = {}) {
