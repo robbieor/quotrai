@@ -588,7 +588,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       // Attempt connection with retry
       const { success, error } = await withRetry(
-        () => attemptConnection(tokenData, dynamicVariables),
+        () => attemptConnection(token, dynamicVariables),
         "ElevenLabs connection",
         (attempt) => {
           setRetryAttempt(attempt);
