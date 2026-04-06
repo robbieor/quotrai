@@ -23,19 +23,31 @@ export function ImportFromUrlDialog({ open, onOpenChange, onImport }: ImportFrom
   const { formatCurrency } = useCurrency();
   const { getSettingForSupplier } = useSupplierSettings();
 
+  const isProductUrl = (u: string): boolean => {
+    const lower = u.toLowerCase();
+    return lower.includes("/products/") || lower.includes("/product/") || lower.match(/\/[a-z0-9\-]+\.html$/) !== null;
+  };
+
   const handleFetch = async () => {
     if (!url) return;
+
+    const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+
+    if (!isProductUrl(fullUrl)) {
+      toast.error("Please paste a specific product page URL, not a homepage. For bulk import, use the Website Import wizard.");
+      return;
+    }
+
     setLoading(true);
     setProduct(null);
     try {
       const { data, error } = await supabase.functions.invoke("scrape-supplier-url", {
-        body: { url },
+        body: { url: fullUrl },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.product) throw new Error("No product data returned");
 
-      // Apply team supplier discount
       const p = data.product;
       const setting = getSettingForSupplier(p.supplier_name || "");
       const discount = setting?.discount_percent ?? 0;
