@@ -76,10 +76,9 @@ function parseWesco(html: string, url: string): Record<string, any> {
   if (breadcrumbs.length > 0) category = breadcrumbs[0];
   if (breadcrumbs.length > 1) subcategory = breadcrumbs[breadcrumbs.length - 1];
 
-  // Manufacturer - from l-products__intro or brand
+  // Manufacturer - from l-products__intro "stockists of X"
   let manufacturer = "";
-  const mfgMatch = html.match(/l-products__intro[\s\S]*?stockists of\s+(\w+)/i)
-    || html.match(/brand[^>]*>([^<]+)/i);
+  const mfgMatch = html.match(/stockists of\s+([A-Za-z0-9]+)/i);
   if (mfgMatch) manufacturer = mfgMatch[1].trim();
 
   return {
