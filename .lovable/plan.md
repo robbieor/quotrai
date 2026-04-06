@@ -1,113 +1,155 @@
 
-Brutally honest diagnosis
+# Fix the real Foreman AI voice failure
 
-- Exact failing step: the voice flow is breaking after token generation and mic permission, but before a real ElevenLabs session becomes usable.
-- Evidence from the current app:
-  - Mic starts: confirmed by frontend logs (`Microphone permission granted`).
-  - Token generation works: confirmed by backend logs from `elevenlabs-agent-token` returning both a conversation token and signed URL.
-  - Session handshake is failing: browser logs show:
-    - `websocket closed ... code: 1006`
-    - `Initial connection failed: v1 RTC path not found`
-  - Webhook/task stage is not being reached:
-    - no recent `george-webhook` logs during the failed voice attempt
-    - no fresh transcript/assistant messages saved for the new voice conversation
-- Root cause: the app currently treats `conversation.startSession()` resolving as “connected enough”, but the actual transport fails asynchronously right after. Because of that:
-  1. the code records a voice conversation as if startup succeeded
-  2. the UI can look alive / mic can be active
-  3. the WebSocket fallback is not triggered reliably
-  4. no transcript arrives, so no client tool calls fire, so no webhook runs
-- Classification: primary issue is integration/frontend state management, not missing secrets. The key and agent ID appear valid. Secondary risk: agent tool config drift may still exist, but it is not the first blocker.
+Do I know what the issue is? Yes.
 
-What I will fix
+## What is actually wrong
+The current failure is now more specific than “ElevenLabs might be down.”
 
-1. Harden the ElevenLabs connection handshake
-- Update `src/contexts/VoiceAgentContext.tsx`
-- Stop treating `startSession()` success as a real connection
-- Require a confirmed `onConnect` event before marking voice as connected or creating a DB conversation
-- Add a timeout window for WebRTC handshake
-- If WebRTC never reaches `onConnect`, automatically tear it down and retry using the signed URL path
-- If both paths fail, surface the exact stage and error instead of falling through silently
+1. The endless pulsing is a real UI bug:
+- `FloatingTomButton.tsx` and `GeorgeMobileInput.tsx` keep pulsing off local `isConnecting`
+- the “End Call” state only appears when `status === "connected"`
+- during a failed handshake, users get no real cancel/end control
 
-2. Add end-to-end voice debug state
-- Add a temporary visible debug panel for Foreman AI voice showing:
-  - mic permission: idle / granted / failed
-  - token fetch: pending / success / failed
-  - transport path: WebRTC or WebSocket
-  - session connected: yes/no
-  - transcript received: latest transcript text
-  - tool call triggered: function name
-  - backend action sent: yes/no
-  - backend response status/result
-  - final action status
-  - last error details
-- Make it visible on the Foreman AI experience and easy to disable later
+2. The current WebRTC -> WebSocket fallback is not reliably working:
+- `src/contexts/VoiceAgentContext.tsx` uses `useConversation().startSession()`
+- in the ElevenLabs React provider, `startSession()` is `void` and internally guarded by a pending lock
+- when WebRTC times out, the app calls `endSession()` and immediately tries fallback
+- but the provider’s pending lock can still be active, so the next `startSession()` is ignored
+- result: fallback/retries become fake attempts, pulsing continues, and no real connection is established
 
-3. Instrument transcript and client-tool stages
-- In `src/contexts/VoiceAgentContext.tsx`:
-  - log all key SDK events (`conversation_initiation_metadata`, transcript, agent response, disconnect, error)
-  - track whether any user transcript is actually arriving
-  - track whether any client tool is invoked
-- Wrap every client tool call to `george-webhook` with structured debug entries:
-  - requested function
-  - payload summary
-  - response success/failure
-  - returned message
+This is primarily a frontend integration/state-management bug, not just a secret-key problem.
 
-4. Fix false-positive UI states
-- Do not show effective “live call” state until actual connection is confirmed
-- Prevent creating `george_conversations` records until handshake truly succeeds
-- Improve visible status labels to match reality:
-  - Listening = connected and ready
-  - Processing = transcript/tool execution in progress
-  - Webhook sent = backend action dispatched
-  - Action completed = backend responded successfully
-  - Error = exact failing stage shown
+## Files involved
+- `src/contexts/VoiceAgentContext.tsx`
+- `src/components/layout/FloatingTomButton.tsx`
+- `src/components/george/GeorgeMobileInput.tsx`
+- `src/components/george/VoiceDebugPanel.tsx`
+- optionally `src/components/layout/ActiveCallBar.tsx`
 
-5. Verify tool/webhook chain after transport fix
-- Confirm frontend client tools still match the agent tool schema source of truth
-- If needed, re-sync agent tools via `sync-agent-tools`
-- Verify `george-webhook` is called with the expected function name + parameters once transcript/tool execution starts
-- Confirm successful webhook results are reflected in app state / cache invalidation
+## Fix plan
 
-Files involved
+### 1. Rebuild the session controller in `VoiceAgentContext.tsx`
+Replace the current wrapper-driven retry flow with a truly controlled connection flow.
 
-- `src/contexts/VoiceAgentContext.tsx` — main fix; handshake, fallback, debug state, event logging
-- `supabase/functions/elevenlabs-agent-token/index.ts` — keep token/signed URL responses explicit; expand error detail if needed
-- `src/components/layout/FloatingTomButton.tsx` — connection state messaging if needed
-- `src/components/layout/ActiveCallBar.tsx` — ensure “Listening” only appears after real connect
-- new temporary component, likely `src/components/george/VoiceDebugPanel.tsx` — visible debug UI
-- optionally `src/pages/George.tsx` — mount the debug panel in the Foreman AI interface
+- Use app-owned connection phases:
+  - `idle`
+  - `requesting_mic`
+  - `fetching_token`
+  - `dialing_webrtc`
+  - `dialing_websocket`
+  - `connected`
+  - `cancelling`
+  - `failed`
+- Add an `attemptId` so stale callbacks from old attempts cannot mutate the UI
+- Track the active transport explicitly (`webrtc` / `websocket`)
+- Only mark connected after the live session is actually established
+- Clear connecting state immediately on failure/cancel
 
-Implementation sequence
+### 2. Stop using the current fallback pattern that gets blocked
+In `VoiceAgentContext.tsx`:
 
-1. Refactor connection logic so `onConnect` is the only success gate
-2. Add explicit async fallback from failed/stalled WebRTC to signed URL transport
-3. Add structured debug state machine in context
-4. Add visible debug panel
-5. Instrument webhook and action execution stages
-6. Re-check whether tool sync drift exists only after transport is healthy
+- move connection orchestration to a lower-level session flow so each attempt is truly sequential and awaitable
+- if WebRTC fails/times out, fully end that attempt before starting WebSocket fallback
+- do not rely on “call `endSession()` and immediately call `startSession()` again” through the current wrapper
+- make fallback explicit and serial, not overlapping
 
-Expected result after the fix
+### 3. Add a real cancel connection action
+Expose `cancelConnection()` from the voice context.
 
-- If the transport is broken, the app will clearly say so and show which stage failed
-- If WebRTC fails but signed URL works, Foreman AI should still connect reliably
-- Once connected, transcript arrival and backend action execution will be observable live
-- If the webhook layer fails next, we’ll finally see that explicitly instead of the current silent failure
+Behavior:
+- if user taps while dialing, cancel immediately
+- stop pulse immediately
+- clear retry state/debug state
+- ignore late callbacks from cancelled attempts
+- never leave the UI stuck in “connecting”
 
-Manual verification still needed after implementation
+### 4. Fix the button logic so it reflects reality
+#### `FloatingTomButton.tsx`
+- while dialing: show cancel/X behavior, not expandable menu behavior
+- if connecting, clicking the button should cancel the attempt
+- pulse only while the current active attempt is genuinely dialing
+- show `PhoneOff` only for connected sessions, but show a clear cancel state while dialing
 
-- Test on the actual device/browser where it is failing
-- Confirm:
-  - greeting is heard
-  - transcript appears in debug panel
-  - a known command triggers a backend action
-  - backend response status is shown
-  - resulting record/task appears in the app
-- Also verify the fallback path by forcing/observing a WebRTC failure scenario
+#### `GeorgeMobileInput.tsx`
+- do not disable the phone button during connecting
+- switch it to a cancel action while dialing
+- replace generic “Connecting…” with specific states like:
+  - Requesting mic
+  - Authenticating voice
+  - Trying WebRTC
+  - Switching to fallback
+  - Connection failed
 
-Bottom line
+### 5. Improve the debug panel so it shows the real failure point
+Update `VoiceDebugPanel.tsx` to include:
+- app connection phase
+- active transport
+- whether current attempt was cancelled
+- transcript received
+- webhook triggered
+- webhook response status
+- final action status
+- last error
 
-- This is not “working.”
-- The current break is before transcript and webhook execution.
-- The highest-probability real bug is that the app is misclassifying an incomplete ElevenLabs session startup as a successful connection, while the actual RTC transport dies immediately afterward.
-- I will fix that first, then instrument the rest of the chain so the next failure, if any, is undeniable and visible.
+This makes it obvious whether the failure is:
+- mic
+- token
+- WebRTC
+- WebSocket fallback
+- transcript/tool call
+- webhook/action handling
+
+### 6. Keep webhook/task instrumentation in place
+Once connection is restored, keep the current webhook debug trail and make it more explicit:
+- tool invoked
+- webhook sent
+- response code/result
+- action completed / failed
+
+## Expected result
+After this fix:
+
+- the pulse will stop if connection fails or user cancels
+- there will be a visible cancel path during dialing
+- WebSocket fallback will be a real second attempt, not a blocked no-op
+- users will either:
+  - connect and hear/use Foreman AI, or
+  - see the exact failing stage clearly
+
+## Manual verification after implementation
+1. Tap the phone button
+2. Confirm the UI moves through real phases, not endless pulse
+3. Cancel during dialing and confirm pulse stops immediately
+4. Test a failed WebRTC case and confirm WebSocket fallback actually starts
+5. Confirm one successful live session:
+   - connected state appears
+   - greeting or transcript arrives
+   - debug panel shows transcript/tool/webhook flow
+6. Confirm failed attempts surface a clear error instead of silent looping
+
+## Technical detail
+```text
+Current broken behavior
+tap call
+  -> local isConnecting = true
+  -> WebRTC attempt starts
+  -> timeout/failure
+  -> endSession + immediate fallback
+  -> wrapper still has pending lock
+  -> fallback start is ignored
+  -> pulse continues
+  -> no connected state
+  -> no end-call control
+
+Planned behavior
+tap call
+  -> phase: requesting_mic
+  -> phase: fetching_token
+  -> phase: dialing_webrtc
+  -> if fail: fully cancel old attempt
+  -> phase: dialing_websocket
+  -> if success: connected
+  -> if fail: failed + pulse stops
+  -> user can cancel at any point
+```
