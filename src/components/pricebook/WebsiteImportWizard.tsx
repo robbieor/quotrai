@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Globe, CheckCircle2, Search, Package, AlertCircle } from "lucide-react";
+import { Loader2, Globe, CheckCircle2, Search, Package, AlertCircle, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSupplierSettings } from "@/hooks/useSupplierSettings";
 import { usePricebooks, type Pricebook } from "@/hooks/usePricebooks";
-import { useTeamCatalog } from "@/hooks/useTeamCatalog";
 import { useProfile } from "@/hooks/useProfile";
 import { getAllTradeTypes } from "@/data/tradeCategoryMap";
 
@@ -21,57 +20,70 @@ interface WebsiteImportWizardProps {
   onComplete: (pricebook: Pricebook) => void;
 }
 
-type Step = "domain" | "discovering" | "select" | "configure" | "importing" | "done";
+type Step = "domain" | "mapping" | "categories" | "scraping" | "importing" | "done";
+
+interface CategoryGroup {
+  name: string;
+  count: number;
+  urls: string[];
+}
 
 interface ScrapedProduct {
   product_name: string;
-  supplier_name: string;
   supplier_sku: string;
   website_price: number | null;
   image_url?: string;
   category?: string;
   subcategory?: string;
   manufacturer?: string;
-  description?: string;
-  unit_of_measure?: string;
   source_url?: string;
+  unit_of_measure?: string;
 }
 
 export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteImportWizardProps) {
   const [step, setStep] = useState<Step>("domain");
   const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
-  const [discoveredProducts, setDiscoveredProducts] = useState<ScrapedProduct[]>([]);
-  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-  const [urlsFound, setUrlsFound] = useState(0);
-  const [productUrlsFound, setProductUrlsFound] = useState(0);
-  const [discoveryError, setDiscoveryError] = useState("");
+  const [error, setError] = useState("");
 
-  // Configure step
+  // Map phase
+  const [categories, setCategories] = useState<CategoryGroup[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  const [totalProductUrls, setTotalProductUrls] = useState(0);
+
+  // Scrape phase
+  const [scrapedProducts, setScrapedProducts] = useState<ScrapedProduct[]>([]);
+  const [scrapeProgress, setScrapeProgress] = useState({ done: 0, total: 0 });
+
+  // Import phase
   const [pricebookName, setPricebookName] = useState("");
   const [tradeType, setTradeType] = useState("Electrical");
-
-  // Import progress
   const [importProgress, setImportProgress] = useState(0);
   const [importCount, setImportCount] = useState(0);
 
   const { getSettingForSupplier } = useSupplierSettings();
   const { createPricebook, updateItemCount } = usePricebooks();
-  const { addItem } = useTeamCatalog();
   const { profile } = useProfile();
+
+  const selectedUrlCount = useMemo(() => {
+    return categories
+      .filter((c) => selectedCategories.has(c.name))
+      .reduce((sum, c) => sum + c.count, 0);
+  }, [categories, selectedCategories]);
 
   const reset = () => {
     setStep("domain");
     setDomain("");
-    setDiscoveredProducts([]);
-    setSelectedIndices(new Set());
-    setUrlsFound(0);
-    setProductUrlsFound(0);
-    setDiscoveryError("");
+    setCategories([]);
+    setSelectedCategories(new Set());
+    setTotalProductUrls(0);
+    setScrapedProducts([]);
+    setScrapeProgress({ done: 0, total: 0 });
     setPricebookName("");
     setTradeType("Electrical");
     setImportProgress(0);
     setImportCount(0);
+    setError("");
     setLoading(false);
   };
 
@@ -85,66 +97,105 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
     return clean.charAt(0).toUpperCase() + clean.slice(1);
   };
 
-  const handleDiscover = async () => {
+  // Phase 1: Map the site to discover categories
+  const handleMap = async () => {
     if (!domain) return;
     setLoading(true);
-    setDiscoveryError("");
-    setStep("discovering");
+    setError("");
+    setStep("mapping");
 
     try {
-      const { data, error } = await supabase.functions.invoke("discover-supplier-products", {
-        body: { domain: domain.trim(), limit: 100 },
+      const { data, error: fnErr } = await supabase.functions.invoke("discover-supplier-products", {
+        body: { mode: "map", domain: domain.trim() },
       });
 
-      if (error) throw new Error(error.message || "Discovery failed");
+      if (fnErr) throw new Error(fnErr.message || "Mapping failed");
+      if (data?.error) throw new Error(data.error);
 
-      const products: ScrapedProduct[] = data?.products || [];
-      setDiscoveredProducts(products);
-      setUrlsFound(data?.urls_found || 0);
-      setProductUrlsFound(data?.product_urls_found || 0);
+      const cats: CategoryGroup[] = data?.categories || [];
+      setCategories(cats);
+      setTotalProductUrls(data?.total_product_urls || 0);
 
-      if (products.length === 0) {
-        setDiscoveryError(data?.error || "No products found. Try a different supplier domain.");
+      if (cats.length === 0) {
+        setError("No product pages found. Try a different supplier domain.");
         setStep("domain");
       } else {
-        // Select all by default
-        setSelectedIndices(new Set(products.map((_: ScrapedProduct, i: number) => i)));
+        // Pre-select all categories
+        setSelectedCategories(new Set(cats.map((c) => c.name)));
         const supplier = detectSupplierName(domain);
         setPricebookName(`${supplier} Pricebook`);
-        setStep("select");
+        setStep("categories");
       }
     } catch (e: any) {
-      setDiscoveryError(e.message || "Discovery failed");
+      setError(e.message || "Mapping failed");
       setStep("domain");
-      toast.error("Discovery failed: " + (e.message || "Unknown error"));
+      toast.error(e.message || "Mapping failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleProduct = (idx: number) => {
-    setSelectedIndices((prev) => {
+  const toggleCategory = (name: string) => {
+    setSelectedCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
       return next;
     });
   };
 
-  const toggleAll = () => {
-    if (selectedIndices.size === discoveredProducts.length) {
-      setSelectedIndices(new Set());
+  const toggleAllCategories = () => {
+    if (selectedCategories.size === categories.length) {
+      setSelectedCategories(new Set());
     } else {
-      setSelectedIndices(new Set(discoveredProducts.map((_, i) => i)));
+      setSelectedCategories(new Set(categories.map((c) => c.name)));
     }
   };
 
-  const handleImport = async () => {
-    if (!profile?.team_id || selectedIndices.size === 0) return;
-    setStep("importing");
+  // Phase 2: Scrape selected categories then import
+  const handleScrapeAndImport = async () => {
+    if (!profile?.team_id || selectedCategories.size === 0) return;
+    setStep("scraping");
     setLoading(true);
 
     try {
+      // Collect all URLs from selected categories
+      const allUrls = categories
+        .filter((c) => selectedCategories.has(c.name))
+        .flatMap((c) => c.urls);
+
+      const totalToScrape = allUrls.length;
+      setScrapeProgress({ done: 0, total: totalToScrape });
+
+      // Scrape in batches of 200
+      const allProducts: ScrapedProduct[] = [];
+      for (let offset = 0; offset < allUrls.length; offset += 200) {
+        const batch = allUrls.slice(offset, offset + 200);
+        const { data, error: fnErr } = await supabase.functions.invoke("discover-supplier-products", {
+          body: { mode: "scrape", urls: batch },
+        });
+
+        if (fnErr) {
+          console.error("Batch scrape error:", fnErr);
+          continue;
+        }
+
+        const products: ScrapedProduct[] = data?.products || [];
+        allProducts.push(...products);
+        setScrapeProgress({ done: Math.min(offset + 200, totalToScrape), total: totalToScrape });
+        setScrapedProducts([...allProducts]);
+      }
+
+      if (allProducts.length === 0) {
+        toast.error("No products could be scraped. Try different categories.");
+        setStep("categories");
+        setLoading(false);
+        return;
+      }
+
+      // Now import
+      setStep("importing");
+
       const supplier = detectSupplierName(domain);
       const pb = await createPricebook.mutateAsync({
         name: pricebookName,
@@ -171,11 +222,9 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
         .single();
       const jobId = (importJob as any)?.id;
 
-      const selected = Array.from(selectedIndices).map((i) => discoveredProducts[i]);
       let imported = 0;
-
-      for (let i = 0; i < selected.length; i++) {
-        const product = selected[i];
+      for (let i = 0; i < allProducts.length; i++) {
+        const product = allProducts[i];
         const setting = getSettingForSupplier(supplier);
         const discount = setting?.discount_percent ?? 0;
         const markup = setting?.default_markup_percent ?? 30;
@@ -205,7 +254,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           });
 
         if (!itemErr) imported++;
-        setImportProgress(Math.round(((i + 1) / selected.length) * 100));
+        setImportProgress(Math.round(((i + 1) / allProducts.length) * 100));
         setImportCount(imported);
       }
 
@@ -215,9 +264,9 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           .from("pricebook_import_jobs" as any)
           .update({
             status: "completed",
-            items_found: selected.length,
+            items_found: allProducts.length,
             items_imported: imported,
-            items_failed: selected.length - imported,
+            items_failed: allProducts.length - imported,
             completed_at: new Date().toISOString(),
           })
           .eq("id", jobId);
@@ -229,15 +278,10 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
       if (pb) onComplete(pb as unknown as Pricebook);
     } catch (e: any) {
       toast.error(e.message || "Import failed");
-      setStep("select");
+      setStep("categories");
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatPrice = (price: number | null) => {
-    if (!price) return "—";
-    return `€${price.toFixed(2)}`;
   };
 
   return (
@@ -247,9 +291,9 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           <DialogTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
             {step === "domain" && "Import from Supplier Website"}
-            {step === "discovering" && "Scanning Supplier..."}
-            {step === "select" && `Select Products (${selectedIndices.size}/${discoveredProducts.length})`}
-            {step === "configure" && "Configure Import"}
+            {step === "mapping" && "Scanning Supplier..."}
+            {step === "categories" && "Select Product Categories"}
+            {step === "scraping" && "Scraping Products..."}
             {step === "importing" && "Importing Products..."}
             {step === "done" && "Import Complete"}
           </DialogTitle>
@@ -265,115 +309,88 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
                   placeholder="e.g. wesco.ie"
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleDiscover()}
+                  onKeyDown={(e) => e.key === "Enter" && handleMap()}
                   autoFocus
                 />
-                <Button onClick={handleDiscover} disabled={loading || !domain}>
+                <Button onClick={handleMap} disabled={loading || !domain}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-1" /> Scan</>}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Enter a supplier domain. Foreman will automatically discover and scrape product pages.
+                Foreman will map the site, find product categories, and let you choose what to import.
               </p>
             </div>
-
-            {discoveryError && (
+            {error && (
               <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
                 <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-destructive">{discoveryError}</p>
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Step 2: Discovering */}
-        {step === "discovering" && (
+        {/* Step 2: Mapping */}
+        {step === "mapping" && (
           <div className="flex flex-col items-center justify-center py-12 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <div className="text-center">
-              <p className="font-medium">Scanning {domain}...</p>
+              <p className="font-medium">Mapping {domain}...</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Mapping site structure and scraping product pages. This may take 30-60 seconds.
+                Discovering product categories. This takes 5-10 seconds.
               </p>
             </div>
           </div>
         )}
 
-        {/* Step 3: Select products */}
-        {step === "select" && (
+        {/* Step 3: Select categories */}
+        {step === "categories" && (
           <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Found {productUrlsFound} product pages · {discoveredProducts.length} products scraped
+                {totalProductUrls.toLocaleString()} products in {categories.length} categories
               </p>
-              <Button variant="ghost" size="sm" onClick={toggleAll}>
-                {selectedIndices.size === discoveredProducts.length ? "Deselect All" : "Select All"}
+              <Button variant="ghost" size="sm" onClick={toggleAllCategories}>
+                {selectedCategories.size === categories.length ? "Deselect All" : "Select All"}
               </Button>
             </div>
 
-            <div className="overflow-y-auto flex-1 max-h-[400px] space-y-2 pr-1">
-              {discoveredProducts.map((product, idx) => (
+            <div className="overflow-y-auto flex-1 max-h-[300px] space-y-1.5 pr-1">
+              {categories.map((cat) => (
                 <label
-                  key={idx}
-                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedIndices.has(idx)
+                  key={cat.name}
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedCategories.has(cat.name)
                       ? "border-primary/40 bg-primary/5"
                       : "border-border hover:bg-accent/30"
                   }`}
                 >
                   <Checkbox
-                    checked={selectedIndices.has(idx)}
-                    onCheckedChange={() => toggleProduct(idx)}
-                    className="mt-1"
+                    checked={selectedCategories.has(cat.name)}
+                    onCheckedChange={() => toggleCategory(cat.name)}
                   />
-                  {product.image_url && (
-                    <img
-                      src={product.image_url}
-                      alt=""
-                      className="w-12 h-12 object-contain rounded border border-border bg-white flex-shrink-0"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{product.product_name}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      {product.supplier_sku && <span>{product.supplier_sku}</span>}
-                      {product.category && <span>· {product.category}</span>}
-                      {product.manufacturer && <span>· {product.manufacturer}</span>}
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold whitespace-nowrap">
-                    {formatPrice(product.website_price)}
+                  <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="flex-1 text-sm font-medium">{cat.name}</span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {cat.count} products
                   </span>
                 </label>
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Step 4: Configure */}
-        {step === "configure" && (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
-              <Package className="h-5 w-5 text-primary flex-shrink-0" />
-              <p className="text-sm">
-                <span className="font-medium">{selectedIndices.size} products</span> selected for import
-              </p>
-            </div>
-
-            <div className="grid gap-3">
+            {/* Inline config */}
+            <div className="border-t pt-3 grid grid-cols-2 gap-3">
               <div>
-                <Label>Pricebook Name</Label>
+                <Label className="text-xs">Pricebook Name</Label>
                 <Input
                   value={pricebookName}
                   onChange={(e) => setPricebookName(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 h-9 text-sm"
                 />
               </div>
               <div>
-                <Label>Trade Type</Label>
+                <Label className="text-xs">Trade Type</Label>
                 <Select value={tradeType} onValueChange={setTradeType}>
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-1 h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -387,14 +404,35 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           </div>
         )}
 
-        {/* Step 5: Importing */}
-        {step === "importing" && (
+        {/* Step 4: Scraping */}
+        {step === "scraping" && (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <div className="w-full max-w-xs space-y-2">
+              <Progress
+                value={scrapeProgress.total > 0 ? (scrapeProgress.done / scrapeProgress.total) * 100 : 0}
+                className="h-2"
+              />
+              <p className="text-sm text-muted-foreground text-center">
+                Scraping {scrapeProgress.done} of {scrapeProgress.total} product pages...
+              </p>
+              {scrapedProducts.length > 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  {scrapedProducts.length} products found so far
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Importing */}
+        {step === "importing" && (
+          <div className="flex flex-col items-center justify-center py-8 gap-4">
+            <Package className="h-8 w-8 text-primary animate-pulse" />
+            <div className="w-full max-w-xs space-y-2">
               <Progress value={importProgress} className="h-2" />
               <p className="text-sm text-muted-foreground text-center">
-                Importing {importCount} of {selectedIndices.size} products...
+                Saving {importCount} of {scrapedProducts.length} products to catalog...
               </p>
             </div>
           </div>
@@ -403,7 +441,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
         {/* Step 6: Done */}
         {step === "done" && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
-            <CheckCircle2 className="h-10 w-10 text-green-500" />
+            <CheckCircle2 className="h-10 w-10 text-primary" />
             <p className="font-medium">"{pricebookName}" created</p>
             <p className="text-sm text-muted-foreground">
               {importCount} product{importCount !== 1 ? "s" : ""} imported successfully
@@ -415,19 +453,11 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete }: WebsiteI
           {step === "domain" && (
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           )}
-          {step === "select" && (
+          {step === "categories" && (
             <>
-              <Button variant="outline" onClick={() => { setStep("domain"); setDiscoveredProducts([]); }}>Back</Button>
-              <Button onClick={() => setStep("configure")} disabled={selectedIndices.size === 0}>
-                Next · {selectedIndices.size} selected
-              </Button>
-            </>
-          )}
-          {step === "configure" && (
-            <>
-              <Button variant="outline" onClick={() => setStep("select")}>Back</Button>
-              <Button onClick={handleImport} disabled={!pricebookName}>
-                Create & Import
+              <Button variant="outline" onClick={() => { setStep("domain"); setCategories([]); }}>Back</Button>
+              <Button onClick={handleScrapeAndImport} disabled={selectedCategories.size === 0 || !pricebookName}>
+                Import {selectedUrlCount.toLocaleString()} Products
               </Button>
             </>
           )}
