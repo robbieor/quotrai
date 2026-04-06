@@ -39,8 +39,10 @@ export function CsvColumnMapper({ csvHeaders, mapping, onChange, rowCount, sampl
     onChange(next);
   };
 
-  const headerIndex = (header: string) => csvHeaders.indexOf(header);
-
+  const getSample = (fieldKey: string) => {
+    const header = mapping[fieldKey];
+    return header && sampleRow ? (sampleRow[header] || "—") : "—";
+  };
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
