@@ -157,6 +157,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Reject garbage/non-product pages
+    const nameLower = (product.product_name || "").toLowerCase();
+    const rejectPatterns = ["domain name", "can't find", "page not found", "404", "not related", "parking", "coming soon"];
+    if (rejectPatterns.some((p) => nameLower.includes(p))) {
+      return new Response(JSON.stringify({ error: "This page does not contain valid product data" }), {
+        status: 422,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Upsert into supplier_sources if we have a SKU
     if (product.supplier_sku) {
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
