@@ -18,6 +18,13 @@ const quickActions = [
   { icon: Calendar, label: "Today's Jobs", action: "get_todays_jobs", message: "What jobs do I have today?" },
 ];
 
+const PHASE_LABELS: Record<string, string> = {
+  requesting_mic: "Requesting mic…",
+  fetching_token: "Authenticating…",
+  dialing_webrtc: "Connecting…",
+  dialing_websocket: "Trying fallback…",
+};
+
 export function FloatingTomButton() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,62 +38,47 @@ export function FloatingTomButton() {
     status, 
     isSpeaking, 
     isConnecting, 
-    retryAttempt,
-    maxRetries,
+    connectionPhase,
     startConversation, 
     stopConversation,
+    cancelConnection,
     callWebhook,
     setContext,
     preWarmToken,
   } = useGlobalVoiceAgent();
 
   const isConnected = status === "connected";
-  const isRetrying = retryAttempt > 0 && isConnecting;
 
-  // Set context when profile loads
   useEffect(() => {
     const loadContext = async () => {
       if (!profile) return;
-      
       try {
         const { data: teamId } = await supabase.rpc("get_user_team_id");
         const { data: { user } } = await supabase.auth.getUser();
-        
         if (teamId && user) {
-          setContext({
-            userId: user.id,
-            teamId,
-            userName: profile.full_name || undefined,
-          });
+          setContext({ userId: user.id, teamId, userName: profile.full_name || undefined });
         }
       } catch (error) {
         console.error("Failed to load context:", error);
       }
     };
-    
     loadContext();
   }, [profile, setContext]);
 
-  // Pre-warm token when FAB expands (user shows intent to call)
   useEffect(() => {
-    if (isExpanded && hasVoiceAccess && canUseVoice) {
-      preWarmToken();
-    }
+    if (isExpanded && hasVoiceAccess && canUseVoice) preWarmToken();
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
-  // Hide on Foreman AI page (the page has its own controls)
-  // Hide completely for Team Seat (member) users — but wait for role to load
-  if (location.pathname === "/foreman-ai" || (!roleLoading && isTeamSeat)) {
-    return null;
-  }
+  if (location.pathname === "/foreman-ai" || (!roleLoading && isTeamSeat)) return null;
 
   const handleMainButtonClick = () => {
     if (isConnected) {
-      // If connected, end the call
       stopConversation();
       setIsExpanded(false);
+    } else if (isConnecting) {
+      cancelConnection();
+      setIsExpanded(false);
     } else {
-      // Toggle expanded state
       setIsExpanded(!isExpanded);
     }
   };
@@ -96,32 +88,23 @@ export function FloatingTomButton() {
       navigate("/foreman-ai");
       return;
     }
-    
+    setIsExpanded(false);
     await startConversation({
       userId: profile?.id,
       teamId: profile?.team_id || undefined,
       userName: profile?.full_name || undefined,
     });
-    setIsExpanded(false);
   };
 
   const handleQuickAction = async (action: typeof quickActions[0]) => {
     setIsExpanded(false);
-    
-    // Start global task visibility for mutation actions
     const taskStepsMap: Record<string, { label: string; steps: any[] }> = {
       create_quote: { label: "Creating quote…", steps: QUOTE_CREATION_STEPS },
       create_invoice: { label: "Creating invoice…", steps: INVOICE_CREATION_STEPS },
     };
     const taskDef = taskStepsMap[action.action];
-    if (taskDef) {
-      startTask(action.action, taskDef.label, taskDef.steps);
-    }
-
-    // Navigate to Foreman AI page with the quick action
+    if (taskDef) startTask(action.action, taskDef.label, taskDef.steps);
     navigate("/foreman-ai");
-    
-    // Dispatch event for the Foreman AI page to handle
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent("foremanai-quick-action", {
         detail: { action: action.action, message: action.message }
@@ -134,9 +117,10 @@ export function FloatingTomButton() {
     navigate("/foreman-ai");
   };
 
+  const phaseLabel = PHASE_LABELS[connectionPhase] || "Connecting…";
+
   return (
     <>
-      {/* Backdrop when expanded */}
       {isExpanded && (
         <div 
           className="fixed inset-0 bg-black/20 z-40 backdrop-blur-sm"
@@ -144,63 +128,42 @@ export function FloatingTomButton() {
         />
       )}
 
-      {/* Quick Actions Menu */}
-      {isExpanded && !isConnected && (
+      {isExpanded && !isConnected && !isConnecting && (
         <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-2 animate-fade-in">
-          {/* Voice Call Button — show for owners/managers, loading state while checking access */}
           {(georgeLoading || (hasVoiceAccess && canUseVoice)) && (
             <button
               onClick={handleStartCall}
-              disabled={isConnecting || georgeLoading}
+              disabled={georgeLoading}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-full",
                 "bg-primary text-primary-foreground shadow-lg",
                 "hover:bg-primary/90 active:scale-95",
                 "transition-all duration-200",
-                (isConnecting || georgeLoading) && "opacity-50 cursor-not-allowed"
+                georgeLoading && "opacity-50 cursor-not-allowed"
               )}
             >
               <Phone className="h-5 w-5" />
               <span className="font-medium pr-2">
-                {georgeLoading
-                  ? "Loading..."
-                  : isRetrying 
-                    ? `Retrying (${retryAttempt}/${maxRetries})...` 
-                    : isConnecting 
-                      ? "Connecting..." 
-                      : "Call Foreman AI"}
+                {georgeLoading ? "Loading..." : "Call Foreman AI"}
               </span>
             </button>
           )}
 
-          {/* Chat Button */}
           <button
             onClick={handleOpenChat}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-full",
-              "bg-card text-foreground border border-border shadow-lg",
-              "hover:bg-muted active:scale-95",
-              "transition-all duration-200"
-            )}
+            className="flex items-center gap-3 px-4 py-3 rounded-full bg-card text-foreground border border-border shadow-lg hover:bg-muted active:scale-95 transition-all duration-200"
           >
             <MessageSquare className="h-5 w-5 text-primary" />
             <span className="font-medium pr-2">Chat with Foreman AI</span>
           </button>
 
-          {/* Divider */}
           <div className="h-px bg-border my-1" />
 
-          {/* Quick Actions */}
           {quickActions.map((action) => (
             <button
               key={action.action}
               onClick={() => handleQuickAction(action)}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-full",
-                "bg-card text-foreground border border-border shadow-lg",
-                "hover:bg-muted active:scale-95",
-                "transition-all duration-200"
-              )}
+              className="flex items-center gap-3 px-4 py-3 rounded-full bg-card text-foreground border border-border shadow-lg hover:bg-muted active:scale-95 transition-all duration-200"
             >
               <action.icon className="h-5 w-5 text-primary" />
               <span className="font-medium pr-2">{action.label}</span>
@@ -231,15 +194,17 @@ export function FloatingTomButton() {
             isConnected 
               ? "bg-destructive text-destructive-foreground shadow-destructive/25 hover:shadow-destructive/30 animate-breathe" 
               : isConnecting
-                ? "bg-primary text-primary-foreground animate-pulse"
+                ? "bg-destructive/80 text-destructive-foreground"
                 : isExpanded
                   ? "bg-muted text-foreground border border-border"
                   : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
           )}
-          aria-label={isConnected ? "End call with Foreman AI" : "Talk to Foreman AI"}
+          aria-label={isConnected ? "End call" : isConnecting ? "Cancel call" : "Talk to Foreman AI"}
         >
           {isConnected ? (
             <PhoneOff className="h-6 w-6" />
+          ) : isConnecting ? (
+            <X className="h-6 w-6" />
           ) : isExpanded ? (
             <X className="h-6 w-6" />
           ) : (
@@ -247,6 +212,20 @@ export function FloatingTomButton() {
           )}
         </button>
       </div>
+
+      {/* Connecting phase indicator */}
+      {isConnecting && (
+        <div className={cn(
+          "fixed bottom-24 right-6 z-50",
+          "px-4 py-2 rounded-full",
+          "bg-card border border-border shadow-lg",
+          "flex items-center gap-2",
+          "animate-fade-in"
+        )}>
+          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-ping" />
+          <span className="text-sm font-medium">{phaseLabel}</span>
+        </div>
+      )}
 
       {/* Voice Activity Indicator */}
       {isConnected && (

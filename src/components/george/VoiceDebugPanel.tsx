@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export function VoiceDebugPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const { status, isConnecting, debugState } = useGlobalVoiceAgent();
+  const { status, isConnecting, connectionPhase, debugState } = useGlobalVoiceAgent();
 
   if (!isOpen) {
     return (
@@ -24,13 +24,15 @@ export function VoiceDebugPanel() {
   const statusColor = (val: string) => {
     if (val.includes("success") || val.includes("granted") || val === "connected" || val === "true") return "text-green-500";
     if (val.includes("failed") || val.includes("denied") || val.includes("error") || val.includes("FAILED")) return "text-red-500";
-    if (val.includes("pending") || val.includes("requesting") || val === "connecting") return "text-yellow-500";
+    if (val.includes("pending") || val.includes("requesting") || val === "connecting" || val.includes("dialing")) return "text-yellow-500";
     return "text-muted-foreground";
   };
 
   const rows: [string, string][] = [
-    ["Connection", status],
+    ["Connection Phase", connectionPhase],
+    ["SDK Status", status],
     ["isConnecting", String(isConnecting)],
+    ["Cancelled", String(debugState.attemptCancelled)],
     ["Mic Permission", debugState.micPermission],
     ["Token Fetch", debugState.tokenFetch],
     ["Transport", debugState.transportPath],
@@ -47,7 +49,6 @@ export function VoiceDebugPanel() {
       "fixed bottom-24 left-4 z-50 w-80 bg-card border border-border rounded-lg shadow-xl overflow-hidden",
       "text-xs font-mono"
     )}>
-      {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border">
         <div className="flex items-center gap-1.5 font-semibold text-foreground">
           <Bug className="h-3.5 w-3.5" />
@@ -65,7 +66,6 @@ export function VoiceDebugPanel() {
 
       {!isMinimized && (
         <>
-          {/* Status rows */}
           <div className="px-3 py-2 space-y-1 max-h-48 overflow-y-auto border-b border-border">
             {rows.map(([label, value]) => (
               <div key={label} className="flex justify-between gap-2">
@@ -77,7 +77,6 @@ export function VoiceDebugPanel() {
             ))}
           </div>
 
-          {/* Timeline */}
           <div className="px-3 py-2 max-h-40 overflow-y-auto">
             <div className="text-muted-foreground font-semibold mb-1">Timeline</div>
             {debugState.timeline.length === 0 ? (
