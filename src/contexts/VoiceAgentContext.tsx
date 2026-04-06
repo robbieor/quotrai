@@ -69,7 +69,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
-  const cachedTokenRef = useRef<{ token?: string; usePublicAgent?: boolean; fetchedAt: number } | null>(null);
+  const cachedTokenRef = useRef<{ token: string; fetchedAt: number } | null>(null);
   const TOKEN_TTL_MS = 30_000; // tokens valid ~60s, use within 30s for freshness
 
   // Webhook caller that invalidates relevant React Query caches after mutations
@@ -540,16 +540,30 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       micStream.getTracks().forEach(t => t.stop());
       console.log("[VoiceAgent] ✅ Microphone permission granted");
 
-      // Use cached token or freshly fetched one
-      let tokenData: { token?: string; usePublicAgent?: boolean } = { usePublicAgent: true };
+      // Get conversation token — REQUIRED, no silent fallback
+      let token: string | null = null;
+      
       if (!needsToken && cachedTokenRef.current?.token) {
-        tokenData = { token: cachedTokenRef.current.token };
+        token = cachedTokenRef.current.token;
         console.log("[VoiceAgent] ✅ Using pre-warmed token");
       } else if (tokenFetchResult.status === "fulfilled" && tokenFetchResult.value?.data?.token) {
-        tokenData = { token: tokenFetchResult.value.data.token };
+        token = tokenFetchResult.value.data.token;
         console.log("[VoiceAgent] ✅ Got fresh conversation token");
       } else {
-        console.warn("[VoiceAgent] Token unavailable, using public agent fallback");
+        // Extract error details
+        const errorData = tokenFetchResult.status === "fulfilled" 
+          ? tokenFetchResult.value?.data 
+          : null;
+        const errorMsg = errorData?.error || "Could not authenticate with voice service";
+        console.error("[VoiceAgent] ❌ Token fetch failed:", errorMsg, errorData?.code);
+        
+        toast.error("Voice Service Unavailable", {
+          description: errorMsg,
+          duration: 6000,
+        });
+        setIsConnecting(false);
+        setVoiceUnavailable(true);
+        return;
       }
       // Clear cached token after use (single-use)
       cachedTokenRef.current = null;
