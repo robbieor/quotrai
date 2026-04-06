@@ -69,7 +69,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastToastRef = useRef<number>(0);
-  const cachedTokenRef = useRef<{ token: string; fetchedAt: number } | null>(null);
+  const cachedTokenRef = useRef<{ token: string; signedUrl?: string; fetchedAt: number } | null>(null);
   const TOKEN_TTL_MS = 30_000; // tokens valid ~60s, use within 30s for freshness
 
   // Webhook caller that invalidates relevant React Query caches after mutations
