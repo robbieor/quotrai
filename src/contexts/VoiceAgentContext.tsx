@@ -382,10 +382,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       void (async () => {
         try {
           const conv = await VoiceConversation.startSession({
-            ...sessionOpts,
+            ...(sessionOpts as any),
             dynamicVariables,
             clientTools,
-            connectionType: "signedUrl" in sessionOpts ? "websocket" : "webrtc",
+            connectionType: ("signedUrl" in sessionOpts ? "websocket" : "webrtc") as "webrtc" | "websocket",
             onConnect: () => {
               if (currentAttemptRef.current !== attemptId) return;
               addDebugEvent("✅ onConnect fired — session truly connected");
