@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
     console.log(`[discover] Found ${allUrls.length} total URLs`);
 
     // Step 2: Filter to product URLs only
-    const productUrls = allUrls.filter(isProductUrl).slice(0, Math.min(limit, 50));
+    const productUrls = allUrls.filter(isProductUrl).slice(0, Math.min(limit, 200));
     console.log(`[discover] Filtered to ${productUrls.length} product URLs`);
 
     if (productUrls.length === 0) {
