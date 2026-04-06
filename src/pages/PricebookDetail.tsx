@@ -4,13 +4,13 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Search, Plus, Globe, Settings2, Filter } from "lucide-react";
+import { ArrowLeft, Search, Plus, Globe, Filter } from "lucide-react";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
 import { usePricebooks } from "@/hooks/usePricebooks";
 import { CatalogSidebar } from "@/components/pricebook/CatalogSidebar";
 import { CatalogProductCard } from "@/components/pricebook/CatalogProductCard";
 import { CatalogItemForm } from "@/components/pricebook/CatalogItemForm";
-import { ImportFromUrlDialog } from "@/components/pricebook/ImportFromUrlDialog";
+import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -26,9 +26,12 @@ export default function PricebookDetail() {
 
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<CatalogItem | null>(null);
-  const [showUrlImport, setShowUrlImport] = useState(false);
+  const [showWebsiteImport, setShowWebsiteImport] = useState(false);
 
   const handleSearch = (q: string) => setFilters({ ...filters, search: q });
+
+  // Get unique supplier names from items
+  const uniqueSuppliers = [...new Set(items.map((i) => i.supplier_name).filter(Boolean))];
 
   const sidebar = (
     <CatalogSidebar filters={filters} onFiltersChange={setFilters} options={filterOptions} />
@@ -45,9 +48,13 @@ export default function PricebookDetail() {
             </Button>
             <div>
               <h1 className="text-xl font-bold">{pricebook?.name || "Pricebook"}</h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                {pricebook?.supplier_name && (
-                  <span className="text-xs text-muted-foreground">{pricebook.supplier_name}</span>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                {uniqueSuppliers.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {uniqueSuppliers.length === 1
+                      ? uniqueSuppliers[0]
+                      : `${uniqueSuppliers.length} suppliers`}
+                  </span>
                 )}
                 {pricebook?.trade_type && (
                   <Badge variant="outline" className="text-[10px]">{pricebook.trade_type}</Badge>
@@ -56,11 +63,9 @@ export default function PricebookDetail() {
             </div>
           </div>
           <div className="flex gap-2">
-            {pricebook?.source_type === "website" && (
-              <Button size="sm" variant="outline" onClick={() => setShowUrlImport(true)}>
-                <Globe className="h-4 w-4 mr-1.5" /> Import Product
-              </Button>
-            )}
+            <Button size="sm" variant="outline" onClick={() => setShowWebsiteImport(true)}>
+              <Globe className="h-4 w-4 mr-1.5" /> Add Supplier
+            </Button>
             <Button size="sm" onClick={() => { setEditItem(null); setShowForm(true); }}>
               <Plus className="h-4 w-4 mr-1.5" /> Add Item
             </Button>
@@ -100,12 +105,10 @@ export default function PricebookDetail() {
             ) : items.length === 0 ? (
               <EmptyState
                 icon={Search}
-                title="No items in this catalog"
-                description={pricebook?.source_type === "website"
-                  ? "Import products from the supplier URL or add items manually."
-                  : "Add items manually or import a CSV."}
-                actionLabel={pricebook?.source_type === "website" ? "Import Product" : "Add Item"}
-                onAction={() => pricebook?.source_type === "website" ? setShowUrlImport(true) : setShowForm(true)}
+                title="No items in this pricebook"
+                description="Import products from a supplier website or add items manually."
+                actionLabel="Import from Website"
+                onAction={() => setShowWebsiteImport(true)}
               />
             ) : (
               <div className="space-y-2">
@@ -143,10 +146,13 @@ export default function PricebookDetail() {
         />
       )}
 
-      <ImportFromUrlDialog
-        open={showUrlImport}
-        onOpenChange={setShowUrlImport}
-        onImport={(product) => addItem.mutate({ ...product, pricebook_id: id } as any)}
+      <WebsiteImportWizard
+        open={showWebsiteImport}
+        onOpenChange={setShowWebsiteImport}
+        existingPricebook={pricebook || null}
+        onComplete={() => {
+          setShowWebsiteImport(false);
+        }}
       />
     </DashboardLayout>
   );
