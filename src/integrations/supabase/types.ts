@@ -4327,6 +4327,66 @@ export type Database = {
           },
         ]
       }
+      supplier_sources: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          last_scraped_at: string | null
+          manufacturer: string | null
+          product_name: string
+          source_url: string | null
+          subcategory: string | null
+          supplier_name: string
+          supplier_sku: string
+          trade_type: string | null
+          unit_of_measure: string | null
+          updated_at: string | null
+          vat_mode: string | null
+          website_price: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_scraped_at?: string | null
+          manufacturer?: string | null
+          product_name: string
+          source_url?: string | null
+          subcategory?: string | null
+          supplier_name: string
+          supplier_sku: string
+          trade_type?: string | null
+          unit_of_measure?: string | null
+          updated_at?: string | null
+          vat_mode?: string | null
+          website_price?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          last_scraped_at?: string | null
+          manufacturer?: string | null
+          product_name?: string
+          source_url?: string | null
+          subcategory?: string | null
+          supplier_name?: string
+          supplier_sku?: string
+          trade_type?: string | null
+          unit_of_measure?: string | null
+          updated_at?: string | null
+          vat_mode?: string | null
+          website_price?: number | null
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -4391,6 +4451,100 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "agent_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_catalog_items: {
+        Row: {
+          category: string | null
+          cost_price: number | null
+          created_at: string | null
+          discount_percent: number | null
+          id: string
+          image_url: string | null
+          is_favourite: boolean | null
+          item_name: string
+          last_updated: string | null
+          last_used_at: string | null
+          manufacturer: string | null
+          markup_percent: number | null
+          sell_price: number | null
+          source_id: string | null
+          subcategory: string | null
+          supplier_name: string | null
+          supplier_sku: string | null
+          team_id: string
+          trade_type: string | null
+          unit: string | null
+          website_price: number | null
+        }
+        Insert: {
+          category?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          discount_percent?: number | null
+          id?: string
+          image_url?: string | null
+          is_favourite?: boolean | null
+          item_name: string
+          last_updated?: string | null
+          last_used_at?: string | null
+          manufacturer?: string | null
+          markup_percent?: number | null
+          sell_price?: number | null
+          source_id?: string | null
+          subcategory?: string | null
+          supplier_name?: string | null
+          supplier_sku?: string | null
+          team_id: string
+          trade_type?: string | null
+          unit?: string | null
+          website_price?: number | null
+        }
+        Update: {
+          category?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          discount_percent?: number | null
+          id?: string
+          image_url?: string | null
+          is_favourite?: boolean | null
+          item_name?: string
+          last_updated?: string | null
+          last_used_at?: string | null
+          manufacturer?: string | null
+          markup_percent?: number | null
+          sell_price?: number | null
+          source_id?: string | null
+          subcategory?: string | null
+          supplier_name?: string | null
+          supplier_sku?: string | null
+          team_id?: string
+          trade_type?: string | null
+          unit?: string | null
+          website_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_catalog_items_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_catalog_items_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_catalog_items_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -4481,6 +4635,51 @@ export type Database = {
           },
           {
             foreignKeyName: "team_memberships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_supplier_settings: {
+        Row: {
+          created_at: string | null
+          default_markup_percent: number | null
+          discount_percent: number | null
+          id: string
+          supplier_name: string
+          team_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_markup_percent?: number | null
+          discount_percent?: number | null
+          id?: string
+          supplier_name: string
+          team_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_markup_percent?: number | null
+          discount_percent?: number | null
+          id?: string
+          supplier_name?: string
+          team_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_supplier_settings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_supplier_settings_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
