@@ -382,13 +382,52 @@ export function useAddressAutocomplete() {
     }
   }, []);
 
-  // Lookup Eircode specifically (Irish postcodes)
+  // Lookup Eircode via Autoaddress.ie edge function (falls back to Nominatim)
   const lookupEircode = useCallback(async (eircode: string): Promise<GeocodedAddress | null> => {
     if (!isValidEircode(eircode)) {
       return null;
     }
 
     setDetectedCountry('eircode');
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      if (projectId) {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: eircode, mode: 'lookup' }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.latitude && data.longitude) {
+            return {
+              formattedAddress: data.formattedAddress || eircode,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              postcode: data.postcode || eircode,
+              city: data.city,
+              county: data.region,
+              country: data.country || 'Ireland',
+              countryCode: data.countryCode || 'ie',
+              line1: data.line1,
+              line2: data.line2,
+              region: data.region,
+              confidence: data.confidence || 'high',
+              isPOBox: false,
+            };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Autoaddress lookup failed, falling back to Nominatim:', err);
+    }
+
+    // Fallback to Nominatim
     return geocodeAddress(eircode, 'Ireland');
   }, [geocodeAddress]);
 
