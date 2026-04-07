@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,10 +29,13 @@ import {
   XCircle,
   MapPin,
   MailWarning,
+  Loader2,
+  X,
 } from "lucide-react";
 import type { Customer } from "@/hooks/useCustomers";
 import type { GeocodedAddress } from "@/hooks/useAddressAutocomplete";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
+import { detectPostcodeType, isValidEircode } from "@/hooks/useAddressAutocomplete";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
