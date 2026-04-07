@@ -216,6 +216,7 @@ export function useCreateTemplate() {
           is_favorite: input.is_favorite || false,
           labour_rate_default: input.labour_rate_default || 45,
           estimated_duration: input.estimated_duration || 1,
+          default_display_mode: input.default_display_mode || "detailed",
           is_system_template: false,
           is_active: true,
         })
