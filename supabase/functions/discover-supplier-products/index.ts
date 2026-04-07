@@ -3,29 +3,62 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function extractCategoryFromUrl(url: string): string {
-  // Extract category from URL path like /products/cable-management/item.html → Cable Management
-  const match = url.match(/\/products\/([^/]+)/i);
+/** Known product family mappings for major suppliers */
+const WESCO_FAMILIES: Record<string, string[]> = {
+  "Light Bulbs": ["light-bulbs", "bulbs", "lamps"],
+  "LED Lighting": ["led-lighting", "led"],
+  "Wiring Accessories": ["wiring-accessories", "wiring"],
+  "Cable": ["cable/", "cables"],
+  "Cable Management": ["cable-management", "trunking", "conduit"],
+  "Heating & Ventilation": ["heating", "ventilation", "hvac"],
+  "Switchgear & Distribution": ["switchgear", "distribution", "consumer-unit", "mcb", "rcbo"],
+  "Industrial Controls": ["industrial", "controls", "motor"],
+  "Fire, Security & Emergency": ["fire", "security", "emergency", "smoke", "alarm"],
+  "Tools, Fixings & Safety": ["tools", "fixings", "safety", "ppe"],
+  "Clearance": ["clearance", "sale", "offers"],
+  "Brands": ["brands"],
+};
+
+function classifyUrlToFamily(url: string, supplierDomain: string): string {
+  const lower = url.toLowerCase();
+
+  if (supplierDomain.includes("wesco")) {
+    for (const [family, keywords] of Object.entries(WESCO_FAMILIES)) {
+      if (keywords.some((kw) => lower.includes(kw))) return family;
+    }
+  }
+
+  // Generic: extract from URL path segments
+  const match = lower.match(/\/products\/([^/]+)/i) || lower.match(/\/category\/([^/]+)/i);
   if (match) {
     return match[1]
       .replace(/-/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
   }
-  // Try generic path segment
-  const segments = new URL(url).pathname.split("/").filter(Boolean);
-  if (segments.length >= 2) {
-    return segments[segments.length - 2]
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-  return "Uncategorized";
+
+  // Try second-to-last path segment
+  try {
+    const segments = new URL(url).pathname.split("/").filter(Boolean);
+    if (segments.length >= 2) {
+      return segments[segments.length - 2]
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+  } catch {}
+
+  return "Other";
 }
 
 function isProductUrl(url: string): boolean {
   const lower = url.toLowerCase();
-  if (lower.includes("/products/") && !lower.endsWith("/products/")) return true;
+  // Skip category/listing pages
+  if (lower.match(/\/products\/?$/)) return false;
+  if (lower.match(/\/category\/?$/)) return false;
+  // Must be a product detail page
+  if (lower.includes("/products/") && lower.match(/\/[^/]+\.[^/]+$/)) return true;
   if (lower.includes("/product/")) return true;
-  if (lower.match(/\/[a-z0-9\-]+\.html$/)) return true;
+  if (lower.match(/\/p[-_][a-z0-9\-]+\.html$/i)) return true;
+  if (lower.match(/\/[a-z0-9\-]+\.html$/) && !lower.endsWith("/index.html")) return true;
   return false;
 }
 
@@ -35,13 +68,15 @@ function extractText(html: string, pattern: RegExp): string {
 }
 
 function parseProductPage(html: string, url: string): Record<string, any> {
-  const productName = extractText(html, /<h1[^>]*>\s*<span>([\s\S]*?)<\/span>\s*<\/h1>/i)
-    || extractText(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  const productName =
+    extractText(html, /<h1[^>]*>\s*<span>([\s\S]*?)<\/span>\s*<\/h1>/i) ||
+    extractText(html, /<h1[^>]*>([\s\S]*?)<\/h1>/i);
 
   let sku = "";
-  const skuMatch = html.match(/product-info-sku[^>]*>[\s\S]*?Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i)
-    || html.match(/Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i)
-    || html.match(/Code:\s*([A-Za-z0-9\-]+)/i);
+  const skuMatch =
+    html.match(/product-info-sku[^>]*>[\s\S]*?Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i) ||
+    html.match(/Code:\s*<\/span>\s*([A-Za-z0-9\-]+)/i) ||
+    html.match(/Code:\s*([A-Za-z0-9\-]+)/i);
   if (skuMatch) sku = skuMatch[1].trim();
 
   let price: number | null = null;
@@ -58,11 +93,13 @@ function parseProductPage(html: string, url: string): Record<string, any> {
   }
 
   let imageUrl = "";
-  const imgMatch = html.match(/<a[^>]*id="altimg-1"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i)
-    || html.match(/imggallery[\s\S]*?<img[^>]*src="([^"]+)"/i);
+  const imgMatch =
+    html.match(/<a[^>]*id="altimg-1"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i) ||
+    html.match(/imggallery[\s\S]*?<img[^>]*src="([^"]+)"/i);
   if (imgMatch) imageUrl = imgMatch[1].startsWith("http") ? imgMatch[1] : `https://www.wesco.ie${imgMatch[1]}`;
 
-  let category = extractCategoryFromUrl(url);
+  // Use breadcrumbs for category/subcategory
+  let category = "";
   let subcategory = "";
   const breadcrumbs: string[] = [];
   const bcRegex = /breadcrumb__link[^>]*>([^<]+)<\/a>/gi;
@@ -108,7 +145,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const mode = body.mode || "map"; // "map" or "scrape"
+    const mode = body.mode || "map";
 
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
     if (!firecrawlKey) {
@@ -119,7 +156,6 @@ Deno.serve(async (req) => {
     }
 
     // ── MODE: MAP ──────────────────────────────────────────────
-    // Returns all product URLs grouped by category. No scraping. Fast.
     if (mode === "map") {
       const domain = body.domain;
       if (!domain || typeof domain !== "string") {
@@ -161,32 +197,57 @@ Deno.serve(async (req) => {
       const allUrls: string[] = mapData.links || mapData.data?.links || [];
       const productUrls = allUrls.filter(isProductUrl);
 
-      // Group by category
-      const categories: Record<string, string[]> = {};
+      // Group by product family (smart classification)
+      const families: Record<string, { urls: string[]; subfamilies: Record<string, string[]> }> = {};
+
       for (const url of productUrls) {
-        const cat = extractCategoryFromUrl(url);
-        if (!categories[cat]) categories[cat] = [];
-        categories[cat].push(url);
+        const family = classifyUrlToFamily(url, domain);
+
+        if (!families[family]) {
+          families[family] = { urls: [], subfamilies: {} };
+        }
+        families[family].urls.push(url);
+
+        // Extract subfamiliy from deeper path segments
+        try {
+          const segments = new URL(url).pathname.split("/").filter(Boolean);
+          let sub = "General";
+          if (segments.length >= 3) {
+            sub = segments[segments.length - 2]
+              .replace(/-/g, " ")
+              .replace(/\b\w/g, (c: string) => c.toUpperCase());
+          }
+          if (!families[family].subfamilies[sub]) families[family].subfamilies[sub] = [];
+          families[family].subfamilies[sub].push(url);
+        } catch {}
       }
 
-      // Sort by count descending
-      const sortedCategories = Object.entries(categories)
-        .map(([name, urls]) => ({ name, count: urls.length, urls }))
+      // Build response with two-level hierarchy
+      const familyList = Object.entries(families)
+        .map(([name, data]) => ({
+          name,
+          count: data.urls.length,
+          urls: data.urls,
+          subfamilies: Object.entries(data.subfamilies)
+            .map(([subName, subUrls]) => ({ name: subName, count: subUrls.length, urls: subUrls }))
+            .sort((a, b) => b.count - a.count),
+        }))
         .sort((a, b) => b.count - a.count);
 
-      console.log(`[discover:map] Found ${productUrls.length} product URLs in ${sortedCategories.length} categories`);
+      console.log(`[discover:map] Found ${productUrls.length} product URLs in ${familyList.length} families`);
 
       return new Response(JSON.stringify({
         total_urls: allUrls.length,
         total_product_urls: productUrls.length,
-        categories: sortedCategories,
+        families: familyList,
+        // Keep backward compat
+        categories: familyList.map((f) => ({ name: f.name, count: f.count, urls: f.urls })),
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // ── MODE: SCRAPE ───────────────────────────────────────────
-    // Accepts array of URLs, scrapes them, returns parsed products.
     if (mode === "scrape") {
       const urls: string[] = body.urls || [];
       if (!urls.length) {
@@ -195,7 +256,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Cap at 200 per batch to stay within edge function timeout
       const batch = urls.slice(0, 200);
       const products: Record<string, any>[] = [];
       const errors: string[] = [];
