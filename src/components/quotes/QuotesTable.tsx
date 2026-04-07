@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  FileText,
+  MoreHorizontal,
   MoreHorizontal,
   Pencil,
   Trash2,
