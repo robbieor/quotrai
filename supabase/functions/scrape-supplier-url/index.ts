@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     // Use AI JSON extraction for all suppliers — no hardcoded parsers
     console.log("AI extraction for:", url);
-    const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const fcRes = await fetch("https://api.firecrawl.dev/v2/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${firecrawlKey}`,
