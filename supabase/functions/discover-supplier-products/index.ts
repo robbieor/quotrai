@@ -351,13 +351,14 @@ Deno.serve(async (req) => {
         });
       }
 
-      const batch = urls.slice(0, 200);
+      const batch = urls.slice(0, 50);
       const products: Record<string, any>[] = [];
       const errors: string[] = [];
+      const CONCURRENCY = 5;
 
-      console.log(`[discover:scrape] Scraping ${batch.length} URLs with AI extraction...`);
+      console.log(`[discover:scrape] Scraping ${batch.length} URLs with concurrency=${CONCURRENCY}...`);
 
-      for (const productUrl of batch) {
+      async function scrapeOne(productUrl: string): Promise<void> {
         try {
           const scrapeRes = await fetch("https://api.firecrawl.dev/v2/scrape", {
             method: "POST",
@@ -398,14 +399,10 @@ Deno.serve(async (req) => {
             const errDetail = `${productUrl}: ${JSON.stringify(scrapeData.error || scrapeData).slice(0, 200)} (status ${scrapeRes.status})`;
             errors.push(errDetail);
             console.error(`[discover:scrape] API error:`, errDetail);
-            continue;
+            return;
           }
 
           const extracted = scrapeData.data?.json || scrapeData.json || {};
-          if (!extracted.product_name) {
-            console.log(`[discover:scrape] No product_name from ${productUrl}, keys: ${Object.keys(scrapeData.data || scrapeData).join(',')}`);
-          }
-
           if (extracted.product_name && extracted.product_name.length >= 3) {
             const nameLower = extracted.product_name.toLowerCase();
             const rejectPatterns = ["domain name", "can't find", "page not found", "404", "error", "parking", "coming soon"];
@@ -428,8 +425,11 @@ Deno.serve(async (req) => {
           errors.push(errMsg);
           console.error(`[discover:scrape] Error:`, errMsg);
         }
+      }
 
-        await new Promise((r) => setTimeout(r, 200));
+      for (let i = 0; i < batch.length; i += CONCURRENCY) {
+        const chunk = batch.slice(i, i + CONCURRENCY);
+        await Promise.allSettled(chunk.map(scrapeOne));
       }
 
       console.log(`[discover:scrape] Done. ${products.length} valid, ${errors.length} errors`);
