@@ -5,20 +5,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
+const USER_AGENT = "Foreman-App/1.0";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    if (!GOOGLE_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "Google Maps API key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const { query, mode } = await req.json();
     if (!query || typeof query !== "string" || query.trim().length < 2) {
       return new Response(
@@ -31,43 +26,35 @@ serve(async (req) => {
     const lookupMode = mode === "lookup" ? "lookup" : "autocomplete";
 
     if (lookupMode === "autocomplete") {
-      // Google Places Autocomplete
       const params = new URLSearchParams({
-        input: trimmed,
-        key: GOOGLE_API_KEY,
-        types: "address",
-        components: "country:ie|country:gb|country:us",
+        q: trimmed,
+        format: "json",
+        addressdetails: "1",
+        limit: "6",
+        countrycodes: "ie,gb,us",
       });
 
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`
-      );
+      const response = await fetch(`${NOMINATIM_BASE}/search?${params.toString()}`, {
+        headers: { "User-Agent": USER_AGENT },
+      });
 
       if (!response.ok) {
-        const text = await response.text();
-        console.error("Google Autocomplete error:", response.status, text);
         return new Response(
-          JSON.stringify({ error: "Address autocomplete failed", details: text }),
+          JSON.stringify({ error: "Address autocomplete failed" }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const data = await response.json();
-
-      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-        console.error("Google Autocomplete API error:", data.status, data.error_message);
-        return new Response(
-          JSON.stringify({ error: "Address autocomplete failed", details: data.error_message || data.status }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      const suggestions = (data.predictions || []).map((pred: any) => ({
-        display_name: pred.description || "",
-        address_id: pred.place_id || null,
-        eircode: null,
-        type: pred.types?.[0] || null,
-      }));
+      const results = await response.json();
+      const suggestions = (results || []).map((r: any) => {
+        const addr = r.address || {};
+        return {
+          display_name: r.display_name || "",
+          address_id: r.place_id || null,
+          eircode: addr.postcode || null,
+          type: r.type || null,
+        };
+      });
 
       return new Response(
         JSON.stringify({ suggestions, totalResults: suggestions.length }),
@@ -75,94 +62,69 @@ serve(async (req) => {
       );
     }
 
-    // Lookup mode — use Google Geocoding API
+    // Lookup mode — resolve a specific postcode/address
     const params = new URLSearchParams({
-      address: trimmed,
-      key: GOOGLE_API_KEY,
-      region: "ie",
+      q: trimmed,
+      format: "json",
+      addressdetails: "1",
+      limit: "1",
+      countrycodes: "ie,gb,us",
     });
 
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`
-    );
+    const response = await fetch(`${NOMINATIM_BASE}/search?${params.toString()}`, {
+      headers: { "User-Agent": USER_AGENT },
+    });
 
     if (!response.ok) {
-      const text = await response.text();
-      console.error("Google Geocoding error:", response.status, text);
       return new Response(
-        JSON.stringify({ error: "Address lookup failed", details: text }),
+        JSON.stringify({ error: "Address lookup failed" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const data = await response.json();
-
-    if (data.status !== "OK" || !data.results?.length) {
-      // Fallback to Nominatim
-      const nominatimResult = await nominatimLookup(trimmed);
-      if (nominatimResult) {
-        return new Response(JSON.stringify(nominatimResult), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    const results = await response.json();
+    if (!results?.length) {
       return new Response(
-        JSON.stringify({ error: "No results found", details: data.status }),
+        JSON.stringify({ error: "No results found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const result = data.results[0];
-    const location = result.geometry?.location;
-    const components = result.address_components || [];
+    const r = results[0];
+    const addr = r.address || {};
+    const line1 = [addr.house_number, addr.road].filter(Boolean).join(" ")
+      || addr.suburb || addr.neighbourhood || addr.hamlet || "";
+    const line2 = (line1 === addr.road && addr.suburb) ? addr.suburb
+      : (addr.suburb && addr.road ? addr.suburb : "");
 
-    const getComponent = (type: string) =>
-      components.find((c: any) => c.types.includes(type))?.long_name || "";
-    const getComponentShort = (type: string) =>
-      components.find((c: any) => c.types.includes(type))?.short_name || "";
+    const city = addr.city || addr.town || addr.village || "";
+    const region = addr.county || addr.state || "";
+    const country = addr.country || "";
+    const countryCode = (addr.country_code || "").toLowerCase();
+    const postcode = addr.postcode || "";
 
-    const streetNumber = getComponent("street_number");
-    const route = getComponent("route");
-    const sublocality = getComponent("sublocality_level_1") || getComponent("sublocality");
-    const neighborhood = getComponent("neighborhood");
-    const premise = getComponent("premise");
-    const city = getComponent("locality") || getComponent("postal_town");
-    const county = getComponent("administrative_area_level_1");
-    const country = getComponent("country");
-    const countryCode = getComponentShort("country").toLowerCase();
-    const postcode = getComponent("postal_code");
-
-    
-
-    const line1 = (streetNumber && route)
-      ? `${streetNumber} ${route}`
-      : (route || sublocality || neighborhood || premise || result.formatted_address?.split(",")[0]?.trim() || "");
-    const line2 = (line1 === route && (sublocality || neighborhood))
-      ? (sublocality || neighborhood)
-      : (sublocality && route ? sublocality : "");
-
-    // Determine confidence from geometry location_type
-    const locationType = result.geometry?.location_type || "";
+    // Confidence based on address detail level
     let confidence: "high" | "medium" | "low" = "low";
-    if (locationType === "ROOFTOP") {
+    if (addr.house_number && addr.road) {
       confidence = "high";
-    } else if (locationType === "RANGE_INTERPOLATED" || locationType === "GEOMETRIC_CENTER") {
+    } else if (addr.road || addr.suburb) {
       confidence = "medium";
     }
 
     const responseData = {
-      formattedAddress: result.formatted_address || trimmed,
+      formattedAddress: r.display_name || trimmed,
       line1,
       line2,
       city,
-      region: county,
+      region,
       postcode,
       country,
       countryCode,
-      latitude: location?.lat || null,
-      longitude: location?.lng || null,
+      latitude: parseFloat(r.lat) || null,
+      longitude: parseFloat(r.lon) || null,
       confidence,
-      matchLevel: locationType === "ROOFTOP" ? 5 : locationType === "RANGE_INTERPOLATED" ? 3 : 1,
-      addressType: locationType,
+      matchLevel: confidence === "high" ? 5 : confidence === "medium" ? 3 : 1,
+      addressType: r.type || null,
       options: [],
     };
 
@@ -177,47 +139,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Nominatim fallback
-async function nominatimLookup(query: string) {
-  try {
-    const params = new URLSearchParams({
-      q: query,
-      format: "json",
-      addressdetails: "1",
-      limit: "1",
-      countrycodes: "ie,gb,us",
-    });
-
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?${params.toString()}`,
-      { headers: { "User-Agent": "Foreman-App/1.0" } }
-    );
-
-    if (!response.ok) return null;
-    const results = await response.json();
-    if (!results?.length) return null;
-
-    const r = results[0];
-    const addr = r.address || {};
-
-    return {
-      formattedAddress: r.display_name || query,
-      line1: [addr.house_number, addr.road].filter(Boolean).join(" ") || "",
-      line2: addr.suburb || "",
-      city: addr.city || addr.town || addr.village || "",
-      region: addr.county || addr.state || "",
-      postcode: addr.postcode || "",
-      country: addr.country || "",
-      countryCode: addr.country_code || "",
-      latitude: parseFloat(r.lat) || null,
-      longitude: parseFloat(r.lon) || null,
-      confidence: "low" as const,
-      matchLevel: 1,
-      addressType: r.type || null,
-      options: [],
-    };
-  } catch {
-    return null;
-  }
-}

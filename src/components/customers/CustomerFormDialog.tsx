@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+
 import { MapPreview } from "@/components/ui/map-preview";
 import {
   CheckCircle2,
@@ -35,7 +35,7 @@ import {
 import type { Customer } from "@/hooks/useCustomers";
 import type { GeocodedAddress } from "@/hooks/useAddressAutocomplete";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
-import { detectPostcodeType, isValidEircode } from "@/hooks/useAddressAutocomplete";
+import { detectPostcodeType } from "@/hooks/useAddressAutocomplete";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -285,17 +285,76 @@ export function CustomerFormDialog({
     setIsManualEdit(true);
   };
 
-  // Eircode inline detection on Address Line 1
-  const handleLine1Change = useCallback(async (value: string) => {
-    setStructuredFields((prev) => ({ ...prev, line1: value }));
+  // Smart postcode lookup — triggers on postcode/Eircode field changes
+  const handlePostcodeChange = useCallback(async (value: string) => {
+    setStructuredFields((prev) => ({ ...prev, postcode: value }));
     setIsManualEdit(true);
     setEircodeQuery(value);
 
     const trimmed = value.trim();
     const type = detectPostcodeType(trimmed);
+    const normalizedLen = trimmed.replace(/\s+/g, '').length;
 
-    // If it looks like an Eircode (or any postcode-like input in line1), trigger lookup
-    if (type === 'eircode' && trimmed.replace(/\s+/g, '').length >= 5) {
+    // Detect if it looks like a complete or near-complete postcode
+    const isLikelyComplete =
+      (type === 'eircode' && normalizedLen >= 7) ||
+      (type === 'uk' && normalizedLen >= 5) ||
+      (type === 'us' && trimmed.replace('-', '').length >= 5);
+
+    if (isLikelyComplete) {
+      // Direct lookup
+      setEircodeLoading(true);
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        if (projectId) {
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: trimmed, mode: 'lookup' }),
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.latitude && data.longitude) {
+              setStructuredFields({
+                line1: data.line1 || "",
+                line2: data.line2 || "",
+                city: data.city || "",
+                region: data.region || "",
+                postcode: data.postcode || trimmed,
+                country: data.country || "",
+              });
+              setGeocodedAddress({
+                formattedAddress: data.formattedAddress || trimmed,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                postcode: data.postcode || trimmed,
+                city: data.city,
+                country: data.country,
+                countryCode: data.countryCode,
+                line1: data.line1,
+                line2: data.line2,
+                region: data.region,
+                confidence: data.confidence || 'medium',
+                isPOBox: false,
+              });
+              form.setValue("address", data.formattedAddress || trimmed);
+              setIsManualEdit(false);
+              setShowEircodeDropdown(false);
+              setEircodeSuggestions([]);
+            }
+          }
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setEircodeLoading(false);
+      }
+    } else if (type !== 'unknown' && normalizedLen >= 3) {
+      // Partial — show autocomplete suggestions
       setEircodeLoading(true);
       setShowEircodeDropdown(true);
       try {
@@ -306,24 +365,13 @@ export function CustomerFormDialog({
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: trimmed, mode: isValidEircode(trimmed) ? 'lookup' : 'autocomplete' }),
+              body: JSON.stringify({ query: trimmed, mode: 'autocomplete' }),
             }
           );
 
           if (response.ok) {
             const data = await response.json();
-            if (data.suggestions) {
-              setEircodeSuggestions(data.suggestions);
-            } else if (data.formattedAddress) {
-              // Direct lookup result
-              setEircodeSuggestions([{
-                display_name: data.formattedAddress,
-                ...data,
-                _isDirectResult: true,
-              }]);
-            } else {
-              setEircodeSuggestions([]);
-            }
+            setEircodeSuggestions(data.suggestions || []);
           } else {
             setEircodeSuggestions([]);
           }
@@ -337,43 +385,14 @@ export function CustomerFormDialog({
       setEircodeSuggestions([]);
       setShowEircodeDropdown(false);
     }
-  }, []);
+  }, [form]);
 
-  // Handle selecting an Eircode suggestion
-  const handleEircodeSuggestionSelect = useCallback(async (suggestion: any) => {
+  // Handle selecting a suggestion from the postcode dropdown
+  const handlePostcodeSuggestionSelect = useCallback(async (suggestion: any) => {
     setShowEircodeDropdown(false);
     setEircodeSuggestions([]);
 
-    if (suggestion._isDirectResult && suggestion.latitude && suggestion.longitude) {
-      // Direct result — populate immediately
-      setStructuredFields({
-        line1: suggestion.line1 || "",
-        line2: suggestion.line2 || "",
-        city: suggestion.city || "",
-        region: suggestion.region || "",
-        postcode: suggestion.postcode || "",
-        country: suggestion.country || "Ireland",
-      });
-      setGeocodedAddress({
-        formattedAddress: suggestion.formattedAddress,
-        latitude: suggestion.latitude,
-        longitude: suggestion.longitude,
-        postcode: suggestion.postcode,
-        city: suggestion.city,
-        country: suggestion.country || 'Ireland',
-        countryCode: suggestion.countryCode || 'ie',
-        line1: suggestion.line1,
-        line2: suggestion.line2,
-        region: suggestion.region,
-        confidence: suggestion.confidence || 'high',
-        isPOBox: false,
-      });
-      form.setValue("address", suggestion.formattedAddress);
-      setIsManualEdit(false);
-      return;
-    }
-
-    // Need to resolve the suggestion via lookup
+    // Resolve full address via lookup
     const lookupQuery = suggestion.eircode || suggestion.display_name;
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -396,8 +415,8 @@ export function CustomerFormDialog({
               line2: data.line2 || "",
               city: data.city || "",
               region: data.region || "",
-              postcode: data.postcode || "",
-              country: data.country || "Ireland",
+              postcode: data.postcode || lookupQuery,
+              country: data.country || "",
             });
             setGeocodedAddress({
               formattedAddress: data.formattedAddress || lookupQuery,
@@ -405,12 +424,12 @@ export function CustomerFormDialog({
               longitude: data.longitude,
               postcode: data.postcode,
               city: data.city,
-              country: data.country || 'Ireland',
-              countryCode: data.countryCode || 'ie',
+              country: data.country,
+              countryCode: data.countryCode,
               line1: data.line1,
               line2: data.line2,
               region: data.region,
-              confidence: data.confidence || 'high',
+              confidence: data.confidence || 'medium',
               isPOBox: false,
             });
             form.setValue("address", data.formattedAddress || lookupQuery);
@@ -419,7 +438,7 @@ export function CustomerFormDialog({
         }
       }
     } catch (err) {
-      console.warn('Eircode resolution failed:', err);
+      console.warn('Address resolution failed:', err);
     } finally {
       setEircodeLoading(false);
     }
@@ -510,25 +529,54 @@ export function CustomerFormDialog({
 
             {/* Address Section */}
             <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address Search</FormLabel>
-                    <FormControl>
-                      <AddressAutocomplete
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onAddressSelect={handleAddressSelect}
-                        placeholder="Search address, Eircode or postcode…"
-                        showCurrentLocation
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              {/* Eircode / Postcode — SINGLE smart entry field */}
+              <div className="relative" ref={eircodeDropdownRef}>
+                <label className="text-xs font-medium text-muted-foreground">{labels.postcode} *</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={structuredFields.postcode}
+                    onChange={(e) => handlePostcodeChange(e.target.value)}
+                    className="h-9 text-sm mt-1 pl-9"
+                    placeholder={labels.postcodePlaceholder || "Enter Eircode, postcode, or ZIP"}
+                  />
+                  {eircodeLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {geocodedAddress && !eircodeLoading && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                  )}
+                </div>
+                {/* Suggestions dropdown */}
+                {showEircodeDropdown && eircodeSuggestions.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+                    <div className="flex items-center justify-between px-3 py-2 border-b">
+                      <span className="text-xs text-muted-foreground font-medium">Select an address</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowEircodeDropdown(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <ul className="max-h-48 overflow-auto py-1">
+                      {eircodeSuggestions.map((s, i) => (
+                        <li
+                          key={i}
+                          className="cursor-pointer px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handlePostcodeSuggestionSelect(s)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="text-sm">{s.display_name}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
-              />
+              </div>
 
               {/* Validation badge row */}
               {geocodedAddress && (
@@ -549,51 +597,17 @@ export function CustomerFormDialog({
                 </div>
               )}
 
-              {/* Structured address fields with inline Eircode detection */}
+              {/* Structured address fields — auto-populated */}
               <div className="space-y-2.5">
-                {/* Address Line 1 — with Eircode auto-detect */}
-                <div className="relative" ref={eircodeDropdownRef}>
+                {/* Address Line 1 */}
+                <div>
                   <label className="text-xs font-medium text-muted-foreground">{labels.line1}</label>
-                  <div className="relative">
-                    <Input
-                      value={structuredFields.line1}
-                      onChange={(e) => handleLine1Change(e.target.value)}
-                      className="h-9 text-sm mt-1"
-                      placeholder="Enter address or Eircode (e.g. D08 NRH1)"
-                    />
-                    {eircodeLoading && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                  {/* Eircode dropdown */}
-                  {showEircodeDropdown && eircodeSuggestions.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
-                      <div className="flex items-center justify-between px-3 py-2 border-b">
-                        <span className="text-xs text-muted-foreground font-medium">Select an address</span>
-                        <button
-                          type="button"
-                          onClick={() => setShowEircodeDropdown(false)}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <ul className="max-h-48 overflow-auto py-1">
-                        {eircodeSuggestions.map((s, i) => (
-                          <li
-                            key={i}
-                            className="cursor-pointer px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground"
-                            onClick={() => handleEircodeSuggestionSelect(s)}
-                          >
-                            <div className="flex items-start gap-2">
-                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                              <span className="text-sm">{s.display_name}</span>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <Input
+                    value={structuredFields.line1}
+                    onChange={(e) => handleStructuredFieldChange("line1", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                    placeholder="Auto-populated from postcode"
+                  />
                 </div>
 
                 {/* Address Line 2 */}
@@ -627,16 +641,6 @@ export function CustomerFormDialog({
                   />
                 </div>
 
-                {/* Postcode */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">{labels.postcode}</label>
-                  <Input
-                    value={structuredFields.postcode}
-                    onChange={(e) => handleStructuredFieldChange("postcode", e.target.value)}
-                    className="h-9 text-sm mt-1"
-                    placeholder={labels.postcodePlaceholder}
-                  />
-                </div>
 
                 {/* Country */}
                 <div>
