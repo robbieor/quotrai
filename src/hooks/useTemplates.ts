@@ -49,6 +49,7 @@ export interface CreateTemplateInput {
   is_favorite?: boolean;
   labour_rate_default?: number;
   estimated_duration?: number;
+  default_display_mode?: string;
   items: Omit<TemplateItem, "id" | "template_id" | "created_at">[];
 }
 
