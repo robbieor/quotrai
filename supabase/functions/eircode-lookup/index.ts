@@ -8,6 +8,15 @@ const corsHeaders = {
 const NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
 const USER_AGENT = "Foreman-App/1.0";
 
+// Haversine distance in km between two lat/lng points
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 // Irish Eircode routing keys with area names AND precise lat/lng coordinates
 const EIRCODE_ROUTING_KEYS: Record<string, { area: string; lat: number; lng: number }> = {
   "A41": { area: "Letterkenny, County Donegal", lat: 54.9558, lng: -7.7342 },
