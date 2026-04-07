@@ -280,6 +280,8 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Log sample URLs for debugging
+      console.log(`[discover:map] Sample URLs:`, JSON.stringify(allUrls.slice(0, 10)));
       const productUrls = allUrls.filter(isProductUrl);
       console.log(`[discover:map] ${allUrls.length} total URLs, ${productUrls.length} passed product filter`);
 
