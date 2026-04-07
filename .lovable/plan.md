@@ -1,23 +1,42 @@
 
 
-# Fix Auth Pages to Match Login Theme
+# Fix: Eircode Lookup 404 Error + Audit Cleanup
 
-## Problem
-ForgotPassword and ResetPassword pages use dark navy (`bg-[#0f172a]`) backgrounds with white text. The login page (the reference screenshot) uses a clean light theme: white card on `bg-background`, default text colors, green primary button, no dark backgrounds.
+## Problems Found
+
+1. **The 404 error** — When user types an Eircode, `handleInputChange` fires BOTH `lookupPostcode()` (edge function with `mode: "lookup"` — works) AND `searchAddress()` (direct Nominatim — fails for Eircodes). The failing Nominatim call generates the 404 error in console.
+
+2. **UK postcode bypass** — The client-side `lookupUKPostcode` hook skips the edge function entirely and calls Nominatim directly, missing the `postcodes.io` integration that gives better results.
+
+3. **Redundant direct Nominatim calls** — `searchAddress` in the hook calls Nominatim directly from the browser. When the input is a detected postcode, this is wasteful and produces bad results.
 
 ## Fix
-Strip all dark navy styling from both pages and match the Login.tsx pattern exactly:
-- `bg-background` wrapper instead of `bg-[#0f172a]`
-- Default `Card` with no custom border/bg overrides
-- Standard text colors (remove all `text-white`, `text-white/60`, etc.)
-- Default `Input` styling (remove `bg-white/10 border-white/20 text-white`)
-- Keep the green CTA button (`bg-[#00E6A0] text-[#0f172a]`) — matches login "Sign in" button
-- Standard `variant="ghost"` / `variant="outline"` for secondary buttons without white overrides
+
+### 1. Skip autocomplete search when postcode detected (`address-autocomplete.tsx`)
+
+In `handleInputChange`, when `isLikelyCompletePostcode` is true, do NOT call `searchAddress()`. The postcode lookup handles it.
+
+```
+if (isLikelyCompletePostcode) {
+  lookupPostcode(newValue).then(...)
+} else {
+  searchAddress(newValue, countryCode);
+  setIsOpen(true);
+}
+```
+
+### 2. Route UK postcode through edge function (`useAddressAutocomplete.ts`)
+
+Change `lookupUKPostcode` to call the edge function with `mode: "lookup"` (same pattern as `lookupEircode`), so it uses the `postcodes.io` integration server-side.
+
+### 3. Route US ZIP through edge function too (`useAddressAutocomplete.ts`)
+
+Same pattern — call the edge function for consistency. The edge function's generic Nominatim fallback handles US ZIPs fine.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/ForgotPassword.tsx` | Remove all dark navy classes, match Login.tsx card/input/button styling |
-| `src/pages/ResetPassword.tsx` | Same — remove dark navy from all 3 states (loading, success, form) |
+| `src/components/ui/address-autocomplete.tsx` | Skip `searchAddress` when postcode is detected |
+| `src/hooks/useAddressAutocomplete.ts` | Route UK + US lookups through edge function instead of direct Nominatim |
 
