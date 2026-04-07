@@ -388,7 +388,7 @@ export default function Quotes() {
           </div>
         ) : (
           /* ---- DESKTOP TABLE ---- */
-          <Card>
+          <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-sm">
             <TableSelectionBar
               selectedCount={selectedRows.size}
               onClear={clearSelection}
@@ -399,50 +399,53 @@ export default function Quotes() {
                 clearSelection();
               }}
             />
-            <CardContent className="p-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                </div>
-              ) : sortedData.length === 0 ? (
-                <div className="p-6">
-                  <EmptyState
-                    icon={FileText}
-                    title={searchQuery || statusFilter !== "all" ? "No quotes match your filters" : "Win more work with professional quotes"}
-                    description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter to find what you're looking for." : "Create branded quotes in seconds, send them to customers, and track when they're accepted — all from one place."}
-                    actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Quote" : undefined}
-                    onAction={!searchQuery && statusFilter === "all" ? handleNewQuote : undefined}
-                  />
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            ) : sortedData.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={FileText}
+                  title={searchQuery || statusFilter !== "all" ? "No quotes match your filters" : "Win more work with professional quotes"}
+                  description={searchQuery || statusFilter !== "all" ? "Try adjusting your search or status filter to find what you're looking for." : "Create branded quotes in seconds, send them to customers, and track when they're accepted — all from one place."}
+                  actionLabel={!searchQuery && statusFilter === "all" ? "Create Your First Quote" : undefined}
+                  onAction={!searchQuery && statusFilter === "all" ? handleNewQuote : undefined}
+                />
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block">
+                  <table className="w-full text-sm border-collapse">
+                    <thead className="sticky top-0 z-10 bg-card">
                       <tr className="border-b border-border/50">
-                        <th className="h-8 w-8 px-2 bg-muted/60">
+                        <th className="w-8 h-8 px-2 text-center bg-muted/60 border-r border-border/30">
                           <Checkbox
-                            checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                            checked={allSelected}
                             onCheckedChange={handleSelectAll}
                             className="h-3.5 w-3.5"
+                            aria-label="Select all"
+                            {...(someSelected ? { "data-state": "indeterminate" } : {})}
                           />
                         </th>
-                        <SortableHeader sortDirection={getSortDirection("display_number" as any)} onSort={() => handleSort("display_number" as any)} className="text-[10px] uppercase tracking-wider">
+                        <SortableHeader sortDirection={getSortDirection("display_number" as any)} onSort={() => handleSort("display_number" as any)}>
                           Quote #
                         </SortableHeader>
-                        <SortableHeader sortDirection={getSortDirection("customer" as any)} onSort={() => handleSort("customer" as any)} className="text-[10px] uppercase tracking-wider hidden md:table-cell">
+                        <SortableHeader sortDirection={getSortDirection("customer" as any)} onSort={() => handleSort("customer" as any)}>
                           Customer
                         </SortableHeader>
-                        <SortableHeader sortDirection={getSortDirection("created_at" as any)} onSort={() => handleSort("created_at" as any)} className="text-[10px] uppercase tracking-wider hidden sm:table-cell">
+                        <SortableHeader sortDirection={getSortDirection("created_at" as any)} onSort={() => handleSort("created_at" as any)} className="w-28">
                           Date
                         </SortableHeader>
-                        <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="text-[10px] uppercase tracking-wider">
+                        <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="w-24">
                           Status
                         </SortableHeader>
-                        <th className="h-8 px-3 text-[10px] uppercase tracking-wider font-semibold text-foreground/80 bg-muted/60 hidden lg:table-cell">Items</th>
-                        <SortableHeader sortDirection={getSortDirection("total" as any)} onSort={() => handleSort("total" as any)} className="text-[10px] uppercase tracking-wider" align="right">
+                        <th className="h-8 px-2 text-xs font-semibold text-foreground/80 bg-muted/60 border-r border-border/30 hidden lg:table-cell w-16 text-center">Items</th>
+                        <SortableHeader sortDirection={getSortDirection("total" as any)} onSort={() => handleSort("total" as any)} align="right" className="w-24">
                           Total
                         </SortableHeader>
-                        <th className="h-8 w-10 bg-muted/60" />
+                        <th className="w-10 h-8 px-1.5 bg-muted/60"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -453,61 +456,63 @@ export default function Quotes() {
                             key={quote.id}
                             onClick={() => handleViewQuote(quote)}
                             className={cn(
-                              "border-b border-[hsl(240_10%_95%)] cursor-pointer transition-colors hover:bg-muted/30",
-                              selectedRows.has(idx) && "bg-primary/5"
+                              "border-b border-border/30 transition-colors cursor-pointer",
+                              selectedRows.has(idx)
+                                ? "bg-primary/10 hover:bg-primary/15"
+                                : "hover:bg-muted/50"
                             )}
                           >
-                            <td className="px-2 py-3 w-8" onClick={(e) => e.stopPropagation()}>
+                            <td className="px-2 py-1.5 text-center border-r border-border/20" onClick={(e) => e.stopPropagation()}>
                               <Checkbox
                                 checked={selectedRows.has(idx)}
                                 onCheckedChange={(c) => handleCheckboxChange(idx, c)}
                                 className="h-3.5 w-3.5"
                               />
                             </td>
-                            <td className="px-3 py-3">
-                              <span className="text-sm font-medium">{quote.display_number}</span>
+                            <td className="px-2 py-1.5 border-r border-border/20">
+                              <span className="font-medium text-sm">{quote.display_number}</span>
                             </td>
-                            <td className="px-3 py-3 hidden md:table-cell">
+                            <td className="px-2 py-1.5 border-r border-border/20">
                               <span className="text-sm text-muted-foreground truncate block max-w-[150px]">{quote.customer?.name || "—"}</span>
                             </td>
-                            <td className="px-3 py-3 hidden sm:table-cell">
-                              <span className="text-sm text-muted-foreground">{format(new Date(quote.created_at), "MMM d, yyyy")}</span>
+                            <td className="px-2 py-1.5 border-r border-border/20">
+                              <span className="text-xs text-muted-foreground">{format(new Date(quote.created_at), "MMM d, yyyy")}</span>
                             </td>
-                            <td className="px-3 py-3">
-                              <Badge className={cn(statusConfig[quote.status].className, "text-[11px] px-2 py-0.5")}>
+                            <td className="px-2 py-1.5 border-r border-border/20">
+                              <Badge className={cn(statusConfig[quote.status].className, "text-[10px] px-1.5 py-0")}>
                                 {statusConfig[quote.status].label}
                               </Badge>
                             </td>
-                            <td className="px-3 py-3 hidden lg:table-cell">
-                              <span className="text-sm text-muted-foreground">{quote.quote_items.length}</span>
+                            <td className="px-2 py-1.5 text-center border-r border-border/20 hidden lg:table-cell">
+                              <span className="text-xs text-muted-foreground">{quote.quote_items.length}</span>
                             </td>
-                            <td className="px-3 py-3 text-right">
-                              <span className="text-sm font-semibold tabular-nums">{formatCurrencyValue(Number(quote.total), currency)}</span>
+                            <td className="px-2 py-1.5 text-right border-r border-border/20">
+                              <span className="text-xs font-semibold tabular-nums">{formatCurrencyValue(Number(quote.total), currency)}</span>
                             </td>
-                            <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
+                            <td className="px-1.5 py-1.5" onClick={(e) => e.stopPropagation()}>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-6 w-6">
-                                    <MoreHorizontal className="h-3.5 w-3.5" />
+                                    <MoreHorizontal className="h-3 w-3" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleDownloadPdf(quote)}>
-                                    <Download className="mr-2 h-4 w-4" /> Download PDF
+                                    <Download className="mr-2 h-3.5 w-3.5" /> Download PDF
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleSendEmail(quote)}>
-                                    <Mail className="mr-2 h-4 w-4" /> Send via Email
+                                    <Mail className="mr-2 h-3.5 w-3.5" /> Send via Email
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleCopyPortalLink(quote)}>
-                                    <Link2 className="mr-2 h-4 w-4" /> Copy Portal Link
+                                    <Link2 className="mr-2 h-3.5 w-3.5" /> Copy Portal Link
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handleEdit(quote)}>
-                                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                                    <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handleDelete(quote)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -518,9 +523,65 @@ export default function Quotes() {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {/* Mobile Card List */}
+                <div className="md:hidden divide-y divide-border/30">
+                  {sortedData.map((quote, idx) => {
+                    const currency = (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code);
+                    return (
+                      <div
+                        key={quote.id}
+                        className={cn(
+                          "px-3 py-2.5 transition-colors cursor-pointer",
+                          selectedRows.has(idx) ? "bg-primary/10" : "hover:bg-muted/50"
+                        )}
+                        onClick={() => handleViewQuote(quote)}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className="pt-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selectedRows.has(idx)}
+                              onCheckedChange={(c) => handleCheckboxChange(idx, c)}
+                              className="h-3.5 w-3.5"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm truncate">{quote.display_number}</span>
+                              <Badge className={cn(statusConfig[quote.status].className, "text-[10px] px-1.5 py-0 shrink-0")}>
+                                {statusConfig[quote.status].label}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                              {quote.customer?.name && <span className="truncate">{quote.customer.name}</span>}
+                              <span className="font-semibold text-foreground tabular-nums">{formatCurrencyValue(Number(quote.total), currency)}</span>
+                            </div>
+                          </div>
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <MoreHorizontal className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(quote)}>
+                                  <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(quote)} className="text-destructive focus:text-destructive">
+                                  <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
 

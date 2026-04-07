@@ -456,181 +456,228 @@ export default function Expenses() {
         />
 
         {/* Dense Table */}
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <div className="p-4 space-y-3">
-                {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-full" />
-                ))}
-              </div>
-            ) : sortedData.length === 0 ? (
-              <div className="p-6">
-                <EmptyState
-                  icon={Receipt}
-                  title={
-                    searchQuery || categoryFilter !== "all" || dateRange
-                      ? "No expenses match your filters"
-                      : "Track every business expense"
-                  }
-                  description={
-                    searchQuery || categoryFilter !== "all" || dateRange
-                      ? "Try a different search term, category, or date range."
-                      : "Log expenses, snap receipt photos, and import fuel card statements — so tax time is painless."
-                  }
-                  actionLabel={
-                    !searchQuery && categoryFilter === "all" && !dateRange
-                      ? "Add Your First Expense"
-                      : undefined
-                  }
-                  onAction={
-                    !searchQuery && categoryFilter === "all" && !dateRange
-                      ? handleNewExpense
-                      : undefined
-                  }
-                />
-              </div>
-            ) : (
-              <table className="w-full text-[11px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="h-8 px-2 w-8 bg-muted/60">
-                      <Checkbox
-                        checked={allSelected ? true : someSelected ? "indeterminate" : false}
-                        onCheckedChange={handleSelectAll}
-                        className="h-3.5 w-3.5"
-                      />
-                    </th>
-                    <SortableHeader
-                      sortDirection={getSortDirection("expense_date")}
-                      onSort={() => handleSort("expense_date")}
-                      className="w-[90px]"
-                    >
-                      DATE
-                    </SortableHeader>
-                    <SortableHeader
-                      sortDirection={getSortDirection("description")}
-                      onSort={() => handleSort("description")}
-                    >
-                      DESCRIPTION
-                    </SortableHeader>
-                    <SortableHeader
-                      sortDirection={getSortDirection("vendor")}
-                      onSort={() => handleSort("vendor")}
-                      className="hidden md:table-cell"
-                    >
-                      VENDOR
-                    </SortableHeader>
-                    <SortableHeader
-                      sortDirection={getSortDirection("category")}
-                      onSort={() => handleSort("category")}
-                    >
-                      CATEGORY
-                    </SortableHeader>
-                    <th className="h-8 px-3 py-2 text-[10px] font-semibold text-foreground/80 bg-muted/60 uppercase tracking-wide hidden lg:table-cell">
-                      JOB
-                    </th>
-                    <th className="h-8 px-2 w-8 bg-muted/60 hidden sm:table-cell text-center">
-                      <FileImage className="h-3 w-3 mx-auto text-muted-foreground" />
-                    </th>
-                    <SortableHeader
-                      sortDirection={getSortDirection("amount")}
-                      onSort={() => handleSort("amount")}
-                      align="right"
-                      className="w-[100px]"
-                    >
-                      AMOUNT
-                    </SortableHeader>
-                    <th className="h-8 px-2 w-8 bg-muted/60" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedData.map((expense, idx) => (
-                    <tr
-                      key={expense.id}
-                      className={`border-b border-border/50 last:border-0 hover:bg-muted/40 transition-colors cursor-pointer ${selectedRows.has(idx) ? "bg-primary/5" : ""}`}
-                      onClick={() => handleEdit(expense)}
-                    >
-                      <td
-                        className="px-2 py-0.5 w-8"
-                        onClick={(e) => e.stopPropagation()}
+        <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-sm">
+          {isLoading ? (
+            <div className="p-4 space-y-3">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          ) : sortedData.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                icon={Receipt}
+                title={
+                  searchQuery || categoryFilter !== "all" || dateRange
+                    ? "No expenses match your filters"
+                    : "Track every business expense"
+                }
+                description={
+                  searchQuery || categoryFilter !== "all" || dateRange
+                    ? "Try a different search term, category, or date range."
+                    : "Log expenses, snap receipt photos, and import fuel card statements — so tax time is painless."
+                }
+                actionLabel={
+                  !searchQuery && categoryFilter === "all" && !dateRange
+                    ? "Add Your First Expense"
+                    : undefined
+                }
+                onAction={
+                  !searchQuery && categoryFilter === "all" && !dateRange
+                    ? handleNewExpense
+                    : undefined
+                }
+              />
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="sticky top-0 z-10 bg-card">
+                    <tr className="border-b border-border/50">
+                      <th className="w-8 h-8 px-2 text-center bg-muted/60 border-r border-border/30">
+                        <Checkbox
+                          checked={allSelected}
+                          onCheckedChange={handleSelectAll}
+                          className="h-3.5 w-3.5"
+                          aria-label="Select all"
+                          {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                        />
+                      </th>
+                      <SortableHeader
+                        sortDirection={getSortDirection("expense_date")}
+                        onSort={() => handleSort("expense_date")}
+                        className="w-24"
                       >
+                        Date
+                      </SortableHeader>
+                      <SortableHeader
+                        sortDirection={getSortDirection("description")}
+                        onSort={() => handleSort("description")}
+                      >
+                        Description
+                      </SortableHeader>
+                      <SortableHeader
+                        sortDirection={getSortDirection("vendor")}
+                        onSort={() => handleSort("vendor")}
+                      >
+                        Vendor
+                      </SortableHeader>
+                      <SortableHeader
+                        sortDirection={getSortDirection("category")}
+                        onSort={() => handleSort("category")}
+                        className="w-28"
+                      >
+                        Category
+                      </SortableHeader>
+                      <th className="h-8 px-2 text-xs font-semibold text-foreground/80 bg-muted/60 border-r border-border/30 hidden lg:table-cell">
+                        Job
+                      </th>
+                      <th className="w-8 h-8 px-2 bg-muted/60 border-r border-border/30 hidden sm:table-cell text-center">
+                        <FileImage className="h-3 w-3 mx-auto text-muted-foreground" />
+                      </th>
+                      <SortableHeader
+                        sortDirection={getSortDirection("amount")}
+                        onSort={() => handleSort("amount")}
+                        align="right"
+                        className="w-24"
+                      >
+                        Amount
+                      </SortableHeader>
+                      <th className="w-10 h-8 px-1.5 bg-muted/60"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedData.map((expense, idx) => (
+                      <tr
+                        key={expense.id}
+                        className={cn(
+                          "border-b border-border/30 transition-colors cursor-pointer",
+                          selectedRows.has(idx)
+                            ? "bg-primary/10 hover:bg-primary/15"
+                            : "hover:bg-muted/50"
+                        )}
+                        onClick={() => handleEdit(expense)}
+                      >
+                        <td className="px-2 py-1.5 text-center border-r border-border/20" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedRows.has(idx)}
+                            onCheckedChange={(checked) => handleCheckboxChange(idx, checked)}
+                            className="h-3.5 w-3.5"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {format(new Date(expense.expense_date), "dd MMM yy")}
+                          </span>
+                        </td>
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <span className="font-medium text-sm truncate block max-w-[200px]">{expense.description}</span>
+                        </td>
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <span className="text-xs text-muted-foreground truncate block max-w-[120px]">{expense.vendor || "—"}</span>
+                        </td>
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <Badge
+                            variant="secondary"
+                            className={`text-[10px] px-1.5 py-0 ${categoryColors[expense.category]}`}
+                          >
+                            {getCategoryLabel(expense.category)}
+                          </Badge>
+                        </td>
+                        <td className="px-2 py-1.5 border-r border-border/20 hidden lg:table-cell">
+                          <span className="text-xs text-muted-foreground truncate block max-w-[120px]">{expense.jobs?.title || "—"}</span>
+                        </td>
+                        <td className="px-2 py-1.5 text-center border-r border-border/20 hidden sm:table-cell">
+                          {expense.receipt_url ? (
+                            <FileImage className="h-3 w-3 text-primary mx-auto" />
+                          ) : (
+                            <span className="text-muted-foreground/40">—</span>
+                          )}
+                        </td>
+                        <td className="px-2 py-1.5 text-right border-r border-border/20">
+                          <span className="text-xs font-semibold tabular-nums">{formatCurrency(Number(expense.amount))}</span>
+                        </td>
+                        <td className="px-1.5 py-1.5" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(expense)}>
+                                <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(expense)} className="text-destructive focus:text-destructive">
+                                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List */}
+              <div className="md:hidden divide-y divide-border/30">
+                {sortedData.map((expense, idx) => (
+                  <div
+                    key={expense.id}
+                    className={cn(
+                      "px-3 py-2.5 transition-colors cursor-pointer",
+                      selectedRows.has(idx) ? "bg-primary/10" : "hover:bg-muted/50"
+                    )}
+                    onClick={() => handleEdit(expense)}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="pt-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedRows.has(idx)}
-                          onCheckedChange={(checked) =>
-                            handleCheckboxChange(idx, checked)
-                          }
+                          onCheckedChange={(checked) => handleCheckboxChange(idx, checked)}
                           className="h-3.5 w-3.5"
                         />
-                      </td>
-                      <td className="px-3 py-0.5 text-muted-foreground whitespace-nowrap">
-                        {format(new Date(expense.expense_date), "dd MMM yy")}
-                      </td>
-                      <td className="px-3 py-0.5 font-medium truncate max-w-[200px]">
-                        {expense.description}
-                      </td>
-                      <td className="px-3 py-0.5 text-muted-foreground truncate max-w-[120px] hidden md:table-cell">
-                        {expense.vendor || "—"}
-                      </td>
-                      <td className="px-3 py-0.5">
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] px-1.5 py-0 ${categoryColors[expense.category]}`}
-                        >
-                          {getCategoryLabel(expense.category)}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-0.5 text-muted-foreground truncate max-w-[120px] hidden lg:table-cell">
-                        {expense.jobs?.title || "—"}
-                      </td>
-                      <td className="px-2 py-0.5 text-center hidden sm:table-cell">
-                        {expense.receipt_url ? (
-                          <FileImage className="h-3 w-3 text-primary mx-auto" />
-                        ) : (
-                          <span className="text-muted-foreground/40">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-0.5 text-right font-semibold whitespace-nowrap">
-                        <span className="tabular-nums">{formatCurrency(Number(expense.amount))}</span>
-                      </td>
-                      <td
-                        className="px-1 py-0.5 w-8"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate">{expense.description}</span>
+                          <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 shrink-0 ${categoryColors[expense.category]}`}>
+                            {getCategoryLabel(expense.category)}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                          <span>{format(new Date(expense.expense_date), "dd MMM")}</span>
+                          {expense.vendor && <span className="truncate">{expense.vendor}</span>}
+                          <span className="font-semibold text-foreground">{formatCurrency(Number(expense.amount))}</span>
+                        </div>
+                      </div>
+                      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                            >
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
                               <MoreVertical className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEdit(expense)}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
+                            <DropdownMenuItem onClick={() => handleEdit(expense)}>
+                              <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(expense)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                            <DropdownMenuItem onClick={() => handleDelete(expense)} className="text-destructive focus:text-destructive">
+                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </Card>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Row count */}
         {!isLoading && sortedData.length > 0 && (
