@@ -115,169 +115,212 @@ export function QuotesTable({
         onBulkSendEmail={onBulkSendEmail ? () => { onBulkSendEmail(getSelectedQuotes()); clearSelection(); } : undefined}
       />
 
-      <ScrollArea className="w-full">
-        <div className="min-w-[800px]">
-          <table className="w-full text-sm border-collapse">
-            <thead className="sticky top-0 z-10 bg-card">
-              <tr className="border-b border-border/50">
-                <th className="w-10 h-10 px-3 text-center bg-muted/60 border-r border-border/30">
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <table className="w-full text-sm border-collapse">
+          <thead className="sticky top-0 z-10 bg-card">
+            <tr className="border-b border-border/50">
+              <th className="w-8 h-8 px-2 text-center bg-muted/60 border-r border-border/30">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
+                  className="h-3.5 w-3.5"
+                  aria-label="Select all"
+                  {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                />
+              </th>
+              <SortableHeader
+                sortDirection={getSortDirection("display_number")}
+                onSort={() => handleSort("display_number")}
+                className="w-28"
+              >
+                Quote #
+              </SortableHeader>
+              <SortableHeader
+                sortDirection={getSortDirection("customer")}
+                onSort={() => handleSort("customer")}
+              >
+                Customer
+              </SortableHeader>
+              <SortableHeader
+                sortDirection={getSortDirection("status")}
+                onSort={() => handleSort("status")}
+                className="w-24"
+              >
+                Status
+              </SortableHeader>
+              <th className="h-8 px-2 text-xs font-semibold text-foreground/80 bg-muted/60 border-r border-border/30 text-center w-16 hidden sm:table-cell">
+                Items
+              </th>
+              <SortableHeader
+                sortDirection={getSortDirection("total")}
+                onSort={() => handleSort("total")}
+                align="right"
+                className="w-24"
+              >
+                Total
+              </SortableHeader>
+              <SortableHeader
+                sortDirection={getSortDirection("created_at")}
+                onSort={() => handleSort("created_at")}
+                className="w-28 hidden md:table-cell"
+              >
+                Created
+              </SortableHeader>
+              <th className="w-10 h-8 px-1.5 bg-muted/60"></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {sortedData.map((quote, rowIdx) => (
+              <tr
+                key={quote.id}
+                className={cn(
+                  "border-b border-border/30 transition-colors cursor-pointer",
+                  selectedRows.has(rowIdx)
+                    ? "bg-primary/10 hover:bg-primary/15"
+                    : "hover:bg-muted/50"
+                )}
+                onClick={(e) => {
+                  if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                    handleRowClick(rowIdx, e);
+                  } else if (onView) {
+                    onView(quote);
+                  }
+                }}
+              >
+                <td className="px-2 py-1.5 text-center border-r border-border/20">
                   <Checkbox
-                    checked={allSelected}
-                    onCheckedChange={handleSelectAll}
-                    className="h-4 w-4"
-                    aria-label="Select all"
-                    {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                    checked={selectedRows.has(rowIdx)}
+                    onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-3.5 w-3.5"
                   />
-                </th>
-                <SortableHeader
-                  sortDirection={getSortDirection("display_number")}
-                  onSort={() => handleSort("display_number")}
-                  className="w-28"
-                >
-                  Quote #
-                </SortableHeader>
-                <SortableHeader
-                  sortDirection={getSortDirection("customer")}
-                  onSort={() => handleSort("customer")}
-                >
-                  Customer
-                </SortableHeader>
-                <SortableHeader
-                  sortDirection={getSortDirection("status")}
-                  onSort={() => handleSort("status")}
-                  className="w-24"
-                >
-                  Status
-                </SortableHeader>
-                <th className="h-10 px-3 py-2 text-xs font-semibold text-foreground/80 bg-muted/60 border-r border-border/30 text-center w-16 hidden sm:table-cell">
-                  Items
-                </th>
-                <SortableHeader
-                  sortDirection={getSortDirection("total")}
-                  onSort={() => handleSort("total")}
-                  align="right"
-                  className="w-28"
-                >
-                  Total
-                </SortableHeader>
-                <SortableHeader
-                  sortDirection={getSortDirection("created_at")}
-                  onSort={() => handleSort("created_at")}
-                  className="w-28 hidden md:table-cell"
-                >
-                  Created
-                </SortableHeader>
-                <th className="w-12 h-10 px-2 bg-muted/60"></th>
+                </td>
+                <td className="px-2 py-1.5 border-r border-border/20">
+                  <span className="font-medium text-sm">{quote.display_number}</span>
+                </td>
+                <td className="px-2 py-1.5 border-r border-border/20">
+                  <span className="text-sm truncate block max-w-[200px]">
+                    {quote.customer?.name || "No customer"}
+                  </span>
+                </td>
+                <td className="px-2 py-1.5 border-r border-border/20">
+                  <Badge className={cn("text-[10px] px-1.5 py-0", statusColors[quote.status])}>
+                    {statusLabels[quote.status]}
+                  </Badge>
+                </td>
+                <td className="px-2 py-1.5 text-center border-r border-border/20 hidden sm:table-cell">
+                  <span className="text-xs text-muted-foreground">
+                    {quote.quote_items.length}
+                  </span>
+                </td>
+                <td className="px-2 py-1.5 text-right border-r border-border/20">
+                  <span className="text-xs font-semibold tabular-nums">
+                    {formatCurrencyValue(Number(quote.total), (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code))}
+                  </span>
+                </td>
+                <td className="px-2 py-1.5 border-r border-border/20 hidden md:table-cell">
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(quote.created_at), "MMM d, yyyy")}
+                  </span>
+                </td>
+                <td className="px-1.5 py-1.5">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <MoreHorizontal className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onDownloadPdf(quote)}>
+                        <Download className="mr-2 h-3.5 w-3.5" />
+                        Download PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onSendEmail(quote)}>
+                        <Mail className="mr-2 h-3.5 w-3.5" />
+                        Send via Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onCopyPortalLink(quote)}>
+                        <Link2 className="mr-2 h-3.5 w-3.5" />
+                        Copy Portal Link
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onEdit(quote)}>
+                        <Pencil className="mr-2 h-3.5 w-3.5" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onDelete(quote)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
               </tr>
-            </thead>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-            <tbody>
-              {sortedData.map((quote, rowIdx) => (
-                <tr
-                  key={quote.id}
-                  className={cn(
-                    "border-b border-border/30 transition-colors cursor-pointer",
-                    selectedRows.has(rowIdx)
-                      ? "bg-primary/10 hover:bg-primary/15"
-                      : "hover:bg-muted/50"
-                  )}
-                  onClick={(e) => {
-                    // If shift/ctrl held, do selection; otherwise open detail view
-                    if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                      handleRowClick(rowIdx, e);
-                    } else if (onView) {
-                      onView(quote);
-                    }
-                  }}
-                >
-                  <td className="px-3 py-2 text-center border-r border-border/20">
-                    <Checkbox
-                      checked={selectedRows.has(rowIdx)}
-                      onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-4"
-                    />
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 shrink-0">
-                        <FileText className="h-3.5 w-3.5 text-primary" />
-                      </div>
-                      <span className="font-medium text-sm">{quote.display_number}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20">
-                    <span className="text-sm truncate block max-w-[200px]">
-                      {quote.customer?.name || "No customer"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20">
-                    <Badge className={cn("text-xs", statusColors[quote.status])}>
-                      {statusLabels[quote.status]}
-                    </Badge>
-                  </td>
-                  <td className="px-3 py-2 text-center border-r border-border/20 hidden sm:table-cell">
-                    <span className="text-xs text-muted-foreground">
-                      {quote.quote_items.length}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right border-r border-border/20">
-                    <span className="font-semibold text-sm">
-                      {formatCurrencyValue(Number(quote.total), (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code))}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 border-r border-border/20 hidden md:table-cell">
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(quote.created_at), "MMM d, yyyy")}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onDownloadPdf(quote)}>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onSendEmail(quote)}>
-                          <Mail className="mr-2 h-4 w-4" />
-                          Send via Email
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onCopyPortalLink(quote)}>
-                          <Link2 className="mr-2 h-4 w-4" />
-                          Copy Portal Link
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onEdit(quote)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => onDelete(quote)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <ScrollBar orientation="horizontal" className="h-2.5" />
-      </ScrollArea>
-
-      <div className="md:hidden px-4 py-2 text-xs text-muted-foreground bg-muted/30 border-t border-border/30 flex items-center gap-2">
-        <span>←→</span>
-        <span>Swipe to see more columns</span>
+      {/* Mobile Card List */}
+      <div className="md:hidden divide-y divide-border/30">
+        {sortedData.map((quote, rowIdx) => (
+          <div
+            key={quote.id}
+            className={cn(
+              "px-3 py-2.5 transition-colors cursor-pointer",
+              selectedRows.has(rowIdx) ? "bg-primary/10" : "hover:bg-muted/50"
+            )}
+            onClick={() => onView?.(quote)}
+          >
+            <div className="flex items-start gap-2">
+              <div className="pt-0.5 shrink-0">
+                <Checkbox
+                  checked={selectedRows.has(rowIdx)}
+                  onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-3.5 w-3.5"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm truncate">{quote.display_number}</span>
+                  <Badge className={cn("text-[10px] px-1.5 py-0 shrink-0", statusColors[quote.status])}>
+                    {statusLabels[quote.status]}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                  {quote.customer?.name && <span className="truncate">{quote.customer.name}</span>}
+                  <span className="font-semibold text-foreground tabular-nums">
+                    {formatCurrencyValue(Number(quote.total), (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code))}
+                  </span>
+                </div>
+              </div>
+              <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <MoreHorizontal className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(quote)}>
+                      <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDelete(quote)} className="text-destructive focus:text-destructive">
+                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
