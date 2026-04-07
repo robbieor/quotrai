@@ -81,9 +81,10 @@ export function AddressAutocomplete({
           setHasSelectedAddress(true);
         }
       });
+    } else {
+      searchAddress(newValue, countryCode);
+      setIsOpen(true);
     }
-    searchAddress(newValue, countryCode);
-    setIsOpen(true);
   };
 
   const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {

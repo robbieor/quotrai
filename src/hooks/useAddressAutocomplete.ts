@@ -436,23 +436,99 @@ export function useAddressAutocomplete() {
     return geocodeAddress(eircode, 'Ireland');
   }, [geocodeAddress]);
 
-  // Lookup UK postcode
+  // Lookup UK postcode via edge function (uses postcodes.io server-side)
   const lookupUKPostcode = useCallback(async (postcode: string): Promise<GeocodedAddress | null> => {
     if (!isValidUKPostcode(postcode)) {
       return null;
     }
 
     setDetectedCountry('uk');
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      if (projectId) {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: postcode, mode: 'lookup' }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.latitude && data.longitude) {
+            return {
+              formattedAddress: data.formattedAddress || postcode,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              postcode: data.postcode || postcode,
+              city: data.city,
+              county: data.region,
+              country: data.country || 'United Kingdom',
+              countryCode: data.countryCode || 'gb',
+              line1: data.line1,
+              line2: data.line2,
+              region: data.region,
+              confidence: data.confidence || 'high',
+              isPOBox: false,
+            };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('UK postcode lookup failed, falling back to Nominatim:', err);
+    }
+
     return geocodeAddress(postcode, 'United Kingdom');
   }, [geocodeAddress]);
 
-  // Lookup US ZIP code
+  // Lookup US ZIP code via edge function
   const lookupUSZip = useCallback(async (zip: string): Promise<GeocodedAddress | null> => {
     if (!isValidUSZip(zip)) {
       return null;
     }
 
     setDetectedCountry('us');
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      if (projectId) {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: zip, mode: 'lookup' }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.latitude && data.longitude) {
+            return {
+              formattedAddress: data.formattedAddress || zip,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              postcode: data.postcode || zip,
+              city: data.city,
+              county: data.region,
+              country: data.country || 'United States',
+              countryCode: data.countryCode || 'us',
+              line1: data.line1,
+              line2: data.line2,
+              region: data.region,
+              confidence: data.confidence || 'medium',
+              isPOBox: false,
+            };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('US ZIP lookup failed, falling back to Nominatim:', err);
+    }
+
     return geocodeAddress(zip, 'United States');
   }, [geocodeAddress]);
 
