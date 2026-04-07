@@ -6,28 +6,36 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Globe, CheckCircle2, Search, Package, AlertCircle, FolderOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Globe, CheckCircle2, Search, Package, AlertCircle, FolderOpen, ChevronRight, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSupplierSettings } from "@/hooks/useSupplierSettings";
 import { usePricebooks, type Pricebook } from "@/hooks/usePricebooks";
 import { useProfile } from "@/hooks/useProfile";
 import { getAllTradeTypes } from "@/data/tradeCategoryMap";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface WebsiteImportWizardProps {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onComplete: (pricebook: Pricebook) => void;
-  /** If provided, import into this existing pricebook instead of creating a new one */
   existingPricebook?: Pricebook | null;
 }
 
-type Step = "domain" | "mapping" | "categories" | "scraping" | "importing" | "done";
+type Step = "domain" | "mapping" | "families" | "scraping" | "importing" | "done";
 
-interface CategoryGroup {
+interface SubFamily {
   name: string;
   count: number;
   urls: string[];
+}
+
+interface ProductFamily {
+  name: string;
+  count: number;
+  urls: string[];
+  subfamilies: SubFamily[];
 }
 
 interface ScrapedProduct {
@@ -48,20 +56,25 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Map phase
-  const [categories, setCategories] = useState<CategoryGroup[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  // Family hierarchy
+  const [families, setFamilies] = useState<ProductFamily[]>([]);
+  const [selectedFamilies, setSelectedFamilies] = useState<Set<string>>(new Set());
+  const [expandedFamily, setExpandedFamily] = useState<string | null>(null);
+  const [selectedSubfamilies, setSelectedSubfamilies] = useState<Map<string, Set<string>>>(new Map());
   const [totalProductUrls, setTotalProductUrls] = useState(0);
+
+  // Search
+  const [familySearch, setFamilySearch] = useState("");
+  const [subfamilySearch, setSubfamilySearch] = useState("");
 
   // Scrape phase
   const [scrapedProducts, setScrapedProducts] = useState<ScrapedProduct[]>([]);
   const [scrapeProgress, setScrapeProgress] = useState({ done: 0, total: 0 });
 
-  // Config (only used when creating new pricebook)
+  // Config
   const [pricebookName, setPricebookName] = useState("");
   const [tradeType, setTradeType] = useState(existingPricebook?.trade_type || "Electrical");
 
-  // Import progress
   const [importProgress, setImportProgress] = useState(0);
   const [importCount, setImportCount] = useState(0);
 
@@ -71,17 +84,48 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
 
   const isAddingToExisting = !!existingPricebook;
 
+  // Filtered families
+  const filteredFamilies = useMemo(() => {
+    if (!familySearch) return families;
+    const q = familySearch.toLowerCase();
+    return families.filter((f) => f.name.toLowerCase().includes(q));
+  }, [families, familySearch]);
+
+  // Filtered subfamilies for expanded family
+  const filteredSubfamilies = useMemo(() => {
+    if (!expandedFamily) return [];
+    const family = families.find((f) => f.name === expandedFamily);
+    if (!family) return [];
+    if (!subfamilySearch) return family.subfamilies;
+    const q = subfamilySearch.toLowerCase();
+    return family.subfamilies.filter((s) => s.name.toLowerCase().includes(q));
+  }, [families, expandedFamily, subfamilySearch]);
+
+  // Count selected URLs
   const selectedUrlCount = useMemo(() => {
-    return categories
-      .filter((c) => selectedCategories.has(c.name))
-      .reduce((sum, c) => sum + c.count, 0);
-  }, [categories, selectedCategories]);
+    let total = 0;
+    for (const family of families) {
+      if (selectedFamilies.has(family.name)) {
+        const subs = selectedSubfamilies.get(family.name);
+        if (!subs || subs.size === 0 || subs.size === family.subfamilies.length) {
+          total += family.count;
+        } else {
+          for (const sub of family.subfamilies) {
+            if (subs.has(sub.name)) total += sub.count;
+          }
+        }
+      }
+    }
+    return total;
+  }, [families, selectedFamilies, selectedSubfamilies]);
 
   const reset = () => {
     setStep("domain");
     setDomain("");
-    setCategories([]);
-    setSelectedCategories(new Set());
+    setFamilies([]);
+    setSelectedFamilies(new Set());
+    setExpandedFamily(null);
+    setSelectedSubfamilies(new Map());
     setTotalProductUrls(0);
     setScrapedProducts([]);
     setScrapeProgress({ done: 0, total: 0 });
@@ -91,6 +135,8 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
     setImportCount(0);
     setError("");
     setLoading(false);
+    setFamilySearch("");
+    setSubfamilySearch("");
   };
 
   const detectSupplierName = (d: string): string => {
@@ -117,20 +163,20 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
       if (fnErr) throw new Error(fnErr.message || "Mapping failed");
       if (data?.error) throw new Error(data.error);
 
-      const cats: CategoryGroup[] = data?.categories || [];
-      setCategories(cats);
+      const fams: ProductFamily[] = data?.families || [];
+      setFamilies(fams);
       setTotalProductUrls(data?.total_product_urls || 0);
 
-      if (cats.length === 0) {
+      if (fams.length === 0) {
         setError("No product pages found. Try a different supplier domain.");
         setStep("domain");
       } else {
-        setSelectedCategories(new Set(cats.map((c) => c.name)));
+        setSelectedFamilies(new Set(fams.map((f) => f.name)));
         if (!isAddingToExisting) {
           const supplier = detectSupplierName(domain);
           setPricebookName(`${supplier} Pricebook`);
         }
-        setStep("categories");
+        setStep("families");
       }
     } catch (e: any) {
       setError(e.message || "Mapping failed");
@@ -141,32 +187,80 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
     }
   };
 
-  const toggleCategory = (name: string) => {
-    setSelectedCategories((prev) => {
+  const toggleFamily = (name: string) => {
+    setSelectedFamilies((prev) => {
       const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
+      if (next.has(name)) {
+        next.delete(name);
+        // Clear subfamily selections
+        setSelectedSubfamilies((prev) => {
+          const n = new Map(prev);
+          n.delete(name);
+          return n;
+        });
+      } else {
+        next.add(name);
+      }
       return next;
     });
   };
 
-  const toggleAllCategories = () => {
-    if (selectedCategories.size === categories.length) {
-      setSelectedCategories(new Set());
+  const toggleSubfamily = (familyName: string, subName: string) => {
+    setSelectedSubfamilies((prev) => {
+      const n = new Map(prev);
+      const current = n.get(familyName) || new Set<string>();
+      const next = new Set(current);
+      if (next.has(subName)) next.delete(subName);
+      else next.add(subName);
+      n.set(familyName, next);
+
+      // If all subs selected or none, ensure family is toggled accordingly
+      const family = families.find((f) => f.name === familyName);
+      if (family && next.size === 0) {
+        setSelectedFamilies((sf) => {
+          const s = new Set(sf);
+          s.delete(familyName);
+          return s;
+        });
+      } else if (!selectedFamilies.has(familyName)) {
+        setSelectedFamilies((sf) => new Set([...sf, familyName]));
+      }
+      return n;
+    });
+  };
+
+  const toggleAllFamilies = () => {
+    if (selectedFamilies.size === families.length) {
+      setSelectedFamilies(new Set());
+      setSelectedSubfamilies(new Map());
     } else {
-      setSelectedCategories(new Set(categories.map((c) => c.name)));
+      setSelectedFamilies(new Set(families.map((f) => f.name)));
+      setSelectedSubfamilies(new Map());
     }
   };
 
+  const expandFamily = (name: string) => {
+    setExpandedFamily(expandedFamily === name ? null : name);
+    setSubfamilySearch("");
+  };
+
+  const getSelectedUrlsForFamily = (family: ProductFamily): string[] => {
+    const subs = selectedSubfamilies.get(family.name);
+    if (!subs || subs.size === 0) return family.urls; // All selected
+    return family.subfamilies
+      .filter((s) => subs.has(s.name))
+      .flatMap((s) => s.urls);
+  };
+
   const handleScrapeAndImport = async () => {
-    if (!profile?.team_id || selectedCategories.size === 0) return;
+    if (!profile?.team_id || selectedFamilies.size === 0) return;
     setStep("scraping");
     setLoading(true);
 
     try {
-      const allUrls = categories
-        .filter((c) => selectedCategories.has(c.name))
-        .flatMap((c) => c.urls);
+      const allUrls = families
+        .filter((f) => selectedFamilies.has(f.name))
+        .flatMap((f) => getSelectedUrlsForFamily(f));
 
       const totalToScrape = allUrls.length;
       setScrapeProgress({ done: 0, total: totalToScrape });
@@ -178,10 +272,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
           body: { mode: "scrape", urls: batch },
         });
 
-        if (fnErr) {
-          console.error("Batch scrape error:", fnErr);
-          continue;
-        }
+        if (fnErr) { console.error("Batch scrape error:", fnErr); continue; }
 
         const products: ScrapedProduct[] = data?.products || [];
         allProducts.push(...products);
@@ -190,13 +281,12 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
       }
 
       if (allProducts.length === 0) {
-        toast.error("No products could be scraped. Try different categories.");
-        setStep("categories");
+        toast.error("No products could be scraped. Try different families.");
+        setStep("families");
         setLoading(false);
         return;
       }
 
-      // Now import
       setStep("importing");
 
       const supplier = detectSupplierName(domain);
@@ -207,7 +297,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
       } else {
         const pb = await createPricebook.mutateAsync({
           name: pricebookName,
-          supplier_name: null, // Multi-supplier: don't lock to one supplier
+          supplier_name: null,
           source_type: "website",
           source_url: domain.startsWith("http") ? domain : `https://${domain}`,
           trade_type: tradeType,
@@ -216,7 +306,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
         pricebookId = (pb as any)?.id;
       }
 
-      // Create import job
       const { data: importJob } = await supabase
         .from("pricebook_import_jobs" as any)
         .insert({
@@ -284,9 +373,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
       await updateItemCount(pricebookId);
       setStep("done");
 
-      // Return the pricebook for navigation
       if (!isAddingToExisting) {
-        // Refetch to get the created pricebook
         const { data: freshPb } = await supabase
           .from("team_pricebooks" as any)
           .select("*")
@@ -298,7 +385,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
       }
     } catch (e: any) {
       toast.error(e.message || "Import failed");
-      setStep("categories");
+      setStep("families");
     } finally {
       setLoading(false);
     }
@@ -313,16 +400,17 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
+            <Globe className="h-5 w-5 text-primary" />
             {step === "domain" && title}
             {step === "mapping" && "Scanning Supplier..."}
-            {step === "categories" && "Select Product Categories"}
+            {step === "families" && "Select Product Families"}
             {step === "scraping" && "Scraping Products..."}
             {step === "importing" && "Importing Products..."}
             {step === "done" && "Import Complete"}
           </DialogTitle>
         </DialogHeader>
 
+        {/* ── DOMAIN STEP ── */}
         {step === "domain" && (
           <div className="space-y-4">
             <div>
@@ -342,7 +430,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
               <p className="text-xs text-muted-foreground mt-1.5">
                 {isAddingToExisting
                   ? "Add products from another supplier to this pricebook."
-                  : "Foreman will map the site, find product categories, and let you choose what to import."}
+                  : "Foreman will map the site, find product families, and let you choose what to import."}
               </p>
             </div>
             {error && (
@@ -354,53 +442,142 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
           </div>
         )}
 
+        {/* ── MAPPING STEP ── */}
         {step === "mapping" && (
           <div className="flex flex-col items-center justify-center py-12 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <div className="text-center">
               <p className="font-medium">Mapping {domain}...</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Discovering product categories. This takes 5-10 seconds.
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">Discovering product families. This takes 5-10 seconds.</p>
             </div>
           </div>
         )}
 
-        {step === "categories" && (
+        {/* ── FAMILIES STEP (two-level drill-down) ── */}
+        {step === "families" && (
           <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+            {/* Stats bar */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                {totalProductUrls.toLocaleString()} products in {categories.length} categories
+                {totalProductUrls.toLocaleString()} products in {families.length} families
               </p>
-              <Button variant="ghost" size="sm" onClick={toggleAllCategories}>
-                {selectedCategories.size === categories.length ? "Deselect All" : "Select All"}
+              <Button variant="ghost" size="sm" onClick={toggleAllFamilies}>
+                {selectedFamilies.size === families.length ? "Deselect All" : "Select All"}
               </Button>
             </div>
 
-            <div className="overflow-y-auto flex-1 max-h-[300px] space-y-1.5 pr-1">
-              {categories.map((cat) => (
-                <label
-                  key={cat.name}
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedCategories.has(cat.name)
-                      ? "border-primary/40 bg-primary/5"
-                      : "border-border hover:bg-accent/30"
-                  }`}
-                >
-                  <Checkbox
-                    checked={selectedCategories.has(cat.name)}
-                    onCheckedChange={() => toggleCategory(cat.name)}
-                  />
-                  <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 text-sm font-medium">{cat.name}</span>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    {cat.count} products
-                  </span>
-                </label>
-              ))}
+            {/* Two-column layout: Families | Subfamilies */}
+            <div className="flex gap-3 min-h-0 flex-1">
+              {/* Left: Product Families */}
+              <div className="flex-1 flex flex-col min-w-0 border rounded-lg overflow-hidden">
+                <div className="p-2 border-b bg-muted/30">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search families..."
+                      value={familySearch}
+                      onChange={(e) => setFamilySearch(e.target.value)}
+                      className="pl-7 h-8 text-xs"
+                    />
+                  </div>
+                </div>
+                <ScrollArea className="flex-1 max-h-[280px]">
+                  <div className="p-1 space-y-0.5">
+                    {filteredFamilies.map((family) => (
+                      <div
+                        key={family.name}
+                        className={`flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors text-sm ${
+                          expandedFamily === family.name
+                            ? "bg-primary/10 border border-primary/30"
+                            : selectedFamilies.has(family.name)
+                            ? "bg-accent/50 hover:bg-accent"
+                            : "hover:bg-accent/30"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selectedFamilies.has(family.name)}
+                          onCheckedChange={() => toggleFamily(family.name)}
+                          className="flex-shrink-0"
+                        />
+                        <button
+                          className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
+                          onClick={() => expandFamily(family.name)}
+                        >
+                          {expandedFamily === family.name ? (
+                            <ChevronDown className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                          ) : (
+                            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <span className="truncate font-medium">{family.name}</span>
+                        </button>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+                          {family.count}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Right: Subfamilies (shown when a family is expanded) */}
+              <div className="flex-1 flex flex-col min-w-0 border rounded-lg overflow-hidden">
+                {expandedFamily ? (
+                  <>
+                    <div className="p-2 border-b bg-muted/30">
+                      <p className="text-xs font-medium text-foreground mb-1.5 truncate">{expandedFamily}</p>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          placeholder="Search products..."
+                          value={subfamilySearch}
+                          onChange={(e) => setSubfamilySearch(e.target.value)}
+                          className="pl-7 h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                    <ScrollArea className="flex-1 max-h-[280px]">
+                      <div className="p-1 space-y-0.5">
+                        {filteredSubfamilies.map((sub) => {
+                          const familySubs = selectedSubfamilies.get(expandedFamily) || new Set();
+                          const isSelected = familySubs.size === 0
+                            ? selectedFamilies.has(expandedFamily)
+                            : familySubs.has(sub.name);
+
+                          return (
+                            <label
+                              key={sub.name}
+                              className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors text-sm ${
+                                isSelected ? "bg-primary/5" : "hover:bg-accent/30"
+                              }`}
+                            >
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleSubfamily(expandedFamily, sub.name)}
+                                className="flex-shrink-0"
+                              />
+                              <span className="flex-1 truncate text-xs">{sub.name}</span>
+                              <span className="text-[10px] text-muted-foreground flex-shrink-0">{sub.count}</span>
+                            </label>
+                          );
+                        })}
+                        {filteredSubfamilies.length === 0 && (
+                          <p className="text-xs text-muted-foreground text-center py-4">No matches</p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground p-4 text-center">
+                    <div>
+                      <FolderOpen className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
+                      <p>Click a product family to browse subcategories</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Config — only show pricebook name/trade when creating new */}
+            {/* Config — only show when creating new */}
             {!isAddingToExisting && (
               <div className="border-t pt-3 grid grid-cols-2 gap-3">
                 <div>
@@ -414,9 +591,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
                 <div>
                   <Label className="text-xs">Trade Type</Label>
                   <Select value={tradeType} onValueChange={setTradeType}>
-                    <SelectTrigger className="mt-1 h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="mt-1 h-9 text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {getAllTradeTypes().map((t) => (
                         <SelectItem key={t} value={t}>{t}</SelectItem>
@@ -429,6 +604,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
           </div>
         )}
 
+        {/* ── SCRAPING STEP ── */}
         {step === "scraping" && (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -449,6 +625,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
           </div>
         )}
 
+        {/* ── IMPORTING STEP ── */}
         {step === "importing" && (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
             <Package className="h-8 w-8 text-primary animate-pulse" />
@@ -461,6 +638,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
           </div>
         )}
 
+        {/* ── DONE STEP ── */}
         {step === "done" && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
             <CheckCircle2 className="h-10 w-10 text-primary" />
@@ -479,12 +657,12 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
           {step === "domain" && (
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           )}
-          {step === "categories" && (
+          {step === "families" && (
             <>
-              <Button variant="outline" onClick={() => { setStep("domain"); setCategories([]); }}>Back</Button>
+              <Button variant="outline" onClick={() => { setStep("domain"); setFamilies([]); }}>Back</Button>
               <Button
                 onClick={handleScrapeAndImport}
-                disabled={selectedCategories.size === 0 || (!isAddingToExisting && !pricebookName)}
+                disabled={selectedFamilies.size === 0 || (!isAddingToExisting && !pricebookName)}
               >
                 Import {selectedUrlCount.toLocaleString()} Products
               </Button>
