@@ -4,7 +4,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Search, Plus, Globe, Filter } from "lucide-react";
+import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
 import { usePricebooks } from "@/hooks/usePricebooks";
 import { CatalogSidebar } from "@/components/pricebook/CatalogSidebar";
@@ -12,6 +13,7 @@ import { CatalogProductCard } from "@/components/pricebook/CatalogProductCard";
 import { CatalogItemForm } from "@/components/pricebook/CatalogItemForm";
 import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { PriceCompareView } from "@/components/pricebook/PriceCompareView";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +29,7 @@ export default function PricebookDetail() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<CatalogItem | null>(null);
   const [showWebsiteImport, setShowWebsiteImport] = useState(false);
+  const [activeTab, setActiveTab] = useState("catalog");
 
   const handleSearch = (q: string) => setFilters({ ...filters, search: q });
 
@@ -72,60 +75,75 @@ export default function PricebookDetail() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="flex gap-2">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products, SKU, manufacturer..."
-              value={filters.search || ""}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="sm:hidden h-11 w-11">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-4 pt-8">{sidebar}</SheetContent>
-          </Sheet>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="h-8">
+            <TabsTrigger value="catalog" className="text-xs">Products</TabsTrigger>
+            <TabsTrigger value="compare" className="text-xs">
+              <BarChart3 className="h-3 w-3 mr-1" /> Compare Prices
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Content */}
-        <div className="flex gap-6">
-          <div className="hidden sm:block w-48 flex-shrink-0">
-            <Card><CardContent className="p-4">{sidebar}</CardContent></Card>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            {isLoading ? (
-              <Card><CardContent className="p-8 text-center text-muted-foreground">Loading...</CardContent></Card>
-            ) : items.length === 0 ? (
-              <EmptyState
-                icon={Search}
-                title="No items in this pricebook"
-                description="Import products from a supplier website or add items manually."
-                actionLabel="Import from Website"
-                onAction={() => setShowWebsiteImport(true)}
-              />
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
-                {items.map((item) => (
-                  <CatalogProductCard
-                    key={item.id}
-                    item={item}
-                    onEdit={(i) => { setEditItem(i); setShowForm(true); }}
-                    onDelete={(delId) => deleteItem.mutate(delId)}
-                    onToggleFav={(favId, fav) => toggleFavourite.mutate({ id: favId, is_favourite: fav })}
-                  />
-                ))}
+          <TabsContent value="catalog" className="mt-4 space-y-4">
+            {/* Search */}
+            <div className="flex gap-2">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search products, SKU, manufacturer..."
+                  value={filters.search || ""}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-            )}
-          </div>
-        </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="sm:hidden h-11 w-11">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-64 p-4 pt-8">{sidebar}</SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Content */}
+            <div className="flex gap-6">
+              <div className="hidden sm:block w-48 flex-shrink-0">
+                <Card><CardContent className="p-4">{sidebar}</CardContent></Card>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {isLoading ? (
+                  <Card><CardContent className="p-8 text-center text-muted-foreground">Loading...</CardContent></Card>
+                ) : items.length === 0 ? (
+                  <EmptyState
+                    icon={Search}
+                    title="No items in this pricebook"
+                    description="Import products from a supplier website or add items manually."
+                    actionLabel="Import from Website"
+                    onAction={() => setShowWebsiteImport(true)}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
+                    {items.map((item) => (
+                      <CatalogProductCard
+                        key={item.id}
+                        item={item}
+                        onEdit={(i) => { setEditItem(i); setShowForm(true); }}
+                        onDelete={(delId) => deleteItem.mutate(delId)}
+                        onToggleFav={(favId, fav) => toggleFavourite.mutate({ id: favId, is_favourite: fav })}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="compare" className="mt-4">
+            <PriceCompareView />
+          </TabsContent>
+        </Tabs>
 
         <div className="pb-24" />
       </div>
