@@ -271,6 +271,46 @@ export function useAddressAutocomplete() {
   const [detectedCountry, setDetectedCountry] = useState<PostcodeType>('unknown');
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Try Autoaddress.ie autocomplete for Irish queries
+  const searchAutoaddress = useCallback(async (query: string, signal: AbortSignal): Promise<AddressSuggestion[] | null> => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      if (!projectId) return null;
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, mode: 'autocomplete' }),
+          signal,
+        }
+      );
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      if (!data.suggestions?.length) return null;
+
+      // Convert Autoaddress suggestions to our AddressSuggestion format
+      return data.suggestions.map((s: any) => ({
+        display_name: s.display_name,
+        lat: '0', // Will be resolved on selection via lookup
+        lon: '0',
+        address: {
+          road: s.display_name,
+          postcode: s.eircode || '',
+          country: 'Ireland',
+          country_code: 'ie',
+        },
+        _autoaddress_id: s.address_id, // Internal marker for Autoaddress results
+        _eircode: s.eircode,
+      }));
+    } catch {
+      return null;
+    }
+  }, []);
+
   const searchAddress = useCallback(async (query: string, countryCode?: string) => {
     if (!query || query.length < 3) {
       setSuggestions([]);
@@ -287,6 +327,22 @@ export function useAddressAutocomplete() {
     setError(null);
 
     try {
+      // If query looks Irish (Eircode pattern or country is IE), try Autoaddress first
+      const isIrishQuery = countryCode?.includes('ie') || 
+        detectPostcodeType(query) === 'eircode' ||
+        (!countryCode && /^[A-Z]\d{2}/i.test(query.trim()));
+
+      if (isIrishQuery) {
+        const autoResults = await searchAutoaddress(query, abortControllerRef.current.signal);
+        if (autoResults && autoResults.length > 0) {
+          setDetectedCountry('eircode');
+          setSuggestions(autoResults);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Fallback to Nominatim
       const params = new URLSearchParams({
         q: query,
         format: 'json',
@@ -294,7 +350,6 @@ export function useAddressAutocomplete() {
         limit: '5',
       });
 
-      // Add country bias for better results
       if (countryCode) {
         params.append('countrycodes', countryCode);
       }
@@ -318,14 +373,14 @@ export function useAddressAutocomplete() {
       setSuggestions(data);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        return; // Ignore aborted requests
+        return;
       }
       setError(err instanceof Error ? err.message : 'Failed to search addresses');
       setSuggestions([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [searchAutoaddress]);
 
   // Debounced version for real-time search
   const debouncedSearch = useCallback(
@@ -382,13 +437,52 @@ export function useAddressAutocomplete() {
     }
   }, []);
 
-  // Lookup Eircode specifically (Irish postcodes)
+  // Lookup Eircode via Autoaddress.ie edge function (falls back to Nominatim)
   const lookupEircode = useCallback(async (eircode: string): Promise<GeocodedAddress | null> => {
     if (!isValidEircode(eircode)) {
       return null;
     }
 
     setDetectedCountry('eircode');
+
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      if (projectId) {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: eircode, mode: 'lookup' }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.latitude && data.longitude) {
+            return {
+              formattedAddress: data.formattedAddress || eircode,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              postcode: data.postcode || eircode,
+              city: data.city,
+              county: data.region,
+              country: data.country || 'Ireland',
+              countryCode: data.countryCode || 'ie',
+              line1: data.line1,
+              line2: data.line2,
+              region: data.region,
+              confidence: data.confidence || 'high',
+              isPOBox: false,
+            };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Autoaddress lookup failed, falling back to Nominatim:', err);
+    }
+
+    // Fallback to Nominatim
     return geocodeAddress(eircode, 'Ireland');
   }, [geocodeAddress]);
 
