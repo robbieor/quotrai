@@ -258,14 +258,13 @@ export default function Jobs() {
           </Select>
         </div>
 
-        <Card>
+        <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-sm">
           <TableSelectionBar
             selectedCount={selectedRows.size}
             onClear={clearSelection}
             onExport={handleExport}
             onBulkDelete={handleBulkDelete}
           />
-          <CardContent className="p-0">
             {isLoading ? (
               <div className="p-4 space-y-3">
                 {[...Array(5)].map((_, i) => (
@@ -285,33 +284,37 @@ export default function Jobs() {
                 />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
+              <>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="sticky top-0 z-10 bg-card">
                     <tr className="border-b border-border/50">
-                      <th className="h-8 w-8 px-2 bg-muted/60">
+                      <th className="w-8 h-8 px-2 text-center bg-muted/60 border-r border-border/30">
                         <Checkbox
-                          checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                          checked={allSelected}
                           onCheckedChange={handleSelectAll}
                           className="h-3.5 w-3.5"
+                          aria-label="Select all"
+                          {...(someSelected ? { "data-state": "indeterminate" } : {})}
                         />
                       </th>
-                      <SortableHeader sortDirection={getSortDirection("title" as any)} onSort={() => handleSort("title" as any)} className="text-[10px] uppercase tracking-wider">
+                      <SortableHeader sortDirection={getSortDirection("title" as any)} onSort={() => handleSort("title" as any)}>
                         Title
                       </SortableHeader>
-                      <SortableHeader sortDirection={getSortDirection("customers" as any)} onSort={() => handleSort("customers" as any)} className="text-[10px] uppercase tracking-wider hidden md:table-cell">
+                      <SortableHeader sortDirection={getSortDirection("customers" as any)} onSort={() => handleSort("customers" as any)}>
                         Customer
                       </SortableHeader>
-                      <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="text-[10px] uppercase tracking-wider">
+                      <SortableHeader sortDirection={getSortDirection("status" as any)} onSort={() => handleSort("status" as any)} className="w-24">
                         Status
                       </SortableHeader>
-                      <SortableHeader sortDirection={getSortDirection("scheduled_date" as any)} onSort={() => handleSort("scheduled_date" as any)} className="text-[10px] uppercase tracking-wider hidden sm:table-cell">
+                      <SortableHeader sortDirection={getSortDirection("scheduled_date" as any)} onSort={() => handleSort("scheduled_date" as any)} className="w-28">
                         Scheduled
                       </SortableHeader>
-                      <SortableHeader sortDirection={getSortDirection("estimated_value" as any)} onSort={() => handleSort("estimated_value" as any)} className="text-[10px] uppercase tracking-wider" align="right">
+                      <SortableHeader sortDirection={getSortDirection("estimated_value" as any)} onSort={() => handleSort("estimated_value" as any)} align="right" className="w-24">
                         Value
                       </SortableHeader>
-                      <th className="h-8 w-10 bg-muted/60" />
+                      <th className="w-10 h-8 px-1.5 bg-muted/60"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -320,49 +323,51 @@ export default function Jobs() {
                         key={job.id}
                         onClick={() => setDetailJob(job)}
                         className={cn(
-                          "border-b border-border/30 cursor-pointer transition-colors hover:bg-muted/30",
-                          selectedRows.has(idx) && "bg-primary/5"
+                          "border-b border-border/30 transition-colors cursor-pointer",
+                          selectedRows.has(idx)
+                            ? "bg-primary/10 hover:bg-primary/15"
+                            : "hover:bg-muted/50"
                         )}
                       >
-                        <td className="px-2 py-0.5 w-8" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-2 py-1.5 text-center border-r border-border/20" onClick={(e) => e.stopPropagation()}>
                           <Checkbox
                             checked={selectedRows.has(idx)}
                             onCheckedChange={(c) => handleCheckboxChange(idx, c)}
                             className="h-3.5 w-3.5"
                           />
                         </td>
-                        <td className="px-3 py-0.5">
-                          <span className="text-[11px] font-medium truncate block max-w-[200px]">{job.title}</span>
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <span className="font-medium text-sm truncate block max-w-[200px]">{job.title}</span>
                         </td>
-                        <td className="px-3 py-0.5 hidden md:table-cell">
-                          <span className="text-[11px] text-muted-foreground truncate block max-w-[150px]">{job.customers?.name || "—"}</span>
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <span className="text-sm text-muted-foreground truncate block max-w-[150px]">{job.customers?.name || "—"}</span>
                         </td>
-                        <td className="px-3 py-0.5">
+                        <td className="px-2 py-1.5 border-r border-border/20">
                           <Badge variant={statusBadgeVariant[job.status]} className="text-[10px] px-1.5 py-0">
                             {JOB_STATUSES.find((s) => s.value === job.status)?.label}
                           </Badge>
                         </td>
-                        <td className="px-3 py-0.5 hidden sm:table-cell">
-                          <span className="text-[11px] text-muted-foreground">
+                        <td className="px-2 py-1.5 border-r border-border/20">
+                          <span className="text-xs text-muted-foreground">
                             {job.scheduled_date ? format(new Date(job.scheduled_date), "MMM d, yyyy") : "—"}
                           </span>
                         </td>
-                        <td className="px-3 py-0.5 text-right">
-                          <span className="text-[11px] font-semibold tabular-nums">{formatCurrency(job.estimated_value)}</span>
+                        <td className="px-2 py-1.5 text-right border-r border-border/20">
+                          <span className="text-xs font-semibold tabular-nums">{formatCurrency(job.estimated_value)}</span>
                         </td>
-                        <td className="px-1 py-0.5 w-10" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-1.5 py-1.5" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <MoreVertical className="h-3.5 w-3.5" />
+                                <MoreVertical className="h-3 w-3" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => { setSelectedJob(job); setFormDialogOpen(true); }}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                                <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => { setSelectedJob(job); setDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -372,9 +377,63 @@ export default function Jobs() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Card List */}
+              <div className="md:hidden divide-y divide-border/30">
+                {sortedData.map((job, idx) => (
+                  <div
+                    key={job.id}
+                    className={cn(
+                      "px-3 py-2.5 transition-colors cursor-pointer",
+                      selectedRows.has(idx) ? "bg-primary/10" : "hover:bg-muted/50"
+                    )}
+                    onClick={() => setDetailJob(job)}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="pt-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedRows.has(idx)}
+                          onCheckedChange={(c) => handleCheckboxChange(idx, c)}
+                          className="h-3.5 w-3.5"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate">{job.title}</span>
+                          <Badge variant={statusBadgeVariant[job.status]} className="text-[10px] px-1.5 py-0 shrink-0">
+                            {JOB_STATUSES.find((s) => s.value === job.status)?.label}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                          {job.customers?.name && <span className="truncate">{job.customers.name}</span>}
+                          {job.scheduled_date && <span>{format(new Date(job.scheduled_date), "MMM d")}</span>}
+                          <span className="font-semibold text-foreground">{formatCurrency(job.estimated_value)}</span>
+                        </div>
+                      </div>
+                      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setSelectedJob(job); setFormDialogOpen(true); }}>
+                              <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedJob(job); setDeleteDialogOpen(true); }} className="text-destructive focus:text-destructive">
+                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
       <JobFormDialog open={formDialogOpen} onOpenChange={setFormDialogOpen} job={selectedJob} onSubmit={handleCreateOrUpdate} isLoading={createJobWithSite.isPending || updateJob.isPending} />
