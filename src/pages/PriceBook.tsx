@@ -13,6 +13,7 @@ import { CsvImportDialog } from "@/components/pricebook/CsvImportDialog";
 import { SupplierSettingsDialog } from "@/components/pricebook/SupplierSettingsDialog";
 import { SupplierDirectoryBrowser } from "@/components/pricebook/SupplierDirectoryBrowser";
 import { RequestSupplierForm } from "@/components/pricebook/RequestSupplierForm";
+import { PricebookOnboarding } from "@/components/pricebook/PricebookOnboarding";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function PriceBook() {
@@ -57,6 +58,9 @@ export default function PriceBook() {
             </Button>
           </div>
         </div>
+
+        {/* Onboarding guide */}
+        <PricebookOnboarding />
 
         {/* Pricebook grid */}
         {isLoading ? (
