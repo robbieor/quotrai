@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Plus, Settings2, BookOpen } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Settings2, BookOpen, Search } from "lucide-react";
 import { usePricebooks } from "@/hooks/usePricebooks";
+import { useTeamCatalog, type CatalogItem } from "@/hooks/useTeamCatalog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PricebookCard } from "@/components/pricebook/PricebookCard";
+import { PricebookStats } from "@/components/pricebook/PricebookStats";
+import { RecentItems } from "@/components/pricebook/RecentItems";
 import { AddPriceSourceDialog } from "@/components/pricebook/AddPriceSourceDialog";
 import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
 import { ManualCatalogDialog } from "@/components/pricebook/ManualCatalogDialog";
@@ -17,9 +21,12 @@ import { PricebookOnboarding } from "@/components/pricebook/PricebookOnboarding"
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function PriceBook() {
-  const { pricebooks, isLoading, deletePricebook } = usePricebooks();
+  const { pricebooks, isLoading } = usePricebooks();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Fetch ALL catalog items for stats + global search + recent
+  const { items: allItems } = useTeamCatalog({});
 
   const [showAddSource, setShowAddSource] = useState(false);
   const [showWebsiteWizard, setShowWebsiteWizard] = useState(false);
@@ -28,6 +35,38 @@ export default function PriceBook() {
   const [showSupplierSettings, setShowSupplierSettings] = useState(false);
   const [showDirectoryBrowser, setShowDirectoryBrowser] = useState(false);
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
+
+  // Stats
+  const stats = useMemo(() => {
+    const totalItems = allItems.length;
+    const suppliers = new Set(allItems.map((i) => i.supplier_name).filter(Boolean));
+    const margins = allItems.filter((i) => i.sell_price > 0).map((i) => ((i.sell_price - i.cost_price) / i.sell_price) * 100);
+    const avgMargin = margins.length > 0 ? margins.reduce((a, b) => a + b, 0) / margins.length : 0;
+    const lowMarginCount = margins.filter((m) => m > 0 && m < 15).length;
+    return { totalItems, totalSuppliers: suppliers.size, avgMargin, lowMarginCount };
+  }, [allItems]);
+
+  // Recent items (sorted by last_used_at, top 10)
+  const recentItems = useMemo(() => {
+    return [...allItems]
+      .filter((i) => i.last_used_at)
+      .sort((a, b) => (b.last_used_at || "").localeCompare(a.last_used_at || ""))
+      .slice(0, 10);
+  }, [allItems]);
+
+  // Global search results
+  const searchResults = useMemo(() => {
+    if (!globalSearch || globalSearch.length < 2) return [];
+    const q = globalSearch.toLowerCase();
+    return allItems.filter(
+      (i) =>
+        i.item_name?.toLowerCase().includes(q) ||
+        i.supplier_sku?.toLowerCase().includes(q) ||
+        i.manufacturer?.toLowerCase().includes(q) ||
+        i.supplier_name?.toLowerCase().includes(q)
+    ).slice(0, 20);
+  }, [allItems, globalSearch]);
 
   const handleSourceSelect = (type: "supplier_directory" | "csv" | "manual" | "ai_extract") => {
     if (type === "supplier_directory") setShowDirectoryBrowser(true);
@@ -59,6 +98,53 @@ export default function PriceBook() {
           </div>
         </div>
 
+        {/* Stats bar — only show when there are items */}
+        {stats.totalItems > 0 && (
+          <PricebookStats
+            totalItems={stats.totalItems}
+            totalSuppliers={stats.totalSuppliers}
+            avgMargin={stats.avgMargin}
+            lowMarginCount={stats.lowMarginCount}
+          />
+        )}
+
+        {/* Global search */}
+        {allItems.length > 0 && (
+          <div className="relative max-w-lg">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search across all pricebooks..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              className="pl-9"
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-auto">
+                {searchResults.map((item) => (
+                  <button
+                    key={item.id}
+                    className="w-full text-left px-3 py-2 hover:bg-accent/50 transition-colors border-b border-border last:border-0"
+                    onClick={() => {
+                      setGlobalSearch("");
+                      // Navigate to the item's pricebook
+                      const pb = pricebooks.find((p) => allItems.some((i) => i.id === item.id && (i as any).pricebook_id === p.id));
+                      if (pb) navigate(`/price-book/${pb.id}`);
+                    }}
+                  >
+                    <p className="text-sm font-medium truncate">{item.item_name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {[item.supplier_name, item.supplier_sku, item.category].filter(Boolean).join(" · ")}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Recently used items */}
+        <RecentItems items={recentItems} />
+
         {/* Onboarding guide */}
         <PricebookOnboarding />
 
@@ -80,7 +166,7 @@ export default function PriceBook() {
                 key={pb.id}
                 pricebook={pb}
                 onClick={() => navigate(`/price-book/${pb.id}`)}
-                onDelete={() => deletePricebook.mutate(pb.id)}
+                onDelete={() => queryClient.invalidateQueries({ queryKey: ["pricebooks"] })}
               />
             ))}
           </div>
