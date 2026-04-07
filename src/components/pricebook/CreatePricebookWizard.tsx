@@ -45,7 +45,7 @@ const CSV_TEMPLATE_HEADERS = [
 ];
 
 const CSV_TEMPLATE_SAMPLE = [
-  "10W LED Floodlight", "Wesco", "FL-10W-BK", "Black 10W LED floodlight IP65",
+  "10W LED Floodlight", "My Supplier", "FL-10W-BK", "Black 10W LED floodlight IP65",
   "Electrical", "Lighting", "Floodlights", "each", "24.50", "Philips",
   "", "", "EUR", "no", ""
 ];
@@ -109,11 +109,6 @@ export function CreatePricebookWizard({ open, onOpenChange, onComplete }: Create
   const detectSupplierFromUrl = (u: string): string => {
     try {
       const host = new URL(u.startsWith("http") ? u : `https://${u}`).hostname.toLowerCase();
-      if (host.includes("wesco")) return "Wesco";
-      if (host.includes("cef")) return "CEF";
-      if (host.includes("screwfix")) return "Screwfix";
-      if (host.includes("toolstation")) return "Toolstation";
-      if (host.includes("edmundson")) return "Edmundson";
       const clean = host.replace("www.", "").split(".")[0];
       return clean.charAt(0).toUpperCase() + clean.slice(1);
     } catch {

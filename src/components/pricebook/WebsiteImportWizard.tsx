@@ -141,10 +141,6 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
 
   const detectSupplierName = (d: string): string => {
     const lower = d.toLowerCase();
-    if (lower.includes("wesco")) return "Wesco";
-    if (lower.includes("cef")) return "CEF";
-    if (lower.includes("screwfix")) return "Screwfix";
-    if (lower.includes("edmundson")) return "Edmundson";
     const clean = lower.replace("www.", "").split(".")[0];
     return clean.charAt(0).toUpperCase() + clean.slice(1);
   };
@@ -417,7 +413,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
               <Label>Supplier Domain</Label>
               <div className="flex gap-2 mt-1.5">
                 <Input
-                  placeholder="e.g. wesco.ie, cef.ie, screwfix.ie"
+                  placeholder="e.g. supplier.com, distributor.ie"
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleMap()}

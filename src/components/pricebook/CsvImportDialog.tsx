@@ -24,7 +24,7 @@ const CSV_TEMPLATE_HEADERS = [
 ];
 
 const CSV_TEMPLATE_SAMPLE = [
-  "10W LED Floodlight", "Wesco", "FL-10W-BK", "Black 10W LED floodlight IP65",
+  "10W LED Floodlight", "My Supplier", "FL-10W-BK", "Black 10W LED floodlight IP65",
   "Electrical", "Lighting", "Floodlights", "each", "24.50", "Philips", ""
 ];
 
