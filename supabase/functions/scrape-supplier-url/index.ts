@@ -113,42 +113,101 @@ Deno.serve(async (req) => {
     }
 
     const supplier = detectSupplier(url);
-    if (!supplier) {
-      return new Response(JSON.stringify({ error: "Unsupported supplier. Currently supported: Wesco" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let product: Record<string, any>;
+
+    if (supplier) {
+      // Known supplier — use custom parser
+      const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${firecrawlKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),
       });
-    }
 
-    // Fetch the page via Firecrawl (handles JS rendering + bot protection)
-    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-    if (!firecrawlKey) {
-      return new Response(JSON.stringify({ error: "Firecrawl connector not configured. Please connect Firecrawl in Settings." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const fcData = await fcRes.json();
+      if (!fcRes.ok) {
+        console.error("Firecrawl error:", JSON.stringify(fcData));
+        return new Response(JSON.stringify({ error: `Firecrawl scrape failed: ${fcData.error || fcRes.status}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const html = fcData.data?.html || fcData.html || "";
+      product = supplier.parser(html, url);
+    } else {
+      // Unknown supplier — use Firecrawl AI JSON extraction
+      console.log("Unknown supplier, using AI extraction for:", url);
+      const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${firecrawlKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          formats: [
+            {
+              type: "json",
+              prompt: "Extract product information from this page. Return product_name, sku, price (as a number), currency, category, subcategory, manufacturer, description (max 200 chars), unit_of_measure, and image_url.",
+              schema: {
+                type: "object",
+                properties: {
+                  product_name: { type: "string" },
+                  sku: { type: "string" },
+                  price: { type: "number" },
+                  currency: { type: "string" },
+                  category: { type: "string" },
+                  subcategory: { type: "string" },
+                  manufacturer: { type: "string" },
+                  description: { type: "string" },
+                  unit_of_measure: { type: "string" },
+                  image_url: { type: "string" },
+                },
+                required: ["product_name"],
+              },
+            },
+          ],
+          onlyMainContent: true,
+        }),
       });
+
+      const fcData = await fcRes.json();
+      if (!fcRes.ok) {
+        console.error("Firecrawl AI extraction error:", JSON.stringify(fcData));
+        return new Response(JSON.stringify({ error: `AI extraction failed: ${fcData.error || fcRes.status}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const extracted = fcData.data?.json || fcData.json || {};
+      console.log("AI extracted:", JSON.stringify(extracted));
+
+      // Try to detect supplier name from domain
+      let domainName = "";
+      try {
+        domainName = new URL(url).hostname.replace(/^www\./, "").split(".")[0];
+        domainName = domainName.charAt(0).toUpperCase() + domainName.slice(1);
+      } catch {}
+
+      product = {
+        supplier_name: domainName || "Unknown",
+        source_url: url,
+        supplier_sku: extracted.sku || "",
+        product_name: extracted.product_name || "",
+        description: (extracted.description || "").slice(0, 500),
+        category: extracted.category || "",
+        subcategory: extracted.subcategory || "",
+        manufacturer: extracted.manufacturer || "",
+        website_price: extracted.price || null,
+        vat_mode: "ex_vat",
+        image_url: extracted.image_url || "",
+        unit_of_measure: extracted.unit_of_measure || "each",
+      };
     }
-
-    const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url, formats: ["html"], onlyMainContent: false }),
-    });
-
-    const fcData = await fcRes.json();
-    if (!fcRes.ok) {
-      console.error("Firecrawl error:", JSON.stringify(fcData));
-      return new Response(JSON.stringify({ error: `Firecrawl scrape failed: ${fcData.error || fcRes.status}` }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const html = fcData.data?.html || fcData.html || "";
-    const product = supplier.parser(html, url);
 
     if (!product.product_name) {
       return new Response(JSON.stringify({ error: "Could not parse product data from this page" }), {
