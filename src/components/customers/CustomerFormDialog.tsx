@@ -176,6 +176,13 @@ export function CustomerFormDialog({
     country: "",
   });
 
+  // Eircode inline lookup state
+  const [eircodeQuery, setEircodeQuery] = useState("");
+  const [eircodeSuggestions, setEircodeSuggestions] = useState<any[]>([]);
+  const [eircodeLoading, setEircodeLoading] = useState(false);
+  const [showEircodeDropdown, setShowEircodeDropdown] = useState(false);
+  const eircodeDropdownRef = useRef<HTMLDivElement>(null);
+
   const companyCountry = (branding as any)?.company_country_iso2 || null;
   const labels = useMemo(() => getAddressLabels(companyCountry), [companyCountry]);
 
@@ -231,6 +238,9 @@ export function CustomerFormDialog({
       setStructuredFields({ line1: "", line2: "", city: "", region: "", postcode: "", country: "" });
     }
     setIsManualEdit(false);
+    setEircodeQuery("");
+    setEircodeSuggestions([]);
+    setShowEircodeDropdown(false);
   }, [customer, form]);
 
   const handleSubmit = (values: CustomerFormValues) => {
@@ -274,6 +284,157 @@ export function CustomerFormDialog({
     setStructuredFields((prev) => ({ ...prev, [field]: value }));
     setIsManualEdit(true);
   };
+
+  // Eircode inline detection on Address Line 1
+  const handleLine1Change = useCallback(async (value: string) => {
+    setStructuredFields((prev) => ({ ...prev, line1: value }));
+    setIsManualEdit(true);
+    setEircodeQuery(value);
+
+    const trimmed = value.trim();
+    const type = detectPostcodeType(trimmed);
+
+    // If it looks like an Eircode (or any postcode-like input in line1), trigger lookup
+    if (type === 'eircode' && trimmed.replace(/\s+/g, '').length >= 5) {
+      setEircodeLoading(true);
+      setShowEircodeDropdown(true);
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        if (projectId) {
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: trimmed, mode: isValidEircode(trimmed) ? 'lookup' : 'autocomplete' }),
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.suggestions) {
+              setEircodeSuggestions(data.suggestions);
+            } else if (data.formattedAddress) {
+              // Direct lookup result
+              setEircodeSuggestions([{
+                display_name: data.formattedAddress,
+                ...data,
+                _isDirectResult: true,
+              }]);
+            } else {
+              setEircodeSuggestions([]);
+            }
+          } else {
+            setEircodeSuggestions([]);
+          }
+        }
+      } catch {
+        setEircodeSuggestions([]);
+      } finally {
+        setEircodeLoading(false);
+      }
+    } else {
+      setEircodeSuggestions([]);
+      setShowEircodeDropdown(false);
+    }
+  }, []);
+
+  // Handle selecting an Eircode suggestion
+  const handleEircodeSuggestionSelect = useCallback(async (suggestion: any) => {
+    setShowEircodeDropdown(false);
+    setEircodeSuggestions([]);
+
+    if (suggestion._isDirectResult && suggestion.latitude && suggestion.longitude) {
+      // Direct result — populate immediately
+      setStructuredFields({
+        line1: suggestion.line1 || "",
+        line2: suggestion.line2 || "",
+        city: suggestion.city || "",
+        region: suggestion.region || "",
+        postcode: suggestion.postcode || "",
+        country: suggestion.country || "Ireland",
+      });
+      setGeocodedAddress({
+        formattedAddress: suggestion.formattedAddress,
+        latitude: suggestion.latitude,
+        longitude: suggestion.longitude,
+        postcode: suggestion.postcode,
+        city: suggestion.city,
+        country: suggestion.country || 'Ireland',
+        countryCode: suggestion.countryCode || 'ie',
+        line1: suggestion.line1,
+        line2: suggestion.line2,
+        region: suggestion.region,
+        confidence: suggestion.confidence || 'high',
+        isPOBox: false,
+      });
+      form.setValue("address", suggestion.formattedAddress);
+      setIsManualEdit(false);
+      return;
+    }
+
+    // Need to resolve the suggestion via lookup
+    const lookupQuery = suggestion.eircode || suggestion.display_name;
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      if (projectId) {
+        setEircodeLoading(true);
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: lookupQuery, mode: 'lookup' }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.latitude && data.longitude) {
+            setStructuredFields({
+              line1: data.line1 || "",
+              line2: data.line2 || "",
+              city: data.city || "",
+              region: data.region || "",
+              postcode: data.postcode || "",
+              country: data.country || "Ireland",
+            });
+            setGeocodedAddress({
+              formattedAddress: data.formattedAddress || lookupQuery,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              postcode: data.postcode,
+              city: data.city,
+              country: data.country || 'Ireland',
+              countryCode: data.countryCode || 'ie',
+              line1: data.line1,
+              line2: data.line2,
+              region: data.region,
+              confidence: data.confidence || 'high',
+              isPOBox: false,
+            });
+            form.setValue("address", data.formattedAddress || lookupQuery);
+            setIsManualEdit(false);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Eircode resolution failed:', err);
+    } finally {
+      setEircodeLoading(false);
+    }
+  }, [form]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (eircodeDropdownRef.current && !eircodeDropdownRef.current.contains(event.target as Node)) {
+        setShowEircodeDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const confidence = geocodedAddress?.confidence || (geocodedAddress ? "medium" : null);
   const isPOBox = geocodedAddress?.isPOBox || false;
