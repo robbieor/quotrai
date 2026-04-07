@@ -11,6 +11,8 @@ import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard"
 import { ManualCatalogDialog } from "@/components/pricebook/ManualCatalogDialog";
 import { CsvImportDialog } from "@/components/pricebook/CsvImportDialog";
 import { SupplierSettingsDialog } from "@/components/pricebook/SupplierSettingsDialog";
+import { SupplierDirectoryBrowser } from "@/components/pricebook/SupplierDirectoryBrowser";
+import { RequestSupplierForm } from "@/components/pricebook/RequestSupplierForm";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function PriceBook() {
@@ -23,9 +25,12 @@ export default function PriceBook() {
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [showCsvImport, setShowCsvImport] = useState(false);
   const [showSupplierSettings, setShowSupplierSettings] = useState(false);
+  const [showDirectoryBrowser, setShowDirectoryBrowser] = useState(false);
+  const [showRequestForm, setShowRequestForm] = useState(false);
 
-  const handleSourceSelect = (type: "website" | "csv" | "manual") => {
-    if (type === "website") setShowWebsiteWizard(true);
+  const handleSourceSelect = (type: "supplier_directory" | "csv" | "manual" | "ai_extract") => {
+    if (type === "supplier_directory") setShowDirectoryBrowser(true);
+    else if (type === "ai_extract") setShowWebsiteWizard(true);
     else if (type === "csv") setShowCsvImport(true);
     else setShowManualDialog(true);
   };
@@ -60,7 +65,7 @@ export default function PriceBook() {
           <EmptyState
             icon={BookOpen}
             title="No price sources yet"
-            description="Import products from supplier websites, upload CSV price lists, or create manual catalogs. Paste a URL → detect source → select categories → save as a named pricebook."
+            description="Browse our supplier directory, import from any website with AI, upload CSV price lists, or create manual catalogs."
             actionLabel="Add Price Source"
             onAction={() => setShowAddSource(true)}
           />
@@ -85,6 +90,24 @@ export default function PriceBook() {
         open={showAddSource}
         onOpenChange={setShowAddSource}
         onSelect={handleSourceSelect}
+      />
+
+      <SupplierDirectoryBrowser
+        open={showDirectoryBrowser}
+        onOpenChange={setShowDirectoryBrowser}
+        onSelectSupplier={(supplier, method) => {
+          setShowDirectoryBrowser(false);
+          if (method === "csv") setShowCsvImport(true);
+          else if (method === "ai_extract") setShowWebsiteWizard(true);
+          else if (method === "catalog") setShowWebsiteWizard(true);
+          else setShowManualDialog(true);
+        }}
+        onRequestSupplier={() => setShowRequestForm(true)}
+      />
+
+      <RequestSupplierForm
+        open={showRequestForm}
+        onOpenChange={setShowRequestForm}
       />
 
       <WebsiteImportWizard

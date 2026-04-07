@@ -9,7 +9,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
-import { COUNTRIES } from "@/data/countries";
+import { COUNTRIES } from "@/constants/countries";
 
 interface RequestSupplierFormProps {
   open: boolean;
@@ -70,8 +70,8 @@ export function RequestSupplierForm({ open, onOpenChange }: RequestSupplierFormP
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center gap-4 py-8">
-            <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
-              <CheckCircle2 className="h-6 w-6 text-green-500" />
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-primary" />
             </div>
             <div className="text-center">
               <h3 className="font-semibold text-lg">Request Submitted</h3>
