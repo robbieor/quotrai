@@ -131,7 +131,7 @@ serve(async (req) => {
     const countryCode = getComponentShort("country").toLowerCase();
     const postcode = getComponent("postal_code");
 
-    console.log("Components debug:", JSON.stringify({ streetNumber, route, sublocality, neighborhood, premise, formattedFirst: result.formatted_address?.split(",")[0]?.trim() }));
+    
 
     const line1 = (streetNumber && route)
       ? `${streetNumber} ${route}`
