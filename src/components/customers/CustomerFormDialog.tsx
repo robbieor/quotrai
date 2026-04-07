@@ -609,12 +609,6 @@ export function CustomerFormDialog({
                     placeholder="Auto-populated from postcode"
                   />
                 </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
 
                 {/* Address Line 2 */}
                 <div>
