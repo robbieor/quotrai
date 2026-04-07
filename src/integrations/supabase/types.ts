@@ -4390,6 +4390,45 @@ export type Database = {
           },
         ]
       }
+      supplier_directory: {
+        Row: {
+          country_code: string
+          created_at: string | null
+          domain: string | null
+          id: string
+          is_scrapeable: boolean | null
+          logo_url: string | null
+          product_count: number | null
+          status: string | null
+          supplier_name: string
+          trade_types: string[] | null
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          is_scrapeable?: boolean | null
+          logo_url?: string | null
+          product_count?: number | null
+          status?: string | null
+          supplier_name: string
+          trade_types?: string[] | null
+        }
+        Update: {
+          country_code?: string
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          is_scrapeable?: boolean | null
+          logo_url?: string | null
+          product_count?: number | null
+          status?: string | null
+          supplier_name?: string
+          trade_types?: string[] | null
+        }
+        Relationships: []
+      }
       supplier_price_book: {
         Row: {
           category: string | null
@@ -4437,6 +4476,63 @@ export type Database = {
           },
           {
             foreignKeyName: "supplier_price_book_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_requests: {
+        Row: {
+          country_code: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          status: string | null
+          supplier_name: string
+          supplier_website: string | null
+          team_id: string
+          trade_type: string | null
+          user_id: string
+          vote_count: number | null
+        }
+        Insert: {
+          country_code?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+          supplier_name: string
+          supplier_website?: string | null
+          team_id: string
+          trade_type?: string | null
+          user_id: string
+          vote_count?: number | null
+        }
+        Update: {
+          country_code?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+          supplier_name?: string
+          supplier_website?: string | null
+          team_id?: string
+          trade_type?: string | null
+          user_id?: string
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_requests_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_requests_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
