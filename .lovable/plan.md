@@ -1,62 +1,23 @@
 
 
-# Fix Password Reset Flow + Brand Theme
+# Fix Auth Pages to Match Login Theme
 
-## Problems
-
-1. **ResetPassword.tsx race condition** — The `useEffect` calls `getSession()` immediately on mount. When the user clicks the reset link, Supabase processes the recovery token from the URL hash via `onAuthStateChange`. But `getSession()` fires before the token is exchanged, finds no session, and redirects to `/forgot-password` with "Invalid or expired reset link." The reset page never loads.
-
-2. **Bland styling** — Both `ForgotPassword.tsx` and `ResetPassword.tsx` use plain white Cards on a bare background. They don't match the dark navy (#0f172a) premium aesthetic used across the rest of Foreman (login page, dashboard, etc.).
+## Problem
+ForgotPassword and ResetPassword pages use dark navy (`bg-[#0f172a]`) backgrounds with white text. The login page (the reference screenshot) uses a clean light theme: white card on `bg-background`, default text colors, green primary button, no dark backgrounds.
 
 ## Fix
+Strip all dark navy styling from both pages and match the Login.tsx pattern exactly:
+- `bg-background` wrapper instead of `bg-[#0f172a]`
+- Default `Card` with no custom border/bg overrides
+- Standard text colors (remove all `text-white`, `text-white/60`, etc.)
+- Default `Input` styling (remove `bg-white/10 border-white/20 text-white`)
+- Keep the green CTA button (`bg-[#00E6A0] text-[#0f172a]`) — matches login "Sign in" button
+- Standard `variant="ghost"` / `variant="outline"` for secondary buttons without white overrides
 
-### 1. Fix the reset flow (ResetPassword.tsx)
-
-Replace the `useEffect` session check with a proper `onAuthStateChange` listener that waits for the `PASSWORD_RECOVERY` event before allowing the form to render. This is the correct Supabase pattern:
-
-```typescript
-useEffect(() => {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      // Token exchanged — user can now set new password
-      setReady(true);
-    }
-  });
-  
-  // Also check existing session (user may already be authenticated)
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) setReady(true);
-  });
-  
-  // Timeout fallback — if no event after 5s, redirect
-  const timeout = setTimeout(() => {
-    if (!ready) {
-      toast.error("Invalid or expired reset link.");
-      navigate("/forgot-password");
-    }
-  }, 5000);
-  
-  return () => { subscription.unsubscribe(); clearTimeout(timeout); };
-}, []);
-```
-
-Show a loading spinner until `ready` is true.
-
-### 2. Brand both pages to match Foreman theme
-
-Apply the dark navy command center aesthetic to both ForgotPassword and ResetPassword:
-
-- **Dark navy background** (`bg-[#0f172a]`) with centered card — matching login page
-- **Logo** at top of card (already present, keep it)
-- **Primary green CTA buttons** (`bg-[#00E6A0] text-[#0f172a]`) instead of default
-- **Card styling** — subtle border, slight shadow, rounded corners matching the login page
-- **Typography** — use the same "Welcome back" / card description style from Login.tsx
-- **Success states** — green gradient checkmark circle (already partially there, just needs navy bg context)
-
-### Files Changed
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/ResetPassword.tsx` | Fix session check race condition with `onAuthStateChange` + `PASSWORD_RECOVERY` event; apply dark navy branded theme |
-| `src/pages/ForgotPassword.tsx` | Apply dark navy branded theme matching login page |
+| `src/pages/ForgotPassword.tsx` | Remove all dark navy classes, match Login.tsx card/input/button styling |
+| `src/pages/ResetPassword.tsx` | Same — remove dark navy from all 3 states (loading, success, form) |
 
