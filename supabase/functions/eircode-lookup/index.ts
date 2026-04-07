@@ -11,10 +11,10 @@ serve(async (req) => {
   }
 
   try {
-    const AUTOADDRESS_API_KEY = Deno.env.get("AUTOADDRESS_API_KEY");
-    if (!AUTOADDRESS_API_KEY) {
+    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    if (!GOOGLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Autoaddress API key not configured" }),
+        JSON.stringify({ error: "Google Maps API key not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -28,67 +28,67 @@ serve(async (req) => {
     }
 
     const trimmed = query.trim();
-
-    // Mode: "autocomplete" (default) — type-ahead suggestions
-    // Mode: "lookup" — direct Eircode or address lookup returning full details
     const lookupMode = mode === "lookup" ? "lookup" : "autocomplete";
 
     if (lookupMode === "autocomplete") {
-      // Autoaddress autocomplete endpoint
+      // Google Places Autocomplete
       const params = new URLSearchParams({
-        key: AUTOADDRESS_API_KEY,
-        address: trimmed,
-        country: "ie",
-        limit: "8",
-        geographicAddress: "true",
-        vanityMode: "true",
+        input: trimmed,
+        key: GOOGLE_API_KEY,
+        types: "address",
+        components: "country:ie|country:gb|country:us",
       });
 
       const response = await fetch(
-        `https://api.autoaddress.ie/2.0/autocomplete?${params.toString()}`
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`
       );
 
       if (!response.ok) {
         const text = await response.text();
-        console.error("Autoaddress autocomplete error:", response.status, text);
+        console.error("Google Autocomplete error:", response.status, text);
         return new Response(
-          JSON.stringify({ error: "Address lookup failed", details: text }),
+          JSON.stringify({ error: "Address autocomplete failed", details: text }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       const data = await response.json();
 
-      // Normalize the response for the frontend
-      const suggestions = (data.options || []).map((opt: any) => ({
-        display_name: opt.displayName || opt.description || "",
-        address_id: opt.addressId || opt.links?.[0]?.href || null,
-        eircode: opt.postcode || opt.eircode || null,
-        type: opt.addressType || null,
+      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+        console.error("Google Autocomplete API error:", data.status, data.error_message);
+        return new Response(
+          JSON.stringify({ error: "Address autocomplete failed", details: data.error_message || data.status }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const suggestions = (data.predictions || []).map((pred: any) => ({
+        display_name: pred.description || "",
+        address_id: pred.place_id || null,
+        eircode: null,
+        type: pred.types?.[0] || null,
       }));
 
       return new Response(
-        JSON.stringify({ suggestions, totalResults: data.totalOptions || suggestions.length }),
+        JSON.stringify({ suggestions, totalResults: suggestions.length }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Lookup mode — get full address details for a specific Eircode or address ID
+    // Lookup mode — use Google Geocoding API
     const params = new URLSearchParams({
-      key: AUTOADDRESS_API_KEY,
       address: trimmed,
-      country: "ie",
-      geographicAddress: "true",
-      vanityMode: "true",
+      key: GOOGLE_API_KEY,
+      region: "ie",
     });
 
     const response = await fetch(
-      `https://api.autoaddress.ie/2.0/findaddress?${params.toString()}`
+      `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`
     );
 
     if (!response.ok) {
       const text = await response.text();
-      console.error("Autoaddress findaddress error:", response.status, text);
+      console.error("Google Geocoding error:", response.status, text);
       return new Response(
         JSON.stringify({ error: "Address lookup failed", details: text }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -97,59 +97,119 @@ serve(async (req) => {
 
     const data = await response.json();
 
-    // Parse the spatial info for lat/lng
-    const spatialInfo = data.spatialInfo;
-    const latitude = spatialInfo?.wgs84?.location?.latitude || null;
-    const longitude = spatialInfo?.wgs84?.location?.longitude || null;
+    if (data.status !== "OK" || !data.results?.length) {
+      // Fallback to Nominatim
+      const nominatimResult = await nominatimLookup(trimmed);
+      if (nominatimResult) {
+        return new Response(JSON.stringify(nominatimResult), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify({ error: "No results found", details: data.status }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Parse address components
-    const addressLines = data.addressLine || data.postalAddress || [];
-    const line1 = addressLines[0] || "";
-    const line2 = addressLines[1] || "";
-    const city = addressLines[addressLines.length - 2] || "";
-    const county = data.county || addressLines[addressLines.length - 1] || "";
-    const eircode = data.postcode || data.eircode || "";
-    const formattedAddress = data.displayName || addressLines.join(", ");
+    const result = data.results[0];
+    const location = result.geometry?.location;
+    const components = result.address_components || [];
 
-    // Determine confidence based on match level
-    const matchLevel = data.matchLevel || 0;
+    const getComponent = (type: string) =>
+      components.find((c: any) => c.types.includes(type))?.long_name || "";
+    const getComponentShort = (type: string) =>
+      components.find((c: any) => c.types.includes(type))?.short_name || "";
+
+    const streetNumber = getComponent("street_number");
+    const route = getComponent("route");
+    const sublocality = getComponent("sublocality_level_1") || getComponent("sublocality");
+    const city = getComponent("locality") || getComponent("postal_town");
+    const county = getComponent("administrative_area_level_1");
+    const country = getComponent("country");
+    const countryCode = getComponentShort("country").toLowerCase();
+    const postcode = getComponent("postal_code");
+
+    const line1 = streetNumber && route ? `${streetNumber} ${route}` : route || sublocality || "";
+    const line2 = sublocality && route ? sublocality : "";
+
+    // Determine confidence from geometry location_type
+    const locationType = result.geometry?.location_type || "";
     let confidence: "high" | "medium" | "low" = "low";
-    if (matchLevel >= 4 || data.addressType === "ResidentialAddressPoint") {
+    if (locationType === "ROOFTOP") {
       confidence = "high";
-    } else if (matchLevel >= 2) {
+    } else if (locationType === "RANGE_INTERPOLATED" || locationType === "GEOMETRIC_CENTER") {
       confidence = "medium";
     }
 
-    const result = {
-      formattedAddress,
+    const responseData = {
+      formattedAddress: result.formatted_address || trimmed,
       line1,
       line2,
       city,
       region: county,
-      postcode: eircode,
-      country: "Ireland",
-      countryCode: "ie",
-      latitude,
-      longitude,
+      postcode,
+      country,
+      countryCode,
+      latitude: location?.lat || null,
+      longitude: location?.lng || null,
       confidence,
-      matchLevel,
-      addressType: data.addressType || null,
-      // Pass through options if the result needs further drilling
-      options: (data.options || []).map((opt: any) => ({
-        display_name: opt.displayName || opt.description || "",
-        address_id: opt.addressId || null,
-        eircode: opt.postcode || opt.eircode || null,
-      })),
+      matchLevel: locationType === "ROOFTOP" ? 5 : locationType === "RANGE_INTERPOLATED" ? 3 : 1,
+      addressType: locationType,
+      options: [],
     };
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Eircode lookup error:", err);
+    console.error("Address lookup error:", err);
     return new Response(
       JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
+
+// Nominatim fallback
+async function nominatimLookup(query: string) {
+  try {
+    const params = new URLSearchParams({
+      q: query,
+      format: "json",
+      addressdetails: "1",
+      limit: "1",
+      countrycodes: "ie,gb,us",
+    });
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+      { headers: { "User-Agent": "Foreman-App/1.0" } }
+    );
+
+    if (!response.ok) return null;
+    const results = await response.json();
+    if (!results?.length) return null;
+
+    const r = results[0];
+    const addr = r.address || {};
+
+    return {
+      formattedAddress: r.display_name || query,
+      line1: [addr.house_number, addr.road].filter(Boolean).join(" ") || "",
+      line2: addr.suburb || "",
+      city: addr.city || addr.town || addr.village || "",
+      region: addr.county || addr.state || "",
+      postcode: addr.postcode || "",
+      country: addr.country || "",
+      countryCode: addr.country_code || "",
+      latitude: parseFloat(r.lat) || null,
+      longitude: parseFloat(r.lon) || null,
+      confidence: "low" as const,
+      matchLevel: 1,
+      addressType: r.type || null,
+      options: [],
+    };
+  } catch {
+    return null;
+  }
+}
