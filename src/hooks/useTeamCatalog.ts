@@ -20,6 +20,7 @@ export interface CatalogItem {
   cost_price: number;
   markup_percent: number;
   sell_price: number;
+  manufacturer_part_number: string | null;
   image_url: string | null;
   is_favourite: boolean;
   last_used_at: string | null;

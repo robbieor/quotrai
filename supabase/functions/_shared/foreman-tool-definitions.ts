@@ -722,4 +722,31 @@ export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
       required: ["product_name"],
     },
   },
+  // ==================== PRICE COMPARISON ====================
+  {
+    type: "client",
+    name: "compare_product_prices",
+    description: "Compare prices for a product across all indexed suppliers. Returns ranked alternatives sorted by price with savings calculations.",
+    parameters: {
+      type: "object",
+      properties: {
+        product_name: { type: "string", description: "Product name or description to compare." },
+        manufacturer_part_number: { type: "string", description: "Manufacturer part number (MPN) for exact matching." },
+        manufacturer: { type: "string", description: "Manufacturer/brand name." },
+      },
+      required: ["product_name"],
+    },
+  },
+  {
+    type: "client",
+    name: "suggest_cheaper_alternative",
+    description: "Find a cheaper alternative for a product currently in the user's pricebook. Suggests switching suppliers to save money.",
+    parameters: {
+      type: "object",
+      properties: {
+        catalog_item_id: { type: "string", description: "The catalog item ID to find alternatives for." },
+        product_name: { type: "string", description: "Product name if ID not available." },
+      },
+    },
+  },
 ];

@@ -45,12 +45,13 @@ Deno.serve(async (req) => {
         formats: [
           {
             type: "json",
-            prompt: "Extract product information from this page. Return product_name, sku, price (as a number), currency, category, subcategory, manufacturer, description (max 200 chars), unit_of_measure, and image_url.",
+            prompt: "Extract product information from this page. Return product_name, sku, manufacturer_part_number (MPN - the manufacturer's own part/model number, different from supplier SKU), price (as a number), currency, category, subcategory, manufacturer, description (max 200 chars), unit_of_measure, and image_url.",
             schema: {
               type: "object",
               properties: {
                 product_name: { type: "string" },
                 sku: { type: "string" },
+                manufacturer_part_number: { type: "string" },
                 price: { type: "number" },
                 currency: { type: "string" },
                 category: { type: "string" },
@@ -91,6 +92,7 @@ Deno.serve(async (req) => {
       supplier_name: domainName || "Unknown",
       source_url: url,
       supplier_sku: extracted.sku || "",
+      manufacturer_part_number: extracted.manufacturer_part_number || "",
       product_name: extracted.product_name || "",
       description: (extracted.description || "").slice(0, 500),
       category: extracted.category || "",
