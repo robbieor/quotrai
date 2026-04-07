@@ -1,112 +1,127 @@
 
 
-# Global Supplier Strategy — User-Driven Discovery + Suggestion Pipeline
+# Price Comparison Intelligence — Cross-Supplier Product Matching
 
-## Problem
+## How price comparison sites work
 
-The current system is hard-coded to Wesco (Ireland). As Foreman scales globally, we cannot manually build parsers for every supplier in every country. We need a system where:
-1. Users tell us which suppliers they use
-2. We can progressively build out a shared global catalog
-3. Users can still self-serve via CSV or manual entry for unsupported suppliers
+Price comparison sites (like PriceRunner, Google Shopping, Idealo) use three techniques:
 
-## Architecture
+1. **Product feeds / APIs** — Suppliers push structured data (CSV/XML/JSON) on a schedule. This is the fastest path and is how 90% of comparisons happen.
+2. **Pre-indexed scraping** — A background job scrapes supplier sites periodically and stores normalised data in a central database. Users query the local DB, not the live sites — that is why results appear instantly.
+3. **Product matching** — An AI/fuzzy-match layer maps the same physical product across different suppliers using SKU, manufacturer part number, EAN/barcode, or name similarity.
 
-```text
-┌─────────────────────────┐     ┌──────────────────────┐     ┌─────────────────────┐
-│  supplier_requests      │     │  supplier_sources    │     │ team_catalog_items   │
-│  (user suggestions)     │────▶│  (global catalog)    │────▶│ (per-team picks)    │
-│  "I use X in country Y" │     │  admin-curated       │     │ with team markup    │
-└─────────────────────────┘     └──────────────────────┘     └─────────────────────┘
-```
+The key insight: **users never wait for live scrapes**. All data is pre-cached. The UI queries a local index.
+
+## What this means for Foreman
+
+We already have the right foundation:
+
+- `supplier_sources` — global shared product catalog (pre-populated per supplier)
+- `team_catalog_items` — per-team selections with team-specific pricing
+- `supplier_directory` — curated list of known suppliers
+- Firecrawl AI extraction — generic scraper for any domain
+
+What is missing is the **comparison layer**: the ability to see the same product (e.g. "Hager 16A RCBO") from multiple suppliers side-by-side with prices, and let the AI recommend the best option.
 
 ## Plan
 
-### Step 1: New `supplier_directory` table
+### Step 1: Add `manufacturer_part_number` to enable cross-supplier matching
 
-A curated list of known suppliers per country — starts with Irish suppliers, grows as users request more.
-
-```sql
-CREATE TABLE public.supplier_directory (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  supplier_name TEXT NOT NULL,
-  domain TEXT,
-  country_code TEXT NOT NULL DEFAULT 'IE',
-  trade_types TEXT[] DEFAULT '{}',
-  logo_url TEXT,
-  is_scrapeable BOOLEAN DEFAULT false,
-  product_count INTEGER DEFAULT 0,
-  status TEXT DEFAULT 'active',
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-Pre-seed with known Irish suppliers (Wesco, CityPlumbing, Chadwicks, etc.). As we expand, add suppliers per country.
-
-### Step 2: New `supplier_requests` table
-
-Users can suggest suppliers they use. This feeds a pipeline for us to evaluate and add support.
+Add a column to `supplier_sources` and `team_catalog_items` for manufacturer part number (MPN). This is the universal key that links the same product across different suppliers (like an ISBN for books).
 
 ```sql
-CREATE TABLE public.supplier_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  team_id UUID NOT NULL REFERENCES teams(id),
-  user_id UUID NOT NULL,
-  supplier_name TEXT NOT NULL,
-  supplier_website TEXT,
-  country_code TEXT NOT NULL,
-  trade_type TEXT,
-  notes TEXT,
-  status TEXT DEFAULT 'pending',
-  vote_count INTEGER DEFAULT 1,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+ALTER TABLE supplier_sources ADD COLUMN manufacturer_part_number TEXT;
+ALTER TABLE team_catalog_items ADD COLUMN manufacturer_part_number TEXT;
+CREATE INDEX idx_supplier_sources_mpn ON supplier_sources(manufacturer_part_number);
+CREATE INDEX idx_team_catalog_mpn ON team_catalog_items(manufacturer_part_number);
 ```
 
-When multiple teams request the same supplier, we increment `vote_count` (or track unique votes) so we can prioritize which suppliers to add next.
+Update the Firecrawl AI extraction prompt to also extract `manufacturer_part_number` / `mpn` from product pages.
 
-### Step 3: "Add Supplier" flow in Pricebook UI
+### Step 2: New "Price Compare" view in the Pricebook Detail page
 
-Replace the current "Supplier Website" option with a smarter two-path flow:
+Add a **Compare** tab/toggle alongside the existing product grid. When activated:
 
-**Path A — Browse Known Suppliers**
-- Show suppliers from `supplier_directory` filtered by the team's country
-- If a supplier has `is_scrapeable = true` and `product_count > 0`, show "Browse Catalog" (pulls from pre-populated `supplier_sources`)
-- If not scrapeable, show "CSV Upload" or "Manual" as the import method
+- For each product in the user's catalog, query `supplier_sources` for matching items (match by MPN, then fuzzy name + manufacturer)
+- Display a comparison card showing:
+  - Product name + image
+  - Price from each supplier (sorted cheapest first)
+  - Savings vs. current supplier
+  - "Switch Supplier" action to update the team catalog item
+- Search bar to compare any product across all indexed suppliers
 
-**Path B — Request a Supplier**
-- "Can't find your supplier?" button
-- Simple form: supplier name, website URL, country, trade type
-- Inserts into `supplier_requests`
-- Shows confirmation: "We'll notify you when this supplier is available"
-- We can review requests in an admin view and prioritize by vote count
+### Step 3: AI-powered product matching edge function
 
-### Step 4: Self-serve scraping for any URL (generic extractor)
+New edge function `compare-products` that:
 
-For users who want to import from an unsupported supplier NOW, add a generic Firecrawl-powered scraper that:
-- Uses Firecrawl's **JSON extraction** format with a prompt like "Extract product name, SKU, price, category from this page"
-- No custom parser needed — Firecrawl's LLM does the extraction
-- Works on any supplier website without us writing code
-- Results go into `team_catalog_items` directly (not the global catalog)
+- Accepts a product description, MPN, or catalog item ID
+- Searches `supplier_sources` across all suppliers using: exact MPN match → fuzzy name match → AI semantic match (using Gemini Flash)
+- Returns ranked alternatives with price comparisons
+- Calculates savings potential
 
-This is the key unlock for global scale — instead of writing regex parsers per supplier, use Firecrawl's AI extraction.
+### Step 4: "Smart Suggestions" from Foreman AI
 
-### Step 5: Country-aware supplier settings
+Extend the agent tools to include:
 
-Add `country_code` to the team's supplier settings so the directory filters correctly. Already have `COUNTRIES` constant with 20 countries.
+- `compare_product_prices` — "Find me the cheapest 16A RCBO across all suppliers"
+- `suggest_cheaper_alternative` — "Is there a cheaper option for this item in my pricebook?"
+- Surface proactive savings insights in the daily briefing: "Switching 3 items to Supplier B could save €240/month"
 
-## Files Modified
+### Step 5: Background price refresh (periodic, not live)
 
-- **New migration**: `supplier_directory` + `supplier_requests` tables with RLS
-- `src/components/pricebook/AddPriceSourceDialog.tsx` — replace "Website" with "Browse Suppliers" + "Request Supplier"
-- `src/components/pricebook/SupplierDirectoryBrowser.tsx` — NEW: browse known suppliers by country
-- `src/components/pricebook/RequestSupplierForm.tsx` — NEW: suggest a supplier
-- `supabase/functions/scrape-supplier-url/index.ts` — add generic Firecrawl JSON extraction fallback for unknown suppliers
-- `src/pages/PriceBook.tsx` — wire new flows
+Create a scheduled edge function `refresh-supplier-prices` that:
+
+- Runs weekly (triggered via cron or manual)
+- Re-scrapes a sample of `supplier_sources` items to detect price changes
+- Flags price increases/decreases in the UI
+- Alerts users: "Supplier X increased prices on 12 items by avg 8%"
+
+This is how comparison sites stay current without real-time scraping.
+
+### Step 6: Update the Pricebook onboarding
+
+Add a step explaining the comparison feature: "Add products from multiple suppliers to compare prices and find the best deals automatically."
+
+## Technical details
+
+### Product matching algorithm (in `compare-products` edge function)
+
+```text
+1. Exact MPN match         → confidence: 100%
+2. Same manufacturer + similar name (Levenshtein < 0.3) → confidence: 85%
+3. AI semantic match (Gemini Flash)  → confidence: 70%
+4. Category + price-range heuristic  → confidence: 50%
+```
+
+### Comparison query pattern (fast, local DB)
+
+```sql
+-- Find alternatives for a product
+SELECT * FROM supplier_sources
+WHERE manufacturer_part_number = $mpn
+   OR (manufacturer ILIKE $manufacturer AND product_name % $name)
+ORDER BY website_price ASC;
+```
+
+Uses the existing `supplier_sources` table — no live scraping needed.
+
+## Files modified
+
+- **New migration**: Add `manufacturer_part_number` column + indexes
+- `supabase/functions/scrape-supplier-url/index.ts` — add MPN to AI extraction prompt
+- `supabase/functions/discover-supplier-products/index.ts` — add MPN to batch extraction
+- `supabase/functions/compare-products/index.ts` — NEW: cross-supplier matching engine
+- `src/components/pricebook/PriceCompareView.tsx` — NEW: comparison UI
+- `src/pages/PricebookDetail.tsx` — add Compare tab
+- `src/hooks/useTeamCatalog.ts` — add MPN to interfaces
+- `supabase/functions/_shared/foreman-tool-definitions.ts` — add comparison tools
+- `src/components/pricebook/PricebookOnboarding.tsx` — add comparison step
 
 ## What this enables
 
-- **Ireland launch**: Pre-seed directory with Wesco + other Irish suppliers
-- **Global expansion**: Users in any country request their suppliers, we see demand signals and add support
-- **Self-serve**: Generic AI extraction lets users import from ANY website today without waiting for us
-- **No per-user scraping bloat**: Known suppliers use shared `supplier_sources`, unknown ones go to `team_catalog_items` directly
+- Users add multiple suppliers → see instant cross-supplier price comparisons
+- AI suggests cheaper alternatives automatically
+- Daily briefing surfaces savings opportunities
+- No live scraping — everything queries pre-indexed local data
+- Works with any supplier, any country — fully generic
 
