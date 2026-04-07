@@ -79,10 +79,10 @@ export default function ResetPassword() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a] px-4">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#00E6A0]" />
-          <p className="text-white/60 text-sm">Verifying reset link...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Verifying reset link...</p>
         </div>
       </div>
     );
@@ -90,21 +90,21 @@ export default function ResetPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a] px-4">
-        <Card className="w-full max-w-md text-center border-white/10 bg-white/5 backdrop-blur-sm">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md text-center">
           <CardHeader className="pb-4">
             <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[#00E6A0] to-[#00b37d] flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-[#0f172a]" />
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-white">Password Updated!</CardTitle>
-            <CardDescription className="text-base mt-2 text-white/60">
+            <CardTitle className="text-2xl">Password Updated!</CardTitle>
+            <CardDescription className="text-base mt-2">
               Your password has been successfully reset
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-muted-foreground">
               Redirecting you to the dashboard...
             </p>
           </CardContent>
@@ -114,21 +114,21 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f172a] px-4">
-      <Card className="w-full max-w-md border-white/10 bg-white/5 backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
-          <CardTitle className="text-2xl text-white">Set new password</CardTitle>
-          <CardDescription className="text-white/60">
+          <CardTitle className="text-2xl">Set new password</CardTitle>
+          <CardDescription>
             Enter your new password below
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/80">New Password</Label>
+              <Label htmlFor="password">New Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -137,11 +137,10 @@ export default function ResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-[#00E6A0]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-white/80">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -150,14 +149,13 @@ export default function ResetPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-[#00E6A0]"
               />
             </div>
           </CardContent>
           <CardFooter>
             <Button
               type="submit"
-              className="w-full gap-2 bg-[#00E6A0] text-[#0f172a] hover:bg-[#00cc8e] font-semibold"
+              className="w-full gap-2"
               disabled={submitting}
             >
               <Lock className="h-4 w-4" />
