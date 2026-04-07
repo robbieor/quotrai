@@ -18,6 +18,11 @@ export interface TemplateItem {
   is_material: boolean;
   item_type: "labor" | "material";
   sort_order: number;
+  catalog_item_id: string | null;
+  cost_price: number;
+  sell_price: number;
+  margin_percent: number;
+  line_group: string;
   created_at: string;
 }
 
@@ -44,6 +49,7 @@ export interface CreateTemplateInput {
   is_favorite?: boolean;
   labour_rate_default?: number;
   estimated_duration?: number;
+  default_display_mode?: string;
   items: Omit<TemplateItem, "id" | "template_id" | "created_at">[];
 }
 
@@ -210,6 +216,7 @@ export function useCreateTemplate() {
           is_favorite: input.is_favorite || false,
           labour_rate_default: input.labour_rate_default || 45,
           estimated_duration: input.estimated_duration || 1,
+          default_display_mode: input.default_display_mode || "detailed",
           is_system_template: false,
           is_active: true,
         })
@@ -232,6 +239,11 @@ export function useCreateTemplate() {
               is_material: item.is_material || false,
               item_type: item.item_type,
               sort_order: item.sort_order ?? index,
+              catalog_item_id: item.catalog_item_id || null,
+              cost_price: item.cost_price || 0,
+              sell_price: item.sell_price || item.unit_price || 0,
+              margin_percent: item.margin_percent || 0,
+              line_group: item.line_group || "Other",
             }))
           );
 
@@ -282,7 +294,7 @@ export function useUpdateTemplate() {
           const { error: itemsError } = await supabase
             .from("template_items")
             .insert(
-              items.map((item, index) => ({
+            items.map((item, index) => ({
                 template_id: id,
                 description: item.description,
                 quantity: item.quantity,
@@ -291,6 +303,11 @@ export function useUpdateTemplate() {
                 is_material: item.is_material || false,
                 item_type: item.item_type,
                 sort_order: item.sort_order ?? index,
+                catalog_item_id: item.catalog_item_id || null,
+                cost_price: item.cost_price || 0,
+                sell_price: item.sell_price || item.unit_price || 0,
+                margin_percent: item.margin_percent || 0,
+                line_group: item.line_group || "Other",
               }))
             );
 

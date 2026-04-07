@@ -36,7 +36,20 @@ interface LineItem {
   is_material: boolean;
   item_type: "labor" | "material";
   sort_order: number;
+  catalog_item_id: string | null;
+  cost_price: number;
+  sell_price: number;
+  margin_percent: number;
+  line_group: string;
 }
+
+const LINE_GROUPS = ["Materials", "Labour", "Other"] as const;
+const DISPLAY_MODES = [
+  { value: "detailed", label: "Detailed (Full Itemized)" },
+  { value: "grouped", label: "Grouped (Subtotals)" },
+  { value: "summary", label: "Summary (Lump Sum)" },
+  { value: "items_only", label: "Items Only (No Prices)" },
+] as const;
 
 export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFormDialogProps) {
   const [name, setName] = useState("");
@@ -45,6 +58,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
   const [isFavorite, setIsFavorite] = useState(false);
   const [labourRateDefault, setLabourRateDefault] = useState(45);
   const [estimatedDuration, setEstimatedDuration] = useState(1);
+  const [displayMode, setDisplayMode] = useState("detailed");
   const [items, setItems] = useState<LineItem[]>([]);
 
   const createTemplate = useCreateTemplate();
@@ -60,6 +74,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
       setIsFavorite(template.is_favorite);
       setLabourRateDefault(template.labour_rate_default || 45);
       setEstimatedDuration(template.estimated_duration || 1);
+      setDisplayMode((template as any).default_display_mode || "detailed");
       setItems(
         template.items?.map((item) => ({
           id: item.id,
@@ -70,6 +85,11 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
           is_material: item.is_material || false,
           item_type: item.item_type as "labor" | "material",
           sort_order: item.sort_order,
+          catalog_item_id: item.catalog_item_id || null,
+          cost_price: item.cost_price || 0,
+          sell_price: item.sell_price || item.unit_price || 0,
+          margin_percent: item.margin_percent || 0,
+          line_group: item.line_group || "Other",
         })) || []
       );
     } else {
@@ -84,6 +104,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
     setIsFavorite(false);
     setLabourRateDefault(45);
     setEstimatedDuration(1);
+    setDisplayMode("detailed");
     setItems([]);
   };
 
@@ -99,6 +120,11 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
         is_material: false,
         item_type: "labor",
         sort_order: items.length,
+        catalog_item_id: null,
+        cost_price: 0,
+        sell_price: 0,
+        margin_percent: 0,
+        line_group: "Other",
       },
     ]);
   };
@@ -110,9 +136,17 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
       // Sync is_material with item_type
       if (updates.item_type !== undefined) {
         updated.is_material = updates.item_type === "material";
+        updated.line_group = updates.item_type === "material" ? "Materials" : "Labour";
       }
       if (updates.is_material !== undefined) {
         updated.item_type = updates.is_material ? "material" : "labor";
+      }
+      // Auto-compute margin
+      if (updates.cost_price !== undefined || updates.sell_price !== undefined) {
+        const sell = updated.sell_price || 0;
+        const cost = updated.cost_price || 0;
+        updated.margin_percent = sell > 0 ? Math.round(((sell - cost) / sell) * 100) : 0;
+        updated.unit_price = sell;
       }
       return updated;
     }));
@@ -132,14 +166,20 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
       is_favorite: isFavorite,
       labour_rate_default: labourRateDefault,
       estimated_duration: estimatedDuration,
+      default_display_mode: displayMode,
       items: items.map((item, index) => ({
         description: item.description,
         quantity: item.quantity,
-        unit_price: item.unit_price,
+        unit_price: item.sell_price || item.unit_price,
         unit: item.unit,
         is_material: item.is_material,
         item_type: item.item_type,
         sort_order: index,
+        catalog_item_id: item.catalog_item_id,
+        cost_price: item.cost_price,
+        sell_price: item.sell_price || item.unit_price,
+        margin_percent: item.margin_percent,
+        line_group: item.line_group,
       })),
     };
 
@@ -153,7 +193,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
   };
 
   const calculateTotal = () => {
-    return items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    return items.reduce((sum, item) => sum + item.quantity * (item.sell_price || item.unit_price), 0);
   };
 
   return (
@@ -234,6 +274,22 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="displayMode">Output Mode</Label>
+              <Select value={displayMode} onValueChange={setDisplayMode}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISPLAY_MODES.map((mode) => (
+                    <SelectItem key={mode.value} value={mode.value}>
+                      {mode.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-end pb-2">
               <div className="flex items-center gap-3">
                 <Switch checked={isFavorite} onCheckedChange={setIsFavorite} id="favorite" />
@@ -263,37 +319,42 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                 {/* Header row */}
                 <div className="grid grid-cols-12 gap-2 px-3 text-xs font-medium text-muted-foreground">
                   <div className="col-span-1"></div>
-                  <div className="col-span-3">Description</div>
-                  <div className="col-span-2">Type</div>
-                  <div className="col-span-2">Unit</div>
+                  <div className="col-span-2">Description</div>
+                  <div className="col-span-1">Type</div>
+                  <div className="col-span-1">Group</div>
+                  <div className="col-span-1">Unit</div>
                   <div className="col-span-1">Qty</div>
-                  <div className="col-span-2">Price (€)</div>
+                  <div className="col-span-1">Cost (€)</div>
+                  <div className="col-span-1">Sell (€)</div>
+                  <div className="col-span-1">Margin</div>
+                  <div className="col-span-1">Line Total</div>
                   <div className="col-span-1"></div>
                 </div>
 
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-12 gap-2 items-start p-3 bg-muted/50 rounded-xl"
+                    className="grid grid-cols-12 gap-2 items-start p-2 bg-muted/50 rounded-lg"
                   >
                     <div className="col-span-1 flex items-center justify-center pt-2">
                       <GripVertical className="h-4 w-4 text-muted-foreground" />
                     </div>
 
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                       <Input
                         placeholder="Description"
                         value={item.description}
                         onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                        className="text-xs h-8"
                       />
                     </div>
 
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Select
                         value={item.item_type}
                         onValueChange={(v) => updateItem(item.id, { item_type: v as "labor" | "material" })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-xs h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -303,12 +364,28 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                       </Select>
                     </div>
 
-                    <div className="col-span-2">
+                    <div className="col-span-1">
+                      <Select
+                        value={item.line_group}
+                        onValueChange={(v) => updateItem(item.id, { line_group: v })}
+                      >
+                        <SelectTrigger className="text-xs h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LINE_GROUPS.map((g) => (
+                            <SelectItem key={g} value={g}>{g}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="col-span-1">
                       <Select
                         value={item.unit}
                         onValueChange={(v) => updateItem(item.id, { unit: v as TemplateUnit })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-xs h-8">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -328,17 +405,44 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                         step="0.01"
                         value={item.quantity}
                         onChange={(e) => updateItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                        className="text-xs h-8"
                       />
                     </div>
 
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Input
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.unit_price}
-                        onChange={(e) => updateItem(item.id, { unit_price: parseFloat(e.target.value) || 0 })}
+                        value={item.cost_price}
+                        onChange={(e) => updateItem(item.id, { cost_price: parseFloat(e.target.value) || 0 })}
+                        className="text-xs h-8"
+                        placeholder="0.00"
                       />
+                    </div>
+
+                    <div className="col-span-1">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.sell_price || item.unit_price}
+                        onChange={(e) => updateItem(item.id, { sell_price: parseFloat(e.target.value) || 0 })}
+                        className="text-xs h-8"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="col-span-1 flex items-center pt-1">
+                      <span className={`text-xs font-medium ${item.margin_percent > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {item.margin_percent > 0 ? `${item.margin_percent}%` : '—'}
+                      </span>
+                    </div>
+
+                    <div className="col-span-1 flex items-center pt-1">
+                      <span className="text-xs font-medium">
+                        €{((item.sell_price || item.unit_price) * item.quantity).toFixed(2)}
+                      </span>
                     </div>
 
                     <div className="col-span-1 flex justify-end">
@@ -347,17 +451,25 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                         variant="ghost"
                         size="icon"
                         onClick={() => removeItem(item.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-8 w-8"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
                 ))}
 
-                <div className="flex justify-end pt-2 pr-12">
+                <div className="flex justify-between items-end pt-2 px-3">
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    <p>Total Cost: €{items.reduce((sum, i) => sum + (i.cost_price || 0) * i.quantity, 0).toFixed(2)}</p>
+                    <p>Overall Margin: {(() => {
+                      const totalSell = items.reduce((sum, i) => sum + (i.sell_price || i.unit_price) * i.quantity, 0);
+                      const totalCost = items.reduce((sum, i) => sum + (i.cost_price || 0) * i.quantity, 0);
+                      return totalSell > 0 ? `${Math.round(((totalSell - totalCost) / totalSell) * 100)}%` : '—';
+                    })()}</p>
+                  </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Template Total</p>
+                    <p className="text-sm text-muted-foreground">Sell Total</p>
                     <p className="text-xl font-bold">€{calculateTotal().toLocaleString()}</p>
                   </div>
                 </div>

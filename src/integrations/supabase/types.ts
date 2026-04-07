@@ -1916,11 +1916,13 @@ export type Database = {
       invoice_items: {
         Row: {
           catalog_item_id: string | null
+          cost_price: number | null
           created_at: string
           description: string
           id: string
           invoice_id: string
           line_group: string
+          margin_percent: number | null
           quantity: number
           tax_rate: number | null
           total_price: number | null
@@ -1929,11 +1931,13 @@ export type Database = {
         }
         Insert: {
           catalog_item_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description: string
           id?: string
           invoice_id: string
           line_group?: string
+          margin_percent?: number | null
           quantity?: number
           tax_rate?: number | null
           total_price?: number | null
@@ -1942,11 +1946,13 @@ export type Database = {
         }
         Update: {
           catalog_item_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string
           id?: string
           invoice_id?: string
           line_group?: string
+          margin_percent?: number | null
           quantity?: number
           tax_rate?: number | null
           total_price?: number | null
@@ -3705,10 +3711,12 @@ export type Database = {
       quote_items: {
         Row: {
           catalog_item_id: string | null
+          cost_price: number | null
           created_at: string
           description: string
           id: string
           line_group: string
+          margin_percent: number | null
           quantity: number
           quote_id: string
           tax_rate: number | null
@@ -3718,10 +3726,12 @@ export type Database = {
         }
         Insert: {
           catalog_item_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description: string
           id?: string
           line_group?: string
+          margin_percent?: number | null
           quantity?: number
           quote_id: string
           tax_rate?: number | null
@@ -3731,10 +3741,12 @@ export type Database = {
         }
         Update: {
           catalog_item_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string
           id?: string
           line_group?: string
+          margin_percent?: number | null
           quantity?: number
           quote_id?: string
           tax_rate?: number | null
@@ -4927,42 +4939,64 @@ export type Database = {
       }
       template_items: {
         Row: {
+          catalog_item_id: string | null
+          cost_price: number | null
           created_at: string
           description: string
           id: string
           is_material: boolean | null
           item_type: string
+          line_group: string | null
+          margin_percent: number | null
           quantity: number
+          sell_price: number | null
           sort_order: number
           template_id: string
           unit: string | null
           unit_price: number
         }
         Insert: {
+          catalog_item_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description: string
           id?: string
           is_material?: boolean | null
           item_type?: string
+          line_group?: string | null
+          margin_percent?: number | null
           quantity?: number
+          sell_price?: number | null
           sort_order?: number
           template_id: string
           unit?: string | null
           unit_price?: number
         }
         Update: {
+          catalog_item_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string
           id?: string
           is_material?: boolean | null
           item_type?: string
+          line_group?: string | null
+          margin_percent?: number | null
           quantity?: number
+          sell_price?: number | null
           sort_order?: number
           template_id?: string
           unit?: string | null
           unit_price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "template_items_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "team_catalog_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "template_items_template_id_fkey"
             columns: ["template_id"]
