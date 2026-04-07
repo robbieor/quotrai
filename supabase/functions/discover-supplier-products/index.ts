@@ -444,7 +444,54 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ error: "Invalid mode. Use 'map' or 'scrape'." }), {
+    // ── MODE: SEARCH ─────────────────────────────────────────
+    if (mode === "search") {
+      const query = body.query;
+      if (!query || typeof query !== "string") {
+        return new Response(JSON.stringify({ error: "Query is required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`[discover:search] Searching: "${query}"`);
+
+      const searchRes = await fetch("https://api.firecrawl.dev/v1/search", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${firecrawlKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: `${query} buy product price`,
+          limit: 10,
+        }),
+      });
+
+      const searchData = await searchRes.json();
+      if (!searchRes.ok) {
+        console.error("[discover:search] Failed:", JSON.stringify(searchData));
+        return new Response(JSON.stringify({ error: `Search failed: ${searchData.error || searchRes.status}` }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const rawResults = searchData.data || searchData.results || [];
+      const results = rawResults
+        .filter((r: any) => r.url && r.title)
+        .map((r: any) => ({
+          url: r.url,
+          title: r.title || "",
+          description: r.description || r.excerpt || "",
+        }));
+
+      console.log(`[discover:search] Found ${results.length} results`);
+
+      return new Response(JSON.stringify({ results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid mode. Use 'map', 'scrape', or 'search'." }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
