@@ -641,16 +641,6 @@ export function CustomerFormDialog({
                   />
                 </div>
 
-                {/* Postcode */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">{labels.postcode}</label>
-                  <Input
-                    value={structuredFields.postcode}
-                    onChange={(e) => handleStructuredFieldChange("postcode", e.target.value)}
-                    className="h-9 text-sm mt-1"
-                    placeholder={labels.postcodePlaceholder}
-                  />
-                </div>
 
                 {/* Country */}
                 <div>
