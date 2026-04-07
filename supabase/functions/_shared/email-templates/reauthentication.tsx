@@ -10,31 +10,33 @@ import {
   Html,
   Img,
   Preview,
-  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
-
-const LOGO_URL = 'https://foreman.world/foreman-logo.png'
 
 interface ReauthenticationEmailProps {
   token: string
 }
 
+const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/foreman-logo.png'
+
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Your verification code for Foreman</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Section style={header}>
-          <Img src={LOGO_URL} alt="Foreman" width="140" style={logoImg} />
-        </Section>
-        <Section style={content}>
-          <Heading style={h1}>Confirm reauthentication</Heading>
-          <Text style={text}>Use the code below to confirm your identity:</Text>
-          <Text style={codeStyle}>{token}</Text>
-          <Text style={footer}>This code will expire shortly. If you didn't request this, you can safely ignore this email.</Text>
-        </Section>
+        <div style={header}>
+          <Img src={LOGO_URL} width="48" height="48" alt="Foreman" style={logo} />
+          <Text style={brandName}>Foreman</Text>
+        </div>
+        <Heading style={h1}>Confirm your identity</Heading>
+        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Text style={codeStyle}>{token}</Text>
+        <Text style={footer}>
+          This code will expire shortly. If you didn't request this, you can
+          safely ignore this email.
+        </Text>
+        <Text style={footerBrand}>© Foreman · foreman.world</Text>
       </Container>
     </Body>
   </Html>
@@ -42,12 +44,24 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }
-const container = { margin: '0 auto', maxWidth: '600px' }
-const header = { backgroundColor: '#0f172a', padding: '30px 25px', borderRadius: '12px 12px 0 0', textAlign: 'center' as const }
-const logoImg = { display: 'block' as const, margin: '0 auto' }
-const content = { padding: '30px 25px' }
-const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 20px' }
-const text = { fontSize: '14px', color: '#64748b', lineHeight: '1.5', margin: '0 0 25px' }
-const codeStyle = { fontFamily: 'Courier, monospace', fontSize: '28px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 30px', letterSpacing: '4px' }
-const footer = { fontSize: '12px', color: '#94a3b8', margin: '30px 0 0' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
+const container = { padding: '40px 32px', maxWidth: '480px', margin: '0 auto' }
+const header = { textAlign: 'center' as const, marginBottom: '32px' }
+const logo = { borderRadius: '12px', margin: '0 auto' }
+const brandName = { fontSize: '18px', fontWeight: 'bold' as const, color: '#0f172a', margin: '12px 0 0' }
+const h1 = { fontSize: '24px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 16px' }
+const text = { fontSize: '15px', color: '#475569', lineHeight: '1.6', margin: '0 0 28px' }
+const codeStyle = {
+  fontFamily: "'SF Mono', Courier, monospace",
+  fontSize: '28px',
+  fontWeight: 'bold' as const,
+  color: '#0f172a',
+  backgroundColor: '#f1f5f9',
+  padding: '16px 24px',
+  borderRadius: '10px',
+  textAlign: 'center' as const,
+  letterSpacing: '4px',
+  margin: '0 0 28px',
+}
+const footer = { fontSize: '13px', color: '#94a3b8', margin: '32px 0 0', lineHeight: '1.5' }
+const footerBrand = { fontSize: '12px', color: '#cbd5e1', margin: '24px 0 0', textAlign: 'center' as const }
