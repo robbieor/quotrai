@@ -250,11 +250,16 @@ async function lookupEircode(routingKey: string, originalQuery: string) {
       for (const r of (fullResults || [])) {
         const addr = r.address || {};
         if (addr.road || addr.house_number || addr.suburb) {
+          // Validate the result's postcode matches our routing key
+          const resultPostcode = (addr.postcode || "").replace(/\s+/g, "").toUpperCase();
+          const matchesRoutingKey = resultPostcode.startsWith(routingKey);
+          if (!matchesRoutingKey && resultPostcode.length > 0) continue;
+          
           const rLat = parseFloat(r.lat);
           const rLng = parseFloat(r.lon);
-          // Validate proximity — result must be within ~15km of expected area center
+          // Validate proximity — result must be within ~10km of expected area center
           const distKm = haversineKm(entry.lat, entry.lng, rLat, rLng);
-          if (distKm < 15) {
+          if (distKm < 10) {
             const result = buildResponse(r, addr, originalQuery);
             return {
               ...result,
