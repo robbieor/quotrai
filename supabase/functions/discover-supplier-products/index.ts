@@ -22,28 +22,105 @@ const TRADE_FAMILIES: Record<string, string[]> = {
 function classifyUrlToFamily(url: string): string {
   const lower = url.toLowerCase();
 
+  // 1. Try keyword matching first
   for (const [family, keywords] of Object.entries(TRADE_FAMILIES)) {
     if (keywords.some((kw) => lower.includes(kw))) return family;
   }
 
-  // Generic: extract from URL path segments
+  // 2. Try explicit /products/ or /category/ paths
   const match = lower.match(/\/products\/([^/]+)/i) || lower.match(/\/category\/([^/]+)/i);
   if (match) {
-    return match[1]
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const candidate = match[1];
+    // Skip if it looks like a product page (has file extension or is very long)
+    if (!candidate.includes(".") && candidate.length <= 50) {
+      return candidate
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
   }
 
+  // 3. Use URL path depth to find category-level segments
   try {
     const segments = new URL(url).pathname.split("/").filter(Boolean);
+    // Only use segment at depth 1-2 as a family (category-level paths)
+    // Deep paths (3+ segments) are product pages — use the category segment instead
     if (segments.length >= 2) {
-      return segments[segments.length - 2]
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c: string) => c.toUpperCase());
+      // Find the best category segment (prefer depth 1, then depth 2)
+      for (let i = 0; i < Math.min(segments.length - 1, 2); i++) {
+        const seg = segments[i];
+        // Skip segments that look like product pages
+        if (seg.includes(".html") || seg.includes(".htm") || seg.includes(".php")) continue;
+        if (seg.length > 50) continue;
+        // Skip generic segments
+        if (["products", "product", "category", "categories", "shop", "store", "catalogue", "catalog"].includes(seg)) continue;
+        
+        return seg
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c: string) => c.toUpperCase());
+      }
     }
   } catch {}
 
   return "Other";
+}
+
+/** Post-process families: merge garbage into "Other" */
+function cleanFamilies(
+  families: Record<string, { urls: string[]; subfamilies: Record<string, string[]> }>
+): Record<string, { urls: string[]; subfamilies: Record<string, string[]> }> {
+  const cleaned: typeof families = {};
+  let otherUrls: string[] = [];
+
+  for (const [name, data] of Object.entries(families)) {
+    const isGarbage =
+      // File extensions in family name
+      /\.(html?|php|aspx?|jsp|cfm)$/i.test(name) ||
+      // Too long — likely a product name, not a category
+      name.length > 60 ||
+      // Only 1 item — not a real category
+      data.urls.length < 2 ||
+      // Contains numbers that look like product codes
+      /\b\d{4,}\b/.test(name) ||
+      // Looks like a filename slug
+      name.includes(".");
+
+    if (isGarbage) {
+      otherUrls.push(...data.urls);
+    } else {
+      // Also clean subfamilies — merge tiny ones
+      const cleanedSubs: Record<string, string[]> = {};
+      let subOther: string[] = [];
+      for (const [subName, subUrls] of Object.entries(data.subfamilies)) {
+        const subIsGarbage =
+          /\.(html?|php|aspx?)$/i.test(subName) ||
+          subName.length > 60 ||
+          subUrls.length < 2 ||
+          subName.includes(".");
+        if (subIsGarbage) {
+          subOther.push(...subUrls);
+        } else {
+          cleanedSubs[subName] = subUrls;
+        }
+      }
+      if (subOther.length > 0) {
+        cleanedSubs["General"] = [...(cleanedSubs["General"] || []), ...subOther];
+      }
+      cleaned[name] = { urls: data.urls, subfamilies: cleanedSubs };
+    }
+  }
+
+  if (otherUrls.length > 0) {
+    if (!cleaned["Other"]) {
+      cleaned["Other"] = { urls: [], subfamilies: {} };
+    }
+    cleaned["Other"].urls.push(...otherUrls);
+    cleaned["Other"].subfamilies["Uncategorised"] = [
+      ...(cleaned["Other"].subfamilies["Uncategorised"] || []),
+      ...otherUrls,
+    ];
+  }
+
+  return cleaned;
 }
 
 function isProductUrl(url: string): boolean {
@@ -117,28 +194,35 @@ Deno.serve(async (req) => {
       const productUrls = allUrls.filter(isProductUrl);
 
       // Group by product family (smart classification)
-      const families: Record<string, { urls: string[]; subfamilies: Record<string, string[]> }> = {};
+      const rawFamilies: Record<string, { urls: string[]; subfamilies: Record<string, string[]> }> = {};
 
       for (const url of productUrls) {
         const family = classifyUrlToFamily(url);
 
-        if (!families[family]) {
-          families[family] = { urls: [], subfamilies: {} };
+        if (!rawFamilies[family]) {
+          rawFamilies[family] = { urls: [], subfamilies: {} };
         }
-        families[family].urls.push(url);
+        rawFamilies[family].urls.push(url);
 
         try {
           const segments = new URL(url).pathname.split("/").filter(Boolean);
           let sub = "General";
           if (segments.length >= 3) {
-            sub = segments[segments.length - 2]
-              .replace(/-/g, " ")
-              .replace(/\b\w/g, (c: string) => c.toUpperCase());
+            const candidate = segments[segments.length - 2];
+            // Only use as subfamily if it doesn't look like a product page
+            if (!candidate.includes(".") && candidate.length <= 50) {
+              sub = candidate
+                .replace(/-/g, " ")
+                .replace(/\b\w/g, (c: string) => c.toUpperCase());
+            }
           }
-          if (!families[family].subfamilies[sub]) families[family].subfamilies[sub] = [];
-          families[family].subfamilies[sub].push(url);
+          if (!rawFamilies[family].subfamilies[sub]) rawFamilies[family].subfamilies[sub] = [];
+          rawFamilies[family].subfamilies[sub].push(url);
         } catch {}
       }
+
+      // Clean up garbage families
+      const families = cleanFamilies(rawFamilies);
 
       const familyList = Object.entries(families)
         .map(([name, data]) => ({
