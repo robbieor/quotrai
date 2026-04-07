@@ -1,127 +1,59 @@
 
+# Eircode Integration via Autoaddress.ie API
 
-# Price Comparison Intelligence — Cross-Supplier Product Matching
-
-## How price comparison sites work
-
-Price comparison sites (like PriceRunner, Google Shopping, Idealo) use three techniques:
-
-1. **Product feeds / APIs** — Suppliers push structured data (CSV/XML/JSON) on a schedule. This is the fastest path and is how 90% of comparisons happen.
-2. **Pre-indexed scraping** — A background job scrapes supplier sites periodically and stores normalised data in a central database. Users query the local DB, not the live sites — that is why results appear instantly.
-3. **Product matching** — An AI/fuzzy-match layer maps the same physical product across different suppliers using SKU, manufacturer part number, EAN/barcode, or name similarity.
-
-The key insight: **users never wait for live scrapes**. All data is pre-cached. The UI queries a local index.
-
-## What this means for Foreman
-
-We already have the right foundation:
-
-- `supplier_sources` — global shared product catalog (pre-populated per supplier)
-- `team_catalog_items` — per-team selections with team-specific pricing
-- `supplier_directory` — curated list of known suppliers
-- Firecrawl AI extraction — generic scraper for any domain
-
-What is missing is the **comparison layer**: the ability to see the same product (e.g. "Hager 16A RCBO") from multiple suppliers side-by-side with prices, and let the AI recommend the best option.
-
-## Plan
-
-### Step 1: Add `manufacturer_part_number` to enable cross-supplier matching
-
-Add a column to `supplier_sources` and `team_catalog_items` for manufacturer part number (MPN). This is the universal key that links the same product across different suppliers (like an ISBN for books).
-
-```sql
-ALTER TABLE supplier_sources ADD COLUMN manufacturer_part_number TEXT;
-ALTER TABLE team_catalog_items ADD COLUMN manufacturer_part_number TEXT;
-CREATE INDEX idx_supplier_sources_mpn ON supplier_sources(manufacturer_part_number);
-CREATE INDEX idx_team_catalog_mpn ON team_catalog_items(manufacturer_part_number);
-```
-
-Update the Firecrawl AI extraction prompt to also extract `manufacturer_part_number` / `mpn` from product pages.
-
-### Step 2: New "Price Compare" view in the Pricebook Detail page
-
-Add a **Compare** tab/toggle alongside the existing product grid. When activated:
-
-- For each product in the user's catalog, query `supplier_sources` for matching items (match by MPN, then fuzzy name + manufacturer)
-- Display a comparison card showing:
-  - Product name + image
-  - Price from each supplier (sorted cheapest first)
-  - Savings vs. current supplier
-  - "Switch Supplier" action to update the team catalog item
-- Search bar to compare any product across all indexed suppliers
-
-### Step 3: AI-powered product matching edge function
-
-New edge function `compare-products` that:
-
-- Accepts a product description, MPN, or catalog item ID
-- Searches `supplier_sources` across all suppliers using: exact MPN match → fuzzy name match → AI semantic match (using Gemini Flash)
-- Returns ranked alternatives with price comparisons
-- Calculates savings potential
-
-### Step 4: "Smart Suggestions" from Foreman AI
-
-Extend the agent tools to include:
-
-- `compare_product_prices` — "Find me the cheapest 16A RCBO across all suppliers"
-- `suggest_cheaper_alternative` — "Is there a cheaper option for this item in my pricebook?"
-- Surface proactive savings insights in the daily briefing: "Switching 3 items to Supplier B could save €240/month"
-
-### Step 5: Background price refresh (periodic, not live)
-
-Create a scheduled edge function `refresh-supplier-prices` that:
-
-- Runs weekly (triggered via cron or manual)
-- Re-scrapes a sample of `supplier_sources` items to detect price changes
-- Flags price increases/decreases in the UI
-- Alerts users: "Supplier X increased prices on 12 items by avg 8%"
-
-This is how comparison sites stay current without real-time scraping.
-
-### Step 6: Update the Pricebook onboarding
-
-Add a step explaining the comparison feature: "Add products from multiple suppliers to compare prices and find the best deals automatically."
-
-## Technical details
-
-### Product matching algorithm (in `compare-products` edge function)
-
-```text
-1. Exact MPN match         → confidence: 100%
-2. Same manufacturer + similar name (Levenshtein < 0.3) → confidence: 85%
-3. AI semantic match (Gemini Flash)  → confidence: 70%
-4. Category + price-range heuristic  → confidence: 50%
-```
-
-### Comparison query pattern (fast, local DB)
-
-```sql
--- Find alternatives for a product
-SELECT * FROM supplier_sources
-WHERE manufacturer_part_number = $mpn
-   OR (manufacturer ILIKE $manufacturer AND product_name % $name)
-ORDER BY website_price ASC;
-```
-
-Uses the existing `supplier_sources` table — no live scraping needed.
-
-## Files modified
-
-- **New migration**: Add `manufacturer_part_number` column + indexes
-- `supabase/functions/scrape-supplier-url/index.ts` — add MPN to AI extraction prompt
-- `supabase/functions/discover-supplier-products/index.ts` — add MPN to batch extraction
-- `supabase/functions/compare-products/index.ts` — NEW: cross-supplier matching engine
-- `src/components/pricebook/PriceCompareView.tsx` — NEW: comparison UI
-- `src/pages/PricebookDetail.tsx` — add Compare tab
-- `src/hooks/useTeamCatalog.ts` — add MPN to interfaces
-- `supabase/functions/_shared/foreman-tool-definitions.ts` — add comparison tools
-- `src/components/pricebook/PricebookOnboarding.tsx` — add comparison step
+## Why Autoaddress.ie
+- Most popular Irish address API (An Post, Revenue, ESB all use it)
+- Returns full structured address + GPS coordinates from Eircode
+- Has autocomplete (type-ahead) for partial address entry
+- Free tier available (500 lookups/month), paid plans scale well
+- REST API, no SDK needed — simple edge function proxy
 
 ## What this enables
 
-- Users add multiple suppliers → see instant cross-supplier price comparisons
-- AI suggests cheaper alternatives automatically
-- Daily briefing surfaces savings opportunities
-- No live scraping — everything queries pre-indexed local data
-- Works with any supplier, any country — fully generic
+### 1. Client Address Entry (Customers page)
+- Add Eircode input field to customer address form
+- Type an Eircode → auto-populate: address line 1, line 2, city, county, country, lat/lng
+- Also support autocomplete: start typing an address → suggestions appear → select → fills all fields
+- Coordinates stored on customer record for job site geofencing
 
+### 2. Workforce Clock-In/Out Verification
+- When a worker clocks in, compare their live GPS against the Eircode's known coordinates
+- Auto-fill the job site address from Eircode if entered manually
+- Validate proximity: GPS must be within geofence radius of Eircode location
+- Show verification status: "Eircode verified — 15m from site" or "Location mismatch"
+
+## Implementation
+
+### Step 1: Store Autoaddress API key
+- Use `add_secret` tool for `AUTOADDRESS_API_KEY`
+- User gets key from https://account.autoaddress.ie
+
+### Step 2: Edge function `eircode-lookup`
+- `POST /eircode-lookup` with `{ query: "D02XY12" }` or `{ query: "12 Main St" }`
+- Proxies to Autoaddress.ie API (autocomplete + getEcad endpoints)
+- Returns: structured address, Eircode, lat/lng, confidence level
+- Validates input, handles errors
+
+### Step 3: Reusable `<EircodeAddressInput>` component
+- Combined input: user types Eircode OR address text
+- Shows autocomplete suggestions dropdown
+- On selection: fills parent form fields (line1, line2, city, region, postcode, lat, lng)
+- Works in: Customer form, Job site form, any address entry
+
+### Step 4: Wire into Customer form
+- Replace current manual address fields with `<EircodeAddressInput>` + manual override
+- Auto-populate lat/lng for geofencing
+
+### Step 5: Wire into Clock-In verification
+- When clock-in happens, if job site has Eircode-derived coordinates, validate GPS proximity
+- Show enhanced verification badge: "Eircode Verified" vs existing "GPS Verified"
+
+## Files
+- `supabase/functions/eircode-lookup/index.ts` — NEW edge function
+- `src/components/shared/EircodeAddressInput.tsx` — NEW reusable component
+- `src/components/customers/CustomerForm.tsx` — wire in Eircode input
+- `src/components/time-tracking/` — enhance GPS verification with Eircode data
+
+## No database changes needed
+- Customer table already has lat/lng, address fields
+- Job sites table already has coordinates
