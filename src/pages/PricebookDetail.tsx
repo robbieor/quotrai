@@ -4,7 +4,8 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon } from "lucide-react";
+import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon, SearchIcon } from "lucide-react";
+import { ProductSearchDialog } from "@/components/pricebook/ProductSearchDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
 import { usePricebooks } from "@/hooks/usePricebooks";
@@ -32,6 +33,7 @@ export default function PricebookDetail() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<CatalogItem | null>(null);
   const [showWebsiteImport, setShowWebsiteImport] = useState(false);
+  const [showProductSearch, setShowProductSearch] = useState(false);
   const [activeTab, setActiveTab] = useState("catalog");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
