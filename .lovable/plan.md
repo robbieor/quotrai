@@ -1,48 +1,62 @@
 
 
-# Audit Report: Price Book Import System
+# Fix Password Reset Flow + Brand Theme
 
-## Status: Partially Working — Critical Issue in Map Phase
+## Problems
 
-### What Works
-- **Single URL scrape** (scrape-supplier-url): Fully functional on v2 endpoint. Tested with Screwfix product page — correctly extracts product name, manufacturer, category, SKU, description.
-- **Batch scrape mode** (discover-supplier-products, mode=scrape): v2 endpoint and response parsing are correct. Will extract products when given valid URLs.
-- **Family classification logic**: The `cleanFamilies` function correctly filters garbage names (`.html` slugs, long names, single-item families).
-- **UI components**: PricebookDetail table view, BulkActionsBar, CatalogTable, PricebookStats, RecentItems all created.
+1. **ResetPassword.tsx race condition** — The `useEffect` calls `getSession()` immediately on mount. When the user clicks the reset link, Supabase processes the recovery token from the URL hash via `onAuthStateChange`. But `getSession()` fires before the token is exchanged, finds no session, and redirects to `/forgot-password` with "Invalid or expired reset link." The reset page never loads.
 
-### What Does NOT Work
-- **Map phase returns 0 product URLs** — the `isProductUrl` filter is too restrictive. Tested with screwfix.ie (138 URLs mapped, 0 passed filter) and cef.ie (3 URLs mapped, 0 passed). The filter only recognizes patterns like `/products/slug.html`, `/product/slug`, or `/p-xxx.html`. Real supplier sites use patterns like `/p/product-name/12345`, `/c/category`, `/browse/`, etc. that don't match.
-- **Map endpoint still on v1** — Line 171 uses `https://api.firecrawl.dev/v1/map`. While v1 map still works, it should be v2 for consistency and future-proofing.
-- **cef.ie only returned 3 URLs** — the Firecrawl map with `search: "products"` is too narrow for some sites. Should fall back to no search filter if few results.
+2. **Bland styling** — Both `ForgotPassword.tsx` and `ResetPassword.tsx` use plain white Cards on a bare background. They don't match the dark navy (#0f172a) premium aesthetic used across the rest of Foreman (login page, dashboard, etc.).
 
-### Root Cause
-The `isProductUrl` function (lines 126-135) is hardcoded for a narrow set of URL patterns. Most Irish/UK supplier websites don't match these patterns. This means the entire import wizard will always show "0 product families found" for most real suppliers.
+## Fix
 
----
+### 1. Fix the reset flow (ResetPassword.tsx)
 
-## Fix Plan
+Replace the `useEffect` session check with a proper `onAuthStateChange` listener that waits for the `PASSWORD_RECOVERY` event before allowing the form to render. This is the correct Supabase pattern:
 
-### 1. Rewrite `isProductUrl` to be inclusive rather than exclusive
-Instead of whitelisting URL patterns, **exclude** known non-product pages (homepages, login, contact, cart, about, blog, terms) and include everything else. This flips the logic from "only accept URLs that look like products" to "accept all URLs except ones that are clearly not products."
+```typescript
+useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // Token exchanged — user can now set new password
+      setReady(true);
+    }
+  });
+  
+  // Also check existing session (user may already be authenticated)
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) setReady(true);
+  });
+  
+  // Timeout fallback — if no event after 5s, redirect
+  const timeout = setTimeout(() => {
+    if (!ready) {
+      toast.error("Invalid or expired reset link.");
+      navigate("/forgot-password");
+    }
+  }, 5000);
+  
+  return () => { subscription.unsubscribe(); clearTimeout(timeout); };
+}, []);
+```
 
-### 2. Upgrade map endpoint to v2
-Line 171: Change `/v1/map` → `/v2/map`
+Show a loading spinner until `ready` is true.
 
-### 3. Add fallback for low URL counts
-If the initial map with `search: "products"` returns fewer than 10 URLs, retry without the search filter to get the full sitemap.
+### 2. Brand both pages to match Foreman theme
 
-### 4. Improve URL pattern recognition
-Add common supplier URL patterns: `/p/`, `/item/`, `/browse/`, `/shop/`, `/catalogue/`, `/catalog/`, numeric-only last segments (SKU pages like `/69974`).
+Apply the dark navy command center aesthetic to both ForgotPassword and ResetPassword:
 
-## Files Changed
+- **Dark navy background** (`bg-[#0f172a]`) with centered card — matching login page
+- **Logo** at top of card (already present, keep it)
+- **Primary green CTA buttons** (`bg-[#00E6A0] text-[#0f172a]`) instead of default
+- **Card styling** — subtle border, slight shadow, rounded corners matching the login page
+- **Typography** — use the same "Welcome back" / card description style from Login.tsx
+- **Success states** — green gradient checkmark circle (already partially there, just needs navy bg context)
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/discover-supplier-products/index.ts` | Rewrite `isProductUrl` to exclusion-based, upgrade map to v2, add low-count fallback |
-
-## Verification
-- Redeploy edge function
-- Test map mode with screwfix.ie — expect 50+ product URLs
-- Test map mode with cef.ie — expect product URLs returned
-- Test full wizard flow end-to-end
+| `src/pages/ResetPassword.tsx` | Fix session check race condition with `onAuthStateChange` + `PASSWORD_RECOVERY` event; apply dark navy branded theme |
+| `src/pages/ForgotPassword.tsx` | Apply dark navy branded theme matching login page |
 
