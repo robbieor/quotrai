@@ -124,7 +124,8 @@ function cleanFamilies(
 }
 
 /** Exclusion-based filter: accept all URLs except known non-product pages */
-function isProductUrl(url: string): boolean {
+function isProductUrl(url: any): boolean {
+  if (typeof url !== "string") return false;
   const lower = url.toLowerCase();
 
   try {
