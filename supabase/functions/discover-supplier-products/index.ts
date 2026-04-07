@@ -251,7 +251,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      let allUrls: string[] = mapData.links || mapData.data?.links || [];
+      let rawLinks: any[] = mapData.links || mapData.data?.links || [];
+      // v2 map may return objects {url, title, description} or plain strings
+      let allUrls: string[] = rawLinks.map((item: any) => typeof item === "string" ? item : item?.url).filter(Boolean);
       console.log(`[discover:map] Initial map returned ${allUrls.length} URLs with search filter`);
 
       // Fallback: if fewer than 10 URLs, retry without search filter
@@ -272,7 +274,8 @@ Deno.serve(async (req) => {
 
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json();
-          const fallbackUrls: string[] = fallbackData.links || fallbackData.data?.links || [];
+          const fallbackRaw: any[] = fallbackData.links || fallbackData.data?.links || [];
+          const fallbackUrls = fallbackRaw.map((item: any) => typeof item === "string" ? item : item?.url).filter(Boolean);
           console.log(`[discover:map] Fallback map returned ${fallbackUrls.length} URLs`);
           if (fallbackUrls.length > allUrls.length) {
             allUrls = fallbackUrls;
@@ -280,8 +283,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Log sample URLs for debugging
-      console.log(`[discover:map] Sample URLs:`, JSON.stringify(allUrls.slice(0, 10)));
       const productUrls = allUrls.filter(isProductUrl);
       console.log(`[discover:map] ${allUrls.length} total URLs, ${productUrls.length} passed product filter`);
 
