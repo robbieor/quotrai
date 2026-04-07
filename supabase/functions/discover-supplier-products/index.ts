@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
 
       for (const productUrl of batch) {
         try {
-          const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          const scrapeRes = await fetch("https://api.firecrawl.dev/v2/scrape", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${firecrawlKey}`,
@@ -300,11 +300,16 @@ Deno.serve(async (req) => {
 
           const scrapeData = await scrapeRes.json();
           if (!scrapeRes.ok) {
-            errors.push(`${productUrl}: ${scrapeData.error || scrapeRes.status}`);
+            const errDetail = `${productUrl}: ${JSON.stringify(scrapeData.error || scrapeData).slice(0, 200)} (status ${scrapeRes.status})`;
+            errors.push(errDetail);
+            console.error(`[discover:scrape] API error:`, errDetail);
             continue;
           }
 
           const extracted = scrapeData.data?.json || scrapeData.json || {};
+          if (!extracted.product_name) {
+            console.log(`[discover:scrape] No product_name from ${productUrl}, keys: ${Object.keys(scrapeData.data || scrapeData).join(',')}`);
+          }
 
           if (extracted.product_name && extracted.product_name.length >= 3) {
             const nameLower = extracted.product_name.toLowerCase();
@@ -324,7 +329,9 @@ Deno.serve(async (req) => {
             }
           }
         } catch (e) {
-          errors.push(`${productUrl}: ${e.message}`);
+          const errMsg = `${productUrl}: ${e.message}`;
+          errors.push(errMsg);
+          console.error(`[discover:scrape] Error:`, errMsg);
         }
 
         await new Promise((r) => setTimeout(r, 200));
