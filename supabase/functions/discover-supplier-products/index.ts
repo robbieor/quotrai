@@ -19,7 +19,8 @@ const TRADE_FAMILIES: Record<string, string[]> = {
   "Clearance & Offers": ["clearance", "sale", "offers", "discount", "deal"],
 };
 
-function classifyUrlToFamily(url: string): string {
+function classifyUrlToFamily(url: any): string {
+  if (typeof url !== "string") return "Other";
   const lower = url.toLowerCase();
 
   // 1. Try keyword matching first
@@ -52,7 +53,9 @@ function classifyUrlToFamily(url: string): string {
         if (seg.includes(".html") || seg.includes(".htm") || seg.includes(".php")) continue;
         if (seg.length > 50) continue;
         // Skip generic segments
-        if (["products", "product", "category", "categories", "shop", "store", "catalogue", "catalog"].includes(seg)) continue;
+        if (["products", "product", "category", "categories", "shop", "store", "catalogue", "catalog", "p", "c", "item", "browse", "brand"].includes(seg)) continue;
+        // Skip single-character segments
+        if (seg.length <= 1) continue;
         
         return seg
           .replace(/-/g, " ")
@@ -123,15 +126,74 @@ function cleanFamilies(
   return cleaned;
 }
 
-function isProductUrl(url: string): boolean {
+/** Exclusion-based filter: accept all URLs except known non-product pages */
+function isProductUrl(url: any): boolean {
+  if (typeof url !== "string") return false;
   const lower = url.toLowerCase();
-  if (lower.match(/\/products\/?$/)) return false;
-  if (lower.match(/\/category\/?$/)) return false;
-  if (lower.includes("/products/") && lower.match(/\/[^/]+\.[^/]+$/)) return true;
-  if (lower.includes("/product/")) return true;
-  if (lower.match(/\/p[-_][a-z0-9\-]+\.html$/i)) return true;
-  if (lower.match(/\/[a-z0-9\-]+\.html$/) && !lower.endsWith("/index.html")) return true;
-  return false;
+
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname.toLowerCase();
+    const segments = path.split("/").filter(Boolean);
+
+    // Reject homepage / root
+    if (segments.length === 0) return false;
+
+    // Reject known non-product paths
+    const excludeExact = [
+      "login", "signin", "sign-in", "signup", "sign-up", "register",
+      "cart", "basket", "checkout", "wishlist",
+      "contact", "contact-us", "about", "about-us",
+      "blog", "news", "press", "media",
+      "terms", "terms-and-conditions", "privacy", "privacy-policy", "cookie-policy", "cookies",
+      "faq", "faqs", "help", "support", "returns", "delivery", "shipping",
+      "sitemap", "sitemap.xml", "robots.txt",
+      "account", "my-account", "profile", "settings", "preferences",
+      "careers", "jobs-at", "work-with-us",
+      "trade-account", "open-account", "credit-account",
+      "branches", "find-a-branch", "store-locator", "stores",
+      "services", "our-services",
+    ];
+    if (segments.length === 1 && excludeExact.includes(segments[0])) return false;
+
+    // Reject paths starting with excluded prefixes
+    const excludePrefixes = [
+      "blog", "news", "press", "help", "support", "account", "my-account",
+      "careers", "api", "cdn", "assets", "static", "images", "img", "media",
+      "wp-content", "wp-admin", "wp-includes", "wp-json",
+      "admin", "cms", "backend",
+    ];
+    if (excludePrefixes.includes(segments[0])) return false;
+
+    // Reject file extensions that aren't product pages
+    const nonProductExts = [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".mp4", ".zip", ".css", ".js", ".xml", ".json", ".txt", ".ico"];
+    if (nonProductExts.some(ext => path.endsWith(ext))) return false;
+
+    // Reject category listing pages (no specific product)
+    const categoryOnlyPaths = [
+      /^\/products\/?$/,
+      /^\/category\/?$/,
+      /^\/categories\/?$/,
+      /^\/shop\/?$/,
+      /^\/catalogue\/?$/,
+      /^\/catalog\/?$/,
+      /^\/browse\/?$/,
+    ];
+    if (categoryOnlyPaths.some(rx => rx.test(path))) return false;
+
+    // Accept: needs at least 2 path segments (category + product) or known product patterns
+    if (segments.length >= 2) return true;
+
+    // Accept single-segment paths that look like product slugs (contain hyphens + numbers)
+    if (segments.length === 1 && /[a-z].*\d/.test(segments[0]) && segments[0].includes("-")) return true;
+
+    // Accept .html pages (likely product detail pages)
+    if (segments.length === 1 && path.endsWith(".html") && !path.endsWith("/index.html")) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -168,7 +230,8 @@ Deno.serve(async (req) => {
 
       console.log(`[discover:map] Mapping ${baseUrl}...`);
 
-      const mapRes = await fetch("https://api.firecrawl.dev/v1/map", {
+      // First attempt: map with "products" search filter
+      let mapRes = await fetch("https://api.firecrawl.dev/v2/map", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${firecrawlKey}`,
@@ -182,7 +245,7 @@ Deno.serve(async (req) => {
         }),
       });
 
-      const mapData = await mapRes.json();
+      let mapData = await mapRes.json();
       if (!mapRes.ok) {
         console.error("[discover:map] Failed:", JSON.stringify(mapData));
         return new Response(JSON.stringify({ error: `Site mapping failed: ${mapData.error || mapRes.status}` }), {
@@ -190,8 +253,40 @@ Deno.serve(async (req) => {
         });
       }
 
-      const allUrls: string[] = mapData.links || mapData.data?.links || [];
+      let rawLinks: any[] = mapData.links || mapData.data?.links || [];
+      // v2 map may return objects {url, title, description} or plain strings
+      let allUrls: string[] = rawLinks.map((item: any) => typeof item === "string" ? item : item?.url).filter(Boolean);
+      console.log(`[discover:map] Initial map returned ${allUrls.length} URLs with search filter`);
+
+      // Fallback: if fewer than 10 URLs, retry without search filter
+      if (allUrls.length < 10) {
+        console.log(`[discover:map] Low URL count (${allUrls.length}), retrying without search filter...`);
+        const fallbackRes = await fetch("https://api.firecrawl.dev/v2/map", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: baseUrl,
+            limit: 5000,
+            includeSubdomains: false,
+          }),
+        });
+
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          const fallbackRaw: any[] = fallbackData.links || fallbackData.data?.links || [];
+          const fallbackUrls = fallbackRaw.map((item: any) => typeof item === "string" ? item : item?.url).filter(Boolean);
+          console.log(`[discover:map] Fallback map returned ${fallbackUrls.length} URLs`);
+          if (fallbackUrls.length > allUrls.length) {
+            allUrls = fallbackUrls;
+          }
+        }
+      }
+
       const productUrls = allUrls.filter(isProductUrl);
+      console.log(`[discover:map] ${allUrls.length} total URLs, ${productUrls.length} passed product filter`);
 
       // Group by product family (smart classification)
       const rawFamilies: Record<string, { urls: string[]; subfamilies: Record<string, string[]> }> = {};
