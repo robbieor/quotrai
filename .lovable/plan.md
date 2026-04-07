@@ -1,48 +1,44 @@
 
 
-# Fix: Address Line 1 Empty on Eircode Lookup
+# Switch to Nominatim + Single Address Input
 
 ## Problem
-Google Geocoding returns Eircodes as area-level results (e.g. "Saint James") without `street_number` or `route` components. The current code only builds `line1` from those two fields, so it returns empty.
+1. The edge function uses Google Geocoding which gives poor results for Irish Eircodes (area-level only)
+2. The customer form has TWO address entry points: an "Address Search" autocomplete AND a separate "Address Line 1" with its own Eircode detection — confusing and redundant
 
-## Root Cause
-Line 132: `const line1 = streetNumber && route ? ... : route || sublocality || "";`
-Google returns "Saint James" as a `neighborhood` component, not `sublocality`. So all fallbacks miss it.
+## Solution
 
-## Fix (single file change)
+### 1. Rewrite `eircode-lookup` edge function to use Nominatim only
+- Remove all Google API calls (Geocoding + Places)
+- Use Nominatim for both `autocomplete` and `lookup` modes
+- Nominatim is completely free, already integrated, and handles Irish Eircodes with GPS coordinates
+- The `GOOGLE_MAPS_API_KEY` secret becomes unused (no cost)
 
-### `supabase/functions/eircode-lookup/index.ts`
+### 2. Merge into a single address input in CustomerFormDialog
+- Remove the separate "Address Search" (`AddressAutocomplete`) component from the form
+- Make the **Eircode/Postcode field** the single smart input — typing an Eircode, postcode, or address triggers lookup and auto-populates all fields (line1, line2, city, region, country) plus GPS coordinates
+- Keep the structured fields (line1, line2, city, region, postcode, country) below as editable fields that get auto-filled
+- Remove duplicate Eircode detection logic from `handleLine1Change`
 
-1. **Expand `line1` fallback chain** to include `neighborhood`, `premise`, `point_of_interest`, and finally extract the first segment of `formatted_address` as last resort:
+### 3. Update `useAddressAutocomplete` hook
+- Remove `searchAutoaddress` function (references Autoaddress.ie patterns)
+- Make `searchAddress` use only Nominatim directly (already the fallback path)
+- `lookupEircode` calls the edge function which now uses Nominatim
 
-```typescript
-const neighborhood = getComponent("neighborhood");
-const premise = getComponent("premise");
+## Files changed
 
-const line1 = streetNumber && route 
-  ? `${streetNumber} ${route}` 
-  : route 
-  || sublocality 
-  || neighborhood 
-  || premise
-  || (result.formatted_address?.split(",")[0]?.trim() || "");
-```
+| File | Change |
+|------|--------|
+| `supabase/functions/eircode-lookup/index.ts` | Rewrite to Nominatim-only (autocomplete + lookup) |
+| `src/components/customers/CustomerFormDialog.tsx` | Remove `AddressAutocomplete`, make postcode field the single smart entry with auto-populate |
+| `src/hooks/useAddressAutocomplete.ts` | Remove `searchAutoaddress`, clean up Autoaddress references |
+| `src/components/ui/address-autocomplete.tsx` | Remove Autoaddress-specific handling in `handleSelectSuggestion` |
 
-2. **Also populate `line2`** more intelligently — if line1 came from route and there's a neighborhood/sublocality, use that:
-
-```typescript
-const line2 = (line1 === route && (sublocality || neighborhood)) 
-  ? (sublocality || neighborhood) 
-  : (sublocality && route ? sublocality : "");
-```
-
-This ensures "D08 NRH1" → line1: "Saint James", with all other fields already populating correctly.
-
-## Files Changed
-- `supabase/functions/eircode-lookup/index.ts` — expand line1/line2 fallback logic (~3 lines changed)
-
-## Verification
-- Redeploy edge function
-- Test with "D08 NRH1" — expect line1: "Saint James"
-- Test with a full street address — expect line1: "123 Main Street" as before
+## UX flow (single input)
+1. User types Eircode (e.g. "D02 AF30") into the Eircode/Postcode field
+2. System detects it's a postcode, calls edge function
+3. All fields auto-populate: Address Line 1, Line 2, City, County, Country + GPS
+4. Map preview appears with pin
+5. User can manually edit any field after auto-populate
+6. Same flow works for UK postcodes and US ZIP codes
 
