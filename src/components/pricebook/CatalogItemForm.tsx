@@ -110,7 +110,7 @@ export function CatalogItemForm({ open, onOpenChange, item, onSubmit }: CatalogI
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Supplier</Label>
-                  <Input value={form.supplier_name} onChange={(e) => setForm({ ...form, supplier_name: e.target.value })} placeholder="Wesco" />
+                  <Input value={form.supplier_name} onChange={(e) => setForm({ ...form, supplier_name: e.target.value })} placeholder="e.g. My Supplier" />
                 </div>
                 <div>
                   <Label>SKU</Label>

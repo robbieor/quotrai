@@ -108,7 +108,7 @@ export function ImportFromUrlDialog({ open, onOpenChange, onImport }: ImportFrom
             <Label>Product URL</Label>
             <div className="flex gap-2 mt-1">
               <Input
-                placeholder="https://www.wesco.ie/products/cable-tray-123.html"
+                placeholder="https://www.supplier.com/products/example-product"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleFetch()}
@@ -117,7 +117,7 @@ export function ImportFromUrlDialog({ open, onOpenChange, onImport }: ImportFrom
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Fetch"}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Paste a specific product page URL (not a homepage). Supported: Wesco.ie</p>
+            <p className="text-xs text-muted-foreground mt-1">Paste a specific product page URL (not a homepage). AI extraction works on any supplier site.</p>
           </div>
 
           {product && (
