@@ -1,22 +1,28 @@
 
+# Switch to Google Geocoding API + Remove Autoaddress
 
-# Update Autoaddress API Key + Verify Integration
+## Why
+- Autoaddress.ie costs €83/month — not viable pre-revenue
+- Google Geocoding API is free under 28,000 requests/month
+- Returns structured addresses + GPS coordinates (lat/lng) for clock-in/out geofencing
 
-## What happens
+## Changes
 
-1. **Update the `AUTOADDRESS_API_KEY` secret** with the new valid key you provide
-2. **Test the `eircode-lookup` edge function** with a real Eircode (e.g. D02 AF30) to confirm the API responds with address + GPS coordinates
-3. **Verify end-to-end** — confirm the customer form auto-populates and lat/lng are returned for geofencing
+### 1. Update `eircode-lookup` edge function
+- Replace Autoaddress.ie calls with Google Geocoding API
+- Autocomplete mode → Google Places Autocomplete API
+- Lookup mode → Google Geocoding API (address/Eircode → structured address + lat/lng)
+- Keep the same request/response interface so the frontend doesn't need changes
+- Fallback to Nominatim if Google fails
 
-## No code changes needed
+### 2. Swap API key
+- Remove `AUTOADDRESS_API_KEY` secret
+- Add `GOOGLE_MAPS_API_KEY` secret (user gets from Google Cloud Console, enable Geocoding + Places APIs)
 
-The edge function and UI components are already built and working — they just need a valid API key. Once updated, the existing flow will activate:
-- Client form: type Eircode → address auto-populates
-- Clock-in: GPS verified against Eircode coordinates
+### 3. No frontend changes needed
+- The edge function returns the same JSON shape
+- `useAddressAutocomplete` hook and `CustomerFormDialog` work unchanged
 
-## Steps
-
-1. Use `update_secret` to replace `AUTOADDRESS_API_KEY` with your new key
-2. Call `eircode-lookup` edge function with a test Eircode to verify 200 response
-3. Confirm address fields + lat/lng are returned correctly
-
+## What the user needs
+- A Google Cloud project with Geocoding API + Places API enabled
+- An API key (restricted to server-side use) — free tier covers 28k geocode + 28k autocomplete requests/month
