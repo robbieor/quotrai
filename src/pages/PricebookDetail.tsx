@@ -131,6 +131,9 @@ export default function PricebookDetail() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setShowProductSearch(true)}>
+              <Search className="h-4 w-4 mr-1.5" /> Find Product
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setShowWebsiteImport(true)}>
               <Globe className="h-4 w-4 mr-1.5" /> Add Supplier
             </Button>
