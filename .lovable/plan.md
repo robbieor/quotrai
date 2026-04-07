@@ -1,104 +1,112 @@
 
 
-# Commercially Intelligent Templates — Internal Costing + Flexible Output
+# Global Supplier Strategy — User-Driven Discovery + Suggestion Pipeline
 
-## Summary
+## Problem
 
-Extend the template system to support internal trade pricing, pricebook linking, and margin tracking — while keeping customer-facing output controlled via the existing display mode system. The AI webhook flow continues working unchanged, with optional enrichment when pricebook data is available.
+The current system is hard-coded to Wesco (Ireland). As Foreman scales globally, we cannot manually build parsers for every supplier in every country. We need a system where:
+1. Users tell us which suppliers they use
+2. We can progressively build out a shared global catalog
+3. Users can still self-serve via CSV or manual entry for unsupported suppliers
 
-## Current State
+## Architecture
 
-- **templates** table: has `default_display_mode`, `labour_rate_default`, `estimated_duration`
-- **template_items** table: has `description`, `quantity`, `unit_price`, `unit`, `item_type` (labor/material), `is_material`, `sort_order`
-- **team_catalog_items**: has `cost_price`, `sell_price`, `website_price`, `markup_percent`, `discount_percent`, `supplier_name`
-- **quote_items / invoice_items**: already have `catalog_item_id` FK to `team_catalog_items`
-- **quotes / invoices**: already have `pricing_display_mode` (detailed/grouped/summary/items_only)
-- **george-webhook** `use_template_for_quote`: fetches template + items, builds quote items with `unit_price` only — no internal costing or pricebook resolution
-
-## Database Changes (2 migrations)
-
-### Migration 1: Extend `template_items` with internal costing + pricebook link
-
-```sql
-ALTER TABLE template_items
-  ADD COLUMN catalog_item_id UUID REFERENCES team_catalog_items(id) ON DELETE SET NULL,
-  ADD COLUMN cost_price NUMERIC DEFAULT 0,
-  ADD COLUMN sell_price NUMERIC DEFAULT 0,
-  ADD COLUMN margin_percent NUMERIC DEFAULT 0,
-  ADD COLUMN line_group TEXT DEFAULT 'Other';
+```text
+┌─────────────────────────┐     ┌──────────────────────┐     ┌─────────────────────┐
+│  supplier_requests      │     │  supplier_sources    │     │ team_catalog_items   │
+│  (user suggestions)     │────▶│  (global catalog)    │────▶│ (per-team picks)    │
+│  "I use X in country Y" │     │  admin-curated       │     │ with team markup    │
+└─────────────────────────┘     └──────────────────────┘     └─────────────────────┘
 ```
 
-- `catalog_item_id` — optional link to pricebook item (SET NULL if catalog item deleted, so template still works)
-- `cost_price` — trade/internal cost (pulled from pricebook or entered manually)
-- `sell_price` — customer-facing price (defaults to existing `unit_price` for backward compat)
-- `margin_percent` — computed or stored margin basis
-- `line_group` — for grouped display mode (Materials, Labour, Other)
+## Plan
 
-### Migration 2: Add internal costing columns to `quote_items` and `invoice_items`
+### Step 1: New `supplier_directory` table
+
+A curated list of known suppliers per country — starts with Irish suppliers, grows as users request more.
 
 ```sql
-ALTER TABLE quote_items
-  ADD COLUMN cost_price NUMERIC DEFAULT 0,
-  ADD COLUMN margin_percent NUMERIC DEFAULT 0;
-
-ALTER TABLE invoice_items
-  ADD COLUMN cost_price NUMERIC DEFAULT 0,
-  ADD COLUMN margin_percent NUMERIC DEFAULT 0;
+CREATE TABLE public.supplier_directory (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_name TEXT NOT NULL,
+  domain TEXT,
+  country_code TEXT NOT NULL DEFAULT 'IE',
+  trade_types TEXT[] DEFAULT '{}',
+  logo_url TEXT,
+  is_scrapeable BOOLEAN DEFAULT false,
+  product_count INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 ```
 
-These are internal-only columns — never exposed to the customer portal or PDF output.
+Pre-seed with known Irish suppliers (Wesco, CityPlumbing, Chadwicks, etc.). As we expand, add suppliers per country.
 
-## Code Changes
+### Step 2: New `supplier_requests` table
 
-### 1. Template Form Dialog (`src/components/templates/TemplateFormDialog.tsx`)
+Users can suggest suppliers they use. This feeds a pipeline for us to evaluate and add support.
 
-- Add a **Display Mode** selector (detailed / grouped / summary / items_only) bound to `default_display_mode`
-- Add a **Line Group** dropdown per item (Materials / Labour / Other)
-- For material items, add an optional **"Link to Pricebook"** button that opens a catalog picker
-- When linked: auto-fill `cost_price` from catalog `cost_price`, `sell_price` from catalog `sell_price`
-- When not linked: allow manual `cost_price` and `sell_price` entry
-- Show computed margin inline: `((sell - cost) / sell * 100)`
-- Backward compat: existing templates keep working — new columns default to 0
+```sql
+CREATE TABLE public.supplier_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id UUID NOT NULL REFERENCES teams(id),
+  user_id UUID NOT NULL,
+  supplier_name TEXT NOT NULL,
+  supplier_website TEXT,
+  country_code TEXT NOT NULL,
+  trade_type TEXT,
+  notes TEXT,
+  status TEXT DEFAULT 'pending',
+  vote_count INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
 
-### 2. useTemplates hook (`src/hooks/useTemplates.ts`)
+When multiple teams request the same supplier, we increment `vote_count` (or track unique votes) so we can prioritize which suppliers to add next.
 
-- Update `TemplateItem` interface to include `catalog_item_id`, `cost_price`, `sell_price`, `margin_percent`, `line_group`
-- Update `Template` interface to include `default_display_mode`
-- Update create/update mutations to persist new fields
+### Step 3: "Add Supplier" flow in Pricebook UI
 
-### 3. Template Picker (`src/components/quotes/TemplatePicker.tsx`)
+Replace the current "Supplier Website" option with a smarter two-path flow:
 
-- When a template is selected for a quote, pass through internal costing data alongside the line items
-- Set `pricing_display_mode` on the new quote from the template's `default_display_mode`
+**Path A — Browse Known Suppliers**
+- Show suppliers from `supplier_directory` filtered by the team's country
+- If a supplier has `is_scrapeable = true` and `product_count > 0`, show "Browse Catalog" (pulls from pre-populated `supplier_sources`)
+- If not scrapeable, show "CSV Upload" or "Manual" as the import method
 
-### 4. George Webhook — `use_template_for_quote` (`supabase/functions/george-webhook/index.ts`)
+**Path B — Request a Supplier**
+- "Can't find your supplier?" button
+- Simple form: supplier name, website URL, country, trade type
+- Inserts into `supplier_requests`
+- Shows confirmation: "We'll notify you when this supplier is available"
+- We can review requests in an admin view and prioritize by vote count
 
-Extend the existing case block (lines 964-1220):
+### Step 4: Self-serve scraping for any URL (generic extractor)
 
-- Fetch template items with new columns: `catalog_item_id`, `cost_price`, `sell_price`, `line_group`
-- For items with `catalog_item_id`, resolve current pricing from `team_catalog_items` (fresh cost/sell)
-- For items without, use the template's manual `cost_price` / `sell_price` (fall back to `unit_price` if both are 0)
-- When inserting `quote_items`, include `cost_price`, `catalog_item_id`, `margin_percent`, `line_group`
-- Set `pricing_display_mode` on the quote from `template.default_display_mode`
-- Response message unchanged — total still uses sell prices
+For users who want to import from an unsupported supplier NOW, add a generic Firecrawl-powered scraper that:
+- Uses Firecrawl's **JSON extraction** format with a prompt like "Extract product name, SKU, price, category from this page"
+- No custom parser needed — Firecrawl's LLM does the extraction
+- Works on any supplier website without us writing code
+- Results go into `team_catalog_items` directly (not the global catalog)
 
-### 5. Quote/Invoice Builders (existing pages)
+This is the key unlock for global scale — instead of writing regex parsers per supplier, use Firecrawl's AI extraction.
 
-- When items are created from a template, populate `cost_price` and `margin_percent` on each line
-- These fields are stored but NOT rendered in customer-facing views (portal, PDF)
-- Internal margin summary can be shown in the builder sidebar (future enhancement, not blocking)
+### Step 5: Country-aware supplier settings
 
-## What does NOT change
-
-- Existing templates with no pricebook links continue working exactly as before (all new columns have defaults)
-- The AI webhook still accepts the same parameters — enrichment is additive
-- Customer-facing rendering uses the same `pricing_display_mode` system already built
-- No new edge functions needed
+Add `country_code` to the team's supplier settings so the directory filters correctly. Already have `COUNTRIES` constant with 20 countries.
 
 ## Files Modified
 
-- `src/hooks/useTemplates.ts` — extended interfaces + mutations
-- `src/components/templates/TemplateFormDialog.tsx` — display mode selector, line group, pricebook link, cost/sell fields
-- `src/components/quotes/TemplatePicker.tsx` — pass display mode + costing data
-- `supabase/functions/george-webhook/index.ts` — resolve pricebook pricing, persist internal costing on quotes
+- **New migration**: `supplier_directory` + `supplier_requests` tables with RLS
+- `src/components/pricebook/AddPriceSourceDialog.tsx` — replace "Website" with "Browse Suppliers" + "Request Supplier"
+- `src/components/pricebook/SupplierDirectoryBrowser.tsx` — NEW: browse known suppliers by country
+- `src/components/pricebook/RequestSupplierForm.tsx` — NEW: suggest a supplier
+- `supabase/functions/scrape-supplier-url/index.ts` — add generic Firecrawl JSON extraction fallback for unknown suppliers
+- `src/pages/PriceBook.tsx` — wire new flows
+
+## What this enables
+
+- **Ireland launch**: Pre-seed directory with Wesco + other Irish suppliers
+- **Global expansion**: Users in any country request their suppliers, we see demand signals and add support
+- **Self-serve**: Generic AI extraction lets users import from ANY website today without waiting for us
+- **No per-user scraping bloat**: Known suppliers use shared `supplier_sources`, unknown ones go to `team_catalog_items` directly
 
