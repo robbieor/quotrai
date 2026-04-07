@@ -86,7 +86,64 @@ export function AddressAutocomplete({
     setIsOpen(true);
   };
 
-  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+  const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
+    const isAutoaddress = (suggestion as any)._autoaddress_id || (suggestion as any)._eircode;
+    
+    if (isAutoaddress) {
+      // Autoaddress result — resolve full address via lookup
+      const displayName = suggestion.display_name;
+      onChange(displayName);
+      setHasSelectedAddress(true);
+      setIsOpen(false);
+      clearSuggestions();
+      setPostcodeHint('eircode');
+
+      // Do a full Eircode/address lookup to get lat/lng
+      const eircode = (suggestion as any)._eircode;
+      const lookupQuery = eircode || displayName;
+
+      try {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        if (projectId) {
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/eircode-lookup`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: lookupQuery, mode: 'lookup' }),
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.latitude && data.longitude && onAddressSelect) {
+              onChange(data.formattedAddress || displayName);
+              onAddressSelect({
+                formattedAddress: data.formattedAddress || displayName,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                postcode: data.postcode || eircode,
+                city: data.city,
+                county: data.region,
+                country: data.country || 'Ireland',
+                countryCode: data.countryCode || 'ie',
+                line1: data.line1,
+                line2: data.line2,
+                region: data.region,
+                confidence: data.confidence || 'high',
+                isPOBox: false,
+              });
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Autoaddress resolution failed:', err);
+      }
+      return;
+    }
+
+    // Standard Nominatim result
     const formattedAddress = formatAddressFromSuggestion(suggestion);
     onChange(formattedAddress);
     setHasSelectedAddress(true);
