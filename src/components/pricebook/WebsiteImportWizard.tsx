@@ -258,12 +258,16 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
         .filter((f) => selectedFamilies.has(f.name))
         .flatMap((f) => getSelectedUrlsForFamily(f));
 
+      const BATCH_SIZE = 30;
       const totalToScrape = allUrls.length;
+      const totalBatches = Math.ceil(totalToScrape / BATCH_SIZE);
       setScrapeProgress({ done: 0, total: totalToScrape });
 
       const allProducts: ScrapedProduct[] = [];
-      for (let offset = 0; offset < allUrls.length; offset += 200) {
-        const batch = allUrls.slice(offset, offset + 200);
+      for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+        const offset = batchIdx * BATCH_SIZE;
+        const batch = allUrls.slice(offset, offset + BATCH_SIZE);
+
         const { data, error: fnErr } = await supabase.functions.invoke("discover-supplier-products", {
           body: { mode: "scrape", urls: batch },
         });
@@ -272,7 +276,8 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
 
         const products: ScrapedProduct[] = data?.products || [];
         allProducts.push(...products);
-        setScrapeProgress({ done: Math.min(offset + 200, totalToScrape), total: totalToScrape });
+        const done = Math.min(offset + batch.length, totalToScrape);
+        setScrapeProgress({ done, total: totalToScrape });
         setScrapedProducts([...allProducts]);
       }
 
@@ -610,11 +615,18 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
                 className="h-2"
               />
               <p className="text-sm text-muted-foreground text-center">
-                Scraping {scrapeProgress.done} of {scrapeProgress.total} product pages...
+                {scrapeProgress.done === 0
+                  ? "Preparing first batch..."
+                  : `Scraped ${scrapeProgress.done} of ${scrapeProgress.total} pages`}
               </p>
               {scrapedProducts.length > 0 && (
                 <p className="text-xs text-muted-foreground text-center">
-                  {scrapedProducts.length} products found so far
+                  {scrapedProducts.length} products extracted so far
+                </p>
+              )}
+              {scrapeProgress.total > 100 && scrapeProgress.done === 0 && (
+                <p className="text-xs text-muted-foreground text-center mt-1">
+                  Large import — this may take a few minutes
                 </p>
               )}
             </div>
