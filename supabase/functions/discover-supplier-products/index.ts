@@ -19,7 +19,8 @@ const TRADE_FAMILIES: Record<string, string[]> = {
   "Clearance & Offers": ["clearance", "sale", "offers", "discount", "deal"],
 };
 
-function classifyUrlToFamily(url: string): string {
+function classifyUrlToFamily(url: any): string {
+  if (typeof url !== "string") return "Other";
   const lower = url.toLowerCase();
 
   // 1. Try keyword matching first
