@@ -1,21 +1,24 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3 } from "lucide-react";
+import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
 import { usePricebooks } from "@/hooks/usePricebooks";
 import { CatalogSidebar } from "@/components/pricebook/CatalogSidebar";
 import { CatalogProductCard } from "@/components/pricebook/CatalogProductCard";
+import { CatalogTable } from "@/components/pricebook/CatalogTable";
+import { BulkActionsBar } from "@/components/pricebook/BulkActionsBar";
 import { CatalogItemForm } from "@/components/pricebook/CatalogItemForm";
 import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PriceCompareView } from "@/components/pricebook/PriceCompareView";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function PricebookDetail() {
   const { id } = useParams<{ id: string }>();
@@ -30,11 +33,72 @@ export default function PricebookDetail() {
   const [editItem, setEditItem] = useState<CatalogItem | null>(null);
   const [showWebsiteImport, setShowWebsiteImport] = useState(false);
   const [activeTab, setActiveTab] = useState("catalog");
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const handleSearch = (q: string) => setFilters({ ...filters, search: q });
 
-  // Get unique supplier names from items
   const uniqueSuppliers = [...new Set(items.map((i) => i.supplier_name).filter(Boolean))];
+
+  const handleSelectToggle = (itemId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === items.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(items.map((i) => i.id)));
+    }
+  };
+
+  const handleInlineUpdate = (itemId: string, updates: Partial<CatalogItem>) => {
+    updateItem.mutate({ id: itemId, ...updates });
+  };
+
+  const handleBulkDelete = async () => {
+    for (const delId of selectedIds) {
+      deleteItem.mutate(delId);
+    }
+    setSelectedIds(new Set());
+    toast.success(`${selectedIds.size} items deleted`);
+  };
+
+  const handleBulkMarkup = (percent: number) => {
+    for (const itemId of selectedIds) {
+      const item = items.find((i) => i.id === itemId);
+      if (item) {
+        const newSell = +(item.cost_price * (1 + percent / 100)).toFixed(2);
+        updateItem.mutate({ id: itemId, markup_percent: percent, sell_price: newSell });
+      }
+    }
+    setSelectedIds(new Set());
+    toast.success(`Markup updated to ${percent}% for ${selectedIds.size} items`);
+  };
+
+  const handleExport = () => {
+    const exportItems = items.filter((i) => selectedIds.has(i.id));
+    const csv = [
+      "Name,SKU,Supplier,Cost,Sell,Margin%,Category",
+      ...exportItems.map((i) => {
+        const margin = i.sell_price > 0 ? (((i.sell_price - i.cost_price) / i.sell_price) * 100).toFixed(1) : "0";
+        return `"${i.item_name}","${i.supplier_sku || ""}","${i.supplier_name || ""}",${i.cost_price},${i.sell_price},${margin},"${i.category || ""}"`;
+      }),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${pricebook?.name || "pricebook"}-export.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${exportItems.length} items`);
+  };
 
   const sidebar = (
     <CatalogSidebar filters={filters} onFiltersChange={setFilters} options={filterOptions} />
@@ -54,14 +118,13 @@ export default function PricebookDetail() {
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 {uniqueSuppliers.length > 0 && (
                   <span className="text-xs text-muted-foreground">
-                    {uniqueSuppliers.length === 1
-                      ? uniqueSuppliers[0]
-                      : `${uniqueSuppliers.length} suppliers`}
+                    {uniqueSuppliers.length === 1 ? uniqueSuppliers[0] : `${uniqueSuppliers.length} suppliers`}
                   </span>
                 )}
                 {pricebook?.trade_type && (
                   <Badge variant="outline" className="text-[10px]">{pricebook.trade_type}</Badge>
                 )}
+                <span className="text-xs text-muted-foreground">{items.length} items</span>
               </div>
             </div>
           </div>
@@ -76,14 +139,32 @@ export default function PricebookDetail() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="h-8">
-            <TabsTrigger value="catalog" className="text-xs">Products</TabsTrigger>
-            <TabsTrigger value="compare" className="text-xs">
-              <BarChart3 className="h-3 w-3 mr-1" /> Compare Prices
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between">
+            <TabsList className="h-8">
+              <TabsTrigger value="catalog" className="text-xs">Products</TabsTrigger>
+              <TabsTrigger value="compare" className="text-xs">
+                <BarChart3 className="h-3 w-3 mr-1" /> Compare Prices
+              </TabsTrigger>
+            </TabsList>
+            {activeTab === "catalog" && (
+              <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 rounded ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <TableIcon className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("card")}
+                  className={`p-1.5 rounded ${viewMode === "card" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
 
-          <TabsContent value="catalog" className="mt-4 space-y-4">
+          <TabsContent value="catalog" className="mt-4 space-y-3">
             {/* Search */}
             <div className="flex gap-2">
               <div className="relative flex-1 max-w-md">
@@ -105,6 +186,15 @@ export default function PricebookDetail() {
               </Sheet>
             </div>
 
+            {/* Bulk actions */}
+            <BulkActionsBar
+              selectedCount={selectedIds.size}
+              onClear={() => setSelectedIds(new Set())}
+              onBulkDelete={handleBulkDelete}
+              onBulkMarkup={handleBulkMarkup}
+              onExport={handleExport}
+            />
+
             {/* Content */}
             <div className="flex gap-6">
               <div className="hidden sm:block w-48 flex-shrink-0">
@@ -121,6 +211,17 @@ export default function PricebookDetail() {
                     description="Import products from a supplier website or add items manually."
                     actionLabel="Import from Website"
                     onAction={() => setShowWebsiteImport(true)}
+                  />
+                ) : viewMode === "table" ? (
+                  <CatalogTable
+                    items={items}
+                    selectedIds={selectedIds}
+                    onSelectToggle={handleSelectToggle}
+                    onSelectAll={handleSelectAll}
+                    onEdit={(i) => { setEditItem(i); setShowForm(true); }}
+                    onDelete={(delId) => deleteItem.mutate(delId)}
+                    onToggleFav={(favId, fav) => toggleFavourite.mutate({ id: favId, is_favourite: fav })}
+                    onInlineUpdate={handleInlineUpdate}
                   />
                 ) : (
                   <div className="space-y-2">
