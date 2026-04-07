@@ -661,4 +661,65 @@ export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
       },
     },
   },
+
+  // ==================== PRICE BOOK / CATALOG ====================
+  {
+    type: "client",
+    name: "search_catalog",
+    description: "Search the team's price book catalog for products by name, SKU, category, or supplier. Returns matching items with pricing.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Search term (product name, SKU, or keyword)." },
+        category: { type: "string", description: "Filter by product category." },
+        supplier: { type: "string", description: "Filter by supplier name." },
+        limit: { type: "number", description: "Max results (default 10)." },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    type: "client",
+    name: "suggest_product",
+    description: "Suggest the best matching product from the price book for a job requirement. Uses AI to match description to catalog items. Returns product details, pricing, and alternatives.",
+    parameters: {
+      type: "object",
+      properties: {
+        description: { type: "string", description: "Description of what product is needed (e.g. '16A RCBO', '2.5mm twin and earth cable', 'LED downlight')." },
+        job_type: { type: "string", description: "Type of job for context (e.g. 'consumer unit upgrade', 'rewire', 'EV charger install')." },
+        quantity: { type: "number", description: "Quantity needed." },
+        budget_max: { type: "number", description: "Maximum budget per unit." },
+      },
+      required: ["description"],
+    },
+  },
+  {
+    type: "client",
+    name: "get_product_price",
+    description: "Get the current price for a specific product from the price book by name or SKU.",
+    parameters: {
+      type: "object",
+      properties: {
+        product_name: { type: "string", description: "Product name to look up." },
+        sku: { type: "string", description: "Product SKU." },
+      },
+    },
+  },
+  {
+    type: "client",
+    name: "add_catalog_to_quote",
+    description: "Add a product from the price book catalog directly to an existing or new quote. Pulls pricing automatically.",
+    parameters: {
+      type: "object",
+      properties: {
+        product_name: { type: "string", description: "Product name to find in catalog." },
+        sku: { type: "string", description: "Product SKU." },
+        quantity: { type: "number", description: "Quantity to add (default 1)." },
+        quote_id: { type: "string", description: "Existing quote ID to add to." },
+        display_number: { type: "string", description: "Quote display number." },
+        customer_name: { type: "string", description: "Customer name (creates new quote if no quote_id)." },
+      },
+      required: ["product_name"],
+    },
+  },
 ];

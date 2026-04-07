@@ -62,10 +62,9 @@ serve(async (req) => {
     const currentAgent = await getRes.json();
     const currentToolCount = currentAgent?.conversation_config?.tools?.length || 0;
 
-    // PATCH only the tools array inside conversation_config
+    // Build a minimal patch: only set tools, explicitly clear tool_ids
     const patchBody = {
       conversation_config: {
-        ...currentAgent.conversation_config,
         tools,
       },
     };
