@@ -1,59 +1,22 @@
 
-# Eircode Integration via Autoaddress.ie API
 
-## Why Autoaddress.ie
-- Most popular Irish address API (An Post, Revenue, ESB all use it)
-- Returns full structured address + GPS coordinates from Eircode
-- Has autocomplete (type-ahead) for partial address entry
-- Free tier available (500 lookups/month), paid plans scale well
-- REST API, no SDK needed — simple edge function proxy
+# Update Autoaddress API Key + Verify Integration
 
-## What this enables
+## What happens
 
-### 1. Client Address Entry (Customers page)
-- Add Eircode input field to customer address form
-- Type an Eircode → auto-populate: address line 1, line 2, city, county, country, lat/lng
-- Also support autocomplete: start typing an address → suggestions appear → select → fills all fields
-- Coordinates stored on customer record for job site geofencing
+1. **Update the `AUTOADDRESS_API_KEY` secret** with the new valid key you provide
+2. **Test the `eircode-lookup` edge function** with a real Eircode (e.g. D02 AF30) to confirm the API responds with address + GPS coordinates
+3. **Verify end-to-end** — confirm the customer form auto-populates and lat/lng are returned for geofencing
 
-### 2. Workforce Clock-In/Out Verification
-- When a worker clocks in, compare their live GPS against the Eircode's known coordinates
-- Auto-fill the job site address from Eircode if entered manually
-- Validate proximity: GPS must be within geofence radius of Eircode location
-- Show verification status: "Eircode verified — 15m from site" or "Location mismatch"
+## No code changes needed
 
-## Implementation
+The edge function and UI components are already built and working — they just need a valid API key. Once updated, the existing flow will activate:
+- Client form: type Eircode → address auto-populates
+- Clock-in: GPS verified against Eircode coordinates
 
-### Step 1: Store Autoaddress API key
-- Use `add_secret` tool for `AUTOADDRESS_API_KEY`
-- User gets key from https://account.autoaddress.ie
+## Steps
 
-### Step 2: Edge function `eircode-lookup`
-- `POST /eircode-lookup` with `{ query: "D02XY12" }` or `{ query: "12 Main St" }`
-- Proxies to Autoaddress.ie API (autocomplete + getEcad endpoints)
-- Returns: structured address, Eircode, lat/lng, confidence level
-- Validates input, handles errors
+1. Use `update_secret` to replace `AUTOADDRESS_API_KEY` with your new key
+2. Call `eircode-lookup` edge function with a test Eircode to verify 200 response
+3. Confirm address fields + lat/lng are returned correctly
 
-### Step 3: Reusable `<EircodeAddressInput>` component
-- Combined input: user types Eircode OR address text
-- Shows autocomplete suggestions dropdown
-- On selection: fills parent form fields (line1, line2, city, region, postcode, lat, lng)
-- Works in: Customer form, Job site form, any address entry
-
-### Step 4: Wire into Customer form
-- Replace current manual address fields with `<EircodeAddressInput>` + manual override
-- Auto-populate lat/lng for geofencing
-
-### Step 5: Wire into Clock-In verification
-- When clock-in happens, if job site has Eircode-derived coordinates, validate GPS proximity
-- Show enhanced verification badge: "Eircode Verified" vs existing "GPS Verified"
-
-## Files
-- `supabase/functions/eircode-lookup/index.ts` — NEW edge function
-- `src/components/shared/EircodeAddressInput.tsx` — NEW reusable component
-- `src/components/customers/CustomerForm.tsx` — wire in Eircode input
-- `src/components/time-tracking/` — enhance GPS verification with Eircode data
-
-## No database changes needed
-- Customer table already has lat/lng, address fields
-- Job sites table already has coordinates
