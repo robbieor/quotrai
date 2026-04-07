@@ -36,17 +36,17 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Foreman"
+const SITE_NAME = "quotrai"
 const SENDER_DOMAIN = "notify.foreman.ie"
 const ROOT_DOMAIN = "foreman.ie"
-const FROM_DOMAIN = "foreman.ie" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "notify.foreman.ie" // Domain shown in From address (may be root or sender subdomain)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://foreman.world"
+const SAMPLE_PROJECT_URL = "https://quotrai.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
@@ -256,7 +256,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       run_id,
       message_id: messageId,
       to: payload.data.email,
-      from: `${SITE_NAME} <support@${FROM_DOMAIN}>`,
+      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
@@ -283,89 +283,6 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
-
-  // Send admin notification for new signups
-  if (emailType === 'signup') {
-    try {
-      const now = new Date().toISOString()
-      const fullName = payload.data.user_meta_data?.full_name || 'Not provided'
-      const refCode = payload.data.user_meta_data?.referral_code || 'None'
-
-      const adminHtml = `
-        <div style="font-family: 'Manrope', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #0f172a; padding: 20px 25px; border-radius: 12px 12px 0 0; text-align: center;">
-            <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="120" />
-          </div>
-          <div style="padding: 24px;">
-            <h2 style="color: #0f172a; font-size: 18px; margin: 0 0 16px;">🎉 New Account Created</h2>
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 8px; color: #64748b; font-weight: 600; width: 40%;">Email</td>
-                <td style="padding: 10px 8px; color: #0f172a;">${payload.data.email}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Full Name</td>
-                <td style="padding: 10px 8px; color: #0f172a;">${fullName}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Signup Time</td>
-                <td style="padding: 10px 8px; color: #0f172a;">${now}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Referral Code</td>
-                <td style="padding: 10px 8px; color: #0f172a;">${refCode}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Plan</td>
-                <td style="padding: 10px 8px; color: #0f172a;">Pro Trial (7 days)</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">Trial Ends</td>
-                <td style="padding: 10px 8px; color: #0f172a;">${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IE')}</td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      `
-
-      const adminMessageId = crypto.randomUUID()
-      const unsubToken = crypto.randomUUID()
-
-      // Ensure unsubscribe token exists for admin email
-      await supabase.from('email_unsubscribe_tokens').upsert(
-        { email: 'support@foreman.ie', token: unsubToken },
-        { onConflict: 'email' }
-      )
-
-      await supabase.from('email_send_log').insert({
-        message_id: adminMessageId,
-        template_name: 'admin_signup_notification',
-        recipient_email: 'support@foreman.ie',
-        status: 'pending',
-      })
-
-      await supabase.rpc('enqueue_email', {
-        queue_name: 'transactional_emails',
-        payload: {
-          message_id: adminMessageId,
-          idempotency_key: `admin-signup-${adminMessageId}`,
-          to: 'support@foreman.ie',
-          from: `Foreman System <support@${FROM_DOMAIN}>`,
-          sender_domain: SENDER_DOMAIN,
-          subject: `New Signup: ${payload.data.email}`,
-          html: adminHtml,
-          text: `New signup: ${payload.data.email} | Name: ${fullName} | Time: ${now} | Ref: ${refCode} | Plan: Pro Trial`,
-          purpose: 'transactional',
-          label: 'admin_signup_notification',
-          unsubscribe_token: unsubToken,
-          queued_at: now,
-        },
-      })
-      console.log('Admin signup notification enqueued', { email: payload.data.email })
-    } catch (adminErr) {
-      console.error('Failed to enqueue admin notification (non-fatal)', { error: adminErr })
-    }
-  }
 
   return new Response(
     JSON.stringify({ success: true, queued: true }),

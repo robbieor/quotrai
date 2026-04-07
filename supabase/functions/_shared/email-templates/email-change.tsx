@@ -9,14 +9,10 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
-  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
-
-const LOGO_URL = 'https://foreman.world/foreman-logo.png'
 
 interface EmailChangeEmailProps {
   siteName: string
@@ -25,26 +21,39 @@ interface EmailChangeEmailProps {
   confirmationUrl: string
 }
 
-export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }: EmailChangeEmailProps) => (
+export const EmailChangeEmail = ({
+  siteName,
+  email,
+  newEmail,
+  confirmationUrl,
+}: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for Foreman</Preview>
+    <Preview>Confirm your email change for {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Section style={header}>
-          <Img src={LOGO_URL} alt="Foreman" width="140" style={logoImg} />
-        </Section>
-        <Section style={content}>
-          <Heading style={h1}>Confirm your email change</Heading>
-          <Text style={text}>
-            You requested to change your email address for Foreman from{' '}
-            <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}to{' '}
-            <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
-          </Text>
-          <Text style={text}>Click the button below to confirm this change:</Text>
-          <Button style={button} href={confirmationUrl}>Confirm Email Change</Button>
-          <Text style={footer}>If you didn't request this change, please secure your account immediately.</Text>
-        </Section>
+        <Heading style={h1}>Confirm your email change</Heading>
+        <Text style={text}>
+          You requested to change your email address for {siteName} from{' '}
+          <Link href={`mailto:${email}`} style={link}>
+            {email}
+          </Link>{' '}
+          to{' '}
+          <Link href={`mailto:${newEmail}`} style={link}>
+            {newEmail}
+          </Link>
+          .
+        </Text>
+        <Text style={text}>
+          Click the button below to confirm this change:
+        </Text>
+        <Button style={button} href={confirmationUrl}>
+          Confirm Email Change
+        </Button>
+        <Text style={footer}>
+          If you didn't request this change, please secure your account
+          immediately.
+        </Text>
       </Container>
     </Body>
   </Html>
@@ -52,13 +61,27 @@ export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }:
 
 export default EmailChangeEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }
-const container = { margin: '0 auto', maxWidth: '600px' }
-const header = { backgroundColor: '#0f172a', padding: '30px 25px', borderRadius: '12px 12px 0 0', textAlign: 'center' as const }
-const logoImg = { display: 'block' as const, margin: '0 auto' }
-const content = { padding: '30px 25px' }
-const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#0f172a', margin: '0 0 20px' }
-const text = { fontSize: '14px', color: '#64748b', lineHeight: '1.5', margin: '0 0 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
+const container = { padding: '20px 25px' }
+const h1 = {
+  fontSize: '22px',
+  fontWeight: 'bold' as const,
+  color: '#000000',
+  margin: '0 0 20px',
+}
+const text = {
+  fontSize: '14px',
+  color: '#55575d',
+  lineHeight: '1.5',
+  margin: '0 0 25px',
+}
 const link = { color: 'inherit', textDecoration: 'underline' }
-const button = { backgroundColor: '#00E6A0', color: '#0f172a', fontSize: '14px', fontWeight: '600' as const, borderRadius: '12px', padding: '12px 24px', textDecoration: 'none' }
-const footer = { fontSize: '12px', color: '#94a3b8', margin: '30px 0 0' }
+const button = {
+  backgroundColor: '#000000',
+  color: '#ffffff',
+  fontSize: '14px',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  textDecoration: 'none',
+}
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
