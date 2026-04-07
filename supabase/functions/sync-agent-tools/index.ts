@@ -63,9 +63,12 @@ serve(async (req) => {
     const currentToolCount = currentAgent?.conversation_config?.tools?.length || 0;
 
     // PATCH only the tools array inside conversation_config
+    // Remove tool_ids to avoid conflict with tools array
+    const cleanConversationConfig = { ...currentAgent.conversation_config };
+    delete cleanConversationConfig.tool_ids;
     const patchBody = {
       conversation_config: {
-        ...currentAgent.conversation_config,
+        ...cleanConversationConfig,
         tools,
       },
     };
