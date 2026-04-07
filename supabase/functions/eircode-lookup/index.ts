@@ -123,14 +123,24 @@ serve(async (req) => {
     const streetNumber = getComponent("street_number");
     const route = getComponent("route");
     const sublocality = getComponent("sublocality_level_1") || getComponent("sublocality");
+    const neighborhood = getComponent("neighborhood");
+    const premise = getComponent("premise");
     const city = getComponent("locality") || getComponent("postal_town");
     const county = getComponent("administrative_area_level_1");
     const country = getComponent("country");
     const countryCode = getComponentShort("country").toLowerCase();
     const postcode = getComponent("postal_code");
 
-    const line1 = streetNumber && route ? `${streetNumber} ${route}` : route || sublocality || "";
-    const line2 = sublocality && route ? sublocality : "";
+    const line1 = streetNumber && route
+      ? `${streetNumber} ${route}`
+      : route
+      || sublocality
+      || neighborhood
+      || premise
+      || (result.formatted_address?.split(",")[0]?.trim() || "");
+    const line2 = (line1 === route && (sublocality || neighborhood))
+      ? (sublocality || neighborhood)
+      : (sublocality && route ? sublocality : "");
 
     // Determine confidence from geometry location_type
     const locationType = result.geometry?.location_type || "";
