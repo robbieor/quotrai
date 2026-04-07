@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 interface TemplatePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (items: Array<{ description: string; quantity: number; unit_price: number }>) => void;
+  onSelect: (items: Array<{ description: string; quantity: number; unit_price: number; cost_price?: number; margin_percent?: number; catalog_item_id?: string | null; line_group?: string }>, displayMode?: string) => void;
 }
 
 export function TemplatePicker({ open, onOpenChange, onSelect }: TemplatePickerProps) {
@@ -67,9 +67,13 @@ export function TemplatePicker({ open, onOpenChange, onSelect }: TemplatePickerP
         const lineItems = items.map((item) => ({
           description: item.description,
           quantity: Number(item.quantity),
-          unit_price: Number(item.unit_price),
+          unit_price: Number(item.sell_price) || Number(item.unit_price),
+          cost_price: Number(item.cost_price) || 0,
+          margin_percent: Number(item.margin_percent) || 0,
+          catalog_item_id: item.catalog_item_id || null,
+          line_group: item.line_group || "Other",
         }));
-        onSelect(lineItems);
+        onSelect(lineItems, (template as any).default_display_mode);
         onOpenChange(false);
       }
     } catch (error) {

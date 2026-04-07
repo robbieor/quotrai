@@ -990,7 +990,7 @@ serve(async (req) => {
         if (template_id) {
           const { data, error: tErr } = await supabase
             .from("templates")
-            .select("id, name, description, category, labour_rate_default, estimated_duration")
+            .select("id, name, description, category, labour_rate_default, estimated_duration, default_display_mode")
             .eq("team_id", company_id)
             .eq("is_active", true)
             .eq("id", template_id)
@@ -1001,7 +1001,7 @@ serve(async (req) => {
           // Try direct substring match first
           const { data: directMatch } = await supabase
             .from("templates")
-            .select("id, name, description, category, labour_rate_default, estimated_duration")
+            .select("id, name, description, category, labour_rate_default, estimated_duration, default_display_mode")
             .eq("team_id", company_id)
             .eq("is_active", true)
             .ilike("name", `%${sanitizeIlike(template_name)}%`)
@@ -1015,7 +1015,7 @@ serve(async (req) => {
             const searchWords = template_name.toLowerCase().split(/\s+/).filter((w: string) => w.length > 1);
             const { data: allTemplates } = await supabase
               .from("templates")
-              .select("id, name, description, category, labour_rate_default, estimated_duration")
+              .select("id, name, description, category, labour_rate_default, estimated_duration, default_display_mode")
               .eq("team_id", company_id)
               .eq("is_active", true);
 
@@ -1050,7 +1050,7 @@ serve(async (req) => {
         // Get template items
         const { data: templateItems, error: itemsError } = await supabase
           .from("template_items")
-          .select("description, quantity, unit_price, unit, is_material, item_type")
+          .select("description, quantity, unit_price, unit, is_material, item_type, catalog_item_id, cost_price, sell_price, margin_percent, line_group")
           .eq("template_id", template.id)
           .order("sort_order");
 
@@ -1102,13 +1102,39 @@ serve(async (req) => {
 
         const quoteNumber = getNextDisplayNumber(recentQuotes, "Q-", quoteCount ?? 0);
 
-        // Build quote items with optional quantity overrides
+        // Resolve pricebook pricing for linked items
+        const catalogItemIds = templateItems.filter((i: any) => i.catalog_item_id).map((i: any) => i.catalog_item_id);
+        let catalogPrices: Record<string, { cost_price: number; sell_price: number }> = {};
+        if (catalogItemIds.length > 0) {
+          const { data: catalogItems } = await supabase
+            .from("team_catalog_items")
+            .select("id, cost_price, sell_price")
+            .in("id", catalogItemIds);
+          if (catalogItems) {
+            catalogPrices = Object.fromEntries(catalogItems.map((c: any) => [c.id, { cost_price: Number(c.cost_price) || 0, sell_price: Number(c.sell_price) || 0 }]));
+          }
+        }
+
+        // Build quote items with internal costing
         const quoteItems = templateItems.map((item: any, index: number) => {
           const qty = quantity_overrides?.[item.description] || item.quantity;
+          // Resolve pricing: pricebook > template sell_price > unit_price
+          let costPrice = Number(item.cost_price) || 0;
+          let sellPrice = Number(item.sell_price) || Number(item.unit_price);
+          if (item.catalog_item_id && catalogPrices[item.catalog_item_id]) {
+            const cp = catalogPrices[item.catalog_item_id];
+            costPrice = cp.cost_price;
+            sellPrice = cp.sell_price || sellPrice;
+          }
+          const marginPercent = sellPrice > 0 ? Math.round(((sellPrice - costPrice) / sellPrice) * 100) : 0;
           return {
             description: item.description,
             quantity: qty,
-            unit_price: item.unit_price,
+            unit_price: sellPrice,
+            cost_price: costPrice,
+            margin_percent: marginPercent,
+            catalog_item_id: item.catalog_item_id || null,
+            line_group: item.line_group || "Other",
           };
         });
 
@@ -1177,7 +1203,7 @@ serve(async (req) => {
           }
         }
 
-        // Create quote
+        // Create quote with display mode from template
         const { data: newQuote, error: quoteError } = await supabase
           .from("quotes")
           .insert({
@@ -1191,7 +1217,8 @@ serve(async (req) => {
             notes: notes || `Created from template: ${template.name}`,
             valid_until: validUntilDate,
             status: "draft",
-            job_id: linkedJobId
+            job_id: linkedJobId,
+            pricing_display_mode: template.default_display_mode || "detailed"
           })
           .select("id, display_number, total")
           .single();
@@ -1202,7 +1229,11 @@ serve(async (req) => {
           quote_id: newQuote.id,
           description: item.description,
           quantity: item.quantity,
-          unit_price: item.unit_price
+          unit_price: item.unit_price,
+          cost_price: item.cost_price || 0,
+          margin_percent: item.margin_percent || 0,
+          catalog_item_id: item.catalog_item_id || null,
+          line_group: item.line_group || "Other",
         }));
 
         const { error: insertItemsError } = await supabase
