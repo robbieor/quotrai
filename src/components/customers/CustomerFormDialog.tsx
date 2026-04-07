@@ -35,7 +35,7 @@ import {
 import type { Customer } from "@/hooks/useCustomers";
 import type { GeocodedAddress } from "@/hooks/useAddressAutocomplete";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
-import { detectPostcodeType, isValidEircode } from "@/hooks/useAddressAutocomplete";
+import { detectPostcodeType } from "@/hooks/useAddressAutocomplete";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
