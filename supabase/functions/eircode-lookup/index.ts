@@ -229,7 +229,7 @@ async function lookupEircode(routingKey: string, originalQuery: string) {
       q: `${cleanedEircode}, Ireland`,
       format: "json",
       addressdetails: "1",
-      limit: "1",
+      limit: "3",
       countrycodes: "ie",
     });
     const fullRes = await fetch(`${NOMINATIM_BASE}/search?${fullParams}`, {
@@ -237,19 +237,23 @@ async function lookupEircode(routingKey: string, originalQuery: string) {
     });
     if (fullRes.ok) {
       const fullResults = await fullRes.json();
-      if (fullResults?.length) {
-        const r = fullResults[0];
+      // Find a result that has street-level detail AND is near our expected coordinates
+      for (const r of (fullResults || [])) {
         const addr = r.address || {};
-        // Only use if it returned street-level detail (not just city)
         if (addr.road || addr.house_number || addr.suburb) {
-          const result = buildResponse(r, addr, originalQuery);
-          // Override with our more reliable coordinates if Nominatim coords seem off
-          return {
-            ...result,
-            latitude: parseFloat(r.lat) || entry.lat,
-            longitude: parseFloat(r.lon) || entry.lng,
-            postcode: originalQuery.trim().toUpperCase(),
-          };
+          const rLat = parseFloat(r.lat);
+          const rLng = parseFloat(r.lon);
+          // Validate proximity — result must be within ~15km of expected area center
+          const distKm = haversineKm(entry.lat, entry.lng, rLat, rLng);
+          if (distKm < 15) {
+            const result = buildResponse(r, addr, originalQuery);
+            return {
+              ...result,
+              latitude: rLat || entry.lat,
+              longitude: rLng || entry.lng,
+              postcode: originalQuery.trim().toUpperCase(),
+            };
+          }
         }
       }
     }
