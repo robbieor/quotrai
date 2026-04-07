@@ -18,6 +18,11 @@ export interface TemplateItem {
   is_material: boolean;
   item_type: "labor" | "material";
   sort_order: number;
+  catalog_item_id: string | null;
+  cost_price: number;
+  sell_price: number;
+  margin_percent: number;
+  line_group: string;
   created_at: string;
 }
 
@@ -282,7 +287,7 @@ export function useUpdateTemplate() {
           const { error: itemsError } = await supabase
             .from("template_items")
             .insert(
-              items.map((item, index) => ({
+            items.map((item, index) => ({
                 template_id: id,
                 description: item.description,
                 quantity: item.quantity,
@@ -291,6 +296,11 @@ export function useUpdateTemplate() {
                 is_material: item.is_material || false,
                 item_type: item.item_type,
                 sort_order: item.sort_order ?? index,
+                catalog_item_id: item.catalog_item_id || null,
+                cost_price: item.cost_price || 0,
+                sell_price: item.sell_price || item.unit_price || 0,
+                margin_percent: item.margin_percent || 0,
+                line_group: item.line_group || "Other",
               }))
             );
 

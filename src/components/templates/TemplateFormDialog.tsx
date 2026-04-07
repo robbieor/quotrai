@@ -36,7 +36,20 @@ interface LineItem {
   is_material: boolean;
   item_type: "labor" | "material";
   sort_order: number;
+  catalog_item_id: string | null;
+  cost_price: number;
+  sell_price: number;
+  margin_percent: number;
+  line_group: string;
 }
+
+const LINE_GROUPS = ["Materials", "Labour", "Other"] as const;
+const DISPLAY_MODES = [
+  { value: "detailed", label: "Detailed (Full Itemized)" },
+  { value: "grouped", label: "Grouped (Subtotals)" },
+  { value: "summary", label: "Summary (Lump Sum)" },
+  { value: "items_only", label: "Items Only (No Prices)" },
+] as const;
 
 export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFormDialogProps) {
   const [name, setName] = useState("");
@@ -45,6 +58,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
   const [isFavorite, setIsFavorite] = useState(false);
   const [labourRateDefault, setLabourRateDefault] = useState(45);
   const [estimatedDuration, setEstimatedDuration] = useState(1);
+  const [displayMode, setDisplayMode] = useState("detailed");
   const [items, setItems] = useState<LineItem[]>([]);
 
   const createTemplate = useCreateTemplate();
@@ -60,6 +74,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
       setIsFavorite(template.is_favorite);
       setLabourRateDefault(template.labour_rate_default || 45);
       setEstimatedDuration(template.estimated_duration || 1);
+      setDisplayMode((template as any).default_display_mode || "detailed");
       setItems(
         template.items?.map((item) => ({
           id: item.id,
@@ -70,6 +85,11 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
           is_material: item.is_material || false,
           item_type: item.item_type as "labor" | "material",
           sort_order: item.sort_order,
+          catalog_item_id: item.catalog_item_id || null,
+          cost_price: item.cost_price || 0,
+          sell_price: item.sell_price || item.unit_price || 0,
+          margin_percent: item.margin_percent || 0,
+          line_group: item.line_group || "Other",
         })) || []
       );
     } else {
@@ -84,6 +104,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
     setIsFavorite(false);
     setLabourRateDefault(45);
     setEstimatedDuration(1);
+    setDisplayMode("detailed");
     setItems([]);
   };
 
@@ -99,6 +120,11 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
         is_material: false,
         item_type: "labor",
         sort_order: items.length,
+        catalog_item_id: null,
+        cost_price: 0,
+        sell_price: 0,
+        margin_percent: 0,
+        line_group: "Other",
       },
     ]);
   };
@@ -132,14 +158,20 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
       is_favorite: isFavorite,
       labour_rate_default: labourRateDefault,
       estimated_duration: estimatedDuration,
+      default_display_mode: displayMode,
       items: items.map((item, index) => ({
         description: item.description,
         quantity: item.quantity,
-        unit_price: item.unit_price,
+        unit_price: item.sell_price || item.unit_price,
         unit: item.unit,
         is_material: item.is_material,
         item_type: item.item_type,
         sort_order: index,
+        catalog_item_id: item.catalog_item_id,
+        cost_price: item.cost_price,
+        sell_price: item.sell_price || item.unit_price,
+        margin_percent: item.margin_percent,
+        line_group: item.line_group,
       })),
     };
 
