@@ -515,7 +515,7 @@ export function CustomerFormDialog({
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Address Search</FormLabel>
                     <FormControl>
                       <AddressAutocomplete
                         value={field.value || ""}
@@ -549,78 +549,103 @@ export function CustomerFormDialog({
                 </div>
               )}
 
-              {/* PO Box Warning */}
-              {isPOBox && (
-                <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                  <div className="flex gap-2">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-destructive">PO Box detected</p>
-                      <p className="text-muted-foreground text-xs mt-0.5">
-                        This address cannot be used for GPS tracking.
-                        You'll need to set the job site location separately.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Always-visible structured address fields */}
-              <div className="rounded-md border bg-muted/30 p-3 space-y-2.5">
-                <div>
+              {/* Structured address fields with inline Eircode detection */}
+              <div className="space-y-2.5">
+                {/* Address Line 1 — with Eircode auto-detect */}
+                <div className="relative" ref={eircodeDropdownRef}>
                   <label className="text-xs font-medium text-muted-foreground">{labels.line1}</label>
-                  <Input
-                    value={structuredFields.line1}
-                    onChange={(e) => handleStructuredFieldChange("line1", e.target.value)}
-                    className="h-9 text-sm mt-1"
-                    placeholder="123 Main Street"
-                  />
+                  <div className="relative">
+                    <Input
+                      value={structuredFields.line1}
+                      onChange={(e) => handleLine1Change(e.target.value)}
+                      className="h-9 text-sm mt-1"
+                      placeholder="Enter address or Eircode (e.g. D08 NRH1)"
+                    />
+                    {eircodeLoading && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                  {/* Eircode dropdown */}
+                  {showEircodeDropdown && eircodeSuggestions.length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+                      <div className="flex items-center justify-between px-3 py-2 border-b">
+                        <span className="text-xs text-muted-foreground font-medium">Select an address</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowEircodeDropdown(false)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <ul className="max-h-48 overflow-auto py-1">
+                        {eircodeSuggestions.map((s, i) => (
+                          <li
+                            key={i}
+                            className="cursor-pointer px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => handleEircodeSuggestionSelect(s)}
+                          >
+                            <div className="flex items-start gap-2">
+                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                              <span className="text-sm">{s.display_name}</span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
+
+                {/* Address Line 2 */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{labels.line2}</label>
                   <Input
                     value={structuredFields.line2}
                     onChange={(e) => handleStructuredFieldChange("line2", e.target.value)}
                     className="h-9 text-sm mt-1"
-                    placeholder="Apt, Suite, etc."
+                    placeholder="Apt, Suite, Building, etc."
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">{labels.city}</label>
-                    <Input
-                      value={structuredFields.city}
-                      onChange={(e) => handleStructuredFieldChange("city", e.target.value)}
-                      className="h-9 text-sm mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">{labels.region}</label>
-                    <Input
-                      value={structuredFields.region}
-                      onChange={(e) => handleStructuredFieldChange("region", e.target.value)}
-                      className="h-9 text-sm mt-1"
-                    />
-                  </div>
+
+                {/* City */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{labels.city}</label>
+                  <Input
+                    value={structuredFields.city}
+                    onChange={(e) => handleStructuredFieldChange("city", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">{labels.postcode}</label>
-                    <Input
-                      value={structuredFields.postcode}
-                      onChange={(e) => handleStructuredFieldChange("postcode", e.target.value)}
-                      className="h-9 text-sm mt-1"
-                      placeholder={labels.postcodePlaceholder}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">{labels.country}</label>
-                    <Input
-                      value={structuredFields.country}
-                      onChange={(e) => handleStructuredFieldChange("country", e.target.value)}
-                      className="h-9 text-sm mt-1"
-                    />
-                  </div>
+
+                {/* Region / County */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{labels.region}</label>
+                  <Input
+                    value={structuredFields.region}
+                    onChange={(e) => handleStructuredFieldChange("region", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                  />
+                </div>
+
+                {/* Postcode */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{labels.postcode}</label>
+                  <Input
+                    value={structuredFields.postcode}
+                    onChange={(e) => handleStructuredFieldChange("postcode", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                    placeholder={labels.postcodePlaceholder}
+                  />
+                </div>
+
+                {/* Country */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{labels.country}</label>
+                  <Input
+                    value={structuredFields.country}
+                    onChange={(e) => handleStructuredFieldChange("country", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                  />
                 </div>
               </div>
 
