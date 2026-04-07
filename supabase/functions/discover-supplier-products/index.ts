@@ -278,8 +278,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      const allUrls: string[] = mapData.links || mapData.data?.links || [];
       const productUrls = allUrls.filter(isProductUrl);
+      console.log(`[discover:map] ${allUrls.length} total URLs, ${productUrls.length} passed product filter`);
 
       // Group by product family (smart classification)
       const rawFamilies: Record<string, { urls: string[]; subfamilies: Record<string, string[]> }> = {};
