@@ -237,6 +237,11 @@ export function useCreateTemplate() {
               is_material: item.is_material || false,
               item_type: item.item_type,
               sort_order: item.sort_order ?? index,
+              catalog_item_id: item.catalog_item_id || null,
+              cost_price: item.cost_price || 0,
+              sell_price: item.sell_price || item.unit_price || 0,
+              margin_percent: item.margin_percent || 0,
+              line_group: item.line_group || "Other",
             }))
           );
 
