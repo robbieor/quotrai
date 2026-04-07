@@ -33,26 +33,26 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a] px-4">
-        <Card className="w-full max-w-md text-center border-white/10 bg-white/5 backdrop-blur-sm">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md text-center">
           <CardHeader className="pb-4">
             <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[#00E6A0] to-[#00b37d] flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-[#0f172a]" />
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-2xl text-white">Check your email</CardTitle>
-            <CardDescription className="text-base mt-2 text-white/60">
+            <CardTitle className="text-2xl">Check your email</CardTitle>
+            <CardDescription className="text-base mt-2">
               We've sent a password reset link to
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="font-medium text-white">{email}</p>
-            <p className="text-sm text-white/40">
+            <p className="font-medium">{email}</p>
+            <p className="text-sm text-muted-foreground">
               Click the link in the email to reset your password. If you don't see it, check your spam folder.
             </p>
             <Link to="/login">
-              <Button variant="outline" className="w-full mt-4 gap-2 border-white/20 text-white hover:bg-white/10">
+              <Button variant="outline" className="w-full mt-4 gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Login
               </Button>
@@ -64,21 +64,21 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f172a] px-4">
-      <Card className="w-full max-w-md border-white/10 bg-white/5 backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
           </div>
-          <CardTitle className="text-2xl text-white">Forgot your password?</CardTitle>
-          <CardDescription className="text-white/60">
+          <CardTitle className="text-2xl">Forgot your password?</CardTitle>
+          <CardDescription>
             Enter your email and we'll send you a reset link
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/80">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -86,21 +86,20 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:border-[#00E6A0]"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button
               type="submit"
-              className="w-full gap-2 bg-[#00E6A0] text-[#0f172a] hover:bg-[#00cc8e] font-semibold"
+              className="w-full gap-2"
               disabled={submitting}
             >
               <Mail className="h-4 w-4" />
               {submitting ? "Sending..." : "Send Reset Link"}
             </Button>
             <Link to="/login" className="w-full">
-              <Button variant="ghost" className="w-full gap-2 text-white/60 hover:text-white hover:bg-white/10">
+              <Button variant="ghost" className="w-full gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Login
               </Button>
