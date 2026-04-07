@@ -278,6 +278,16 @@ export default function PricebookDetail() {
           setShowWebsiteImport(false);
         }}
       />
+
+      <ProductSearchDialog
+        open={showProductSearch}
+        onOpenChange={setShowProductSearch}
+        onImport={(product) => {
+          const payload = { ...product, pricebook_id: id };
+          addItem.mutate(payload);
+          setShowProductSearch(false);
+        }}
+      />
     </DashboardLayout>
   );
 }
