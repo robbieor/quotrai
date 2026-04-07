@@ -226,7 +226,8 @@ Deno.serve(async (req) => {
 
       console.log(`[discover:map] Mapping ${baseUrl}...`);
 
-      const mapRes = await fetch("https://api.firecrawl.dev/v1/map", {
+      // First attempt: map with "products" search filter
+      let mapRes = await fetch("https://api.firecrawl.dev/v2/map", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${firecrawlKey}`,
@@ -240,12 +241,41 @@ Deno.serve(async (req) => {
         }),
       });
 
-      const mapData = await mapRes.json();
+      let mapData = await mapRes.json();
       if (!mapRes.ok) {
         console.error("[discover:map] Failed:", JSON.stringify(mapData));
         return new Response(JSON.stringify({ error: `Site mapping failed: ${mapData.error || mapRes.status}` }), {
           status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      let allUrls: string[] = mapData.links || mapData.data?.links || [];
+      console.log(`[discover:map] Initial map returned ${allUrls.length} URLs with search filter`);
+
+      // Fallback: if fewer than 10 URLs, retry without search filter
+      if (allUrls.length < 10) {
+        console.log(`[discover:map] Low URL count (${allUrls.length}), retrying without search filter...`);
+        const fallbackRes = await fetch("https://api.firecrawl.dev/v2/map", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${firecrawlKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: baseUrl,
+            limit: 5000,
+            includeSubdomains: false,
+          }),
+        });
+
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          const fallbackUrls: string[] = fallbackData.links || fallbackData.data?.links || [];
+          console.log(`[discover:map] Fallback map returned ${fallbackUrls.length} URLs`);
+          if (fallbackUrls.length > allUrls.length) {
+            allUrls = fallbackUrls;
+          }
+        }
       }
 
       const allUrls: string[] = mapData.links || mapData.data?.links || [];
