@@ -284,7 +284,8 @@ export default function Jobs() {
                 />
               </div>
             ) : (
-            {/* Desktop Table */}
+              <>
+              {/* Desktop Table */}
               <div className="hidden md:block">
                 <table className="w-full text-sm border-collapse">
                   <thead className="sticky top-0 z-10 bg-card">
