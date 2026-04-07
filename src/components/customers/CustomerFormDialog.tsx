@@ -529,25 +529,54 @@ export function CustomerFormDialog({
 
             {/* Address Section */}
             <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address Search</FormLabel>
-                    <FormControl>
-                      <AddressAutocomplete
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        onAddressSelect={handleAddressSelect}
-                        placeholder="Search address, Eircode or postcode…"
-                        showCurrentLocation
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              {/* Eircode / Postcode — SINGLE smart entry field */}
+              <div className="relative" ref={eircodeDropdownRef}>
+                <label className="text-xs font-medium text-muted-foreground">{labels.postcode} *</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={structuredFields.postcode}
+                    onChange={(e) => handlePostcodeChange(e.target.value)}
+                    className="h-9 text-sm mt-1 pl-9"
+                    placeholder={labels.postcodePlaceholder || "Enter Eircode, postcode, or ZIP"}
+                  />
+                  {eircodeLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {geocodedAddress && !eircodeLoading && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                  )}
+                </div>
+                {/* Suggestions dropdown */}
+                {showEircodeDropdown && eircodeSuggestions.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+                    <div className="flex items-center justify-between px-3 py-2 border-b">
+                      <span className="text-xs text-muted-foreground font-medium">Select an address</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowEircodeDropdown(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <ul className="max-h-48 overflow-auto py-1">
+                      {eircodeSuggestions.map((s, i) => (
+                        <li
+                          key={i}
+                          className="cursor-pointer px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handlePostcodeSuggestionSelect(s)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                            <span className="text-sm">{s.display_name}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
-              />
+              </div>
 
               {/* Validation badge row */}
               {geocodedAddress && (
@@ -568,46 +597,18 @@ export function CustomerFormDialog({
                 </div>
               )}
 
-              {/* Structured address fields with inline Eircode detection */}
+              {/* Structured address fields — auto-populated */}
               <div className="space-y-2.5">
-                {/* Address Line 1 — with Eircode auto-detect */}
-                <div className="relative" ref={eircodeDropdownRef}>
+                {/* Address Line 1 */}
+                <div>
                   <label className="text-xs font-medium text-muted-foreground">{labels.line1}</label>
-                  <div className="relative">
-                    <Input
-                      value={structuredFields.line1}
-                      onChange={(e) => handleLine1Change(e.target.value)}
-                      className="h-9 text-sm mt-1"
-                      placeholder="Enter address or Eircode (e.g. D08 NRH1)"
-                    />
-                    {eircodeLoading && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                  {/* Eircode dropdown */}
-                  {showEircodeDropdown && eircodeSuggestions.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
-                      <div className="flex items-center justify-between px-3 py-2 border-b">
-                        <span className="text-xs text-muted-foreground font-medium">Select an address</span>
-                        <button
-                          type="button"
-                          onClick={() => setShowEircodeDropdown(false)}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <ul className="max-h-48 overflow-auto py-1">
-                        {eircodeSuggestions.map((s, i) => (
-                          <li
-                            key={i}
-                            className="cursor-pointer px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground"
-                            onClick={() => handleEircodeSuggestionSelect(s)}
-                          >
-                            <div className="flex items-start gap-2">
-                              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                              <span className="text-sm">{s.display_name}</span>
-                            </div>
+                  <Input
+                    value={structuredFields.line1}
+                    onChange={(e) => handleStructuredFieldChange("line1", e.target.value)}
+                    className="h-9 text-sm mt-1"
+                    placeholder="Auto-populated from postcode"
+                  />
+                </div>
                           </li>
                         ))}
                       </ul>
