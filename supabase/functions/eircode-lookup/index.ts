@@ -8,6 +8,15 @@ const corsHeaders = {
 const NOMINATIM_BASE = "https://nominatim.openstreetmap.org";
 const USER_AGENT = "Foreman-App/1.0";
 
+// Haversine distance in km between two lat/lng points
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 // Irish Eircode routing keys with area names AND precise lat/lng coordinates
 const EIRCODE_ROUTING_KEYS: Record<string, { area: string; lat: number; lng: number }> = {
   "A41": { area: "Letterkenny, County Donegal", lat: 54.9558, lng: -7.7342 },
@@ -201,9 +210,9 @@ async function lookupEircode(routingKey: string, originalQuery: string) {
   const entry = EIRCODE_ROUTING_KEYS[routingKey];
 
   if (!entry) {
-    // Unknown routing key — try Nominatim as fallback
+    // Unknown routing key — try Nominatim with full eircode
     const params = new URLSearchParams({
-      q: `${routingKey} Ireland`,
+      q: `${originalQuery} Ireland`,
       format: "json",
       addressdetails: "1",
       limit: "1",
@@ -221,36 +230,92 @@ async function lookupEircode(routingKey: string, originalQuery: string) {
   }
 
   const areaName = entry.area;
+  const cleanedEircode = originalQuery.replace(/\s+/g, "").toUpperCase();
 
-  // Try Nominatim for potentially better street-level detail
-  const params = new URLSearchParams({
-    q: `${areaName}, Ireland`,
-    format: "json",
-    addressdetails: "1",
-    limit: "1",
-    countrycodes: "ie",
-  });
-  const res = await fetch(`${NOMINATIM_BASE}/search?${params}`, {
-    headers: { "User-Agent": USER_AGENT },
-  });
+  // Step 1: Try Nominatim with the FULL Eircode — sometimes OSM has exact matches
+  try {
+    const fullParams = new URLSearchParams({
+      q: `${cleanedEircode}, Ireland`,
+      format: "json",
+      addressdetails: "1",
+      limit: "3",
+      countrycodes: "ie",
+    });
+    const fullRes = await fetch(`${NOMINATIM_BASE}/search?${fullParams}`, {
+      headers: { "User-Agent": USER_AGENT },
+    });
+    if (fullRes.ok) {
+      const fullResults = await fullRes.json();
+      // Find a result that has street-level detail AND is near our expected coordinates
+      for (const r of (fullResults || [])) {
+        const addr = r.address || {};
+        if (addr.road || addr.house_number || addr.suburb) {
+          // Validate the result's postcode matches our routing key
+          const resultPostcode = (addr.postcode || "").replace(/\s+/g, "").toUpperCase();
+          const matchesRoutingKey = resultPostcode.startsWith(routingKey);
+          if (!matchesRoutingKey && resultPostcode.length > 0) continue;
+          
+          const rLat = parseFloat(r.lat);
+          const rLng = parseFloat(r.lon);
+          // Validate proximity — result must be within ~10km of expected area center
+          const distKm = haversineKm(entry.lat, entry.lng, rLat, rLng);
+          if (distKm < 10) {
+            const result = buildResponse(r, addr, originalQuery);
+            return {
+              ...result,
+              latitude: rLat || entry.lat,
+              longitude: rLng || entry.lng,
+              postcode: originalQuery.trim().toUpperCase(),
+            };
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Full eircode Nominatim lookup failed:", e);
+  }
 
+  // Step 2: Reverse geocode from our hardcoded coordinates to get nearest street/suburb
+  let line1 = areaName.split(",")[0].trim();
+  let line2 = "";
   let city = areaName.split(",")[0].trim();
   let region = areaName.includes("County") ? areaName.split("County")[1]?.trim() : "";
 
-  if (res.ok) {
-    const results = await res.json();
-    if (results?.length) {
-      const addr = results[0].address || {};
+  try {
+    const revParams = new URLSearchParams({
+      lat: entry.lat.toString(),
+      lon: entry.lng.toString(),
+      format: "json",
+      addressdetails: "1",
+      zoom: "18",
+    });
+    const revRes = await fetch(`${NOMINATIM_BASE}/reverse?${revParams}`, {
+      headers: { "User-Agent": USER_AGENT },
+    });
+    if (revRes.ok) {
+      const revData = await revRes.json();
+      const addr = revData.address || {};
+      // Extract street-level info from reverse geocode
+      const road = addr.road || "";
+      const suburb = addr.suburb || addr.neighbourhood || addr.hamlet || "";
+      if (road) {
+        line1 = road;
+        line2 = suburb || areaName.split(",")[0].trim();
+      } else if (suburb) {
+        line1 = suburb;
+        line2 = areaName.split(",")[0].trim();
+      }
       city = addr.city || addr.town || addr.village || city;
       region = addr.county || addr.state || region;
     }
+  } catch (e) {
+    console.warn("Reverse geocode failed:", e);
   }
 
-  // Always use our hardcoded coordinates — they're more reliable than Nominatim for Eircodes
   return {
-    formattedAddress: `${areaName}, Ireland`,
-    line1: areaName.split(",")[0].trim(),
-    line2: "",
+    formattedAddress: `${line1}${line2 ? ", " + line2 : ""}, ${city}, ${region ? region + ", " : ""}Ireland`,
+    line1,
+    line2,
     city,
     region,
     postcode: originalQuery.trim().toUpperCase(),
