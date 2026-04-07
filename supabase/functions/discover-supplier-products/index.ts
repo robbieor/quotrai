@@ -53,7 +53,9 @@ function classifyUrlToFamily(url: any): string {
         if (seg.includes(".html") || seg.includes(".htm") || seg.includes(".php")) continue;
         if (seg.length > 50) continue;
         // Skip generic segments
-        if (["products", "product", "category", "categories", "shop", "store", "catalogue", "catalog"].includes(seg)) continue;
+        if (["products", "product", "category", "categories", "shop", "store", "catalogue", "catalog", "p", "c", "item", "browse", "brand"].includes(seg)) continue;
+        // Skip single-character segments
+        if (seg.length <= 1) continue;
         
         return seg
           .replace(/-/g, " ")
