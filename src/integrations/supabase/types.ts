@@ -4549,6 +4549,7 @@ export type Database = {
           image_url: string | null
           last_scraped_at: string | null
           manufacturer: string | null
+          manufacturer_part_number: string | null
           product_name: string
           source_url: string | null
           subcategory: string | null
@@ -4568,6 +4569,7 @@ export type Database = {
           image_url?: string | null
           last_scraped_at?: string | null
           manufacturer?: string | null
+          manufacturer_part_number?: string | null
           product_name: string
           source_url?: string | null
           subcategory?: string | null
@@ -4587,6 +4589,7 @@ export type Database = {
           image_url?: string | null
           last_scraped_at?: string | null
           manufacturer?: string | null
+          manufacturer_part_number?: string | null
           product_name?: string
           source_url?: string | null
           subcategory?: string | null
@@ -4681,6 +4684,7 @@ export type Database = {
           last_updated: string | null
           last_used_at: string | null
           manufacturer: string | null
+          manufacturer_part_number: string | null
           markup_percent: number | null
           pricebook_id: string | null
           sell_price: number | null
@@ -4705,6 +4709,7 @@ export type Database = {
           last_updated?: string | null
           last_used_at?: string | null
           manufacturer?: string | null
+          manufacturer_part_number?: string | null
           markup_percent?: number | null
           pricebook_id?: string | null
           sell_price?: number | null
@@ -4729,6 +4734,7 @@ export type Database = {
           last_updated?: string | null
           last_used_at?: string | null
           manufacturer?: string | null
+          manufacturer_part_number?: string | null
           markup_percent?: number | null
           pricebook_id?: string | null
           sell_price?: number | null
@@ -6462,6 +6468,8 @@ export type Database = {
         Args: { p_team_id: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
