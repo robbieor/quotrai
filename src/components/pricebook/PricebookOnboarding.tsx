@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, BookOpen, Globe, Upload, Package, Sparkles, ArrowRight, CheckCircle2, Receipt, FileText } from "lucide-react";
+import { X, BookOpen, Globe, Upload, Package, Sparkles, ArrowRight, CheckCircle2, Receipt, FileText, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STEPS = [
@@ -37,6 +37,11 @@ const STEPS = [
     icon: FileText,
     title: "Link to templates",
     body: "Build job templates with Price Book items pre-attached. When Foreman AI creates a job from a template, it automatically includes the right materials at the right prices.",
+  },
+  {
+    icon: BarChart3,
+    title: "Compare prices across suppliers",
+    body: "Add products from multiple suppliers to see side-by-side pricing. Foreman matches identical products using manufacturer part numbers and suggests the cheapest option — saving you money on every job.",
   },
 ];
 
