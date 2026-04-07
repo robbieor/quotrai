@@ -123,15 +123,73 @@ function cleanFamilies(
   return cleaned;
 }
 
+/** Exclusion-based filter: accept all URLs except known non-product pages */
 function isProductUrl(url: string): boolean {
   const lower = url.toLowerCase();
-  if (lower.match(/\/products\/?$/)) return false;
-  if (lower.match(/\/category\/?$/)) return false;
-  if (lower.includes("/products/") && lower.match(/\/[^/]+\.[^/]+$/)) return true;
-  if (lower.includes("/product/")) return true;
-  if (lower.match(/\/p[-_][a-z0-9\-]+\.html$/i)) return true;
-  if (lower.match(/\/[a-z0-9\-]+\.html$/) && !lower.endsWith("/index.html")) return true;
-  return false;
+
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname.toLowerCase();
+    const segments = path.split("/").filter(Boolean);
+
+    // Reject homepage / root
+    if (segments.length === 0) return false;
+
+    // Reject known non-product paths
+    const excludeExact = [
+      "login", "signin", "sign-in", "signup", "sign-up", "register",
+      "cart", "basket", "checkout", "wishlist",
+      "contact", "contact-us", "about", "about-us",
+      "blog", "news", "press", "media",
+      "terms", "terms-and-conditions", "privacy", "privacy-policy", "cookie-policy", "cookies",
+      "faq", "faqs", "help", "support", "returns", "delivery", "shipping",
+      "sitemap", "sitemap.xml", "robots.txt",
+      "account", "my-account", "profile", "settings", "preferences",
+      "careers", "jobs-at", "work-with-us",
+      "trade-account", "open-account", "credit-account",
+      "branches", "find-a-branch", "store-locator", "stores",
+      "services", "our-services",
+    ];
+    if (segments.length === 1 && excludeExact.includes(segments[0])) return false;
+
+    // Reject paths starting with excluded prefixes
+    const excludePrefixes = [
+      "blog", "news", "press", "help", "support", "account", "my-account",
+      "careers", "api", "cdn", "assets", "static", "images", "img", "media",
+      "wp-content", "wp-admin", "wp-includes", "wp-json",
+      "admin", "cms", "backend",
+    ];
+    if (excludePrefixes.includes(segments[0])) return false;
+
+    // Reject file extensions that aren't product pages
+    const nonProductExts = [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".mp4", ".zip", ".css", ".js", ".xml", ".json", ".txt", ".ico"];
+    if (nonProductExts.some(ext => path.endsWith(ext))) return false;
+
+    // Reject category listing pages (no specific product)
+    const categoryOnlyPaths = [
+      /^\/products\/?$/,
+      /^\/category\/?$/,
+      /^\/categories\/?$/,
+      /^\/shop\/?$/,
+      /^\/catalogue\/?$/,
+      /^\/catalog\/?$/,
+      /^\/browse\/?$/,
+    ];
+    if (categoryOnlyPaths.some(rx => rx.test(path))) return false;
+
+    // Accept: needs at least 2 path segments (category + product) or known product patterns
+    if (segments.length >= 2) return true;
+
+    // Accept single-segment paths that look like product slugs (contain hyphens + numbers)
+    if (segments.length === 1 && /[a-z].*\d/.test(segments[0]) && segments[0].includes("-")) return true;
+
+    // Accept .html pages (likely product detail pages)
+    if (segments.length === 1 && path.endsWith(".html") && !path.endsWith("/index.html")) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 Deno.serve(async (req) => {
