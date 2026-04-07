@@ -62,22 +62,12 @@ serve(async (req) => {
     const currentAgent = await getRes.json();
     const currentToolCount = currentAgent?.conversation_config?.tools?.length || 0;
 
-    // PATCH only the tools array, removing any tool_ids to avoid conflicts
-    const cleanConfig = JSON.parse(JSON.stringify(currentAgent.conversation_config || {}));
-    delete cleanConfig.tool_ids;
-    // Also remove tool_ids from any nested objects
-    if (cleanConfig.agent) delete cleanConfig.agent.tool_ids;
-    
-    const patchBody: Record<string, any> = {
+    // Build a minimal patch: only set tools, explicitly clear tool_ids
+    const patchBody = {
       conversation_config: {
-        ...cleanConfig,
         tools,
       },
     };
-    // Remove top-level tool_ids if present
-    if (currentAgent.tool_ids) {
-      patchBody.tool_ids = undefined;
-    }
 
     const patchRes = await fetch(
       `https://api.elevenlabs.io/v1/convai/agents/${AGENT_ID}`,
