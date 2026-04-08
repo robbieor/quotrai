@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon, MoreVertical } from "lucide-react";
-import { ProductSearchDialog } from "@/components/pricebook/ProductSearchDialog";
+import { SmartProductSearch } from "@/components/pricebook/SmartProductSearch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
 import { usePricebooks } from "@/hooks/usePricebooks";
