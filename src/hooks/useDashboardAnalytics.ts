@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 
 // Job type keyword list (kept for useAvailableJobTypes)
