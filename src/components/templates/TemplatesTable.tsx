@@ -1,5 +1,3 @@
-import { format } from "date-fns";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -9,11 +7,7 @@ import { Template, getTradeCategoryLabel } from "@/hooks/useTemplates";
 import { useToggleFavorite } from "@/hooks/useTemplates";
 import { useCurrency } from "@/hooks/useCurrency";
 import { SortableHeader } from "@/components/shared/table/SortableHeader";
-import { TableSelectionBar } from "@/components/shared/table/TableSelectionBar";
-import { useTableSelection } from "@/hooks/useTableSelection";
 import { useTableSort } from "@/hooks/useTableSort";
-import { exportToExcel } from "@/utils/exportToExcel";
-import { toast } from "sonner";
 
 interface TemplatesTableProps {
   templates: Template[];
@@ -31,66 +25,21 @@ export function TemplatesTable({
   const toggleFavorite = useToggleFavorite();
   const { formatRate } = useCurrency();
   const { sortedData, handleSort, getSortDirection } = useTableSort(templates);
-  const {
-    selectedRows,
-    allSelected,
-    someSelected,
-    handleRowClick,
-    handleSelectAll,
-    handleCheckboxChange,
-    clearSelection,
-  } = useTableSelection(sortedData.length);
 
   const handleToggleFavorite = (e: React.MouseEvent, template: Template) => {
     e.stopPropagation();
     toggleFavorite.mutate({ id: template.id, is_favorite: !template.is_favorite });
   };
 
-  const handleExport = () => {
-    const selectedTemplates = Array.from(selectedRows).map((i) => sortedData[i]);
-    const dataToExport = selectedTemplates.length > 0 ? selectedTemplates : sortedData;
-
-    exportToExcel(
-      dataToExport,
-      [
-        { header: "Name", accessor: "name" },
-        { header: "Category", accessor: (t) => getTradeCategoryLabel(t.category) },
-        { header: "Description", accessor: "description" },
-        { header: "Labour Rate", accessor: "labour_rate_default" },
-        { header: "Duration (hrs)", accessor: "estimated_duration" },
-        { header: "Favorite", accessor: (t) => (t.is_favorite ? "Yes" : "No") },
-        { header: "Created", accessor: (t) => format(new Date(t.created_at), "yyyy-MM-dd") },
-      ],
-      `templates-export-${format(new Date(), "yyyy-MM-dd")}`
-    );
-
-    toast.success(`Exported ${dataToExport.length} templates to Excel`);
-  };
-
   return (
     <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-sm">
-      <TableSelectionBar
-        selectedCount={selectedRows.size}
-        onClear={clearSelection}
-        onExport={handleExport}
-      />
-
       {/* Desktop Table */}
       <div className="hidden md:block">
         <ScrollArea className="w-full">
-          <div className="min-w-[700px]">
+          <div className="min-w-[600px]">
             <table className="w-full text-sm border-collapse">
               <thead className="sticky top-0 z-10 bg-card">
                 <tr className="border-b border-border/50">
-                  <th className="w-8 h-8 px-2 text-center bg-muted/60 border-r border-border/30">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={handleSelectAll}
-                      className="h-3.5 w-3.5"
-                      aria-label="Select all"
-                      {...(someSelected ? { "data-state": "indeterminate" } : {})}
-                    />
-                  </th>
                   <th className="w-8 h-8 px-1.5 bg-muted/60 border-r border-border/30"></th>
                   <SortableHeader
                     sortDirection={getSortDirection("name")}
@@ -131,25 +80,12 @@ export function TemplatesTable({
               </thead>
 
               <tbody>
-                {sortedData.map((template, rowIdx) => (
+                {sortedData.map((template) => (
                   <tr
                     key={template.id}
-                    className={cn(
-                      "border-b border-border/30 transition-colors cursor-pointer",
-                      selectedRows.has(rowIdx)
-                        ? "bg-primary/10 hover:bg-primary/15"
-                        : "hover:bg-muted/50"
-                    )}
-                    onClick={(e) => handleRowClick(rowIdx, e)}
+                    className="border-b border-border/30 transition-colors cursor-pointer hover:bg-muted/50"
+                    onClick={() => onEdit(template)}
                   >
-                    <td className="px-2 py-1.5 text-center border-r border-border/20">
-                      <Checkbox
-                        checked={selectedRows.has(rowIdx)}
-                        onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-3.5 w-3.5"
-                      />
-                    </td>
                     <td className="px-1.5 py-1.5 text-center border-r border-border/20">
                       <button
                         onClick={(e) => handleToggleFavorite(e, template)}
@@ -239,25 +175,14 @@ export function TemplatesTable({
 
       {/* Mobile Card List */}
       <div className="md:hidden divide-y divide-border/30">
-        {sortedData.map((template, rowIdx) => (
+        {sortedData.map((template) => (
           <div
             key={template.id}
-            className={cn(
-              "px-3 py-2.5 transition-colors cursor-pointer",
-              selectedRows.has(rowIdx)
-                ? "bg-primary/10"
-                : "hover:bg-muted/50"
-            )}
-            onClick={(e) => handleRowClick(rowIdx, e)}
+            className="px-3 py-2.5 transition-colors cursor-pointer hover:bg-muted/50"
+            onClick={() => onEdit(template)}
           >
             <div className="flex items-start gap-2">
-              <div className="flex items-center gap-1.5 pt-0.5 shrink-0">
-                <Checkbox
-                  checked={selectedRows.has(rowIdx)}
-                  onCheckedChange={(checked) => handleCheckboxChange(rowIdx, checked)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-3.5 w-3.5"
-                />
+              <div className="flex items-center pt-0.5 shrink-0">
                 <button
                   onClick={(e) => handleToggleFavorite(e, template)}
                   className="p-0.5 hover:bg-muted rounded transition-colors"

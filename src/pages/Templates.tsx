@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, FileText, Download } from "lucide-react";
+import { Plus, Search, FileText } from "lucide-react";
 import { TemplateFormDialog } from "@/components/templates/TemplateFormDialog";
 import { TemplatesTable } from "@/components/templates/TemplatesTable";
 import { DeleteTemplateDialog } from "@/components/templates/DeleteTemplateDialog";
