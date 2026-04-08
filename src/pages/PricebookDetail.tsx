@@ -141,9 +141,6 @@ export default function PricebookDetail() {
 
           {/* Desktop actions */}
           <div className="hidden sm:flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setShowProductSearch(true)}>
-              <Search className="h-4 w-4 mr-1.5" /> Find Product
-            </Button>
             <Button size="sm" variant="outline" onClick={() => setShowWebsiteImport(true)}>
               <Globe className="h-4 w-4 mr-1.5" /> Add Supplier
             </Button>
@@ -161,9 +158,6 @@ export default function PricebookDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowProductSearch(true)}>
-                  <Search className="h-4 w-4 mr-2" /> Find Product
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowWebsiteImport(true)}>
                   <Globe className="h-4 w-4 mr-2" /> Add Supplier
                 </DropdownMenuItem>
@@ -205,18 +199,17 @@ export default function PricebookDetail() {
           <TabsContent value="catalog" className="mt-3 space-y-3">
             {/* Search */}
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={filters.search || ""}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-9"
+              <div className="flex-1">
+                <SmartProductSearch
+                  onImport={(product) => {
+                    const payload = { ...product, pricebook_id: id };
+                    addItem.mutate(payload);
+                  }}
                 />
               </div>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="sm:hidden h-10 w-10">
+                  <Button variant="outline" size="icon" className="sm:hidden h-11 w-11 shrink-0">
                     <Filter className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
