@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Plus, CheckCircle2, X, ExternalLink } from "lucide-react";
+import { Loader2, Search, Plus, CheckCircle2, X, ChevronLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -16,6 +16,28 @@ interface SearchResult {
   url: string;
   title: string;
   description: string;
+}
+
+interface ScrapedPreview {
+  raw: any;
+  pricing: {
+    item_name: string;
+    supplier_name: string | null;
+    supplier_sku: string | null;
+    manufacturer: string | null;
+    category: string | null;
+    subcategory: string | null;
+    trade_type: string;
+    unit: string;
+    website_price: number | null;
+    discount_percent: number;
+    cost_price: number;
+    markup_percent: number;
+    sell_price: number;
+    image_url: string | null;
+    source_id: null;
+  };
+  margin: number;
 }
 
 const URL_PATTERN = /^https?:\/\/|(\.(com|ie|co\.uk|net|org|eu|shop|store))/i;
@@ -34,35 +56,41 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [scrapingUrl, setScrapingUrl] = useState<string | null>(null);
   const [addedUrls, setAddedUrls] = useState<Set<string>>(new Set());
-  const [urlPreview, setUrlPreview] = useState<any>(null);
+  const [preview, setPreview] = useState<ScrapedPreview | null>(null);
   const [showResults, setShowResults] = useState(false);
   const { formatCurrency } = useCurrency();
   const { getSettingForSupplier } = useSupplierSettings();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const applyPricing = (p: any) => {
+  const buildPreview = (p: any): ScrapedPreview => {
     const setting = getSettingForSupplier(p.supplier_name || "");
     const discount = setting?.discount_percent ?? 0;
     const markup = setting?.default_markup_percent ?? 30;
     const webPrice = p.website_price || 0;
     const costPrice = webPrice > 0 ? +(webPrice * (1 - discount / 100)).toFixed(2) : 0;
     const sellPrice = costPrice > 0 ? +(costPrice * (1 + markup / 100)).toFixed(2) : 0;
+    const margin = sellPrice > 0 ? +((sellPrice - costPrice) / sellPrice * 100).toFixed(1) : 0;
+
     return {
-      item_name: p.product_name,
-      supplier_name: p.supplier_name,
-      supplier_sku: p.supplier_sku,
-      manufacturer: p.manufacturer || null,
-      category: p.category || null,
-      subcategory: p.subcategory || null,
-      trade_type: p.trade_type || "Electrical",
-      unit: p.unit_of_measure || "each",
-      website_price: p.website_price || null,
-      discount_percent: discount,
-      cost_price: costPrice,
-      markup_percent: markup,
-      sell_price: sellPrice,
-      image_url: p.image_url || null,
-      source_id: null,
+      raw: p,
+      pricing: {
+        item_name: p.product_name,
+        supplier_name: p.supplier_name,
+        supplier_sku: p.supplier_sku,
+        manufacturer: p.manufacturer || null,
+        category: p.category || null,
+        subcategory: p.subcategory || null,
+        trade_type: p.trade_type || "Electrical",
+        unit: p.unit_of_measure || "each",
+        website_price: p.website_price || null,
+        discount_percent: discount,
+        cost_price: costPrice,
+        markup_percent: markup,
+        sell_price: sellPrice,
+        image_url: p.image_url || null,
+        source_id: null,
+      },
+      margin,
     };
   };
 
@@ -71,10 +99,9 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
     if (!q) return;
 
     setShowResults(true);
-    setUrlPreview(null);
+    setPreview(null);
 
     if (isUrl(q)) {
-      // Direct URL scrape
       setScrapingUrl(q);
       try {
         const url = q.startsWith("http") ? q : `https://${q}`;
@@ -84,14 +111,13 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
         if (!data?.product) throw new Error("Could not extract product data");
-        setUrlPreview({ ...data.product, source_url: url });
+        setPreview(buildPreview({ ...data.product, source_url: url }));
       } catch (e: any) {
         toast.error(e.message || "Failed to fetch product");
       } finally {
         setScrapingUrl(null);
       }
     } else {
-      // Text search
       setSearching(true);
       setResults([]);
       try {
@@ -111,16 +137,7 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
     }
   };
 
-  const handleAddFromUrl = (product: any) => {
-    const payload = applyPricing(product);
-    onImport(payload);
-    toast.success(`${payload.item_name} added`);
-    setUrlPreview(null);
-    setQuery("");
-    setShowResults(false);
-  };
-
-  const handleAddResult = async (result: SearchResult) => {
+  const handleSelectResult = async (result: SearchResult) => {
     setScrapingUrl(result.url);
     try {
       const { data, error } = await supabase.functions.invoke("scrape-supplier-url", {
@@ -129,25 +146,34 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.product) throw new Error("Could not extract product data");
-
-      const payload = applyPricing(data.product);
-      onImport(payload);
-      setAddedUrls((prev) => new Set(prev).add(result.url));
-      toast.success(`${payload.item_name} added`);
+      setPreview(buildPreview(data.product));
     } catch (e: any) {
-      toast.error(e.message || "Failed to add product");
+      toast.error(e.message || "Failed to fetch product details");
     } finally {
       setScrapingUrl(null);
     }
   };
 
+  const handleConfirmAdd = () => {
+    if (!preview) return;
+    onImport(preview.pricing);
+    toast.success(`${preview.pricing.item_name} added`);
+    setAddedUrls((prev) => new Set(prev).add(preview.raw.source_url || ""));
+    setPreview(null);
+  };
+
   const dismiss = () => {
     setShowResults(false);
     setResults([]);
-    setUrlPreview(null);
+    setPreview(null);
     setQuery("");
     setAddedUrls(new Set());
   };
+
+  const marginColor = (m: number) =>
+    m >= 30 ? "text-emerald-600 dark:text-emerald-400" :
+    m >= 15 ? "text-amber-600 dark:text-amber-400" :
+    "text-destructive";
 
   return (
     <div className="space-y-2">
@@ -174,46 +200,92 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
         </Button>
       </div>
 
-      {/* URL preview */}
-      {showResults && urlPreview && (
-        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3 space-y-2">
+      {/* Product preview card — shown after clicking a result or pasting URL */}
+      {showResults && preview && (
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3 space-y-3">
+          {/* Back to results */}
+          {results.length > 0 && (
+            <button
+              onClick={() => setPreview(null)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className="h-3 w-3" /> Back to results
+            </button>
+          )}
+
+          {/* Product info */}
           <div className="flex items-start gap-3">
-            {urlPreview.image_url && (
-              <img src={urlPreview.image_url} alt="" className="w-12 h-12 rounded-lg object-contain bg-background border shrink-0" />
+            {preview.raw.image_url && (
+              <img src={preview.raw.image_url} alt="" className="w-14 h-14 rounded-lg object-contain bg-background border shrink-0" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">{urlPreview.product_name}</p>
-              <p className="text-xs text-muted-foreground">{urlPreview.supplier_name} · {urlPreview.supplier_sku}</p>
+              <p className="font-semibold text-sm leading-tight">{preview.pricing.item_name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {preview.pricing.supplier_name}{preview.pricing.supplier_sku ? ` · ${preview.pricing.supplier_sku}` : ""}
+              </p>
+              {preview.pricing.manufacturer && (
+                <p className="text-xs text-muted-foreground">Mfr: {preview.pricing.manufacturer}</p>
+              )}
             </div>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">
-              {urlPreview.website_price ? formatCurrency(urlPreview.website_price) : "No price"}
-            </span>
-            <Button size="sm" className="h-7 text-xs" onClick={() => handleAddFromUrl(urlPreview)}>
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add to Pricebook
-            </Button>
+
+          {/* Pricing breakdown */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs bg-background/60 rounded-lg p-2.5">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Web Price</span>
+              <span className="font-medium">{preview.pricing.website_price ? formatCurrency(preview.pricing.website_price) : "—"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Discount</span>
+              <span className="font-medium">{preview.pricing.discount_percent}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Your Cost</span>
+              <span className="font-semibold">{formatCurrency(preview.pricing.cost_price)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Markup</span>
+              <span className="font-medium">{preview.pricing.markup_percent}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Sell Price</span>
+              <span className="font-semibold">{formatCurrency(preview.pricing.sell_price)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Margin</span>
+              <span className={`font-bold ${marginColor(preview.margin)}`}>{preview.margin}%</span>
+            </div>
           </div>
+
+          <p className="text-[10px] text-muted-foreground">
+            Client invoices show the sell price only — your cost and margin stay private.
+          </p>
+
+          <Button size="sm" className="w-full" onClick={handleConfirmAdd}>
+            <CheckCircle2 className="h-4 w-4 mr-1.5" /> Add to Pricebook
+          </Button>
         </div>
       )}
 
-      {/* Scraping a URL */}
-      {showResults && scrapingUrl && !urlPreview && results.length === 0 && (
+      {/* Loading spinner for URL/scrape */}
+      {showResults && scrapingUrl && !preview && results.length === 0 && (
         <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Fetching product details...
         </div>
       )}
 
-      {/* Search results */}
-      {showResults && results.length > 0 && (
+      {/* Search results list */}
+      {showResults && results.length > 0 && !preview && (
         <div className="space-y-1.5 max-h-[360px] overflow-y-auto">
           {results.map((result, idx) => {
             const added = addedUrls.has(result.url);
             const loading = scrapingUrl === result.url;
             return (
-              <div
+              <button
                 key={idx}
-                className="flex items-center gap-2 rounded-lg border p-2.5 hover:bg-muted/50 transition-colors"
+                onClick={() => !added && !scrapingUrl && handleSelectResult(result)}
+                disabled={!!scrapingUrl || added}
+                className="w-full text-left flex items-center gap-2 rounded-lg border p-2.5 hover:bg-muted/50 transition-colors disabled:opacity-60"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium line-clamp-1">{result.title}</p>
@@ -225,19 +297,13 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
                   </div>
                 </div>
                 {added ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 shrink-0"
-                    disabled={!!scrapingUrl}
-                    onClick={() => handleAddResult(result)}
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  </Button>
+                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
