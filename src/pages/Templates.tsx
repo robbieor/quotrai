@@ -90,25 +90,6 @@ export default function Templates() {
     navigate("/quotes?new=true");
   };
 
-  const handleExportAll = () => {
-    if (!filteredTemplates?.length) return;
-    
-    exportToExcel(
-      filteredTemplates,
-      [
-        { header: "Name", accessor: "name" },
-        { header: "Category", accessor: (t) => getTradeCategoryLabel(t.category) },
-        { header: "Description", accessor: "description" },
-        { header: "Labour Rate", accessor: "labour_rate_default" },
-        { header: "Duration (hrs)", accessor: "estimated_duration" },
-        { header: "Favorite", accessor: (t) => (t.is_favorite ? "Yes" : "No") },
-        { header: "Created", accessor: (t) => format(new Date(t.created_at), "yyyy-MM-dd") },
-      ],
-      `templates-export-${format(new Date(), "yyyy-MM-dd")}`
-    );
-    toast.success(`Exported ${filteredTemplates.length} templates to Excel`);
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-3">
@@ -127,10 +108,6 @@ export default function Templates() {
             />
           </div>
           <div className="flex gap-2 ml-auto">
-            <Button variant="outline" size="sm" onClick={handleExportAll} disabled={!filteredTemplates?.length} className="hidden sm:flex h-8 text-xs">
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              Export
-            </Button>
             <Button size="sm" className="h-8 text-xs" onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
               <Plus className="h-3.5 w-3.5 mr-1" />
               New Template
