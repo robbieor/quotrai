@@ -1,59 +1,77 @@
 
 
-# Cheaper Eircode Lookup Alternatives
+# Replace Nominatim with Loqate for All Address Lookups
 
-## The Core Problem
-Eircodes are proprietary (owned by An Post). No free API gives point-level Eircode accuracy. Loqate (~€0.05/lookup) and Autoaddress (~€0.22/lookup) license that data — that's why they're expensive.
+## Summary
+Replace all Nominatim-based geocoding (IE, UK, US) with Loqate's Capture API in the edge function. Loqate provides point-level accuracy for Eircodes, UK postcodes, and US addresses through a single API. The `LOQATE_API_KEY` secret is already configured.
 
-## Realistic Cheaper Options
+## How Loqate Works
 
-### Option A: Geoapify (Recommended)
-- **Free tier**: 3,000 requests/day (90K/month)
-- **Paid**: €49/month for 100K requests (~€0.0005 each — 100x cheaper than Loqate)
-- **Irish coverage**: Uses OpenStreetMap + commercial data. Better than raw Nominatim but not point-level for all Eircodes
-- **Also covers**: UK postcodes, US ZIP, global
-- **Quality**: Good for ~70% of Eircodes (towns, suburbs). Rural single-house Eircodes may still be area-level
+Loqate uses a **two-step flow**:
+1. **Find** (`/Capture/Interactive/Find/v1.1`) — type-ahead autocomplete, returns address suggestions with an `Id`
+2. **Retrieve** (`/Capture/Interactive/Retrieve/v1`) — given an `Id`, returns full structured address with lat/lng
 
-### Option B: LocationIQ
-- **Free tier**: 5,000 requests/day
-- **Paid**: $49/month for 30K requests
-- **Quality**: Similar to Geoapify — enhanced OpenStreetMap data
+For postcode lookups (mode=lookup), we call Find with the postcode, then Retrieve on the top result to get coordinates + structured fields.
 
-### Option C: OpenCage
-- **Free tier**: 2,500 requests/day
-- **Paid**: $50/month for 10K requests
-- **Quality**: Aggregates multiple sources, decent Irish coverage
+## Changes
 
-### Option D: Enhance What You Already Have (Free)
-Your edge function already maps routing keys to area names. We can:
-1. Add precise lat/lng coordinates for all ~139 routing keys in the existing lookup table
-2. Use the area name + Nominatim for street-level refinement
-3. Result: free, no API key needed, accuracy goes from "wrong location" to "correct area center"
-4. **Tradeoff**: still area-level (not front-door), but correct area at least
+### 1. Rewrite `supabase/functions/eircode-lookup/index.ts`
 
-## Recommendation
+**Remove**: All Nominatim calls, the 139-entry routing key table (no longer needed — Loqate handles it natively).
 
-**Start with Option D (free fix) + Option A (Geoapify free tier) as fallback.**
+**Add**: Two Loqate helper functions:
+- `loqateFind(query, country?)` — calls Find endpoint, returns list of suggestions
+- `loqateRetrieve(id)` — calls Retrieve endpoint, returns full address with lat/lng
 
-- Fix the routing key table with correct GPS coordinates — this alone solves "takes me to the wrong location"
-- Use Geoapify's free 3K/day tier for enhanced lookups when available
-- Zero cost until you exceed 90K lookups/month
-- Upgrade to Geoapify paid ($49/mo) only if volume demands it
+**Lookup mode** (postcode → structured address):
+- Call `loqateFind(postcode, countryFilter)` → get top result Id
+- Call `loqateRetrieve(id)` → get line1, line2, city, region, postcode, lat, lng
+- Map Loqate fields to the existing response schema (formattedAddress, line1, line2, city, region, latitude, longitude, confidence, etc.)
+- Keep the Eircode/UK/US detection logic for setting correct country filter
 
-## Implementation
+**Autocomplete mode** (typing → suggestions):
+- Call `loqateFind(query)` → return suggestions with display_name and address_id
+- Client uses address_id to call Retrieve for the selected suggestion
+
+**Fallback**: If Loqate returns no results or errors, return a clear error — no silent Nominatim fallback (keeps behavior predictable).
+
+### 2. Update `src/hooks/useAddressAutocomplete.ts`
+
+**`searchAddress`**: Change from direct Nominatim call to calling the edge function with `mode: "autocomplete"`. The edge function already supports this mode — just need to route through it instead of calling Nominatim directly from the client.
+
+**`lookupEircode` / `lookupUKPostcode` / `lookupUSZip`**: These already call the edge function. No changes needed — they'll automatically use Loqate once the edge function is updated.
+
+**`geocodeAddress`**: Replace direct Nominatim call with edge function call (mode: "lookup").
+
+**`reverseGeocode`**: Keep as Nominatim for now — Loqate's reverse geocode is a different API. Reverse geocode is only used for "use my location" and works fine with Nominatim.
+
+**Remove**: The `NOMINATIM_BASE_URL` constant and all direct Nominatim fetch calls from the client hook.
+
+### 3. Add Retrieve endpoint for selected suggestions
+
+Add a new mode `"retrieve"` to the edge function that accepts an `address_id` from a Find result and returns the full structured address. The client will call this when the user selects a suggestion from the autocomplete dropdown.
+
+## Response Schema (unchanged)
+
+The existing response format stays the same — Loqate fields map cleanly:
+- `Line1` → `line1`
+- `Line2` → `line2`
+- `City` → `city`
+- `ProvinceCode` / `Province` → `region`
+- `PostalCode` → `postcode`
+- `CountryIso2` → `countryCode`
+- `Latitude` → `latitude`
+- `Longitude` → `longitude`
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/eircode-lookup/index.ts` | Add lat/lng to routing key table, add Geoapify as secondary geocoder with free tier |
+| `supabase/functions/eircode-lookup/index.ts` | Replace Nominatim with Loqate Find/Retrieve APIs; add "retrieve" mode; remove routing key table |
+| `src/hooks/useAddressAutocomplete.ts` | Route autocomplete + geocode through edge function instead of direct Nominatim |
 
-## Cost Comparison
-
-| Provider | Monthly Cost | Lookups |
-|----------|-------------|---------|
-| Current (Nominatim) | Free | Unlimited but inaccurate |
-| **Option D (enhanced table)** | **Free** | **Unlimited, correct area** |
-| **Geoapify free tier** | **Free** | **90K/month** |
-| Geoapify paid | €49/mo | 100K/month |
-| Loqate | ~€150+/mo | 3K/month |
-| Autoaddress | ~€50+/mo | ~225/month |
+## Cost Impact
+- Loqate charges ~€0.05 per lookup (Find + Retrieve = 2 API calls but counted as 1 transaction)
+- Free Nominatim calls eliminated — all traffic goes through Loqate
+- Point-level accuracy for all Eircodes, UK postcodes, and US addresses
 
