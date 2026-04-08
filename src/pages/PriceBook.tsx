@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Settings2, BookOpen, Search } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePricebooks } from "@/hooks/usePricebooks";
 import { useTeamCatalog, type CatalogItem } from "@/hooks/useTeamCatalog";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -24,6 +25,7 @@ export default function PriceBook() {
   const { pricebooks, isLoading } = usePricebooks();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Fetch ALL catalog items for stats + global search + recent
   const { items: allItems } = useTeamCatalog({});
@@ -98,8 +100,8 @@ export default function PriceBook() {
           </div>
         </div>
 
-        {/* Stats bar — only show when there are items */}
-        {stats.totalItems > 0 && (
+        {/* Stats bar — desktop only */}
+        {stats.totalItems > 0 && !isMobile && (
           <PricebookStats
             totalItems={stats.totalItems}
             totalSuppliers={stats.totalSuppliers}
@@ -110,7 +112,7 @@ export default function PriceBook() {
 
         {/* Global search */}
         {allItems.length > 0 && (
-          <div className="relative max-w-lg">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search across all pricebooks..."
@@ -126,7 +128,6 @@ export default function PriceBook() {
                     className="w-full text-left px-3 py-2 hover:bg-accent/50 transition-colors border-b border-border last:border-0"
                     onClick={() => {
                       setGlobalSearch("");
-                      // Navigate to the item's pricebook
                       const pb = pricebooks.find((p) => allItems.some((i) => i.id === item.id && (i as any).pricebook_id === p.id));
                       if (pb) navigate(`/price-book/${pb.id}`);
                     }}
@@ -142,11 +143,11 @@ export default function PriceBook() {
           </div>
         )}
 
-        {/* Recently used items */}
-        <RecentItems items={recentItems} />
+        {/* Recently used items — desktop only */}
+        {!isMobile && <RecentItems items={recentItems} />}
 
-        {/* Onboarding guide */}
-        <PricebookOnboarding />
+        {/* Onboarding guide — desktop only */}
+        {!isMobile && <PricebookOnboarding />}
 
         {/* Pricebook grid */}
         {isLoading ? (

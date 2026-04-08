@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon, SearchIcon } from "lucide-react";
+import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon, MoreVertical } from "lucide-react";
 import { ProductSearchDialog } from "@/components/pricebook/ProductSearchDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
@@ -19,11 +19,16 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { PriceCompareView } from "@/components/pricebook/PriceCompareView";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
+
+const PAGE_SIZE = 50;
 
 export default function PricebookDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { pricebooks } = usePricebooks();
   const pricebook = pricebooks.find((pb) => pb.id === id);
 
@@ -37,10 +42,18 @@ export default function PricebookDetail() {
   const [activeTab, setActiveTab] = useState("catalog");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [cardPage, setCardPage] = useState(0);
+
+  // Force card view on mobile
+  const effectiveView = isMobile ? "card" : viewMode;
 
   const handleSearch = (q: string) => setFilters({ ...filters, search: q });
 
   const uniqueSuppliers = [...new Set(items.map((i) => i.supplier_name).filter(Boolean))];
+
+  // Pagination for card view
+  const totalCardPages = Math.ceil(items.length / PAGE_SIZE);
+  const pagedItems = items.slice(cardPage * PAGE_SIZE, (cardPage + 1) * PAGE_SIZE);
 
   const handleSelectToggle = (itemId: string) => {
     setSelectedIds((prev) => {
@@ -108,29 +121,26 @@ export default function PricebookDetail() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/price-book")}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/price-book")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h1 className="text-xl font-bold">{pricebook?.name || "Pricebook"}</h1>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold truncate">{pricebook?.name || "Pricebook"}</h1>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {uniqueSuppliers.length > 0 && (
-                  <span className="text-xs text-muted-foreground">
-                    {uniqueSuppliers.length === 1 ? uniqueSuppliers[0] : `${uniqueSuppliers.length} suppliers`}
-                  </span>
-                )}
+                <span className="text-xs text-muted-foreground">{items.length} items</span>
                 {pricebook?.trade_type && (
                   <Badge variant="outline" className="text-[10px]">{pricebook.trade_type}</Badge>
                 )}
-                <span className="text-xs text-muted-foreground">{items.length} items</span>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+
+          {/* Desktop actions */}
+          <div className="hidden sm:flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowProductSearch(true)}>
               <Search className="h-4 w-4 mr-1.5" /> Find Product
             </Button>
@@ -141,17 +151,40 @@ export default function PricebookDetail() {
               <Plus className="h-4 w-4 mr-1.5" /> Add Item
             </Button>
           </div>
+
+          {/* Mobile: compact dropdown */}
+          <div className="flex sm:hidden gap-1.5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" className="h-8 w-8 p-0">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowProductSearch(true)}>
+                  <Search className="h-4 w-4 mr-2" /> Find Product
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowWebsiteImport(true)}>
+                  <Globe className="h-4 w-4 mr-2" /> Add Supplier
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setEditItem(null); setShowForm(true); }}>
+                  <Plus className="h-4 w-4 mr-2" /> Add Item
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between">
             <TabsList className="h-8">
               <TabsTrigger value="catalog" className="text-xs">Products</TabsTrigger>
-              <TabsTrigger value="compare" className="text-xs">
-                <BarChart3 className="h-3 w-3 mr-1" /> Compare Prices
+              <TabsTrigger value="compare" className="text-xs hidden sm:flex">
+                <BarChart3 className="h-3 w-3 mr-1" /> Compare
               </TabsTrigger>
             </TabsList>
-            {activeTab === "catalog" && (
+            {/* View toggle — desktop only */}
+            {activeTab === "catalog" && !isMobile && (
               <div className="flex items-center gap-1 border rounded-lg p-0.5">
                 <button
                   onClick={() => setViewMode("table")}
@@ -169,13 +202,13 @@ export default function PricebookDetail() {
             )}
           </div>
 
-          <TabsContent value="catalog" className="mt-4 space-y-3">
+          <TabsContent value="catalog" className="mt-3 space-y-3">
             {/* Search */}
             <div className="flex gap-2">
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search products, SKU, manufacturer..."
+                  placeholder="Search products..."
                   value={filters.search || ""}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-9"
@@ -183,7 +216,7 @@ export default function PricebookDetail() {
               </div>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="sm:hidden h-11 w-11">
+                  <Button variant="outline" size="icon" className="sm:hidden h-10 w-10">
                     <Filter className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
@@ -191,14 +224,16 @@ export default function PricebookDetail() {
               </Sheet>
             </div>
 
-            {/* Bulk actions */}
-            <BulkActionsBar
-              selectedCount={selectedIds.size}
-              onClear={() => setSelectedIds(new Set())}
-              onBulkDelete={handleBulkDelete}
-              onBulkMarkup={handleBulkMarkup}
-              onExport={handleExport}
-            />
+            {/* Bulk actions — desktop only */}
+            {!isMobile && (
+              <BulkActionsBar
+                selectedCount={selectedIds.size}
+                onClear={() => setSelectedIds(new Set())}
+                onBulkDelete={handleBulkDelete}
+                onBulkMarkup={handleBulkMarkup}
+                onExport={handleExport}
+              />
+            )}
 
             {/* Content */}
             <div className="flex gap-6">
@@ -217,7 +252,7 @@ export default function PricebookDetail() {
                     actionLabel="Import from Website"
                     onAction={() => setShowWebsiteImport(true)}
                   />
-                ) : viewMode === "table" ? (
+                ) : effectiveView === "table" ? (
                   <CatalogTable
                     items={items}
                     selectedIds={selectedIds}
@@ -231,7 +266,7 @@ export default function PricebookDetail() {
                 ) : (
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
-                    {items.map((item) => (
+                    {pagedItems.map((item) => (
                       <CatalogProductCard
                         key={item.id}
                         item={item}
@@ -240,6 +275,22 @@ export default function PricebookDetail() {
                         onToggleFav={(favId, fav) => toggleFavourite.mutate({ id: favId, is_favourite: fav })}
                       />
                     ))}
+                    {/* Card pagination */}
+                    {totalCardPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-xs text-muted-foreground">
+                          {cardPage * PAGE_SIZE + 1}–{Math.min((cardPage + 1) * PAGE_SIZE, items.length)} of {items.length}
+                        </span>
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" className="h-7 text-xs" disabled={cardPage === 0} onClick={() => setCardPage(cardPage - 1)}>
+                            Prev
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-7 text-xs" disabled={cardPage >= totalCardPages - 1} onClick={() => setCardPage(cardPage + 1)}>
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
