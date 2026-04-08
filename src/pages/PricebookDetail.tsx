@@ -38,7 +38,7 @@ export default function PricebookDetail() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<CatalogItem | null>(null);
   const [showWebsiteImport, setShowWebsiteImport] = useState(false);
-  const [showProductSearch, setShowProductSearch] = useState(false);
+  
   const [activeTab, setActiveTab] = useState("catalog");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
