@@ -323,15 +323,6 @@ export default function PricebookDetail() {
         }}
       />
 
-      <ProductSearchDialog
-        open={showProductSearch}
-        onOpenChange={setShowProductSearch}
-        onImport={(product) => {
-          const payload = { ...product, pricebook_id: id };
-          addItem.mutate(payload);
-          setShowProductSearch(false);
-        }}
-      />
     </DashboardLayout>
   );
 }
