@@ -1,77 +1,40 @@
 
 
-# Replace Nominatim with Loqate for All Address Lookups
+# Revert to Free Eircode Lookup (Local Table + Nominatim)
 
-## Summary
-Replace all Nominatim-based geocoding (IE, UK, US) with Loqate's Capture API in the edge function. Loqate provides point-level accuracy for Eircodes, UK postcodes, and US addresses through a single API. The `LOQATE_API_KEY` secret is already configured.
+## What We're Doing
+Replace the Loqate integration (which is out of credit) with the previously-built free solution: hardcoded routing key coordinates + Nominatim street-level refinement. Zero cost, unlimited lookups.
 
-## How Loqate Works
-
-Loqate uses a **two-step flow**:
-1. **Find** (`/Capture/Interactive/Find/v1.1`) — type-ahead autocomplete, returns address suggestions with an `Id`
-2. **Retrieve** (`/Capture/Interactive/Retrieve/v1`) — given an `Id`, returns full structured address with lat/lng
-
-For postcode lookups (mode=lookup), we call Find with the postcode, then Retrieve on the top result to get coordinates + structured fields.
+## Why This Works for Launch
+- The 139 routing key coordinates place the geofence center in the correct area (~500m accuracy)
+- Clock-in/out validation uses the **employee's phone GPS** vs the geofence center — so area-level is sufficient
+- Nominatim fills in line1/line2 address details for display
+- No API key needed, no monthly cost
 
 ## Changes
 
 ### 1. Rewrite `supabase/functions/eircode-lookup/index.ts`
-
-**Remove**: All Nominatim calls, the 139-entry routing key table (no longer needed — Loqate handles it natively).
-
-**Add**: Two Loqate helper functions:
-- `loqateFind(query, country?)` — calls Find endpoint, returns list of suggestions
-- `loqateRetrieve(id)` — calls Retrieve endpoint, returns full address with lat/lng
-
-**Lookup mode** (postcode → structured address):
-- Call `loqateFind(postcode, countryFilter)` → get top result Id
-- Call `loqateRetrieve(id)` → get line1, line2, city, region, postcode, lat, lng
-- Map Loqate fields to the existing response schema (formattedAddress, line1, line2, city, region, latitude, longitude, confidence, etc.)
-- Keep the Eircode/UK/US detection logic for setting correct country filter
-
-**Autocomplete mode** (typing → suggestions):
-- Call `loqateFind(query)` → return suggestions with display_name and address_id
-- Client uses address_id to call Retrieve for the selected suggestion
-
-**Fallback**: If Loqate returns no results or errors, return a clear error — no silent Nominatim fallback (keeps behavior predictable).
+- Remove all Loqate code (Find/Retrieve endpoints, API key reference)
+- Restore the 139-entry `EIRCODE_ROUTING_KEYS` table with precise lat/lng
+- Restore Nominatim-based lookup with Haversine proximity validation
+- Restore reverse geocode fallback for street-level line1/line2 population
+- Keep autocomplete mode using Nominatim search (free, works for Irish addresses)
+- Keep the existing response schema so no client changes needed
 
 ### 2. Update `src/hooks/useAddressAutocomplete.ts`
+- Revert autocomplete search to use Nominatim directly (faster than edge function round-trip for typing)
+- Keep postcode lookups routing through the edge function
+- Remove any Loqate-specific retrieve logic
 
-**`searchAddress`**: Change from direct Nominatim call to calling the edge function with `mode: "autocomplete"`. The edge function already supports this mode — just need to route through it instead of calling Nominatim directly from the client.
-
-**`lookupEircode` / `lookupUKPostcode` / `lookupUSZip`**: These already call the edge function. No changes needed — they'll automatically use Loqate once the edge function is updated.
-
-**`geocodeAddress`**: Replace direct Nominatim call with edge function call (mode: "lookup").
-
-**`reverseGeocode`**: Keep as Nominatim for now — Loqate's reverse geocode is a different API. Reverse geocode is only used for "use my location" and works fine with Nominatim.
-
-**Remove**: The `NOMINATIM_BASE_URL` constant and all direct Nominatim fetch calls from the client hook.
-
-### 3. Add Retrieve endpoint for selected suggestions
-
-Add a new mode `"retrieve"` to the edge function that accepts an `address_id` from a Find result and returns the full structured address. The client will call this when the user selects a suggestion from the autocomplete dropdown.
-
-## Response Schema (unchanged)
-
-The existing response format stays the same — Loqate fields map cleanly:
-- `Line1` → `line1`
-- `Line2` → `line2`
-- `City` → `city`
-- `ProvinceCode` / `Province` → `region`
-- `PostalCode` → `postcode`
-- `CountryIso2` → `countryCode`
-- `Latitude` → `latitude`
-- `Longitude` → `longitude`
+### 3. Update `src/components/ui/address-autocomplete.tsx`
+- Remove Loqate-specific two-step retrieve flow if present
+- Ensure address selection works with Nominatim response format
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/eircode-lookup/index.ts` | Replace Nominatim with Loqate Find/Retrieve APIs; add "retrieve" mode; remove routing key table |
-| `src/hooks/useAddressAutocomplete.ts` | Route autocomplete + geocode through edge function instead of direct Nominatim |
-
-## Cost Impact
-- Loqate charges ~€0.05 per lookup (Find + Retrieve = 2 API calls but counted as 1 transaction)
-- Free Nominatim calls eliminated — all traffic goes through Loqate
-- Point-level accuracy for all Eircodes, UK postcodes, and US addresses
+| `supabase/functions/eircode-lookup/index.ts` | Replace Loqate with local routing key table + Nominatim |
+| `src/hooks/useAddressAutocomplete.ts` | Revert to Nominatim-based autocomplete |
+| `src/components/ui/address-autocomplete.tsx` | Remove Loqate retrieve flow |
 
