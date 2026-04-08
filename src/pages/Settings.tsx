@@ -358,7 +358,7 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            <ReferralCard />
+            {/* ReferralCard hidden until reward flow is built */}
           </TabsContent>
 
           <TabsContent value="branding" className="space-y-6 max-w-3xl">
