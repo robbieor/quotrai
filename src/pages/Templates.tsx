@@ -19,7 +19,6 @@ import {
 } from "@/hooks/useTemplates";
 import { useUserTradeCategory } from "@/hooks/useUserTradeCategory";
 import { useNavigate } from "react-router-dom";
-import { exportToExcel } from "@/utils/exportToExcel";
 import { toast } from "sonner";
 
 export default function Templates() {
