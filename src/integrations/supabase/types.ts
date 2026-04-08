@@ -1111,7 +1111,7 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
-          client_number?: number
+          client_number: number
           contact_person?: string | null
           country?: string | null
           country_code?: string | null
