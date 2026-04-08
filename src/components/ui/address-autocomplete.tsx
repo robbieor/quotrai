@@ -55,7 +55,7 @@ export function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { suggestions, isLoading, searchAddress, lookupPostcode, reverseGeocode, clearSuggestions } = useAddressAutocomplete();
+  const { suggestions, isLoading, searchAddress, lookupPostcode, reverseGeocode, retrieveAddress, clearSuggestions } = useAddressAutocomplete();
 
   const validation = useMemo(() => {
     if (!value || value.length < 3 || hasSelectedAddress) return null;
@@ -88,7 +88,23 @@ export function AddressAutocomplete({
   };
 
   const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
-    // Standard Nominatim result
+    // Loqate suggestion — use retrieve to get full address
+    if (suggestion.address_id) {
+      onChange(suggestion.display_name);
+      setHasSelectedAddress(true);
+      setIsOpen(false);
+      clearSuggestions();
+      setPostcodeHint('unknown');
+
+      const result = await retrieveAddress(suggestion.address_id);
+      if (result && onAddressSelect) {
+        onChange(result.formattedAddress);
+        onAddressSelect(result);
+      }
+      return;
+    }
+
+    // Legacy Nominatim fallback
     const formattedAddress = formatAddressFromSuggestion(suggestion);
     onChange(formattedAddress);
     setHasSelectedAddress(true);
