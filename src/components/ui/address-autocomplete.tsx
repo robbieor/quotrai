@@ -55,7 +55,7 @@ export function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { suggestions, isLoading, searchAddress, lookupPostcode, reverseGeocode, retrieveAddress, clearSuggestions } = useAddressAutocomplete();
+  const { suggestions, isLoading, searchAddress, lookupPostcode, reverseGeocode, clearSuggestions } = useAddressAutocomplete();
 
   const validation = useMemo(() => {
     if (!value || value.length < 3 || hasSelectedAddress) return null;
@@ -74,6 +74,7 @@ export function AddressAutocomplete({
       (detectedType === 'eircode' && normalizedValue.length >= 7) ||
       (detectedType === 'uk' && normalizedValue.length >= 5) ||
       (detectedType === 'us' && normalizedValue.replace('-', '').length >= 5);
+
     if (isLikelyCompletePostcode) {
       lookupPostcode(newValue).then((result) => {
         if (result && onAddressSelect) {
@@ -88,23 +89,6 @@ export function AddressAutocomplete({
   };
 
   const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
-    // Loqate suggestion — use retrieve to get full address
-    if (suggestion.address_id) {
-      onChange(suggestion.display_name);
-      setHasSelectedAddress(true);
-      setIsOpen(false);
-      clearSuggestions();
-      setPostcodeHint('unknown');
-
-      const result = await retrieveAddress(suggestion.address_id);
-      if (result && onAddressSelect) {
-        onChange(result.formattedAddress);
-        onAddressSelect(result);
-      }
-      return;
-    }
-
-    // Legacy Nominatim fallback
     const formattedAddress = formatAddressFromSuggestion(suggestion);
     onChange(formattedAddress);
     setHasSelectedAddress(true);
@@ -224,8 +208,8 @@ export function AddressAutocomplete({
                     <div className="flex items-start gap-2">
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                       <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium">{suggestion.text || suggestion.address?.road || suggestion.address?.suburb || "Address"}{suggestion.address?.house_number && ` ${suggestion.address.house_number}`}</p>
-                        <p className="truncate text-xs text-muted-foreground">{suggestion.description || [suggestion.address?.city || suggestion.address?.town || suggestion.address?.village, suggestion.address?.postcode, suggestion.address?.country].filter(Boolean).join(", ")}</p>
+                        <p className="truncate font-medium">{suggestion.address?.road || suggestion.address?.suburb || "Address"}{suggestion.address?.house_number && ` ${suggestion.address.house_number}`}</p>
+                        <p className="truncate text-xs text-muted-foreground">{[suggestion.address?.city || suggestion.address?.town || suggestion.address?.village, suggestion.address?.postcode, suggestion.address?.country].filter(Boolean).join(", ")}</p>
                       </div>
                     </div>
                 </li>
