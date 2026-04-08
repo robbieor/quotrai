@@ -17,7 +17,7 @@ export interface AddressSuggestion {
     country?: string;
     country_code?: string;
   };
-  // Loqate-specific fields
+  // Legacy fields kept for compatibility
   address_id?: string;
   type?: string;
   text?: string;
@@ -44,15 +44,10 @@ export type PostcodeType = 'eircode' | 'uk' | 'us' | 'unknown';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
 
-// UK postcode regex patterns
 const UK_POSTCODE_PATTERN = /^([A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2})$/i;
 const UK_POSTCODE_PARTIAL = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d?[A-Z]{0,2}$/i;
-
-// Eircode regex patterns
 const EIRCODE_PATTERN = /^([A-Z]\d{2}\s?[A-Z0-9]{4})$/i;
 const EIRCODE_PARTIAL = /^[A-Z]\d{2}\s?[A-Z0-9]{0,4}$/i;
-
-// US ZIP code regex patterns
 const US_ZIP_PATTERN = /^(\d{5})(-\d{4})?$/;
 const US_ZIP_PARTIAL = /^\d{1,5}(-\d{0,4})?$/;
 
@@ -163,8 +158,8 @@ export function useAddressAutocomplete() {
   const [detectedCountry, setDetectedCountry] = useState<PostcodeType>('unknown');
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Autocomplete via Loqate (through edge function)
-  const searchAddress = useCallback(async (query: string, _countryCode?: string) => {
+  // Autocomplete via Nominatim directly (faster for typing)
+  const searchAddress = useCallback(async (query: string, countryCode?: string) => {
     if (!query || query.length < 3) {
       setSuggestions([]);
       return;
@@ -180,29 +175,27 @@ export function useAddressAutocomplete() {
       const type = detectPostcodeType(query);
       if (type !== 'unknown') setDetectedCountry(type);
 
-      const url = getEdgeFunctionUrl();
-      if (!url) throw new Error('Project ID not configured');
+      const params = new URLSearchParams({
+        q: query,
+        format: 'json',
+        addressdetails: '1',
+        limit: '5',
+      });
+      if (countryCode) params.set('countrycodes', countryCode);
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, mode: 'autocomplete' }),
+      const response = await fetch(`${NOMINATIM_BASE_URL}/search?${params}`, {
+        headers: { Accept: 'application/json', 'User-Agent': 'Foreman-App/1.0' },
         signal: abortControllerRef.current.signal,
       });
 
-      if (!response.ok) throw new Error('Failed to fetch address suggestions');
+      if (!response.ok) throw new Error('Failed to fetch suggestions');
 
-      const data = await response.json();
-      // Map Loqate suggestions to AddressSuggestion format
-      const mapped: AddressSuggestion[] = (data.suggestions || []).map((s: any) => ({
-        display_name: s.display_name || '',
-        lat: '0',
-        lon: '0',
-        address: {},
-        address_id: s.address_id,
-        type: s.type,
-        text: s.text,
-        description: s.description,
+      const results = await response.json();
+      const mapped: AddressSuggestion[] = results.map((r: any) => ({
+        display_name: r.display_name,
+        lat: r.lat,
+        lon: r.lon,
+        address: r.address || {},
       }));
       setSuggestions(mapped);
     } catch (err) {
@@ -221,44 +214,7 @@ export function useAddressAutocomplete() {
     [searchAddress]
   );
 
-  // Retrieve full address from Loqate Id
-  const retrieveAddress = useCallback(async (addressId: string): Promise<GeocodedAddress | null> => {
-    const url = getEdgeFunctionUrl();
-    if (!url) return null;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '', mode: 'retrieve', address_id: addressId }),
-      });
-
-      if (!response.ok) return null;
-      const data = await response.json();
-      if (!data.latitude && !data.longitude) return null;
-
-      return {
-        formattedAddress: data.formattedAddress || '',
-        latitude: data.latitude,
-        longitude: data.longitude,
-        postcode: data.postcode,
-        city: data.city,
-        county: data.region,
-        country: data.country,
-        countryCode: data.countryCode,
-        line1: data.line1,
-        line2: data.line2,
-        region: data.region,
-        confidence: data.confidence || 'high',
-        isPOBox: false,
-      };
-    } catch (err) {
-      console.error('Loqate retrieve error:', err);
-      return null;
-    }
-  }, []);
-
-  // Geocode a specific address via edge function lookup
+  // Geocode via edge function (for postcode lookups)
   const geocodeAddress = useCallback(async (address: string, _country?: string): Promise<GeocodedAddress | null> => {
     if (!address) return null;
     const url = getEdgeFunctionUrl();
@@ -296,28 +252,24 @@ export function useAddressAutocomplete() {
     }
   }, []);
 
-  // Lookup Eircode
   const lookupEircode = useCallback(async (eircode: string): Promise<GeocodedAddress | null> => {
     if (!isValidEircode(eircode)) return null;
     setDetectedCountry('eircode');
     return geocodeAddress(eircode);
   }, [geocodeAddress]);
 
-  // Lookup UK postcode
   const lookupUKPostcode = useCallback(async (postcode: string): Promise<GeocodedAddress | null> => {
     if (!isValidUKPostcode(postcode)) return null;
     setDetectedCountry('uk');
     return geocodeAddress(postcode);
   }, [geocodeAddress]);
 
-  // Lookup US ZIP
   const lookupUSZip = useCallback(async (zip: string): Promise<GeocodedAddress | null> => {
     if (!isValidUSZip(zip)) return null;
     setDetectedCountry('us');
     return geocodeAddress(zip);
   }, [geocodeAddress]);
 
-  // Smart postcode lookup
   const lookupPostcode = useCallback(async (postcode: string): Promise<GeocodedAddress | null> => {
     const type = detectPostcodeType(postcode);
     setDetectedCountry(type);
@@ -329,7 +281,6 @@ export function useAddressAutocomplete() {
     }
   }, [lookupEircode, lookupUKPostcode, lookupUSZip, geocodeAddress]);
 
-  // Reverse geocode — keep Nominatim for this (only used for "use my location")
   const reverseGeocode = useCallback(async (lat: number, lon: number): Promise<GeocodedAddress | null> => {
     try {
       const params = new URLSearchParams({
@@ -339,8 +290,8 @@ export function useAddressAutocomplete() {
         addressdetails: '1',
       });
 
-      const response = await fetch(`${NOMINATIM_BASE_URL}/reverse?${params.toString()}`, {
-        headers: { 'Accept': 'application/json', 'User-Agent': 'Foreman-App/1.0' },
+      const response = await fetch(`${NOMINATIM_BASE_URL}/reverse?${params}`, {
+        headers: { Accept: 'application/json', 'User-Agent': 'Foreman-App/1.0' },
       });
 
       if (!response.ok) throw new Error('Failed to reverse geocode');
@@ -368,6 +319,11 @@ export function useAddressAutocomplete() {
 
   const clearSuggestions = useCallback(() => {
     setSuggestions([]);
+  }, []);
+
+  // Keep retrieveAddress as a no-op for backward compatibility
+  const retrieveAddress = useCallback(async (_addressId: string): Promise<GeocodedAddress | null> => {
+    return null;
   }, []);
 
   return {
