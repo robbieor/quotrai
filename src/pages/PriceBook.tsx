@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Settings2, BookOpen, Search } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePricebooks } from "@/hooks/usePricebooks";
 import { useTeamCatalog, type CatalogItem } from "@/hooks/useTeamCatalog";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -24,6 +25,7 @@ export default function PriceBook() {
   const { pricebooks, isLoading } = usePricebooks();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Fetch ALL catalog items for stats + global search + recent
   const { items: allItems } = useTeamCatalog({});
