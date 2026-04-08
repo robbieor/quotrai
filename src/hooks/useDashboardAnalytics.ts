@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 
 // Job type keyword list (kept for useAvailableJobTypes)
@@ -119,10 +120,12 @@ export interface ScatterCustomerData {
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useDashboardAnalytics() {
+  const { user } = useAuth();
   const { dateRange, customerId, staffId, jobType, segment, crossFilter, filterQueryKey } = useDashboardFilters();
 
   return useQuery({
     queryKey: ["dashboard-analytics", ...filterQueryKey],
+    enabled: !!user,
     queryFn: async () => {
       const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined;
       const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
