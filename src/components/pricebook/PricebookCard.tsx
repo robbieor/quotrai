@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Upload, Package, Trash2, MoreVertical } from "lucide-react";
+import { Globe, Upload, Package, Trash2, MoreVertical, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { Pricebook } from "@/hooks/usePricebooks";
+import { usePricebooks } from "@/hooks/usePricebooks";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
 
 interface PricebookCardProps {
   pricebook: Pricebook;
@@ -19,7 +21,20 @@ const sourceIcons = {
 };
 
 export function PricebookCard({ pricebook, onClick, onDelete }: PricebookCardProps) {
+  const { deletePricebook } = usePricebooks();
+  const [deleting, setDeleting] = useState(false);
   const Icon = sourceIcons[pricebook.source_type as keyof typeof sourceIcons] || Package;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleting(true);
+    try {
+      await deletePricebook.mutateAsync(pricebook.id);
+      onDelete();
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <Card
@@ -48,9 +63,11 @@ export function PricebookCard({ pricebook, onClick, onDelete }: PricebookCardPro
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 className="text-destructive"
-                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                disabled={deleting}
+                onClick={handleDelete}
               >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete
+                {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                {deleting ? "Deleting..." : "Delete"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
