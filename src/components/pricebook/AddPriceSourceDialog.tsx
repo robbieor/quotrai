@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Globe, Upload, Package, Search, Sparkles } from "lucide-react";
+import { Upload, Package } from "lucide-react";
 
 interface AddPriceSourceDialogProps {
   open: boolean;
