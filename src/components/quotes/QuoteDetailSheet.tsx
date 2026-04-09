@@ -93,6 +93,27 @@ export function QuoteDetailSheet({
             onConvertToInvoice={onConvertToInvoice ? () => { onConvertToInvoice(quote); onOpenChange(false); } : undefined}
           />
 
+          {/* Status progression buttons */}
+          {onUpdateStatus && (
+            <div className="flex gap-2 flex-wrap">
+              {quote.status === "draft" && (
+                <Button size="sm" variant="outline" onClick={() => onUpdateStatus(quote, "sent")}>
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> Mark as Sent
+                </Button>
+              )}
+              {(quote.status === "draft" || quote.status === "sent") && (
+                <>
+                  <Button size="sm" onClick={() => onUpdateStatus(quote, "accepted")}>
+                    <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Mark as Accepted
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => onUpdateStatus(quote, "declined")}>
+                    <XCircle className="mr-1.5 h-3.5 w-3.5" /> Declined
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Convert actions for accepted quotes */}
           {quote.status === "accepted" && (onConvertToJob || onConvertToInvoice) && (
             <div className="flex gap-2 flex-wrap">
