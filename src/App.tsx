@@ -128,13 +128,13 @@ const App = () => {
                 <Route path="/accept-invite" element={<AcceptInvite />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
 
-                {/* Investor deck */}
-                <Route path="/investor/pitch" element={<InvestorPitch />} />
-                <Route path="/investor/market" element={<InvestorMarket />} />
-                <Route path="/investor/product" element={<InvestorProduct />} />
-                <Route path="/investor/team" element={<InvestorTeam />} />
-                <Route path="/investor/projections" element={<InvestorProjections />} />
-                <Route path="/investor/forecast" element={<InvestorForecast />} />
+                {/* Investor deck — gated behind auth */}
+                <Route path="/investor/pitch" element={<RoleGuard><InvestorPitch /></RoleGuard>} />
+                <Route path="/investor/market" element={<RoleGuard><InvestorMarket /></RoleGuard>} />
+                <Route path="/investor/product" element={<RoleGuard><InvestorProduct /></RoleGuard>} />
+                <Route path="/investor/team" element={<RoleGuard><InvestorTeam /></RoleGuard>} />
+                <Route path="/investor/projections" element={<RoleGuard><InvestorProjections /></RoleGuard>} />
+                <Route path="/investor/forecast" element={<RoleGuard><InvestorForecast /></RoleGuard>} />
 
                 {/* Portal pages */}
                 <Route path="/quote/:token" element={<QuotePortal />} />
