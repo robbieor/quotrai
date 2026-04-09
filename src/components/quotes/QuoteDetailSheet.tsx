@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Download, Mail, Pencil, Link2, FileText, Briefcase, Receipt } from "lucide-react";
+import { Download, Mail, Pencil, Link2, FileText, Briefcase, Receipt, Send, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
@@ -33,6 +33,7 @@ interface QuoteDetailSheetProps {
   onCopyPortalLink: (quote: Quote) => void;
   onConvertToJob?: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote) => void;
+  onUpdateStatus?: (quote: Quote, status: "sent" | "accepted" | "declined") => void;
 }
 
 export function QuoteDetailSheet({
@@ -45,6 +46,7 @@ export function QuoteDetailSheet({
   onCopyPortalLink,
   onConvertToJob,
   onConvertToInvoice,
+  onUpdateStatus,
 }: QuoteDetailSheetProps) {
   if (!quote) return null;
 
