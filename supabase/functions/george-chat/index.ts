@@ -487,7 +487,7 @@ You CANNOT actually create quotes, access real data, or perform actions. You're 
       "What jobs do I have scheduled for today?": { function_name: "get_todays_jobs", parameters: {}, intent: "view_schedule", label: "Today's Schedule" },
       "Which invoices are overdue?": { function_name: "get_overdue_invoices", parameters: {}, intent: "overdue", label: "Overdue Invoices" },
       "Give me a summary of my week ahead": { function_name: "get_week_ahead_summary", parameters: {}, intent: "briefing", label: "Week Ahead" },
-      "Show me my draft quotes that need to be sent.": { function_name: "get_todays_jobs", parameters: {}, intent: "view_schedule", label: "Draft Quotes" },
+      "Show me my draft quotes that need to be sent.": { function_name: "list_quotes", parameters: { status: "draft" }, intent: "draft_quotes", label: "Draft Quotes" },
     };
 
     const directAction = directWebhookActions[message];
