@@ -19,13 +19,17 @@ interface CsvImportDialogProps {
 }
 
 const CSV_TEMPLATE_HEADERS = [
-  "product_name", "supplier", "sku", "description", "trade_type", "category",
-  "subcategory", "unit", "source_price", "manufacturer", "image_url"
+  "item_name", "supplier_name", "supplier_sku", "manufacturer", "manufacturer_part_number",
+  "category", "subcategory", "trade_type", "unit",
+  "website_price", "discount_percent", "cost_price", "markup_percent", "sell_price",
+  "image_url"
 ];
 
 const CSV_TEMPLATE_SAMPLE = [
-  "10W LED Floodlight", "My Supplier", "FL-10W-BK", "Black 10W LED floodlight IP65",
-  "Electrical", "Lighting", "Floodlights", "each", "24.50", "Philips", ""
+  "10W LED Floodlight", "My Supplier", "FL-10W-BK", "Philips", "MPN-12345",
+  "Lighting", "Floodlights", "Electrical", "each",
+  "24.50", "0", "24.50", "30", "31.85",
+  ""
 ];
 
 export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDialogProps) {
@@ -39,16 +43,21 @@ export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDia
   const [csvRows, setCsvRows] = useState<Record<string, string>[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
+  // Maps CSV header names → internal DB column names
   const FIELD_MAP: Record<string, string> = {
-    item_name: "product_name", product_name: "product_name", name: "product_name",
-    supplier_name: "supplier", supplier: "supplier",
-    supplier_sku: "sku", sku: "sku", product_code: "sku",
+    item_name: "item_name", product_name: "item_name", name: "item_name",
+    supplier_name: "supplier_name", supplier: "supplier_name",
+    supplier_sku: "supplier_sku", sku: "supplier_sku", product_code: "supplier_sku",
     manufacturer: "manufacturer", mfr: "manufacturer", brand: "manufacturer",
+    manufacturer_part_number: "manufacturer_part_number", mpn: "manufacturer_part_number",
     category: "category", subcategory: "subcategory",
     unit: "unit", unit_of_measure: "unit",
-    cost_price: "source_price", net_price: "source_price", source_price: "source_price",
-    website_price: "source_price", list_price: "source_price", rrp: "source_price",
-    description: "description", trade_type: "trade_type",
+    website_price: "website_price", list_price: "website_price", rrp: "website_price", source_price: "website_price",
+    discount_percent: "discount_percent",
+    cost_price: "cost_price", net_price: "cost_price",
+    markup_percent: "markup_percent",
+    sell_price: "sell_price",
+    trade_type: "trade_type",
     image_url: "image_url",
   };
 
@@ -96,8 +105,8 @@ export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDia
 
   const handleImport = async () => {
     if (!file || !profile?.team_id || csvRows.length === 0) return;
-    if (!Object.values(columnMapping).includes("product_name")) {
-      toast.error("Map at least the 'Product Name' column");
+    if (!Object.values(columnMapping).includes("item_name")) {
+      toast.error("Map at least the 'Item Name' column");
       return;
     }
     setImporting(true);
@@ -137,35 +146,47 @@ export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDia
 
       const items = csvRows.map(row => {
         const get = (field: string) => row[reverseMap[field]] || "";
-        const productName = get("product_name");
-        if (!productName) return null;
+        const itemName = get("item_name");
+        if (!itemName) return null;
 
-        const sourcePrice = parseFloat(get("source_price")) || 0;
-        const supplierName = get("supplier") || null;
+        const websitePrice = parseFloat(get("website_price")) || 0;
+        const supplierName = get("supplier_name") || null;
 
-        let disc = 0;
-        let mkup = 30;
-        if (supplierName) {
+        // If CSV provides cost/sell directly, use them; otherwise calculate from supplier settings
+        const csvCostPrice = parseFloat(get("cost_price"));
+        const csvSellPrice = parseFloat(get("sell_price"));
+        const csvDiscount = parseFloat(get("discount_percent"));
+        const csvMarkup = parseFloat(get("markup_percent"));
+
+        let disc = !isNaN(csvDiscount) ? csvDiscount : 0;
+        let mkup = !isNaN(csvMarkup) ? csvMarkup : 30;
+
+        if (supplierName && isNaN(csvDiscount) && isNaN(csvMarkup)) {
           const setting = getSettingForSupplier(supplierName);
           disc = setting?.discount_percent ?? 0;
           mkup = setting?.default_markup_percent ?? 30;
         }
 
-        const costPrice = sourcePrice > 0 ? +(sourcePrice * (1 - disc / 100)).toFixed(2) : 0;
-        const sellPrice = costPrice > 0 ? +(costPrice * (1 + mkup / 100)).toFixed(2) : 0;
+        const costPrice = !isNaN(csvCostPrice) && csvCostPrice > 0
+          ? csvCostPrice
+          : websitePrice > 0 ? +(websitePrice * (1 - disc / 100)).toFixed(2) : 0;
+        const sellPrice = !isNaN(csvSellPrice) && csvSellPrice > 0
+          ? csvSellPrice
+          : costPrice > 0 ? +(costPrice * (1 + mkup / 100)).toFixed(2) : 0;
 
         return {
           team_id: profile.team_id,
           pricebook_id: pricebookId,
-          item_name: productName,
+          item_name: itemName,
           supplier_name: supplierName,
-          supplier_sku: get("sku") || null,
+          supplier_sku: get("supplier_sku") || null,
           manufacturer: get("manufacturer") || null,
+          manufacturer_part_number: get("manufacturer_part_number") || null,
           category: get("category") || null,
           subcategory: get("subcategory") || null,
           trade_type: get("trade_type") || null,
           unit: get("unit") || "each",
-          website_price: sourcePrice || null,
+          website_price: websitePrice || null,
           discount_percent: disc,
           cost_price: costPrice,
           markup_percent: mkup,
