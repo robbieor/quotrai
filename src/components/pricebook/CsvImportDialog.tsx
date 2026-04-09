@@ -105,8 +105,8 @@ export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDia
 
   const handleImport = async () => {
     if (!file || !profile?.team_id || csvRows.length === 0) return;
-    if (!Object.values(columnMapping).includes("product_name")) {
-      toast.error("Map at least the 'Product Name' column");
+    if (!Object.values(columnMapping).includes("item_name")) {
+      toast.error("Map at least the 'Item Name' column");
       return;
     }
     setImporting(true);
@@ -146,35 +146,47 @@ export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDia
 
       const items = csvRows.map(row => {
         const get = (field: string) => row[reverseMap[field]] || "";
-        const productName = get("product_name");
-        if (!productName) return null;
+        const itemName = get("item_name");
+        if (!itemName) return null;
 
-        const sourcePrice = parseFloat(get("source_price")) || 0;
-        const supplierName = get("supplier") || null;
+        const websitePrice = parseFloat(get("website_price")) || 0;
+        const supplierName = get("supplier_name") || null;
 
-        let disc = 0;
-        let mkup = 30;
-        if (supplierName) {
+        // If CSV provides cost/sell directly, use them; otherwise calculate from supplier settings
+        const csvCostPrice = parseFloat(get("cost_price"));
+        const csvSellPrice = parseFloat(get("sell_price"));
+        const csvDiscount = parseFloat(get("discount_percent"));
+        const csvMarkup = parseFloat(get("markup_percent"));
+
+        let disc = !isNaN(csvDiscount) ? csvDiscount : 0;
+        let mkup = !isNaN(csvMarkup) ? csvMarkup : 30;
+
+        if (supplierName && isNaN(csvDiscount) && isNaN(csvMarkup)) {
           const setting = getSettingForSupplier(supplierName);
           disc = setting?.discount_percent ?? 0;
           mkup = setting?.default_markup_percent ?? 30;
         }
 
-        const costPrice = sourcePrice > 0 ? +(sourcePrice * (1 - disc / 100)).toFixed(2) : 0;
-        const sellPrice = costPrice > 0 ? +(costPrice * (1 + mkup / 100)).toFixed(2) : 0;
+        const costPrice = !isNaN(csvCostPrice) && csvCostPrice > 0
+          ? csvCostPrice
+          : websitePrice > 0 ? +(websitePrice * (1 - disc / 100)).toFixed(2) : 0;
+        const sellPrice = !isNaN(csvSellPrice) && csvSellPrice > 0
+          ? csvSellPrice
+          : costPrice > 0 ? +(costPrice * (1 + mkup / 100)).toFixed(2) : 0;
 
         return {
           team_id: profile.team_id,
           pricebook_id: pricebookId,
-          item_name: productName,
+          item_name: itemName,
           supplier_name: supplierName,
-          supplier_sku: get("sku") || null,
+          supplier_sku: get("supplier_sku") || null,
           manufacturer: get("manufacturer") || null,
+          manufacturer_part_number: get("manufacturer_part_number") || null,
           category: get("category") || null,
           subcategory: get("subcategory") || null,
           trade_type: get("trade_type") || null,
           unit: get("unit") || "each",
-          website_price: sourcePrice || null,
+          website_price: websitePrice || null,
           discount_percent: disc,
           cost_price: costPrice,
           markup_percent: mkup,
