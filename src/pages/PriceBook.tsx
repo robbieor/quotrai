@@ -30,6 +30,7 @@ export default function PriceBook() {
   const [showCsvImport, setShowCsvImport] = useState(false);
   const [showSupplierSettings, setShowSupplierSettings] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
+  const hasPricebooks = pricebooks.length > 0;
 
   const stats = useMemo(() => {
     const totalItems = allItems.length;
@@ -59,6 +60,8 @@ export default function PriceBook() {
     ).slice(0, 20);
   }, [allItems, globalSearch]);
 
+  const showCatalogOverview = hasPricebooks && allItems.length > 0;
+
   const handleSourceSelect = (type: "supplier_directory" | "csv" | "manual" | "ai_extract") => {
     if (type === "csv") setShowCsvImport(true);
     else setShowManualDialog(true);
@@ -86,7 +89,7 @@ export default function PriceBook() {
           </div>
         </div>
 
-        {stats.totalItems > 0 && !isMobile && (
+        {showCatalogOverview && !isMobile && (
           <PricebookStats
             totalItems={stats.totalItems}
             totalSuppliers={stats.totalSuppliers}
@@ -95,7 +98,7 @@ export default function PriceBook() {
           />
         )}
 
-        {allItems.length > 0 && (
+        {showCatalogOverview && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -127,7 +130,7 @@ export default function PriceBook() {
           </div>
         )}
 
-        {!isMobile && <RecentItems items={recentItems} />}
+        {hasPricebooks && !isMobile && recentItems.length > 0 && <RecentItems items={recentItems} />}
 
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground">Loading catalogs...</div>
