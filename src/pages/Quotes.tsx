@@ -523,6 +523,21 @@ export default function Quotes() {
                                   <DropdownMenuItem onClick={() => handleEdit(quote)}>
                                     <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                                   </DropdownMenuItem>
+                                  {quote.status === "draft" && (
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(quote, "sent")}>
+                                      <Send className="mr-2 h-3.5 w-3.5" /> Mark as Sent
+                                    </DropdownMenuItem>
+                                  )}
+                                  {(quote.status === "draft" || quote.status === "sent") && (
+                                    <>
+                                      <DropdownMenuItem onClick={() => handleUpdateStatus(quote, "accepted")}>
+                                        <CheckCircle className="mr-2 h-3.5 w-3.5" /> Mark as Accepted
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleUpdateStatus(quote, "declined")}>
+                                        <XCircle className="mr-2 h-3.5 w-3.5" /> Mark as Declined
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handleDelete(quote)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
