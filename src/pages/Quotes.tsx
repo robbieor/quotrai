@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays, AlertTriangle, ChevronRight } from "lucide-react";
+import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays, AlertTriangle, ChevronRight, Send, CheckCircle, XCircle } from "lucide-react";
 import { CreateFromQuoteDialog } from "@/components/invoices/CreateFromQuoteDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { useCreateJob } from "@/hooks/useJobs";
-import { useQuotes, useDeleteQuote, Quote } from "@/hooks/useQuotes";
+import { useQuotes, useDeleteQuote, useUpdateQuoteStatus, Quote } from "@/hooks/useQuotes";
 import { QuoteFormDialog } from "@/components/quotes/QuoteFormDialog";
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog";
 import { QuoteDetailSheet } from "@/components/quotes/QuoteDetailSheet";
@@ -62,6 +62,7 @@ export default function Quotes() {
   const { data: quotes, isLoading } = useQuotes();
   const { branding } = useCompanyBranding();
   const deleteQuote = useDeleteQuote();
+  const updateStatus = useUpdateQuoteStatus();
   const { symbol: currencySymbol, formatCurrency } = useCurrency();
   const createJob = useCreateJob();
   const isMobile = useIsMobile();
@@ -173,6 +174,18 @@ export default function Quotes() {
   const handleConvertToInvoice = (quote: Quote) => {
     setSelectedQuote(quote);
     setConvertToInvoiceOpen(true);
+  };
+
+  const handleUpdateStatus = (quote: Quote, status: "sent" | "accepted" | "declined") => {
+    updateStatus.mutate(
+      { id: quote.id, status },
+      {
+        onSuccess: () => {
+          toast.success(`Quote marked as ${status}`);
+          setDetailOpen(false);
+        },
+      }
+    );
   };
 
   const handleExport = () => {
@@ -510,6 +523,21 @@ export default function Quotes() {
                                   <DropdownMenuItem onClick={() => handleEdit(quote)}>
                                     <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                                   </DropdownMenuItem>
+                                  {quote.status === "draft" && (
+                                    <DropdownMenuItem onClick={() => handleUpdateStatus(quote, "sent")}>
+                                      <Send className="mr-2 h-3.5 w-3.5" /> Mark as Sent
+                                    </DropdownMenuItem>
+                                  )}
+                                  {(quote.status === "draft" || quote.status === "sent") && (
+                                    <>
+                                      <DropdownMenuItem onClick={() => handleUpdateStatus(quote, "accepted")}>
+                                        <CheckCircle className="mr-2 h-3.5 w-3.5" /> Mark as Accepted
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleUpdateStatus(quote, "declined")}>
+                                        <XCircle className="mr-2 h-3.5 w-3.5" /> Mark as Declined
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handleDelete(quote)} className="text-destructive focus:text-destructive">
                                     <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
@@ -598,6 +626,7 @@ export default function Quotes() {
         onCopyPortalLink={handleCopyPortalLink}
         onConvertToJob={handleConvertToJob}
         onConvertToInvoice={handleConvertToInvoice}
+        onUpdateStatus={handleUpdateStatus}
       />
       <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} preselectedQuoteId={selectedQuote?.id} />
       <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} onSubmit={(values) => {

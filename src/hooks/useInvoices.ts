@@ -118,7 +118,6 @@ export function useCreateInvoice(onXeroSync?: (id: string) => void) {
         const itemsWithInvoiceId = items.map((item) => ({
           ...item,
           invoice_id: newInvoice.id,
-          total_price: (item.quantity || 1) * (item.unit_price || 0),
         }));
 
         const { error: itemsError } = await supabase
@@ -203,7 +202,6 @@ export function useCreateInvoiceFromQuote() {
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total_price: item.total_price,
         }));
 
         const { error: itemsError } = await supabase
@@ -271,7 +269,6 @@ export function useUpdateInvoice(onXeroSync?: (id: string) => void) {
         const itemsWithInvoiceId = items.map((item) => ({
           ...item,
           invoice_id: id,
-          total_price: (item.quantity || 1) * (item.unit_price || 0),
         }));
 
         const { error: itemsError } = await supabase

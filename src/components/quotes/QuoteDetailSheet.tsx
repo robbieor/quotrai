@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Download, Mail, Pencil, Link2, FileText, Briefcase, Receipt } from "lucide-react";
+import { Download, Mail, Pencil, Link2, FileText, Briefcase, Receipt, Send, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
@@ -33,6 +33,7 @@ interface QuoteDetailSheetProps {
   onCopyPortalLink: (quote: Quote) => void;
   onConvertToJob?: (quote: Quote) => void;
   onConvertToInvoice?: (quote: Quote) => void;
+  onUpdateStatus?: (quote: Quote, status: "sent" | "accepted" | "declined") => void;
 }
 
 export function QuoteDetailSheet({
@@ -45,6 +46,7 @@ export function QuoteDetailSheet({
   onCopyPortalLink,
   onConvertToJob,
   onConvertToInvoice,
+  onUpdateStatus,
 }: QuoteDetailSheetProps) {
   if (!quote) return null;
 
@@ -90,6 +92,27 @@ export function QuoteDetailSheet({
             onConvertToJob={onConvertToJob ? () => { onConvertToJob(quote); onOpenChange(false); } : undefined}
             onConvertToInvoice={onConvertToInvoice ? () => { onConvertToInvoice(quote); onOpenChange(false); } : undefined}
           />
+
+          {/* Status progression buttons */}
+          {onUpdateStatus && (
+            <div className="flex gap-2 flex-wrap">
+              {quote.status === "draft" && (
+                <Button size="sm" variant="outline" onClick={() => onUpdateStatus(quote, "sent")}>
+                  <Send className="mr-1.5 h-3.5 w-3.5" /> Mark as Sent
+                </Button>
+              )}
+              {(quote.status === "draft" || quote.status === "sent") && (
+                <>
+                  <Button size="sm" onClick={() => onUpdateStatus(quote, "accepted")}>
+                    <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Mark as Accepted
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => onUpdateStatus(quote, "declined")}>
+                    <XCircle className="mr-1.5 h-3.5 w-3.5" /> Declined
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Convert actions for accepted quotes */}
           {quote.status === "accepted" && (onConvertToJob || onConvertToInvoice) && (
