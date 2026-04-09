@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Settings2, BookOpen, Search } from "lucide-react";
+import { Plus, BookOpen, Search } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePricebooks } from "@/hooks/usePricebooks";
 import { useTeamCatalog, type CatalogItem } from "@/hooks/useTeamCatalog";
@@ -14,7 +14,7 @@ import { RecentItems } from "@/components/pricebook/RecentItems";
 import { AddPriceSourceDialog } from "@/components/pricebook/AddPriceSourceDialog";
 import { ManualCatalogDialog } from "@/components/pricebook/ManualCatalogDialog";
 import { CsvImportDialog } from "@/components/pricebook/CsvImportDialog";
-import { SupplierSettingsDialog } from "@/components/pricebook/SupplierSettingsDialog";
+
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function PriceBook() {
@@ -28,7 +28,7 @@ export default function PriceBook() {
   const [showAddSource, setShowAddSource] = useState(false);
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [showCsvImport, setShowCsvImport] = useState(false);
-  const [showSupplierSettings, setShowSupplierSettings] = useState(false);
+  
   const [globalSearch, setGlobalSearch] = useState("");
   const hasPricebooks = pricebooks.length > 0;
 
@@ -172,10 +172,6 @@ export default function PriceBook() {
         onComplete={() => queryClient.invalidateQueries({ queryKey: ["pricebooks"] })}
       />
 
-      <SupplierSettingsDialog
-        open={showSupplierSettings}
-        onOpenChange={setShowSupplierSettings}
-      />
     </DashboardLayout>
   );
 }
