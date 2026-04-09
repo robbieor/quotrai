@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays, AlertTriangle, ChevronRight } from "lucide-react";
+import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal, Link2, TrendingUp, TrendingDown, PieChart, BarChart3, CalendarDays, AlertTriangle, ChevronRight, Send, CheckCircle, XCircle } from "lucide-react";
 import { CreateFromQuoteDialog } from "@/components/invoices/CreateFromQuoteDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { useCreateJob } from "@/hooks/useJobs";
