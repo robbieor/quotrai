@@ -19,13 +19,17 @@ interface CsvImportDialogProps {
 }
 
 const CSV_TEMPLATE_HEADERS = [
-  "product_name", "supplier", "sku", "description", "trade_type", "category",
-  "subcategory", "unit", "source_price", "manufacturer", "image_url"
+  "item_name", "supplier_name", "supplier_sku", "manufacturer", "manufacturer_part_number",
+  "category", "subcategory", "trade_type", "unit",
+  "website_price", "discount_percent", "cost_price", "markup_percent", "sell_price",
+  "image_url"
 ];
 
 const CSV_TEMPLATE_SAMPLE = [
-  "10W LED Floodlight", "My Supplier", "FL-10W-BK", "Black 10W LED floodlight IP65",
-  "Electrical", "Lighting", "Floodlights", "each", "24.50", "Philips", ""
+  "10W LED Floodlight", "My Supplier", "FL-10W-BK", "Philips", "MPN-12345",
+  "Lighting", "Floodlights", "Electrical", "each",
+  "24.50", "0", "24.50", "30", "31.85",
+  ""
 ];
 
 export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDialogProps) {
@@ -39,16 +43,21 @@ export function CsvImportDialog({ open, onOpenChange, onComplete }: CsvImportDia
   const [csvRows, setCsvRows] = useState<Record<string, string>[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
+  // Maps CSV header names → internal DB column names
   const FIELD_MAP: Record<string, string> = {
-    item_name: "product_name", product_name: "product_name", name: "product_name",
-    supplier_name: "supplier", supplier: "supplier",
-    supplier_sku: "sku", sku: "sku", product_code: "sku",
+    item_name: "item_name", product_name: "item_name", name: "item_name",
+    supplier_name: "supplier_name", supplier: "supplier_name",
+    supplier_sku: "supplier_sku", sku: "supplier_sku", product_code: "supplier_sku",
     manufacturer: "manufacturer", mfr: "manufacturer", brand: "manufacturer",
+    manufacturer_part_number: "manufacturer_part_number", mpn: "manufacturer_part_number",
     category: "category", subcategory: "subcategory",
     unit: "unit", unit_of_measure: "unit",
-    cost_price: "source_price", net_price: "source_price", source_price: "source_price",
-    website_price: "source_price", list_price: "source_price", rrp: "source_price",
-    description: "description", trade_type: "trade_type",
+    website_price: "website_price", list_price: "website_price", rrp: "website_price", source_price: "website_price",
+    discount_percent: "discount_percent",
+    cost_price: "cost_price", net_price: "cost_price",
+    markup_percent: "markup_percent",
+    sell_price: "sell_price",
+    trade_type: "trade_type",
     image_url: "image_url",
   };
 
