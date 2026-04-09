@@ -1,56 +1,38 @@
 
 
-# Unified Search Bar: Text + URL in One Input
+# Fix Template Line Items Layout + Verify Display Mode Flow
 
-## What You Already Have
-- **ProductSearchDialog** — searches the web by text, click a result to scrape, then "Add to Catalog"
-- **ImportFromUrlDialog** — paste a specific product URL, fetch, preview, add
-- These are two separate flows behind different buttons — confusing for tradies
+## Problems
 
-## The Fix
-Merge both into a **single smart search bar** built into the pricebook detail page (not hidden in a dialog). The input auto-detects whether you typed a search query or pasted a URL.
+1. **Line items grid is squashed on laptop** — 12 columns (grip, description, type, group, unit, qty, cost, sell, margin, line total, delete) crammed into a `max-w-3xl` (768px) dialog. Every field gets ~64px, making inputs unreadable and dropdowns truncated (visible in your screenshot).
 
-### How It Works
+2. **Display mode IS connected to quotes and invoices** — both `QuoteFormDialog` and `InvoiceFormDialog` already save/load `pricing_display_mode`. The `PricingDisplayModeSelector` component exists in both. However, `LineItemsPreview` (the component that renders different views) is defined but **never imported or used anywhere** — so the display mode is stored but never actually applied to customer-facing output (no portal or PDF currently uses it).
 
-1. **Smart input detection**: If the text starts with `http` or contains `.com/.ie/.co.uk` etc., treat it as a URL — call `scrape-supplier-url` directly. Otherwise, treat it as a text search — call `discover-supplier-products`.
+## Plan
 
-2. **Inline results below the search bar** (not a dialog): Search results appear as compact cards directly on the page. Each card shows product name, supplier domain, and a prominent **"+ Add"** button. No extra clicks to open dialogs.
+### 1. Widen the template dialog and restructure the line items grid
 
-3. **One-tap add**: Clicking "+ Add" on a search result scrapes the URL, applies the team's supplier discount/markup settings, and adds it to the current pricebook. A toast confirms success. The result card shows a checkmark after adding.
+- Change `max-w-3xl` to `max-w-5xl` to give columns breathing room on laptop
+- Restructure from 12-column grid to a cleaner layout:
+  - **Row 1**: Description (wide), Type dropdown, Group dropdown, Unit dropdown
+  - **Row 2** (inline right-aligned): Qty, Cost, Sell, Margin badge, Line Total, Delete
+- This gives Description ~250px instead of ~64px, and dropdowns enough space to show their values
 
-4. **URL paste flow**: Paste a URL → single product card appears with preview → click "Add to Pricebook" → done.
+### 2. Mobile layout for line items
 
-5. **Favourites**: Already supported via `is_favourite` on `team_catalog_items` and the existing `toggleFavourite` mutation. The heart icon is already on every card. No changes needed — tradies can favourite any item after adding it.
+- Below `md` breakpoint, stack each line item as a card with labeled fields in 2-column pairs
+- Description full-width on top, then Type/Group, Unit/Qty, Cost/Sell, Margin+Total+Delete row
 
-## Changes
+### 3. Confirm display mode flows end-to-end
+
+- Templates: `default_display_mode` ✅ saved and loaded
+- Quotes: `pricing_display_mode` ✅ saved and loaded, `PricingDisplayModeSelector` present
+- Invoices: `pricing_display_mode` ✅ saved and loaded, `PricingDisplayModeSelector` present
+- **Gap**: `LineItemsPreview` component exists but is never used in any customer-facing view. When a customer portal or PDF export is built, it will need to consume `pricing_display_mode` and render via `LineItemsPreview`. No action needed now — the data is being stored correctly.
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/PricebookDetail.tsx` | Replace the search input with the new smart search component; remove `ProductSearchDialog` usage; keep the "+" dropdown for manual add and website import only |
-| `src/components/pricebook/SmartProductSearch.tsx` | **New file** — the unified search component with URL detection, inline results list, one-tap add button, and scraped product preview |
-| `src/components/pricebook/ProductSearchDialog.tsx` | Remove (replaced by SmartProductSearch) |
-
-## UI Layout (Mobile-first, 402px viewport)
-
-```text
-┌──────────────────────────────────┐
-│ ← Pricebook Name          [+]   │
-│ 42 items · Electrical            │
-├──────────────────────────────────┤
-│ 🔍 Search products or paste URL │
-├──────────────────────────────────┤
-│ ┌──────────────────────────────┐ │
-│ │ Hager MCB 20A Type B        │ │
-│ │ wesco.ie · €12.50    [+Add] │ │
-│ ├──────────────────────────────┤ │
-│ │ Schneider MCB 20A B Curve   │ │
-│ │ cef.ie · €14.20      [+Add] │ │
-│ └──────────────────────────────┘ │
-│                                  │
-│ ── Your Products ──              │
-│ [existing catalog cards below]   │
-└──────────────────────────────────┘
-```
-
-The search results overlay sits between the search bar and the existing catalog list. When dismissed (X or Escape), the normal catalog view returns.
+| `src/components/templates/TemplateFormDialog.tsx` | Widen dialog, restructure line items to 2-row layout on desktop, card layout on mobile |
 
