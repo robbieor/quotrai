@@ -4,8 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Search, Plus, Globe, Filter, BarChart3, LayoutGrid, TableIcon, MoreVertical } from "lucide-react";
-import { SmartProductSearch } from "@/components/pricebook/SmartProductSearch";
+import { ArrowLeft, Search, Plus, Filter, BarChart3, LayoutGrid, TableIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTeamCatalog, type CatalogItem, type CatalogFilters } from "@/hooks/useTeamCatalog";
 import { usePricebooks } from "@/hooks/usePricebooks";
@@ -14,12 +13,10 @@ import { CatalogProductCard } from "@/components/pricebook/CatalogProductCard";
 import { CatalogTable } from "@/components/pricebook/CatalogTable";
 import { BulkActionsBar } from "@/components/pricebook/BulkActionsBar";
 import { CatalogItemForm } from "@/components/pricebook/CatalogItemForm";
-import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PriceCompareView } from "@/components/pricebook/PriceCompareView";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
@@ -37,21 +34,20 @@ export default function PricebookDetail() {
 
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<CatalogItem | null>(null);
-  const [showWebsiteImport, setShowWebsiteImport] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState("catalog");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [cardPage, setCardPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Force card view on mobile
   const effectiveView = isMobile ? "card" : viewMode;
 
-  const handleSearch = (q: string) => setFilters({ ...filters, search: q });
+  const handleSearch = (q: string) => {
+    setSearchQuery(q);
+    setFilters({ ...filters, search: q });
+  };
 
-  const uniqueSuppliers = [...new Set(items.map((i) => i.supplier_name).filter(Boolean))];
-
-  // Pagination for card view
   const totalCardPages = Math.ceil(items.length / PAGE_SIZE);
   const pagedItems = items.slice(cardPage * PAGE_SIZE, (cardPage + 1) * PAGE_SIZE);
 
@@ -139,34 +135,9 @@ export default function PricebookDetail() {
             </div>
           </div>
 
-          {/* Desktop actions */}
-          <div className="hidden sm:flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setShowWebsiteImport(true)}>
-              <Globe className="h-4 w-4 mr-1.5" /> Add Supplier
-            </Button>
-            <Button size="sm" onClick={() => { setEditItem(null); setShowForm(true); }}>
-              <Plus className="h-4 w-4 mr-1.5" /> Add Item
-            </Button>
-          </div>
-
-          {/* Mobile: compact dropdown */}
-          <div className="flex sm:hidden gap-1.5">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" className="h-8 w-8 p-0">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowWebsiteImport(true)}>
-                  <Globe className="h-4 w-4 mr-2" /> Add Supplier
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setEditItem(null); setShowForm(true); }}>
-                  <Plus className="h-4 w-4 mr-2" /> Add Item
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <Button size="sm" onClick={() => { setEditItem(null); setShowForm(true); }}>
+            <Plus className="h-4 w-4 mr-1.5" /> Add Item
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -177,7 +148,6 @@ export default function PricebookDetail() {
                 <BarChart3 className="h-3 w-3 mr-1" /> Compare
               </TabsTrigger>
             </TabsList>
-            {/* View toggle — desktop only */}
             {activeTab === "catalog" && !isMobile && (
               <div className="flex items-center gap-1 border rounded-lg p-0.5">
                 <button
@@ -197,14 +167,15 @@ export default function PricebookDetail() {
           </div>
 
           <TabsContent value="catalog" className="mt-3 space-y-3">
-            {/* Search */}
+            {/* Simple text search */}
             <div className="flex gap-2">
-              <div className="flex-1">
-                <SmartProductSearch
-                  onImport={(product) => {
-                    const payload = { ...product, pricebook_id: id };
-                    addItem.mutate(payload);
-                  }}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-9"
                 />
               </div>
               <Sheet>
@@ -217,7 +188,6 @@ export default function PricebookDetail() {
               </Sheet>
             </div>
 
-            {/* Bulk actions — desktop only */}
             {!isMobile && (
               <BulkActionsBar
                 selectedCount={selectedIds.size}
@@ -228,7 +198,6 @@ export default function PricebookDetail() {
               />
             )}
 
-            {/* Content */}
             <div className="flex gap-6">
               <div className="hidden sm:block w-48 flex-shrink-0">
                 <Card><CardContent className="p-4">{sidebar}</CardContent></Card>
@@ -241,9 +210,9 @@ export default function PricebookDetail() {
                   <EmptyState
                     icon={Search}
                     title="No items in this pricebook"
-                    description="Import products from a supplier website or add items manually."
-                    actionLabel="Import from Website"
-                    onAction={() => setShowWebsiteImport(true)}
+                    description="Add items manually or import from a CSV file."
+                    actionLabel="Add Item"
+                    onAction={() => { setEditItem(null); setShowForm(true); }}
                   />
                 ) : effectiveView === "table" ? (
                   <CatalogTable
@@ -268,7 +237,6 @@ export default function PricebookDetail() {
                         onToggleFav={(favId, fav) => toggleFavourite.mutate({ id: favId, is_favourite: fav })}
                       />
                     ))}
-                    {/* Card pagination */}
                     {totalCardPages > 1 && (
                       <div className="flex items-center justify-between pt-2">
                         <span className="text-xs text-muted-foreground">
@@ -313,16 +281,6 @@ export default function PricebookDetail() {
           }}
         />
       )}
-
-      <WebsiteImportWizard
-        open={showWebsiteImport}
-        onOpenChange={setShowWebsiteImport}
-        existingPricebook={pricebook || null}
-        onComplete={() => {
-          setShowWebsiteImport(false);
-        }}
-      />
-
     </DashboardLayout>
   );
 }
