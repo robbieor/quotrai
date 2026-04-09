@@ -611,6 +611,7 @@ export default function Quotes() {
         onCopyPortalLink={handleCopyPortalLink}
         onConvertToJob={handleConvertToJob}
         onConvertToInvoice={handleConvertToInvoice}
+        onUpdateStatus={handleUpdateStatus}
       />
       <CreateFromQuoteDialog open={convertToInvoiceOpen} onOpenChange={setConvertToInvoiceOpen} preselectedQuoteId={selectedQuote?.id} />
       <JobFormDialog open={convertToJobOpen} onOpenChange={setConvertToJobOpen} job={jobPrefill} onSubmit={(values) => {
