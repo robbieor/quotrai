@@ -176,6 +176,18 @@ export default function Quotes() {
     setConvertToInvoiceOpen(true);
   };
 
+  const handleUpdateStatus = (quote: Quote, status: "sent" | "accepted" | "declined") => {
+    updateStatus.mutate(
+      { id: quote.id, status },
+      {
+        onSuccess: () => {
+          toast.success(`Quote marked as ${status}`);
+          setDetailOpen(false);
+        },
+      }
+    );
+  };
+
   const handleExport = () => {
     const selected = Array.from(selectedRows).map((i) => sortedData[i]).filter(Boolean);
     const data = selected.length > 0 ? selected : sortedData;
