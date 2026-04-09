@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Globe, Upload, Package, Search, Sparkles } from "lucide-react";
+import { Upload, Package } from "lucide-react";
 
 interface AddPriceSourceDialogProps {
   open: boolean;
@@ -8,18 +8,6 @@ interface AddPriceSourceDialogProps {
 }
 
 const sources = [
-  {
-    type: "supplier_directory" as const,
-    icon: Search,
-    title: "Browse Suppliers",
-    desc: "Pick from our directory of known suppliers in your country",
-  },
-  {
-    type: "ai_extract" as const,
-    icon: Sparkles,
-    title: "Import from Any Website",
-    desc: "Paste any supplier URL — AI extracts products and pricing automatically",
-  },
   {
     type: "csv" as const,
     icon: Upload,

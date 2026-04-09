@@ -12,13 +12,9 @@ import { PricebookCard } from "@/components/pricebook/PricebookCard";
 import { PricebookStats } from "@/components/pricebook/PricebookStats";
 import { RecentItems } from "@/components/pricebook/RecentItems";
 import { AddPriceSourceDialog } from "@/components/pricebook/AddPriceSourceDialog";
-import { WebsiteImportWizard } from "@/components/pricebook/WebsiteImportWizard";
 import { ManualCatalogDialog } from "@/components/pricebook/ManualCatalogDialog";
 import { CsvImportDialog } from "@/components/pricebook/CsvImportDialog";
 import { SupplierSettingsDialog } from "@/components/pricebook/SupplierSettingsDialog";
-import { SupplierDirectoryBrowser } from "@/components/pricebook/SupplierDirectoryBrowser";
-import { RequestSupplierForm } from "@/components/pricebook/RequestSupplierForm";
-import { PricebookOnboarding } from "@/components/pricebook/PricebookOnboarding";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function PriceBook() {
@@ -27,19 +23,14 @@ export default function PriceBook() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
 
-  // Fetch ALL catalog items for stats + global search + recent
   const { items: allItems } = useTeamCatalog({});
 
   const [showAddSource, setShowAddSource] = useState(false);
-  const [showWebsiteWizard, setShowWebsiteWizard] = useState(false);
   const [showManualDialog, setShowManualDialog] = useState(false);
   const [showCsvImport, setShowCsvImport] = useState(false);
   const [showSupplierSettings, setShowSupplierSettings] = useState(false);
-  const [showDirectoryBrowser, setShowDirectoryBrowser] = useState(false);
-  const [showRequestForm, setShowRequestForm] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
 
-  // Stats
   const stats = useMemo(() => {
     const totalItems = allItems.length;
     const suppliers = new Set(allItems.map((i) => i.supplier_name).filter(Boolean));
@@ -49,7 +40,6 @@ export default function PriceBook() {
     return { totalItems, totalSuppliers: suppliers.size, avgMargin, lowMarginCount };
   }, [allItems]);
 
-  // Recent items (sorted by last_used_at, top 10)
   const recentItems = useMemo(() => {
     return [...allItems]
       .filter((i) => i.last_used_at)
@@ -57,7 +47,6 @@ export default function PriceBook() {
       .slice(0, 10);
   }, [allItems]);
 
-  // Global search results
   const searchResults = useMemo(() => {
     if (!globalSearch || globalSearch.length < 2) return [];
     const q = globalSearch.toLowerCase();
@@ -71,16 +60,13 @@ export default function PriceBook() {
   }, [allItems, globalSearch]);
 
   const handleSourceSelect = (type: "supplier_directory" | "csv" | "manual" | "ai_extract") => {
-    if (type === "supplier_directory") setShowDirectoryBrowser(true);
-    else if (type === "ai_extract") setShowWebsiteWizard(true);
-    else if (type === "csv") setShowCsvImport(true);
+    if (type === "csv") setShowCsvImport(true);
     else setShowManualDialog(true);
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-[28px] font-bold tracking-[-0.02em]">Price Book</h1>
@@ -100,7 +86,6 @@ export default function PriceBook() {
           </div>
         </div>
 
-        {/* Stats bar — desktop only */}
         {stats.totalItems > 0 && !isMobile && (
           <PricebookStats
             totalItems={stats.totalItems}
@@ -110,7 +95,6 @@ export default function PriceBook() {
           />
         )}
 
-        {/* Global search */}
         {allItems.length > 0 && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -143,20 +127,15 @@ export default function PriceBook() {
           </div>
         )}
 
-        {/* Recently used items — desktop only */}
         {!isMobile && <RecentItems items={recentItems} />}
 
-        {/* Onboarding guide — desktop only */}
-        {!isMobile && <PricebookOnboarding />}
-
-        {/* Pricebook grid */}
         {isLoading ? (
           <div className="text-center py-12 text-muted-foreground">Loading catalogs...</div>
         ) : pricebooks.length === 0 ? (
           <EmptyState
             icon={BookOpen}
             title="No price sources yet"
-            description="Browse our supplier directory, import from any website with AI, upload CSV price lists, or create manual catalogs."
+            description="Upload a supplier CSV price list or create a manual catalog to get started."
             actionLabel="Add Price Source"
             onAction={() => setShowAddSource(true)}
           />
@@ -176,35 +155,10 @@ export default function PriceBook() {
         <div className="pb-24" />
       </div>
 
-      {/* Dialogs */}
       <AddPriceSourceDialog
         open={showAddSource}
         onOpenChange={setShowAddSource}
         onSelect={handleSourceSelect}
-      />
-
-      <SupplierDirectoryBrowser
-        open={showDirectoryBrowser}
-        onOpenChange={setShowDirectoryBrowser}
-        onSelectSupplier={(supplier, method) => {
-          setShowDirectoryBrowser(false);
-          if (method === "csv") setShowCsvImport(true);
-          else if (method === "ai_extract") setShowWebsiteWizard(true);
-          else if (method === "catalog") setShowWebsiteWizard(true);
-          else setShowManualDialog(true);
-        }}
-        onRequestSupplier={() => setShowRequestForm(true)}
-      />
-
-      <RequestSupplierForm
-        open={showRequestForm}
-        onOpenChange={setShowRequestForm}
-      />
-
-      <WebsiteImportWizard
-        open={showWebsiteWizard}
-        onOpenChange={setShowWebsiteWizard}
-        onComplete={() => queryClient.invalidateQueries({ queryKey: ["pricebooks"] })}
       />
 
       <ManualCatalogDialog
