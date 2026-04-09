@@ -7,12 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, GripVertical, RotateCcw } from "lucide-react";
+import { Plus, Trash2, RotateCcw } from "lucide-react";
 import { 
   useCreateTemplate, 
   useUpdateTemplate, 
   Template, 
-  TemplateItem,
   TemplateUnit,
   TRADE_CATEGORIES, 
   TEMPLATE_UNITS,
@@ -133,7 +132,6 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
     setItems(items.map((item) => {
       if (item.id !== id) return item;
       const updated = { ...item, ...updates };
-      // Sync is_material with item_type
       if (updates.item_type !== undefined) {
         updated.is_material = updates.item_type === "material";
         updated.line_group = updates.item_type === "material" ? "Materials" : "Labour";
@@ -141,7 +139,6 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
       if (updates.is_material !== undefined) {
         updated.item_type = updates.is_material ? "material" : "labor";
       }
-      // Auto-compute margin
       if (updates.cost_price !== undefined || updates.sell_price !== undefined) {
         const sell = updated.sell_price || 0;
         const cost = updated.cost_price || 0;
@@ -198,7 +195,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <DialogTitle>{isEditing ? "Edit Template" : "Create Template"}</DialogTitle>
@@ -209,7 +206,8 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          {/* Template metadata */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Template Name</Label>
               <Input
@@ -220,7 +218,6 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="category">Trade Category</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as TradeCategory)}>
@@ -249,9 +246,9 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="labourRate">Default Labour Rate (€/hr)</Label>
+              <Label htmlFor="labourRate">Labour Rate (€/hr)</Label>
               <Input
                 id="labourRate"
                 type="number"
@@ -261,9 +258,8 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                 onChange={(e) => setLabourRateDefault(parseFloat(e.target.value) || 0)}
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="duration">Est. Duration (hours)</Label>
+              <Label htmlFor="duration">Est. Duration (hrs)</Label>
               <Input
                 id="duration"
                 type="number"
@@ -273,7 +269,6 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                 onChange={(e) => setEstimatedDuration(parseFloat(e.target.value) || 0)}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="displayMode">Output Mode</Label>
               <Select value={displayMode} onValueChange={setDisplayMode}>
@@ -289,13 +284,10 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                 </SelectContent>
               </Select>
             </div>
-
             <div className="flex items-end pb-2">
               <div className="flex items-center gap-3">
                 <Switch checked={isFavorite} onCheckedChange={setIsFavorite} id="favorite" />
-                <Label htmlFor="favorite" className="cursor-pointer text-sm">
-                  Favorite
-                </Label>
+                <Label htmlFor="favorite" className="cursor-pointer text-sm">Favorite</Label>
               </div>
             </div>
           </div>
@@ -316,10 +308,9 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
               </div>
             ) : (
               <div className="space-y-3">
-                {/* Header row */}
-                <div className="grid grid-cols-12 gap-2 px-3 text-xs font-medium text-muted-foreground">
-                  <div className="col-span-1"></div>
-                  <div className="col-span-2">Description</div>
+                {/* Desktop header - hidden on mobile */}
+                <div className="hidden md:grid md:grid-cols-12 gap-2 px-3 text-xs font-medium text-muted-foreground">
+                  <div className="col-span-4">Description</div>
                   <div className="col-span-1">Type</div>
                   <div className="col-span-1">Group</div>
                   <div className="col-span-1">Unit</div>
@@ -327,139 +318,163 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                   <div className="col-span-1">Cost (€)</div>
                   <div className="col-span-1">Sell (€)</div>
                   <div className="col-span-1">Margin</div>
-                  <div className="col-span-1">Line Total</div>
-                  <div className="col-span-1"></div>
+                  <div className="col-span-1">Total</div>
                 </div>
 
                 {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid grid-cols-12 gap-2 items-start p-2 bg-muted/50 rounded-lg"
-                  >
-                    <div className="col-span-1 flex items-center justify-center pt-2">
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                  <div key={item.id} className="bg-muted/50 rounded-lg p-3 space-y-2">
+                    {/* Desktop: single row */}
+                    <div className="hidden md:grid md:grid-cols-12 gap-2 items-center">
+                      <div className="col-span-4">
+                        <Input
+                          placeholder="Description"
+                          value={item.description}
+                          onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                          className="text-sm h-9"
+                        />
+                      </div>
+                      <div className="col-span-1">
+                        <Select value={item.item_type} onValueChange={(v) => updateItem(item.id, { item_type: v as "labor" | "material" })}>
+                          <SelectTrigger className="text-xs h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="labor">Labour</SelectItem>
+                            <SelectItem value="material">Material</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-1">
+                        <Select value={item.line_group} onValueChange={(v) => updateItem(item.id, { line_group: v })}>
+                          <SelectTrigger className="text-xs h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {LINE_GROUPS.map((g) => (
+                              <SelectItem key={g} value={g}>{g}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-1">
+                        <Select value={item.unit} onValueChange={(v) => updateItem(item.id, { unit: v as TemplateUnit })}>
+                          <SelectTrigger className="text-xs h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {TEMPLATE_UNITS.map((u) => (
+                              <SelectItem key={u} value={u}>{UNIT_LABELS[u]}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-1">
+                        <Input type="number" min="0" step="0.01" value={item.quantity}
+                          onChange={(e) => updateItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                          className="text-xs h-9" />
+                      </div>
+                      <div className="col-span-1">
+                        <Input type="number" min="0" step="0.01" value={item.cost_price}
+                          onChange={(e) => updateItem(item.id, { cost_price: parseFloat(e.target.value) || 0 })}
+                          className="text-xs h-9" placeholder="0.00" />
+                      </div>
+                      <div className="col-span-1">
+                        <Input type="number" min="0" step="0.01" value={item.sell_price || item.unit_price}
+                          onChange={(e) => updateItem(item.id, { sell_price: parseFloat(e.target.value) || 0 })}
+                          className="text-xs h-9" placeholder="0.00" />
+                      </div>
+                      <div className="col-span-1 flex items-center justify-between">
+                        <span className={`text-xs font-medium ${item.margin_percent > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {item.margin_percent > 0 ? `${item.margin_percent}%` : '—'}
+                        </span>
+                      </div>
+                      <div className="col-span-1 flex items-center justify-between">
+                        <span className="text-xs font-semibold">
+                          €{((item.sell_price || item.unit_price) * item.quantity).toFixed(2)}
+                        </span>
+                        <Button type="button" variant="ghost" size="icon"
+                          onClick={() => removeItem(item.id)}
+                          className="text-destructive hover:text-destructive h-7 w-7 shrink-0">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="col-span-2">
-                      <Input
-                        placeholder="Description"
-                        value={item.description}
-                        onChange={(e) => updateItem(item.id, { description: e.target.value })}
-                        className="text-xs h-8"
-                      />
-                    </div>
-
-                    <div className="col-span-1">
-                      <Select
-                        value={item.item_type}
-                        onValueChange={(v) => updateItem(item.id, { item_type: v as "labor" | "material" })}
-                      >
-                        <SelectTrigger className="text-xs h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="labor">Labour</SelectItem>
-                          <SelectItem value="material">Material</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="col-span-1">
-                      <Select
-                        value={item.line_group}
-                        onValueChange={(v) => updateItem(item.id, { line_group: v })}
-                      >
-                        <SelectTrigger className="text-xs h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LINE_GROUPS.map((g) => (
-                            <SelectItem key={g} value={g}>{g}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="col-span-1">
-                      <Select
-                        value={item.unit}
-                        onValueChange={(v) => updateItem(item.id, { unit: v as TemplateUnit })}
-                      >
-                        <SelectTrigger className="text-xs h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TEMPLATE_UNITS.map((u) => (
-                            <SelectItem key={u} value={u}>
-                              {UNIT_LABELS[u]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="col-span-1">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
-                        className="text-xs h-8"
-                      />
-                    </div>
-
-                    <div className="col-span-1">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.cost_price}
-                        onChange={(e) => updateItem(item.id, { cost_price: parseFloat(e.target.value) || 0 })}
-                        className="text-xs h-8"
-                        placeholder="0.00"
-                      />
-                    </div>
-
-                    <div className="col-span-1">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.sell_price || item.unit_price}
-                        onChange={(e) => updateItem(item.id, { sell_price: parseFloat(e.target.value) || 0 })}
-                        className="text-xs h-8"
-                        placeholder="0.00"
-                      />
-                    </div>
-
-                    <div className="col-span-1 flex items-center pt-1">
-                      <span className={`text-xs font-medium ${item.margin_percent > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        {item.margin_percent > 0 ? `${item.margin_percent}%` : '—'}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 flex items-center pt-1">
-                      <span className="text-xs font-medium">
-                        €{((item.sell_price || item.unit_price) * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="col-span-1 flex justify-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeItem(item.id)}
-                        className="text-destructive hover:text-destructive h-8 w-8"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                    {/* Mobile: card layout */}
+                    <div className="md:hidden space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Input
+                          placeholder="Description"
+                          value={item.description}
+                          onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                          className="text-sm h-9 flex-1"
+                        />
+                        <Button type="button" variant="ghost" size="icon"
+                          onClick={() => removeItem(item.id)}
+                          className="text-destructive hover:text-destructive h-9 w-9 shrink-0">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Type</Label>
+                          <Select value={item.item_type} onValueChange={(v) => updateItem(item.id, { item_type: v as "labor" | "material" })}>
+                            <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="labor">Labour</SelectItem>
+                              <SelectItem value="material">Material</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Group</Label>
+                          <Select value={item.line_group} onValueChange={(v) => updateItem(item.id, { line_group: v })}>
+                            <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {LINE_GROUPS.map((g) => (
+                                <SelectItem key={g} value={g}>{g}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Unit</Label>
+                          <Select value={item.unit} onValueChange={(v) => updateItem(item.id, { unit: v as TemplateUnit })}>
+                            <SelectTrigger className="text-xs h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {TEMPLATE_UNITS.map((u) => (
+                                <SelectItem key={u} value={u}>{UNIT_LABELS[u]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Qty</Label>
+                          <Input type="number" min="0" step="0.01" value={item.quantity}
+                            onChange={(e) => updateItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                            className="text-xs h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Cost (€)</Label>
+                          <Input type="number" min="0" step="0.01" value={item.cost_price}
+                            onChange={(e) => updateItem(item.id, { cost_price: parseFloat(e.target.value) || 0 })}
+                            className="text-xs h-8" placeholder="0.00" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Sell (€)</Label>
+                          <Input type="number" min="0" step="0.01" value={item.sell_price || item.unit_price}
+                            onChange={(e) => updateItem(item.id, { sell_price: parseFloat(e.target.value) || 0 })}
+                            className="text-xs h-8" placeholder="0.00" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                        <span className={`text-xs ${item.margin_percent > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          Margin: {item.margin_percent > 0 ? `${item.margin_percent}%` : '—'}
+                        </span>
+                        <span className="text-sm font-semibold">
+                          €{((item.sell_price || item.unit_price) * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
 
-                <div className="flex justify-between items-end pt-2 px-3">
+                {/* Totals */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end pt-2 px-3 gap-2">
                   <div className="text-xs text-muted-foreground space-y-0.5">
                     <p>Total Cost: €{items.reduce((sum, i) => sum + (i.cost_price || 0) * i.quantity, 0).toFixed(2)}</p>
                     <p>Overall Margin: {(() => {
