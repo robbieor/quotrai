@@ -11,7 +11,7 @@ import { Plus, Search, FileText, Download, Mail, Pencil, Trash2, MoreHorizontal,
 import { CreateFromQuoteDialog } from "@/components/invoices/CreateFromQuoteDialog";
 import { JobFormDialog } from "@/components/jobs/JobFormDialog";
 import { useCreateJob } from "@/hooks/useJobs";
-import { useQuotes, useDeleteQuote, Quote } from "@/hooks/useQuotes";
+import { useQuotes, useDeleteQuote, useUpdateQuoteStatus, Quote } from "@/hooks/useQuotes";
 import { QuoteFormDialog } from "@/components/quotes/QuoteFormDialog";
 import { DeleteQuoteDialog } from "@/components/quotes/DeleteQuoteDialog";
 import { QuoteDetailSheet } from "@/components/quotes/QuoteDetailSheet";
