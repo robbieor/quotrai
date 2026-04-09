@@ -78,10 +78,6 @@ export default function PriceBook() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowSupplierSettings(true)}>
-              <Settings2 className="h-4 w-4 mr-1.5" />
-              <span className="hidden sm:inline">Supplier Settings</span>
-            </Button>
             <Button size="sm" onClick={() => setShowAddSource(true)}>
               <Plus className="h-4 w-4 mr-1.5" />
               Add Price Source
