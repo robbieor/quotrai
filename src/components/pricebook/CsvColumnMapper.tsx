@@ -3,18 +3,21 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2 } from "lucide-react";
 
 const FIELDS = [
-  { key: "product_name", label: "Product Name", required: true },
+  { key: "item_name", label: "Item Name", required: true },
+  { key: "supplier_name", label: "Supplier Name", required: false },
   { key: "supplier_sku", label: "SKU", required: false },
-  { key: "description", label: "Description", required: false },
-  { key: "trade_type", label: "Trade Type", required: false },
+  { key: "manufacturer", label: "Manufacturer", required: false },
+  { key: "manufacturer_part_number", label: "MPN", required: false },
   { key: "category", label: "Category", required: false },
   { key: "subcategory", label: "Subcategory", required: false },
+  { key: "trade_type", label: "Trade Type", required: false },
   { key: "unit", label: "Unit", required: false },
-  { key: "source_price", label: "Source Price", required: true },
-  { key: "manufacturer", label: "Manufacturer", required: false },
+  { key: "website_price", label: "Website / List Price", required: false },
+  { key: "discount_percent", label: "Discount %", required: false },
+  { key: "cost_price", label: "Cost Price", required: false },
+  { key: "markup_percent", label: "Markup %", required: false },
+  { key: "sell_price", label: "Sell Price", required: false },
   { key: "image_url", label: "Image URL", required: false },
-  { key: "product_url", label: "Product URL", required: false },
-  { key: "currency", label: "Currency", required: false },
 ] as const;
 
 interface CsvColumnMapperProps {
