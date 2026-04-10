@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import Stripe from "https://esm.sh/stripe@18.6.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -13,40 +13,41 @@ serve(async (req) => {
   }
 
   try {
+    // --- Stripe Client ---
+    // Uses STRIPE_SECRET_KEY from environment. SDK auto-selects latest API version.
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("Stripe secret key not configured");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your project secrets.");
+    const stripeClient = new Stripe(stripeKey);
 
+    // --- Supabase service client for DB access ---
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
+    // --- Authenticate calling user ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
-
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) throw new Error("Unauthorized");
-
     const userId = user.id;
 
-    // Get org membership (v2)
+    // --- Resolve user's org membership (v2 table) ---
     const { data: orgMembers } = await supabaseClient
       .from("org_members_v2")
       .select("org_id, role, seat_type")
       .eq("user_id", userId)
       .eq("status", "active")
       .limit(1);
-
     const orgMember = orgMembers?.[0];
-
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
-    // Check ownership — CEO role is the owner equivalent
+    // Only owners/CEOs can manage Connect
     if (orgMember.role !== "ceo" && orgMember.role !== "owner") {
       throw new Error("Only team owners can set up payments");
     }
 
-    // Also get profile for email/company info
+    // Fetch profile for email/company info
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("email, company_name, country")
@@ -54,19 +55,20 @@ serve(async (req) => {
       .single();
 
     const teamId = orgMember.org_id;
-
     const { action } = await req.json();
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Check existing Connect account
+    // --- Fetch existing team record for Connect account ID ---
     const { data: team } = await supabaseClient
       .from("teams")
       .select("stripe_connect_account_id, stripe_connect_onboarding_complete")
       .eq("id", teamId)
       .single();
 
+    // ========================================================
+    // ACTION: status — Return current Connect onboarding state
+    // Uses V2 accounts.retrieve with include for requirements
+    // ========================================================
     if (action === "status") {
-      // Return current Connect status
       if (!team?.stripe_connect_account_id) {
         return new Response(
           JSON.stringify({ connected: false, onboarding_complete: false }),
@@ -74,10 +76,23 @@ serve(async (req) => {
         );
       }
 
-      const account = await stripe.accounts.retrieve(team.stripe_connect_account_id);
-      const isComplete = account.charges_enabled && account.payouts_enabled;
+      // V2 account retrieve with merchant config + requirements
+      const account = await stripeClient.v2.core.accounts.retrieve(
+        team.stripe_connect_account_id,
+        { include: ["configuration.merchant", "requirements"] }
+      );
 
-      // Update DB if status changed
+      // Check if card_payments capability is active
+      const cardPaymentsStatus = account?.configuration?.merchant?.capabilities?.card_payments?.status;
+      const readyToProcessPayments = cardPaymentsStatus === "active";
+
+      // Check requirements status — onboarding is complete when no currently_due or past_due items
+      const requirementsStatus = account?.requirements?.summary?.minimum_deadline?.status;
+      const onboardingComplete = requirementsStatus !== "currently_due" && requirementsStatus !== "past_due";
+
+      const isComplete = readyToProcessPayments && onboardingComplete;
+
+      // Sync status back to DB if changed
       if (isComplete !== team.stripe_connect_onboarding_complete) {
         await supabaseClient
           .from("teams")
@@ -89,46 +104,73 @@ serve(async (req) => {
         JSON.stringify({
           connected: true,
           onboarding_complete: isComplete,
-          charges_enabled: account.charges_enabled,
-          payouts_enabled: account.payouts_enabled,
-          details_submitted: account.details_submitted,
+          charges_enabled: readyToProcessPayments,
+          requirements_status: requirementsStatus,
+          details_submitted: onboardingComplete,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // ========================================================
+    // ACTION: onboard — Create V2 account + account link
+    // ========================================================
     if (action === "onboard") {
       let accountId = team?.stripe_connect_account_id;
 
       if (!accountId) {
-        // Create a new Connect Express account
-        const account = await stripe.accounts.create({
-          type: "express",
-          email: profile?.email || undefined,
-          business_profile: {
-            name: profile?.company_name || undefined,
+        // Create a new V2 Connected Account
+        // No top-level `type` — V2 uses configuration-based setup
+        const account = await stripeClient.v2.core.accounts.create({
+          display_name: profile?.company_name || "My Business",
+          contact_email: profile?.email || user.email || undefined,
+          identity: {
+            country: (profile?.country || "ie").toLowerCase(),
           },
-          metadata: {
-            team_id: teamId,
-            user_id: userId,
+          // Full dashboard gives the connected account access to their own Stripe dashboard
+          dashboard: "full",
+          defaults: {
+            responsibilities: {
+              // Stripe collects fees and manages losses — simplest for platforms
+              fees_collector: "stripe",
+              losses_collector: "stripe",
+            },
+          },
+          configuration: {
+            // Customer configuration enables the account to have customers
+            customer: {},
+            merchant: {
+              capabilities: {
+                card_payments: {
+                  requested: true,
+                },
+              },
+            },
           },
         });
 
         accountId = account.id;
 
+        // Store the V2 account ID in the teams table
         await supabaseClient
           .from("teams")
           .update({ stripe_connect_account_id: accountId })
           .eq("id", teamId);
       }
 
-      // Create onboarding link
+      // Create V2 Account Link for onboarding
       const origin = req.headers.get("origin") || "https://foreman.world";
-      const accountLink = await stripe.accountLinks.create({
+      const accountLink = await stripeClient.v2.core.accountLinks.create({
         account: accountId,
-        refresh_url: `${origin}/settings?tab=billing&connect=refresh`,
-        return_url: `${origin}/settings?tab=billing&connect=complete`,
-        type: "account_onboarding",
+        use_case: {
+          type: "account_onboarding",
+          account_onboarding: {
+            // Onboard both merchant (accept payments) and customer (subscribe) configs
+            configurations: ["merchant", "customer"],
+            refresh_url: `${origin}/settings?tab=billing&connect=refresh`,
+            return_url: `${origin}/settings?tab=billing&connect=complete`,
+          },
+        },
       });
 
       return new Response(
@@ -137,12 +179,15 @@ serve(async (req) => {
       );
     }
 
+    // ========================================================
+    // ACTION: dashboard — Generate a login link for the connected account's dashboard
+    // ========================================================
     if (action === "dashboard") {
       if (!team?.stripe_connect_account_id) {
         throw new Error("No Connect account found");
       }
 
-      const loginLink = await stripe.accounts.createLoginLink(
+      const loginLink = await stripeClient.accounts.createLoginLink(
         team.stripe_connect_account_id
       );
 
@@ -152,7 +197,7 @@ serve(async (req) => {
       );
     }
 
-    throw new Error("Invalid action");
+    throw new Error("Invalid action. Supported: status, onboard, dashboard");
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed";
     console.error("Stripe Connect error:", error);
