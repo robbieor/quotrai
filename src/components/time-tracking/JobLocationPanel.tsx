@@ -172,7 +172,7 @@ export function JobLocationPanel({
   })();
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="flex flex-col lg:h-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-base">
           <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export function JobLocationPanel({
         )}
 
         {/* Live map — always rendered */}
-        <div className="flex-1 min-h-[300px] rounded-lg overflow-hidden border relative bg-muted">
+        <div className="flex-1 min-h-[200px] sm:min-h-[300px] rounded-lg overflow-hidden border relative bg-muted">
           <LiveMapEmbed
             lat={mapCenter.lat}
             lng={mapCenter.lng}

@@ -92,7 +92,9 @@ export function SendEmailDialog({
       };
 
       if (isInvoice(document)) {
-        payload.dueDate = format(new Date(document.due_date), "MMM d, yyyy");
+        if (document.due_date) {
+          payload.dueDate = format(new Date(document.due_date), "MMM d, yyyy");
+        }
         // Include portal payment link
         if (document.portal_token) {
           const origin = window.location.origin;

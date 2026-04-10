@@ -10,6 +10,7 @@ import { VoiceAgentProvider } from "@/contexts/VoiceAgentContext";
 import { AgentTaskProvider } from "@/contexts/AgentTaskContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { SeatGuard } from "@/components/auth/SeatGuard";
+import { useIsNative } from "@/hooks/useIsNative";
 
 // Lazy-loaded pages
 const Landing = lazy(() => import("./pages/Landing"));
@@ -63,6 +64,12 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const FunnelAnalytics = lazy(() => import("./pages/FunnelAnalytics"));
 
 const queryClient = new QueryClient();
+
+function RootRedirect() {
+  const isNative = useIsNative();
+  if (isNative) return <Navigate to="/login" replace />;
+  return <Landing />;
+}
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -122,7 +129,7 @@ const App = () => {
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 {/* Public pages */}
-                <Route path="/" element={<Landing />} />
+                <Route path="/" element={<RootRedirect />} />
                 <Route path="/trade/:tradeSlug" element={<TradeLanding />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />

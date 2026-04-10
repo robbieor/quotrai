@@ -33,7 +33,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex-1 flex flex-col min-w-0">
             <ReadOnlyBanner />
             
-            <header className="h-12 md:h-14 border-b border-white/10 items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-[hsl(220_26%_12%)] sticky top-0 z-20">
+            <header className="border-b border-white/10 items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-[hsl(220_26%_12%)] sticky top-0 z-20 pt-[max(10px,env(safe-area-inset-top))]" style={{minHeight: 'calc(3rem + env(safe-area-inset-top, 0px))' }}>
               <SidebarTrigger className="mr-2 md:mr-4 text-white/70 hover:text-white" />
 
               {/* Command Bar Trigger */}
@@ -58,7 +58,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </header>
             <main className="flex-1 overflow-auto">
-              <div className="mx-auto w-full max-w-7xl px-5 md:px-6 py-4 md:py-6 space-y-6">
+              <div className="mx-auto w-full max-w-7xl px-5 md:px-6 py-4 md:py-6 space-y-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
                 {children}
               </div>
             </main>

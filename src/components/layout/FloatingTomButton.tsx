@@ -69,7 +69,7 @@ export function FloatingTomButton() {
     if (isExpanded && hasVoiceAccess && canUseVoice) preWarmToken();
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
-  if (location.pathname === "/foreman-ai" || (!roleLoading && isTeamSeat)) return null;
+  if ((location.pathname === "/foreman-ai" && !isConnected) || (!roleLoading && isTeamSeat)) return null;
 
   const handleMainButtonClick = () => {
     if (isConnected) {
@@ -129,7 +129,7 @@ export function FloatingTomButton() {
       )}
 
       {isExpanded && !isConnected && !isConnecting && (
-        <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-2 animate-fade-in">
+        <div className="fixed right-6 z-50 flex flex-col gap-2 animate-fade-in" style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
           {(georgeLoading || (hasVoiceAccess && canUseVoice)) && (
             <button
               onClick={handleStartCall}
@@ -173,7 +173,7 @@ export function FloatingTomButton() {
       )}
 
       {/* Main Floating Button */}
-      <div className="fixed bottom-6 right-6 z-50 mb-safe-area-inset-bottom mr-safe-area-inset-right">
+      <div className="fixed right-6 z-50" style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
         {/* Pulsing rings when connecting */}
         {isConnecting && (
           <>
@@ -215,13 +215,16 @@ export function FloatingTomButton() {
 
       {/* Connecting phase indicator */}
       {isConnecting && (
-        <div className={cn(
-          "fixed bottom-24 right-6 z-50",
-          "px-4 py-2 rounded-full",
-          "bg-card border border-border shadow-lg",
-          "flex items-center gap-2",
-          "animate-fade-in"
-        )}>
+        <div
+          className={cn(
+            "fixed right-6 z-50",
+            "px-4 py-2 rounded-full",
+            "bg-card border border-border shadow-lg",
+            "flex items-center gap-2",
+            "animate-fade-in"
+          )}
+          style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="h-2.5 w-2.5 rounded-full bg-primary animate-ping" />
           <span className="text-sm font-medium">{phaseLabel}</span>
         </div>
@@ -229,13 +232,16 @@ export function FloatingTomButton() {
 
       {/* Voice Activity Indicator */}
       {isConnected && (
-        <div className={cn(
-          "fixed bottom-24 right-6 z-50",
-          "px-4 py-2 rounded-full",
-          "bg-card border border-border shadow-lg",
-          "flex items-center gap-2",
-          "animate-fade-in"
-        )}>
+        <div
+          className={cn(
+            "fixed right-6 z-50",
+            "px-4 py-2 rounded-full",
+            "bg-card border border-border shadow-lg",
+            "flex items-center gap-2",
+            "animate-fade-in"
+          )}
+          style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
           <span className="text-sm font-medium">
             {isSpeaking ? "Foreman AI is speaking..." : "Listening..."}

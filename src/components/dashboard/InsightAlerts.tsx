@@ -33,14 +33,14 @@ export function InsightAlerts({ insights }: InsightAlertsProps) {
   if (!insights || insights.length === 0) return null;
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+    <div className="flex flex-col sm:flex-row gap-3 sm:overflow-x-auto sm:pb-1 sm:-mx-1 sm:px-1 sm:scrollbar-hide">
       {insights.map((insight) => {
         const Icon = icons[insight.type];
         return (
           <div
             key={insight.id}
             className={cn(
-              "flex items-center gap-3 border rounded-lg p-3 min-w-[280px] shrink-0",
+              "flex items-center gap-3 border rounded-lg p-3 w-full sm:min-w-[280px] sm:shrink-0",
               styles[insight.type]
             )}
           >

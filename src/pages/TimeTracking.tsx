@@ -126,22 +126,22 @@ export default function TimeTracking() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 lg:w-[560px] text-xs sm:text-sm">
-              <TabsTrigger value="clock" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span className="hidden sm:inline">Time Clock</span>
+            <TabsList className="grid w-full grid-cols-4 lg:w-[560px] h-auto">
+              <TabsTrigger value="clock" className="flex flex-col items-center gap-1 py-2 text-[11px] sm:flex-row sm:gap-2 sm:text-sm sm:py-1.5">
+                <Clock className="h-4 w-4 shrink-0" />
+                <span>Clock</span>
               </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Staff</span>
+              <TabsTrigger value="staff" className="flex flex-col items-center gap-1 py-2 text-[11px] sm:flex-row sm:gap-2 sm:text-sm sm:py-1.5">
+                <Users className="h-4 w-4 shrink-0" />
+                <span>Staff</span>
               </TabsTrigger>
-              <TabsTrigger value="entries" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">Entries</span>
+              <TabsTrigger value="entries" className="flex flex-col items-center gap-1 py-2 text-[11px] sm:flex-row sm:gap-2 sm:text-sm sm:py-1.5">
+                <List className="h-4 w-4 shrink-0" />
+                <span>Entries</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                <span className="hidden sm:inline">Alerts</span>
+              <TabsTrigger value="settings" className="flex flex-col items-center gap-1 py-2 text-[11px] sm:flex-row sm:gap-2 sm:text-sm sm:py-1.5">
+                <Bell className="h-4 w-4 shrink-0" />
+                <span>Alerts</span>
               </TabsTrigger>
             </TabsList>
 

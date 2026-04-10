@@ -143,7 +143,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/10 p-4 space-y-3">
+      <SidebarFooter className="border-t border-white/10 p-4 space-y-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
         <Link to="/settings?tab=profile" className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-white/10">
           <Avatar className="h-9 w-9 border-2 border-primary/40">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />

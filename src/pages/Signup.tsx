@@ -15,7 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const TRUST_POINTS = [
   { icon: CreditCard, text: "No credit card required" },
-  { icon: Clock, text: "14-day free trial" },
+  { icon: Clock, text: "14-day full Pro trial" },
   { icon: Shield, text: "Cancel anytime, no lock-in" },
   { icon: CheckCircle2, text: "Set up in under 5 minutes" },
 ];
