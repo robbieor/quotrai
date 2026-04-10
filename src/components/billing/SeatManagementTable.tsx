@@ -21,8 +21,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const BASE_PRICE = 39;
-const EXTRA_SEAT = 19;
-const BASE_USERS = 3;
+const EXTRA_SEAT = 15;
+const BASE_USERS = 1;
 
 const ROLE_COLORS: Record<string, string> = {
   ceo: 'bg-primary/10 text-primary',

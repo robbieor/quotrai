@@ -9,8 +9,8 @@ const corsHeaders = {
 
 // New single-plan pricing
 const BASE_PLAN_PRICE = "price_1TIJDeDQETj2awNEWxP4bB43"; // €39/mo
-const EXTRA_SEAT_PRICE = "price_1TIJDzDQETj2awNEtiMhRUPR"; // €19/mo
-const BASE_USERS = 3;
+const EXTRA_SEAT_PRICE = "price_1TKjaNDQETj2awNEXHD4jFRq"; // €15/mo
+const BASE_USERS = 1;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

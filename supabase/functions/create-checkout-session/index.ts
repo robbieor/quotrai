@@ -7,18 +7,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// New single-plan pricing: €39 base (3 users) + €19/extra seat
+// New single-plan pricing: €39 base (1 user) + €15/extra seat
 const PRICES = {
   month: {
     base: "price_1TIJDeDQETj2awNEWxP4bB43",   // €39/mo
-    seat: "price_1TIJDzDQETj2awNEtiMhRUPR",   // €19/mo
+    seat: "price_1TKjaNDQETj2awNEXHD4jFRq",   // €15/mo
   },
   year: {
     base: "price_1TIQvfDQETj2awNEx7bAyHjy",   // €397.80/yr (15% off)
-    seat: "price_1TIQw1DQETj2awNEth2a6E8y",   // €193.80/yr (15% off)
+    seat: "price_1TIQw1DQETj2awNEth2a6E8y",   // €153/yr (placeholder)
   },
 };
-const BASE_USERS = 3;
+const BASE_USERS = 1;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

@@ -84,7 +84,7 @@ serve(async (req) => {
     }
 
     const totalInCents = Math.round((invoice.total || 0) * 100);
-    const platformFeePercent = team.platform_fee_percent || 1.5;
+    const platformFeePercent = team.platform_fee_percent || 2.9;
     const applicationFee = Math.round(totalInCents * (platformFeePercent / 100));
 
     const origin = req.headers.get("origin") || "https://foreman.world";
