@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const SENDER_DOMAIN = "notify.foreman.ie";
 const FROM_DOMAIN = "foreman.ie";
-const APP_URL = "https://quotrai.lovable.app";
+const APP_URL = "https://foreman.world";
 
 interface DripRow { id: string; user_id: string; email: string; full_name: string | null; drip_step: number; send_at: string; }
 
