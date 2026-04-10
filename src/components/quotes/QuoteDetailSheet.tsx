@@ -222,6 +222,14 @@ export function QuoteDetailSheet({
           )}
         </div>
       </SheetContent>
+
+      <QuoteStatusConfirmDialog
+        open={!!pendingAction}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        action={pendingAction}
+        quoteNumber={quote.display_number}
+        onConfirm={handleConfirm}
+      />
     </Sheet>
   );
 }
