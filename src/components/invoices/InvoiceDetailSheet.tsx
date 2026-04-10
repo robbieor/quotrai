@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Invoice } from "@/hooks/useInvoices";
 import { InvoiceSuggestion } from "@/components/shared/ForemanSuggestion";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
@@ -79,13 +80,13 @@ export function InvoiceDetailSheet({
               {statusLabels[displayStatus]}
             </Badge>
             <span className="text-xs text-muted-foreground">
-              Issued {format(new Date(invoice.issue_date), "MMM d, yyyy")}
+              Issued {safeFormatDate(invoice.issue_date, "MMM d, yyyy")}
             </span>
             <span className={cn(
               "text-xs",
               displayStatus === "overdue" ? "text-destructive font-medium" : "text-muted-foreground"
             )}>
-              Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
+              Due {safeFormatDate(invoice.due_date, "MMM d, yyyy")}
             </span>
           </div>
 

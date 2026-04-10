@@ -42,6 +42,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
@@ -452,7 +453,7 @@ export default function Invoices() {
                           </td>
                           <td className="px-3 py-3">
                             <span className={cn("text-sm", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
-                              {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                              {safeFormatDate(invoice.due_date, "MMM d, yyyy")}
                             </span>
                           </td>
                           <td className="px-3 py-3">

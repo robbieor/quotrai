@@ -10,6 +10,7 @@ import { Loader2, TrendingUp, TrendingDown, Package, Clock, Receipt, DollarSign 
 import { cn } from "@/lib/utils";
 import type { Job, JobStatus } from "@/hooks/useJobs";
 import { JobSuggestion } from "@/components/shared/ForemanSuggestion";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 interface JobDetailSheetProps {
   open: boolean;
@@ -122,7 +123,7 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
               <p className="text-muted-foreground">Scheduled</p>
               <p className="font-medium">
                 {job.scheduled_date
-                  ? format(new Date(job.scheduled_date), "MMM d, yyyy")
+                  ? safeFormatDate(job.scheduled_date, "MMM d, yyyy")
                   : "Not scheduled"}
               </p>
             </div>
@@ -167,8 +168,8 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
                   <div key={entry.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted text-sm">
                     <div>
                       <p className="font-medium">
-                        {format(new Date(entry.clock_in_at), "MMM d")} · {format(new Date(entry.clock_in_at), "h:mm a")}
-                        {entry.clock_out_at && ` – ${format(new Date(entry.clock_out_at), "h:mm a")}`}
+                        {safeFormatDate(entry.clock_in_at, "MMM d")} · {safeFormatDate(entry.clock_in_at, "h:mm a")}
+                        {entry.clock_out_at && ` – ${safeFormatDate(entry.clock_out_at, "h:mm a")}`}
                       </p>
                       {entry.notes && (
                         <p className="text-xs text-muted-foreground">{entry.notes}</p>

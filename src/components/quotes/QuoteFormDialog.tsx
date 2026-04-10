@@ -46,6 +46,7 @@ import { Constants } from "@/integrations/supabase/types";
 import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
 import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const quoteStatuses = Constants.public.Enums.quote_status;
 
@@ -302,7 +303,7 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
                       <SelectItem value="none">No linked job</SelectItem>
                       {filteredJobs.map((job) => (
                         <SelectItem key={job.id} value={job.id}>
-                          {job.title} {job.scheduled_date ? `(${format(new Date(job.scheduled_date), "MMM d")})` : ""}
+                          {job.title} {job.scheduled_date ? `(${safeFormatDate(job.scheduled_date, "MMM d")})` : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>

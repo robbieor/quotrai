@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { format } from "date-fns";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 type ExportEntity = "customers" | "invoices" | "quotes" | "jobs";
 
@@ -70,8 +71,8 @@ export function DataExportSection() {
             { header: "Customer", accessor: (r) => (r.customer as Record<string, unknown>)?.name as string },
             { header: "Customer Email", accessor: (r) => (r.customer as Record<string, unknown>)?.email as string },
             { header: "Status", accessor: (r) => r.status as string },
-            { header: "Issue Date", accessor: (r) => r.issue_date ? format(new Date(r.issue_date as string), "yyyy-MM-dd") : "" },
-            { header: "Due Date", accessor: (r) => r.due_date ? format(new Date(r.due_date as string), "yyyy-MM-dd") : "" },
+            { header: "Issue Date", accessor: (r) => r.issue_date ? safeFormatDate(r.issue_date as string, "yyyy-MM-dd") : "" },
+            { header: "Due Date", accessor: (r) => r.due_date ? safeFormatDate(r.due_date as string, "yyyy-MM-dd") : "" },
             { header: "Subtotal", accessor: (r) => r.subtotal as number },
             { header: "Tax Rate", accessor: (r) => r.tax_rate as number },
             { header: "Tax Amount", accessor: (r) => r.tax_amount as number },

@@ -64,6 +64,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const categoryColors: Record<ExpenseCategory, string> = {
   materials: "bg-blue-500/10 text-blue-500",
@@ -570,7 +571,7 @@ export default function Expenses() {
                         </td>
                         <td className="px-2 py-1.5 border-r border-border/20">
                           <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            {format(new Date(expense.expense_date), "dd MMM yy")}
+                            {safeFormatDate(expense.expense_date, "dd MMM yy")}
                           </span>
                         </td>
                         <td className="px-2 py-1.5 border-r border-border/20">
@@ -650,7 +651,7 @@ export default function Expenses() {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                          <span>{format(new Date(expense.expense_date), "dd MMM")}</span>
+                          <span>{safeFormatDate(expense.expense_date, "dd MMM")}</span>
                           {expense.vendor && <span className="truncate">{expense.vendor}</span>}
                           <span className="font-semibold text-foreground">{formatCurrency(Number(expense.amount))}</span>
                         </div>

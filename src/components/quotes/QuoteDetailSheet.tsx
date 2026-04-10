@@ -10,6 +10,7 @@ import { Quote } from "@/hooks/useQuotes";
 import { QuoteSuggestion } from "@/components/shared/ForemanSuggestion";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
 import { QuoteStatusConfirmDialog } from "./QuoteStatusConfirmDialog";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
@@ -96,7 +97,7 @@ export function QuoteDetailSheet({
             </span>
             {quote.valid_until && (
               <span className="text-xs text-muted-foreground">
-                Valid until {format(new Date(quote.valid_until), "MMM d, yyyy")}
+                Valid until {safeFormatDate(quote.valid_until, "MMM d, yyyy")}
               </span>
             )}
           </div>

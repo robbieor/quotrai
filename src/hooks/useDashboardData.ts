@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfMonth, endOfMonth, subMonths, format, addDays, differenceInDays } from "date-fns";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 export interface DashboardMetrics {
   activeJobs: number;
@@ -233,7 +234,7 @@ export function useRevenueChart() {
       }
 
       (data || []).forEach((inv) => {
-        const month = format(new Date(inv.issue_date), "MMM");
+        const month = safeFormatDate(inv.issue_date, "MMM");
         if (month in monthlyData) {
           monthlyData[month] += Number(inv.total) || 0;
         }
