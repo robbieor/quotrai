@@ -29,12 +29,12 @@ const QUERY_INVALIDATION_MAP: Record<string, string[]> = {
   create_customer: ["customers"],
   update_customer: ["customers"],
   delete_customer: ["customers"],
-  create_enquiry: ["enquiries"],
-  list_enquiries: ["enquiries"],
-  update_enquiry: ["enquiries"],
-  update_enquiry_status: ["enquiries"],
-  convert_enquiry_to_customer: ["enquiries", "customers"],
-  convert_enquiry_to_quote: ["enquiries", "quotes", "customers"],
+  create_enquiry: ["leads"],
+  get_enquiries: ["leads"],
+  update_enquiry: ["leads"],
+  delete_enquiry: ["leads"],
+  convert_enquiry_to_quote: ["leads", "quotes", "customers"],
+  convert_enquiry_to_job: ["leads", "jobs", "customers"],
 };
 
 const ELEVENLABS_AGENT_ID = "agent_2701kffwpjhvf4gvt2cxpsx6j3rb";
@@ -249,23 +249,23 @@ export function useElevenLabsAgent() {
         return await callGeorgeWebhook("get_financial_summary", params, contextRef.current, queryClientRef.current || undefined);
       },
       // --- Enquiry tools ---
-      create_enquiry: async (params: { contact_name: string; phone?: string; email?: string; description?: string; source?: string; address?: string; urgency?: string }) => {
+      create_enquiry: async (params: { name: string; phone?: string; email?: string; description?: string; address?: string; source?: string; priority?: string; estimated_value?: number; job_type?: string; notes?: string; follow_up_date?: string }) => {
         return await callGeorgeWebhook("create_enquiry", params, contextRef.current, queryClientRef.current || undefined);
       },
-      list_enquiries: async (params: { status?: string; source?: string; search?: string; limit?: number }) => {
-        return await callGeorgeWebhook("list_enquiries", params, contextRef.current, queryClientRef.current || undefined);
+      get_enquiries: async (params: { status?: string; limit?: number }) => {
+        return await callGeorgeWebhook("get_enquiries", params, contextRef.current, queryClientRef.current || undefined);
       },
-      update_enquiry: async (params: { enquiry_id?: string; contact_name?: string; phone?: string; email?: string; description?: string; notes?: string; address?: string; urgency?: string }) => {
+      update_enquiry: async (params: { enquiry_id?: string; enquiry_name?: string; status?: string; priority?: string; description?: string; notes?: string; follow_up_date?: string; estimated_value?: number }) => {
         return await callGeorgeWebhook("update_enquiry", params, contextRef.current, queryClientRef.current || undefined);
       },
-      update_enquiry_status: async (params: { enquiry_id?: string; contact_name?: string; new_status: string }) => {
-        return await callGeorgeWebhook("update_enquiry_status", params, contextRef.current, queryClientRef.current || undefined);
+      delete_enquiry: async (params: { enquiry_id?: string; enquiry_name?: string }) => {
+        return await callGeorgeWebhook("delete_enquiry", params, contextRef.current, queryClientRef.current || undefined);
       },
-      convert_enquiry_to_customer: async (params: { enquiry_id?: string; contact_name?: string }) => {
-        return await callGeorgeWebhook("convert_enquiry_to_customer", params, contextRef.current, queryClientRef.current || undefined);
-      },
-      convert_enquiry_to_quote: async (params: { enquiry_id?: string; contact_name?: string; template_name?: string; template_id?: string; notes?: string }) => {
+      convert_enquiry_to_quote: async (params: { enquiry_id?: string; enquiry_name?: string }) => {
         return await callGeorgeWebhook("convert_enquiry_to_quote", params, contextRef.current, queryClientRef.current || undefined);
+      },
+      convert_enquiry_to_job: async (params: { enquiry_id?: string; enquiry_name?: string; scheduled_date?: string; scheduled_time?: string }) => {
+        return await callGeorgeWebhook("convert_enquiry_to_job", params, contextRef.current, queryClientRef.current || undefined);
       },
       // --- Job status tool ---
       update_job_status: async (params: { job_id?: string; job_title?: string; client_name?: string; new_status: string }) => {

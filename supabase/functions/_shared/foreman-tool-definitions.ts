@@ -749,4 +749,96 @@ export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
       },
     },
   },
+
+  // ==================== ENQUIRIES / LEADS ====================
+  {
+    type: "client",
+    name: "create_enquiry",
+    description: "Create a new enquiry (lead) from a potential customer. Use when someone calls, emails, or messages about a job they need done.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Name of the person or company enquiring." },
+        phone: { type: "string", description: "Phone number." },
+        email: { type: "string", description: "Email address." },
+        description: { type: "string", description: "What the enquiry is about — the job or service they need." },
+        address: { type: "string", description: "Property or site address for the work." },
+        source: { type: "string", description: "How the enquiry came in.", enum: ["phone", "email", "website", "referral", "social", "manual"] },
+        priority: { type: "string", description: "Urgency level.", enum: ["low", "medium", "high", "urgent"] },
+        estimated_value: { type: "number", description: "Estimated job value." },
+        job_type: { type: "string", description: "Type of work (e.g. plumbing, electrical, painting)." },
+        notes: { type: "string", description: "Any additional notes." },
+        follow_up_date: { type: "string", description: "When to follow up (YYYY-MM-DD)." },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    type: "client",
+    name: "get_enquiries",
+    description: "List enquiries (leads). Can filter by status (new, contacted, quoted, won, lost) or return all.",
+    parameters: {
+      type: "object",
+      properties: {
+        status: { type: "string", description: "Filter by status.", enum: ["new", "contacted", "quoted", "won", "lost"] },
+        limit: { type: "number", description: "Max number to return. Default 10." },
+      },
+    },
+  },
+  {
+    type: "client",
+    name: "update_enquiry",
+    description: "Update an existing enquiry's status, details, or follow-up date.",
+    parameters: {
+      type: "object",
+      properties: {
+        enquiry_id: { type: "string", description: "Enquiry ID." },
+        enquiry_name: { type: "string", description: "Enquiry name to search for if ID not known." },
+        status: { type: "string", description: "New status.", enum: ["new", "contacted", "quoted", "won", "lost"] },
+        priority: { type: "string", description: "New priority.", enum: ["low", "medium", "high", "urgent"] },
+        description: { type: "string", description: "Updated description." },
+        notes: { type: "string", description: "Updated notes." },
+        follow_up_date: { type: "string", description: "New follow-up date (YYYY-MM-DD)." },
+        estimated_value: { type: "number", description: "Updated estimated value." },
+      },
+    },
+  },
+  {
+    type: "client",
+    name: "delete_enquiry",
+    description: "Delete an enquiry by ID or name.",
+    parameters: {
+      type: "object",
+      properties: {
+        enquiry_id: { type: "string", description: "Enquiry ID." },
+        enquiry_name: { type: "string", description: "Enquiry name to search for if ID not known." },
+      },
+    },
+  },
+  {
+    type: "client",
+    name: "convert_enquiry_to_quote",
+    description: "Convert an enquiry into a quote. Creates a customer if needed and generates a draft quote.",
+    parameters: {
+      type: "object",
+      properties: {
+        enquiry_id: { type: "string", description: "Enquiry ID." },
+        enquiry_name: { type: "string", description: "Enquiry name to search for if ID not known." },
+      },
+    },
+  },
+  {
+    type: "client",
+    name: "convert_enquiry_to_job",
+    description: "Convert an enquiry directly into a job. Creates a customer if needed.",
+    parameters: {
+      type: "object",
+      properties: {
+        enquiry_id: { type: "string", description: "Enquiry ID." },
+        enquiry_name: { type: "string", description: "Enquiry name to search for if ID not known." },
+        scheduled_date: { type: "string", description: "Date for the job (YYYY-MM-DD)." },
+        scheduled_time: { type: "string", description: "Time for the job (HH:MM)." },
+      },
+    },
+  },
 ];

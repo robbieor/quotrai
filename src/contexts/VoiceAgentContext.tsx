@@ -97,6 +97,12 @@ const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   delete_expense: [["expenses"], ["dashboard"]],
   use_template_for_quote: [["quotes"], ["jobs"], ["dashboard"], ["calendar-jobs"]],
   create_invoice_from_template: [["invoices"], ["jobs"], ["dashboard"], ["calendar-jobs"]],
+  create_enquiry: [["leads"]],
+  get_enquiries: [["leads"]],
+  update_enquiry: [["leads"]],
+  delete_enquiry: [["leads"]],
+  convert_enquiry_to_quote: [["leads"], ["quotes"], ["customers"]],
+  convert_enquiry_to_job: [["leads"], ["jobs"], ["customers"]],
   send_invoice_reminder: [["invoices"]],
   record_payment: [["payments"], ["invoices"], ["dashboard"]],
   create_invoice_from_quote: [["invoices"], ["quotes"], ["dashboard"]],
@@ -343,6 +349,20 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       await callGeorgeWebhook("search_templates", params, contextRef.current),
     list_template_categories: async () =>
       await callGeorgeWebhook("list_template_categories", {}, contextRef.current),
+
+    // --- Enquiry tools ---
+    create_enquiry: async (params: { name: string; phone?: string; email?: string; description?: string; address?: string; source?: string; priority?: string; estimated_value?: number; job_type?: string; notes?: string; follow_up_date?: string }) =>
+      await callGeorgeWebhook("create_enquiry", params, contextRef.current),
+    get_enquiries: async (params: { status?: string; limit?: number }) =>
+      await callGeorgeWebhook("get_enquiries", params, contextRef.current),
+    update_enquiry: async (params: { enquiry_id?: string; enquiry_name?: string; status?: string; priority?: string; description?: string; notes?: string; follow_up_date?: string; estimated_value?: number }) =>
+      await callGeorgeWebhook("update_enquiry", params, contextRef.current),
+    delete_enquiry: async (params: { enquiry_id?: string; enquiry_name?: string }) =>
+      await callGeorgeWebhook("delete_enquiry", params, contextRef.current),
+    convert_enquiry_to_quote: async (params: { enquiry_id?: string; enquiry_name?: string }) =>
+      await callGeorgeWebhook("convert_enquiry_to_quote", params, contextRef.current),
+    convert_enquiry_to_job: async (params: { enquiry_id?: string; enquiry_name?: string; scheduled_date?: string; scheduled_time?: string }) =>
+      await callGeorgeWebhook("convert_enquiry_to_job", params, contextRef.current),
   };
 
   const startAndWaitForConnect = useCallback(async (
