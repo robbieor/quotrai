@@ -710,6 +710,11 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   }, [addDebugEvent, createConversationRecord, getFailureReason, handleFailure, setPhase, startAndWaitForConnect, updateDebug]);
 
   const stopConversation = useCallback(async () => {
+    const callStart = callStartRef.current;
+    const userId = contextRef.current.userId;
+    const teamId = contextRef.current.teamId;
+    const convId = conversationIdRef.current;
+
     try {
       addDebugEvent("🛑 Ending session...");
       setStatus("disconnecting");
@@ -718,9 +723,48 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       console.error("[VoiceAgent] Error stopping conversation:", error);
     } finally {
       conversationRef.current = null;
+      callStartRef.current = null;
       setIsSpeaking(false);
       setStatus("disconnected");
       setPhase("idle");
+
+      if (keepAliveRef.current) {
+        clearInterval(keepAliveRef.current);
+        keepAliveRef.current = null;
+      }
+
+      // Track voice minutes usage
+      if (callStart && userId && teamId) {
+        const durationSeconds = Math.round((Date.now() - callStart) / 1000);
+        const durationMinutes = Math.ceil(durationSeconds / 60); // Round up to nearest minute
+
+        // Log to george_usage_log
+        supabase.from("george_usage_log").insert({
+          team_id: teamId,
+          user_id: userId,
+          conversation_id: convId || undefined,
+          duration_seconds: durationSeconds,
+          usage_type: "voice",
+          skill_used: "conversation",
+          credits_used: durationMinutes,
+        }).then(() => {
+          addDebugEvent(`📊 Logged ${durationMinutes} min usage`);
+        }).catch((err) => {
+          console.error("[VoiceAgent] Failed to log usage:", err);
+        });
+
+        // Increment george_voice_minutes_used on team
+        supabase.rpc("increment_voice_minutes", {
+          p_team_id: teamId,
+          p_minutes: durationMinutes,
+        }).then(() => {
+          // Invalidate team data so the UI reflects updated minutes
+          queryClient.invalidateQueries({ queryKey: ["teamGeorgeData"] });
+          queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
+        }).catch((err) => {
+          console.error("[VoiceAgent] Failed to increment voice minutes:", err);
+        });
+      }
     }
   }, [addDebugEvent, setPhase]);
 
