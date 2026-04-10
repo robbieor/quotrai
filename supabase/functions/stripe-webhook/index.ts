@@ -269,7 +269,7 @@ serve(async (req) => {
 
             const { data: inv } = await supabase
               .from("invoices")
-              .select("team_id")
+              .select("team_id, display_number, total, currency, customer_id, customers(name, email)")
               .eq("id", invoiceId)
               .single();
 
@@ -281,8 +281,58 @@ serve(async (req) => {
                 payment_method: "card",
                 notes: `Stripe checkout ${session.id}`,
               });
+
+              // Format currency amount
+              const curr = inv.currency?.toUpperCase() || "EUR";
+              const symbol = curr === "GBP" ? "£" : curr === "USD" ? "$" : "€";
+              const formattedAmount = `${symbol}${amount.toFixed(2)}`;
+              const invoiceNum = inv.display_number || invoiceId.slice(0, 8);
+
+              // --- Email 1: Notify business owner ---
+              const { data: ownerProfile } = await supabase
+                .from("profiles")
+                .select("email, full_name")
+                .eq("team_id", inv.team_id)
+                .limit(1)
+                .single();
+
+              if (ownerProfile?.email) {
+                const customerName = (inv as any).customers?.name || "A customer";
+                await sendBrandedEmail(
+                  supabase,
+                  ownerProfile.email,
+                  `Payment received — Invoice ${invoiceNum} (${formattedAmount})`,
+                  brandedEmailHtml("Payment Received 💰", [
+                    `<strong>${customerName}</strong> has paid <strong>Invoice ${invoiceNum}</strong>.`,
+                    `<strong>Amount:</strong> ${formattedAmount}`,
+                    `<strong>Method:</strong> Card (online)`,
+                    `The invoice has been automatically marked as paid.`,
+                    '<a href="https://foreman.world/invoices" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">View Invoices</a>',
+                  ]),
+                  `inv-paid-owner-${session.id}`
+                );
+              }
+
+              // --- Email 2: Receipt to customer ---
+              const customerEmail = session.customer_email || (inv as any).customers?.email;
+              const customerName = (inv as any).customers?.name || "Customer";
+              if (customerEmail) {
+                await sendBrandedEmail(
+                  supabase,
+                  customerEmail,
+                  `Payment confirmed — Invoice ${invoiceNum}`,
+                  brandedEmailHtml("Payment Confirmed ✓", [
+                    `Hi ${customerName},`,
+                    `Your payment of <strong>${formattedAmount}</strong> for <strong>Invoice ${invoiceNum}</strong> has been received.`,
+                    `This serves as your payment receipt. No further action is required.`,
+                    `If you have any questions, please contact the team directly.`,
+                    `Thank you for your prompt payment.`,
+                  ]),
+                  `inv-paid-receipt-${session.id}`
+                );
+              }
             }
-            logStep("Invoice payment recorded", { invoiceId, amount });
+            logStep("Invoice payment recorded + emails sent", { invoiceId, amount });
           }
         }
 
