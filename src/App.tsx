@@ -111,6 +111,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <OfflineSyncInit />
+      <AutoSyncInit />
       <TooltipProvider>
         <Toaster />
         <Sonner />
