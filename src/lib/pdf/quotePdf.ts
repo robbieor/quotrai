@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import type { Quote } from "@/hooks/useQuotes";
 import type { CompanyBranding } from "@/hooks/useCompanyBranding";
 import { getBrandingConfig, hexToRgb, addBrandingHeader, addBrandingFooter } from "./pdfBranding";
+import { safeFormatDate } from "./dateUtils";
 
 export async function generateQuotePdf(
   quote: Quote,
@@ -38,9 +39,9 @@ export async function generateQuotePdf(
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
-  doc.text(format(new Date(quote.created_at), "MMM d, yyyy"), pageWidth - 20, startY, { align: "right" });
+  doc.text(safeFormatDate(quote.created_at, "MMM d, yyyy"), pageWidth - 20, startY, { align: "right" });
   if (quote.valid_until) {
-    doc.text(format(new Date(quote.valid_until), "MMM d, yyyy"), pageWidth - 20, startY + 7, { align: "right" });
+    doc.text(safeFormatDate(quote.valid_until, "MMM d, yyyy"), pageWidth - 20, startY + 7, { align: "right" });
   }
   
   // Status with color
