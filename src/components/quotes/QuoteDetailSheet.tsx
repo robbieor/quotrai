@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
 import { QuoteSuggestion } from "@/components/shared/ForemanSuggestion";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
+import { QuoteStatusConfirmDialog } from "./QuoteStatusConfirmDialog";
 
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
@@ -48,9 +50,25 @@ export function QuoteDetailSheet({
   onConvertToInvoice,
   onUpdateStatus,
 }: QuoteDetailSheetProps) {
+  const [pendingAction, setPendingAction] = useState<"sent" | "accepted" | "declined" | "convert_job" | "convert_invoice" | null>(null);
+
   if (!quote) return null;
 
   const currency = (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code);
+
+  const handleConfirm = () => {
+    if (!pendingAction || !quote) return;
+    if (pendingAction === "convert_job" && onConvertToJob) {
+      onConvertToJob(quote);
+      onOpenChange(false);
+    } else if (pendingAction === "convert_invoice" && onConvertToInvoice) {
+      onConvertToInvoice(quote);
+      onOpenChange(false);
+    } else if (onUpdateStatus && (pendingAction === "sent" || pendingAction === "accepted" || pendingAction === "declined")) {
+      onUpdateStatus(quote, pendingAction);
+    }
+    setPendingAction(null);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -97,16 +115,16 @@ export function QuoteDetailSheet({
           {onUpdateStatus && (
             <div className="flex gap-2 flex-wrap">
               {quote.status === "draft" && (
-                <Button size="sm" variant="outline" onClick={() => onUpdateStatus(quote, "sent")}>
+                <Button size="sm" variant="outline" onClick={() => setPendingAction("sent")}>
                   <Send className="mr-1.5 h-3.5 w-3.5" /> Mark as Sent
                 </Button>
               )}
               {(quote.status === "draft" || quote.status === "sent") && (
                 <>
-                  <Button size="sm" onClick={() => onUpdateStatus(quote, "accepted")}>
+                  <Button size="sm" onClick={() => setPendingAction("accepted")}>
                     <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Mark as Accepted
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => onUpdateStatus(quote, "declined")}>
+                  <Button size="sm" variant="destructive" onClick={() => setPendingAction("declined")}>
                     <XCircle className="mr-1.5 h-3.5 w-3.5" /> Declined
                   </Button>
                 </>
@@ -118,12 +136,12 @@ export function QuoteDetailSheet({
           {quote.status === "accepted" && (onConvertToJob || onConvertToInvoice) && (
             <div className="flex gap-2 flex-wrap">
               {onConvertToJob && (
-                <Button size="sm" onClick={() => { onConvertToJob(quote); onOpenChange(false); }}>
+                <Button size="sm" onClick={() => setPendingAction("convert_job")}>
                   <Briefcase className="mr-1.5 h-3.5 w-3.5" /> Convert to Job
                 </Button>
               )}
               {onConvertToInvoice && (
-                <Button size="sm" variant="secondary" onClick={() => { onConvertToInvoice(quote); onOpenChange(false); }}>
+                <Button size="sm" variant="secondary" onClick={() => setPendingAction("convert_invoice")}>
                   <Receipt className="mr-1.5 h-3.5 w-3.5" /> Convert to Invoice
                 </Button>
               )}
@@ -204,6 +222,14 @@ export function QuoteDetailSheet({
           )}
         </div>
       </SheetContent>
+
+      <QuoteStatusConfirmDialog
+        open={!!pendingAction}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        action={pendingAction}
+        quoteNumber={quote.display_number}
+        onConfirm={handleConfirm}
+      />
     </Sheet>
   );
 }
