@@ -115,16 +115,16 @@ export function QuoteDetailSheet({
           {onUpdateStatus && (
             <div className="flex gap-2 flex-wrap">
               {quote.status === "draft" && (
-                <Button size="sm" variant="outline" onClick={() => onUpdateStatus(quote, "sent")}>
+                <Button size="sm" variant="outline" onClick={() => setPendingAction("sent")}>
                   <Send className="mr-1.5 h-3.5 w-3.5" /> Mark as Sent
                 </Button>
               )}
               {(quote.status === "draft" || quote.status === "sent") && (
                 <>
-                  <Button size="sm" onClick={() => onUpdateStatus(quote, "accepted")}>
+                  <Button size="sm" onClick={() => setPendingAction("accepted")}>
                     <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Mark as Accepted
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => onUpdateStatus(quote, "declined")}>
+                  <Button size="sm" variant="destructive" onClick={() => setPendingAction("declined")}>
                     <XCircle className="mr-1.5 h-3.5 w-3.5" /> Declined
                   </Button>
                 </>
@@ -136,12 +136,12 @@ export function QuoteDetailSheet({
           {quote.status === "accepted" && (onConvertToJob || onConvertToInvoice) && (
             <div className="flex gap-2 flex-wrap">
               {onConvertToJob && (
-                <Button size="sm" onClick={() => { onConvertToJob(quote); onOpenChange(false); }}>
+                <Button size="sm" onClick={() => setPendingAction("convert_job")}>
                   <Briefcase className="mr-1.5 h-3.5 w-3.5" /> Convert to Job
                 </Button>
               )}
               {onConvertToInvoice && (
-                <Button size="sm" variant="secondary" onClick={() => { onConvertToInvoice(quote); onOpenChange(false); }}>
+                <Button size="sm" variant="secondary" onClick={() => setPendingAction("convert_invoice")}>
                   <Receipt className="mr-1.5 h-3.5 w-3.5" /> Convert to Invoice
                 </Button>
               )}
