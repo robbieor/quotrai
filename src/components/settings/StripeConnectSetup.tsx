@@ -39,6 +39,9 @@ export function StripeConnectSetup() {
     fetchStatus();
   }, [fetchStatus]);
 
+  // Hide payment setup entirely on native (Apple policy)
+  if (isNative) return null;
+
   const handleOnboard = async () => {
     setActionLoading(true);
     try {
