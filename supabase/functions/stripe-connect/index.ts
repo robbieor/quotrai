@@ -32,29 +32,30 @@ serve(async (req) => {
     if (userError || !user) throw new Error("Unauthorized");
     const userId = user.id;
 
-    // --- Resolve user's org membership, ensuring org exists in teams table ---
+    // --- Resolve user's role from org membership ---
     const { data: orgMembers } = await supabaseClient
       .from("org_members_v2")
-      .select("org_id, role, seat_type, teams!inner(id)")
+      .select("org_id, role, seat_type")
       .eq("user_id", userId)
       .eq("status", "active")
       .limit(1);
     const orgMember = orgMembers?.[0];
-    if (!orgMember?.org_id) throw new Error("User not in an organization with a valid team");
 
     // Only owners/CEOs can manage Connect
-    if (orgMember.role !== "ceo" && orgMember.role !== "owner") {
+    if (orgMember && orgMember.role !== "ceo" && orgMember.role !== "owner") {
       throw new Error("Only team owners can set up payments");
     }
 
-    // Fetch profile for email/company info
+    // Fetch profile for email/company info AND the correct team_id
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("email, company_name, country")
+      .select("email, company_name, country, team_id")
       .eq("id", userId)
       .single();
 
-    const teamId = orgMember.org_id;
+    if (!profile?.team_id) throw new Error("User not associated with a team");
+
+    const teamId = profile.team_id;
     const { action } = await req.json();
 
     // --- Fetch existing team record for Connect account ID ---
