@@ -841,4 +841,52 @@ export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
       },
     },
   },
+
+  // ==================== TEAM / WORKFORCE ====================
+  {
+    type: "client",
+    name: "assign_team_member",
+    description: "Assign a team member to a job. Looks up the member by name if no ID is given.",
+    parameters: {
+      type: "object",
+      properties: {
+        job_id: { type: "string", description: "Job ID to assign the member to." },
+        job_title: { type: "string", description: "Job title to search for if ID not known." },
+        member_name: { type: "string", description: "Full name of the team member to assign." },
+        member_id: { type: "string", description: "User ID of the member (optional, resolved from name if omitted)." },
+      },
+      required: ["member_name"],
+    },
+  },
+  {
+    type: "client",
+    name: "get_team_availability",
+    description: "Check which team members are available on a given date. Shows who is free vs booked on jobs.",
+    parameters: {
+      type: "object",
+      properties: {
+        date: { type: "string", description: "Date to check availability for (YYYY-MM-DD). Defaults to today." },
+        member_name: { type: "string", description: "Optional: filter to a specific team member by name." },
+      },
+    },
+  },
+  {
+    type: "client",
+    name: "log_timesheet",
+    description: "Log a timesheet entry for a team member against a job. Records start time, end time, and breaks.",
+    parameters: {
+      type: "object",
+      properties: {
+        member_name: { type: "string", description: "Full name of the team member." },
+        job_id: { type: "string", description: "Job ID to log time against." },
+        job_title: { type: "string", description: "Job title to search for if ID not known." },
+        date: { type: "string", description: "Date of the time entry (YYYY-MM-DD). Defaults to today." },
+        start_time: { type: "string", description: "Clock-in time (HH:MM, 24h format)." },
+        end_time: { type: "string", description: "Clock-out time (HH:MM, 24h format)." },
+        break_minutes: { type: "number", description: "Break duration in minutes. Defaults to 0." },
+        notes: { type: "string", description: "Optional notes for the time entry." },
+      },
+      required: ["member_name", "start_time", "end_time"],
+    },
+  },
 ];
