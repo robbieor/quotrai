@@ -62,6 +62,8 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const SubscriptionConfirmed = lazy(() => import("./pages/SubscriptionConfirmed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const FunnelAnalytics = lazy(() => import("./pages/FunnelAnalytics"));
+const ConnectProducts = lazy(() => import("./pages/ConnectProducts"));
+const Storefront = lazy(() => import("./pages/Storefront"));
 
 const queryClient = new QueryClient();
 
@@ -193,6 +195,11 @@ const App = () => {
                 {/* Grow seat required */}
                 <Route path="/leads" element={<RoleGuard><SeatGuard requiredSeat="grow"><Leads /></SeatGuard></RoleGuard>} />
                 <Route path="/funnel" element={<RoleGuard><FunnelAnalytics /></RoleGuard>} />
+                <Route path="/connect/products" element={<RoleGuard><ConnectProducts /></RoleGuard>} />
+
+                {/* Public storefront — no auth required */}
+                {/* TODO: In production, use a friendly slug instead of accountId */}
+                <Route path="/storefront/:accountId" element={<Storefront />} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
