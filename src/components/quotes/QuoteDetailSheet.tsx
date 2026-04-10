@@ -50,9 +50,25 @@ export function QuoteDetailSheet({
   onConvertToInvoice,
   onUpdateStatus,
 }: QuoteDetailSheetProps) {
+  const [pendingAction, setPendingAction] = useState<"sent" | "accepted" | "declined" | "convert_job" | "convert_invoice" | null>(null);
+
   if (!quote) return null;
 
   const currency = (quote as any).currency || getCurrencyFromCountry(quote.customer?.country_code);
+
+  const handleConfirm = () => {
+    if (!pendingAction || !quote) return;
+    if (pendingAction === "convert_job" && onConvertToJob) {
+      onConvertToJob(quote);
+      onOpenChange(false);
+    } else if (pendingAction === "convert_invoice" && onConvertToInvoice) {
+      onConvertToInvoice(quote);
+      onOpenChange(false);
+    } else if (onUpdateStatus && (pendingAction === "sent" || pendingAction === "accepted" || pendingAction === "declined")) {
+      onUpdateStatus(quote, pendingAction);
+    }
+    setPendingAction(null);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
