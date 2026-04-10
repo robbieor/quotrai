@@ -6383,6 +6383,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["team_role"]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      increment_voice_minutes: {
+        Args: { p_minutes: number; p_team_id: string }
+        Returns: undefined
+      }
       is_customer: { Args: never; Returns: boolean }
       is_member_of_team: { Args: { target_team_id: string }; Returns: boolean }
       is_org_admin_or_owner_v2: {
