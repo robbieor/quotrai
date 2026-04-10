@@ -28,7 +28,7 @@ export function useQuotes() {
           .from("quotes")
           .select(`
             *,
-            customer:customers(name, country_code),
+            customer:customers(name, email, country_code),
             job:jobs!quotes_job_id_fkey(id, title),
             quote_items(*)
           `)
@@ -55,7 +55,7 @@ export function useQuote(id: string | null) {
         .from("quotes")
         .select(`
           *,
-          customer:customers(name, country_code),
+          customer:customers(name, email, country_code),
           job:jobs!quotes_job_id_fkey(id, title),
           quote_items(*)
         `)

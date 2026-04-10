@@ -21,7 +21,7 @@ export function useInvoices() {
         .from("invoices")
         .select(`
           *,
-          customer:customers(name, country_code),
+          customer:customers(name, email, country_code),
           invoice_items(*),
           quote:quotes(display_number)
         `, { count: "exact" })
@@ -46,7 +46,7 @@ export function useInvoice(id: string | null) {
         .from("invoices")
         .select(`
           *,
-          customer:customers(name, country_code),
+          customer:customers(name, email, country_code),
           invoice_items(*),
           quote:quotes(display_number)
         `)
