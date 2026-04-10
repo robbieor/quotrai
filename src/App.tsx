@@ -49,6 +49,7 @@ const InvoicePortal = lazy(() => import("./pages/InvoicePortal"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const AIAuditHistory = lazy(() => import("./pages/AIAuditHistory"));
+const VoiceUsage = lazy(() => import("./pages/VoiceUsage"));
 const Industries = lazy(() => import("./pages/Industries"));
 const InvestorPitch = lazy(() => import("./pages/InvestorPitch"));
 const InvestorMarket = lazy(() => import("./pages/InvestorMarket"));
@@ -177,6 +178,7 @@ const App = () => {
                 <Route path="/foreman-ai" element={<RoleGuard><SeatGuard requiredSeat="connect"><George /></SeatGuard></RoleGuard>} />
                 <Route path="/george" element={<Navigate to="/foreman-ai" replace />} />
                 <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
+                <Route path="/voice-usage" element={<RoleGuard><SeatGuard requiredSeat="connect"><VoiceUsage /></SeatGuard></RoleGuard>} />
                 <Route path="/reports" element={<RoleGuard><SeatGuard requiredSeat="connect"><Reports /></SeatGuard></RoleGuard>} />
                 <Route path="/documents" element={<RoleGuard><SeatGuard requiredSeat="connect"><Documents /></SeatGuard></RoleGuard>} />
                 <Route path="/certificates" element={<RoleGuard><SeatGuard requiredSeat="connect"><Certificates /></SeatGuard></RoleGuard>} />

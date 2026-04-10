@@ -5445,6 +5445,60 @@ export type Database = {
           },
         ]
       }
+      voice_minute_purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          currency: string
+          id: string
+          minutes_purchased: number
+          purchased_at: string
+          status: string
+          stripe_session_id: string | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          currency?: string
+          id?: string
+          minutes_purchased?: number
+          purchased_at?: string
+          status?: string
+          stripe_session_id?: string | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          minutes_purchased?: number
+          purchased_at?: string
+          status?: string
+          stripe_session_id?: string | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_minute_purchases_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_minute_purchases_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       winback_queue: {
         Row: {
           cancelled: boolean
@@ -6455,6 +6509,17 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      process_voice_minute_purchase: {
+        Args: {
+          p_amount: number
+          p_currency?: string
+          p_minutes: number
+          p_stripe_session_id: string
+          p_team_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
