@@ -739,34 +739,36 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         const durationMinutes = Math.ceil(durationSeconds / 60); // Round up to nearest minute
 
         // Log to george_usage_log
-        supabase.from("george_usage_log").insert({
-          team_id: teamId,
-          user_id: userId,
-          conversation_id: convId || undefined,
-          duration_seconds: durationSeconds,
-          usage_type: "voice",
-          skill_used: "conversation",
-          credits_used: durationMinutes,
-        }).then(() => {
-          addDebugEvent(`📊 Logged ${durationMinutes} min usage`);
-        }).catch((err) => {
-          console.error("[VoiceAgent] Failed to log usage:", err);
-        });
+        (async () => {
+          try {
+            await supabase.from("george_usage_log").insert({
+              team_id: teamId,
+              user_id: userId,
+              conversation_id: convId || undefined,
+              duration_seconds: durationSeconds,
+              usage_type: "voice",
+              skill_used: "conversation",
+              credits_used: durationMinutes,
+            });
+            addDebugEvent(`📊 Logged ${durationMinutes} min usage`);
+          } catch (err) {
+            console.error("[VoiceAgent] Failed to log usage:", err);
+          }
 
-        // Increment george_voice_minutes_used on team
-        supabase.rpc("increment_voice_minutes", {
-          p_team_id: teamId,
-          p_minutes: durationMinutes,
-        }).then(() => {
-          // Invalidate team data so the UI reflects updated minutes
-          queryClient.invalidateQueries({ queryKey: ["teamGeorgeData"] });
-          queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
-        }).catch((err) => {
-          console.error("[VoiceAgent] Failed to increment voice minutes:", err);
-        });
+          try {
+            await supabase.rpc("increment_voice_minutes" as any, {
+              p_team_id: teamId,
+              p_minutes: durationMinutes,
+            });
+            queryClient.invalidateQueries({ queryKey: ["teamGeorgeData"] });
+            queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
+          } catch (err) {
+            console.error("[VoiceAgent] Failed to increment voice minutes:", err);
+          }
+        })();
       }
     }
-  }, [addDebugEvent, setPhase]);
+  }, [addDebugEvent, setPhase, queryClient]);
 
   const sendTextMessage = useCallback((text: string) => {
     if (conversationRef.current && phaseRef.current === "connected") {
