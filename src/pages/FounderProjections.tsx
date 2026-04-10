@@ -310,7 +310,7 @@ export default function FounderProjections() {
                   <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                     <p className="text-sm text-muted-foreground">Platform Fees</p>
                     <p className="text-xl font-bold text-foreground">{formatCurrency(platformFeeMRR)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">1.5% × {formatCurrency(customers * avgInvoiceVolume)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">2.9% × {formatCurrency(customers * avgInvoiceVolume)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -536,9 +536,9 @@ export default function FounderProjections() {
                   <p className="text-sm font-semibold text-foreground mb-1">💡 Cash Jobs Reality Check</p>
                   <p className="text-xs text-muted-foreground">
                     ~{PEN_PAPER_STATS.cashJobPct}% of trade work is cash-in-hand — we won't capture platform fees on those. 
-                    But {PEN_PAPER_STATS.invoicedJobPct}% is invoiced, and that's where our 1.5% payment fee + automated chasers 
+                    But {PEN_PAPER_STATS.invoicedJobPct}% is invoiced, and that's where our 2.9% payment fee + automated chasers 
                     create massive value. Even cash-heavy businesses need quotes, scheduling, and job tracking — 
-                    the €12 seat fee captures them regardless.
+                    the €15 seat fee captures them regardless.
                   </p>
                 </div>
               </CardContent>
@@ -576,7 +576,7 @@ export default function FounderProjections() {
                   <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="flex items-start gap-2">
                       <Percent className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span><strong className="text-foreground">1.5% on every "Pay Now" click</strong> — auto-chasers include one-tap payment links via Stripe Connect. More chasers = more on-platform payments = more platform fee revenue.</span>
+                      <span><strong className="text-foreground">2.9% on every "Pay Now" click</strong> — auto-chasers include one-tap payment links via Stripe Connect. More chasers = more on-platform payments = more platform fee revenue.</span>
                     </div>
                     <div className="flex items-start gap-2">
                       <RefreshCcw className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -593,7 +593,7 @@ export default function FounderProjections() {
                   <p className="text-sm font-semibold text-foreground mb-1">📊 Revenue Flywheel</p>
                   <p className="text-xs text-muted-foreground">
                     More auto-chasers → faster payments → tradespeople love it → tell their mates → more sign-ups → 
-                    more invoice volume through platform → more 1.5% fees. 
+                    more invoice volume through platform → more 2.9% fees. 
                     At {customers.toLocaleString()} customers × €{avgInvoiceVolume.toLocaleString()}/mo invoiced volume × {PEN_PAPER_STATS.invoicedJobPct}% invoiced jobs 
                     = <strong className="text-primary">{formatCurrency(customers * avgInvoiceVolume * (PEN_PAPER_STATS.invoicedJobPct / 100) * PLATFORM_FEE_RATE)}/mo</strong> in platform fees alone.
                   </p>
