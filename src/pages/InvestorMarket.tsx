@@ -29,7 +29,7 @@ const COMPETITORS = [
   { name: "ServiceTitan", region: "NA", arr: "~€500M", price: "€10K+/yr", hasAI: false, hasPayments: true, hasPhotoQuote: false, hasVoice: false },
   { name: "Tradify", region: "ANZ/UK", arr: "~€26M", price: "€30/user", hasAI: false, hasPayments: false, hasPhotoQuote: false, hasVoice: false },
   { name: "Fergus", region: "ANZ/UK", arr: "~€13M", price: "€40/user", hasAI: false, hasPayments: false, hasPhotoQuote: false, hasVoice: false },
-  { name: "Foreman", region: "Global", arr: "Pre-rev", price: "€19+/mo", hasAI: true, hasPayments: true, hasPhotoQuote: true, hasVoice: true },
+  { name: "Foreman", region: "Global", arr: "Pre-rev", price: "€39+€15/seat", hasAI: true, hasPayments: true, hasPhotoQuote: true, hasVoice: true },
 ];
 
 const GEOGRAPHIC = [
