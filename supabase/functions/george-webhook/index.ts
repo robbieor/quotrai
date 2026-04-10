@@ -4586,10 +4586,510 @@ serve(async (req) => {
         break;
       }
 
+      // ==================== PRICE BOOK / CATALOG ====================
+      case "search_catalog": {
+        const { query: searchQuery, category, supplier_name: supplierFilter } = parameters as {
+          query?: string; category?: string; supplier_name?: string;
+        };
+
+        if (!searchQuery && !category && !supplierFilter) {
+          response = { success: false, message: "I need a search term, category, or supplier name to search the catalog." };
+          break;
+        }
+
+        let catalogQuery = supabase
+          .from("team_catalog_items")
+          .select("id, item_name, supplier_sku, manufacturer, manufacturer_part_number, cost_price, sell_price, markup_percent, category, supplier_name, unit")
+          .eq("team_id", company_id);
+
+        if (searchQuery) catalogQuery = catalogQuery.ilike("item_name", `%${sanitizeIlike(searchQuery)}%`);
+        if (category) catalogQuery = catalogQuery.ilike("category", `%${sanitizeIlike(category)}%`);
+        if (supplierFilter) catalogQuery = catalogQuery.ilike("supplier_name", `%${sanitizeIlike(supplierFilter)}%`);
+
+        const { data: catalogItems, error: catErr } = await catalogQuery.order("item_name").limit(15);
+        if (catErr) throw catErr;
+
+        if (!catalogItems || catalogItems.length === 0) {
+          response = { success: true, message: `No catalog items found matching your search.`, data: [] };
+          break;
+        }
+
+        const itemList = catalogItems.map((i: any) => {
+          const sell = i.sell_price ? `${currencySymbol}${Number(i.sell_price).toFixed(2)}` : "no price";
+          const cost = i.cost_price ? `(cost: ${currencySymbol}${Number(i.cost_price).toFixed(2)})` : "";
+          const supplier = i.supplier_name ? ` — ${i.supplier_name}` : "";
+          return `${i.item_name}: ${sell} ${cost}${supplier}`;
+        }).join(". ");
+
+        response = {
+          success: true,
+          message: `Found ${catalogItems.length} item${catalogItems.length > 1 ? "s" : ""}: ${itemList}`,
+          data: catalogItems
+        };
+        break;
+      }
+
+      case "suggest_product": {
+        const { description: prodDesc, category: prodCat } = parameters as { description: string; category?: string };
+
+        if (!prodDesc) {
+          response = { success: false, message: "I need a description of what you're looking for to suggest products." };
+          break;
+        }
+
+        const keywords = prodDesc.split(/\s+/).filter((w: string) => w.length > 2).slice(0, 4);
+        const pattern = `%${keywords.join("%")}%`;
+
+        let suggestQuery = supabase
+          .from("team_catalog_items")
+          .select("id, item_name, supplier_sku, manufacturer, cost_price, sell_price, markup_percent, category, supplier_name, unit, is_favourite")
+          .eq("team_id", company_id)
+          .ilike("item_name", pattern);
+
+        if (prodCat) suggestQuery = suggestQuery.ilike("category", `%${sanitizeIlike(prodCat)}%`);
+
+        const { data: suggestions, error: sugErr } = await suggestQuery.order("is_favourite", { ascending: false }).limit(10);
+        if (sugErr) throw sugErr;
+
+        if (!suggestions || suggestions.length === 0) {
+          // Fallback: broader search with just first keyword
+          const { data: broadResults } = await supabase
+            .from("team_catalog_items")
+            .select("id, item_name, sell_price, supplier_name, category")
+            .eq("team_id", company_id)
+            .ilike("item_name", `%${sanitizeIlike(keywords[0] || prodDesc)}%`)
+            .limit(5);
+
+          if (broadResults && broadResults.length > 0) {
+            const list = broadResults.map((i: any) => `${i.item_name} (${currencySymbol}${Number(i.sell_price || 0).toFixed(2)})`).join(", ");
+            response = { success: true, message: `No exact matches, but these might work: ${list}`, data: broadResults };
+          } else {
+            response = { success: true, message: `No products found matching "${prodDesc}". You may need to add it to your catalog.`, data: [] };
+          }
+          break;
+        }
+
+        const list = suggestions.map((i: any) => {
+          const fav = i.is_favourite ? "⭐ " : "";
+          return `${fav}${i.item_name}: ${currencySymbol}${Number(i.sell_price || 0).toFixed(2)}${i.supplier_name ? ` (${i.supplier_name})` : ""}`;
+        }).join(". ");
+
+        response = {
+          success: true,
+          message: `Here are ${suggestions.length} suggestion${suggestions.length > 1 ? "s" : ""}: ${list}`,
+          data: suggestions
+        };
+        break;
+      }
+
+      case "get_product_price": {
+        const { item_name: priceName, supplier_sku: priceSku } = parameters as { item_name?: string; supplier_sku?: string };
+
+        if (!priceName && !priceSku) {
+          response = { success: false, message: "I need an item name or SKU to look up the price." };
+          break;
+        }
+
+        let priceQuery = supabase
+          .from("team_catalog_items")
+          .select("id, item_name, supplier_sku, manufacturer, manufacturer_part_number, cost_price, sell_price, markup_percent, discount_percent, category, supplier_name, unit")
+          .eq("team_id", company_id);
+
+        if (priceSku) {
+          priceQuery = priceQuery.ilike("supplier_sku", sanitizeIlike(priceSku));
+        } else if (priceName) {
+          priceQuery = priceQuery.ilike("item_name", `%${sanitizeIlike(priceName)}%`);
+        }
+
+        const { data: priceItems, error: priceErr } = await priceQuery.limit(5);
+        if (priceErr) throw priceErr;
+
+        if (!priceItems || priceItems.length === 0) {
+          response = { success: true, message: `No item found matching "${priceName || priceSku}".`, data: [] };
+          break;
+        }
+
+        const priceList = priceItems.map((i: any) => {
+          const cost = i.cost_price ? `Cost: ${currencySymbol}${Number(i.cost_price).toFixed(2)}` : "No cost price";
+          const sell = i.sell_price ? `Sell: ${currencySymbol}${Number(i.sell_price).toFixed(2)}` : "No sell price";
+          const markup = i.markup_percent ? `Markup: ${i.markup_percent}%` : "";
+          const supplier = i.supplier_name || "no supplier";
+          return `${i.item_name} — ${cost}, ${sell}${markup ? `, ${markup}` : ""} (${supplier})`;
+        }).join(". ");
+
+        response = {
+          success: true,
+          message: priceItems.length === 1
+            ? `${priceList}`
+            : `Found ${priceItems.length} items: ${priceList}`,
+          data: priceItems
+        };
+        break;
+      }
+
+      case "add_catalog_to_quote": {
+        const { item_name: addItemName, supplier_sku: addSku, quantity: addQty, quote_id: addQuoteId, display_number: addQuoteNum, client_name: addClientName, customer_name: addCustomerName } = parameters as {
+          item_name?: string; supplier_sku?: string; quantity?: number;
+          quote_id?: string; display_number?: string; client_name?: string; customer_name?: string;
+        };
+
+        const resolvedClientName = addClientName || addCustomerName;
+
+        if (!addItemName && !addSku) {
+          response = { success: false, message: "I need an item name or SKU to add to the quote." };
+          break;
+        }
+
+        // Find catalog item
+        let itemQuery = supabase
+          .from("team_catalog_items")
+          .select("id, item_name, sell_price, cost_price, unit, supplier_sku")
+          .eq("team_id", company_id);
+
+        if (addSku) {
+          itemQuery = itemQuery.ilike("supplier_sku", sanitizeIlike(addSku));
+        } else {
+          itemQuery = itemQuery.ilike("item_name", `%${sanitizeIlike(addItemName!)}%`);
+        }
+
+        const { data: foundItems, error: fiErr } = await itemQuery.limit(1);
+        if (fiErr) throw fiErr;
+
+        if (!foundItems || foundItems.length === 0) {
+          response = { success: false, message: `No catalog item found matching "${addItemName || addSku}". Check the name or add it to your catalog first.` };
+          break;
+        }
+
+        const catalogItem = foundItems[0] as any;
+        const qty = addQty || 1;
+        const unitPrice = catalogItem.sell_price || 0;
+
+        // Find or create quote
+        let targetQuoteId: string | null = null;
+        let targetQuoteNumber: string | null = null;
+
+        if (addQuoteId) {
+          const { data: q } = await supabase.from("quotes").select("id, display_number").eq("id", addQuoteId).eq("team_id", company_id).single();
+          if (q) { targetQuoteId = q.id; targetQuoteNumber = q.display_number; }
+        } else if (addQuoteNum) {
+          const { data: q } = await supabase.from("quotes").select("id, display_number").eq("team_id", company_id).ilike("display_number", `%${sanitizeIlike(addQuoteNum)}%`).limit(1).single();
+          if (q) { targetQuoteId = q.id; targetQuoteNumber = q.display_number; }
+        }
+
+        if (!targetQuoteId) {
+          response = { success: false, message: `I couldn't find quote "${addQuoteNum || addQuoteId}". Please provide a valid quote number.` };
+          break;
+        }
+
+        // Insert quote item
+        const { error: addItemErr } = await supabase
+          .from("quote_items")
+          .insert({
+            quote_id: targetQuoteId,
+            description: catalogItem.item_name,
+            quantity: qty,
+            unit_price: unitPrice,
+            catalog_item_id: catalogItem.id,
+          });
+
+        if (addItemErr) throw addItemErr;
+
+        // Recalculate quote totals
+        const { data: allItems } = await supabase
+          .from("quote_items")
+          .select("quantity, unit_price")
+          .eq("quote_id", targetQuoteId);
+
+        const newSubtotal = (allItems || []).reduce((sum: number, i: any) => sum + (i.quantity * i.unit_price), 0);
+
+        const { data: quoteForTax } = await supabase.from("quotes").select("tax_rate").eq("id", targetQuoteId).single();
+        const taxRate = (quoteForTax as any)?.tax_rate || 0;
+        const newTax = newSubtotal * (taxRate / 100);
+        const newTotal = newSubtotal + newTax;
+
+        await supabase.from("quotes").update({ subtotal: newSubtotal, tax_amount: newTax, total: newTotal }).eq("id", targetQuoteId);
+
+        response = {
+          success: true,
+          message: `Added ${qty}x "${catalogItem.item_name}" at ${currencySymbol}${unitPrice.toFixed(2)} each to quote ${targetQuoteNumber}. New total: ${currencySymbol}${newTotal.toFixed(2)}.`,
+          data: { quote_id: targetQuoteId, item: catalogItem.item_name, quantity: qty, unit_price: unitPrice, new_total: newTotal }
+        };
+        break;
+      }
+
+      // ==================== PRICE COMPARISON ====================
+      case "compare_product_prices": {
+        const { product_name: cpName, manufacturer_part_number: cpMpn, manufacturer: cpMfr, catalog_item_id: cpItemId } = parameters as {
+          product_name?: string; manufacturer_part_number?: string; manufacturer?: string; catalog_item_id?: string;
+        };
+
+        let searchName = cpName || "";
+        let searchMpn = cpMpn || "";
+        let searchMfr = cpMfr || "";
+
+        // If catalog_item_id provided, look up the item
+        if (cpItemId) {
+          const { data: catItem } = await supabase
+            .from("team_catalog_items")
+            .select("item_name, manufacturer_part_number, manufacturer, supplier_name")
+            .eq("id", cpItemId)
+            .eq("team_id", company_id)
+            .single();
+          if (catItem) {
+            searchName = (catItem as any).item_name || searchName;
+            searchMpn = (catItem as any).manufacturer_part_number || searchMpn;
+            searchMfr = (catItem as any).manufacturer || searchMfr;
+          }
+        }
+
+        if (!searchName && !searchMpn) {
+          response = { success: false, message: "I need a product name or manufacturer part number to compare prices." };
+          break;
+        }
+
+        interface CompareResult {
+          supplier_name: string; product_name: string; website_price: number | null;
+          manufacturer_part_number: string | null; match_confidence: number; match_method: string;
+        }
+        const results: CompareResult[] = [];
+
+        // Tier 1: Exact MPN match
+        if (searchMpn) {
+          const { data: mpnMatches } = await supabase
+            .from("supplier_sources")
+            .select("*")
+            .eq("manufacturer_part_number", searchMpn)
+            .order("website_price", { ascending: true })
+            .limit(15);
+          if (mpnMatches) {
+            for (const m of mpnMatches) {
+              results.push({ supplier_name: m.supplier_name, product_name: m.product_name, website_price: m.website_price, manufacturer_part_number: m.manufacturer_part_number, match_confidence: 100, match_method: "exact_mpn" });
+            }
+          }
+        }
+
+        // Tier 2: Name fuzzy
+        if (searchName && results.length < 10) {
+          const kw = searchName.split(/\s+/).filter((w: string) => w.length > 2).slice(0, 4);
+          if (kw.length > 0) {
+            const pattern = `%${kw.join("%")}%`;
+            const { data: nameMatches } = await supabase
+              .from("supplier_sources")
+              .select("*")
+              .ilike("product_name", pattern)
+              .order("website_price", { ascending: true })
+              .limit(15);
+            if (nameMatches) {
+              const existing = new Set(results.map(r => `${r.supplier_name}:${r.product_name}`));
+              for (const m of nameMatches) {
+                if (!existing.has(`${m.supplier_name}:${m.product_name}`)) {
+                  results.push({ supplier_name: m.supplier_name, product_name: m.product_name, website_price: m.website_price, manufacturer_part_number: m.manufacturer_part_number, match_confidence: 70, match_method: "name_fuzzy" });
+                }
+              }
+            }
+          }
+        }
+
+        results.sort((a, b) => {
+          if (a.website_price && b.website_price) return a.website_price - b.website_price;
+          if (a.website_price) return -1;
+          if (b.website_price) return 1;
+          return b.match_confidence - a.match_confidence;
+        });
+
+        if (results.length === 0) {
+          response = { success: true, message: `No supplier prices found for "${searchName || searchMpn}".`, data: [] };
+          break;
+        }
+
+        const cheapest = results.find(r => r.website_price && r.website_price > 0);
+        const priceLines = results.slice(0, 10).map(r => {
+          const price = r.website_price ? `${currencySymbol}${r.website_price.toFixed(2)}` : "price unknown";
+          return `${r.supplier_name}: ${price} (${r.match_confidence}% match)`;
+        }).join(". ");
+
+        response = {
+          success: true,
+          message: `Found ${results.length} supplier price${results.length > 1 ? "s" : ""}. ${cheapest ? `Cheapest: ${cheapest.supplier_name} at ${currencySymbol}${cheapest.website_price!.toFixed(2)}.` : ""} ${priceLines}`,
+          data: results.slice(0, 15)
+        };
+        break;
+      }
+
+      case "suggest_cheaper_alternative": {
+        const { item_name: altName, catalog_item_id: altItemId } = parameters as { item_name?: string; catalog_item_id?: string };
+
+        // Find the user's catalog item
+        let userItem: any = null;
+        if (altItemId) {
+          const { data } = await supabase.from("team_catalog_items").select("*").eq("id", altItemId).eq("team_id", company_id).single();
+          userItem = data;
+        } else if (altName) {
+          const { data } = await supabase.from("team_catalog_items").select("*").eq("team_id", company_id).ilike("item_name", `%${sanitizeIlike(altName)}%`).limit(1).single();
+          userItem = data;
+        }
+
+        if (!userItem) {
+          response = { success: false, message: `No catalog item found matching "${altName || altItemId}". Check the name or provide a catalog item ID.` };
+          break;
+        }
+
+        const currentCost = userItem.cost_price || 0;
+        const mpn = userItem.manufacturer_part_number;
+        const itemName = userItem.item_name;
+
+        // Search supplier_sources for cheaper options
+        let altResults: any[] = [];
+
+        if (mpn) {
+          const { data: mpnAlts } = await supabase
+            .from("supplier_sources")
+            .select("supplier_name, product_name, website_price, manufacturer_part_number, source_url")
+            .eq("manufacturer_part_number", mpn)
+            .order("website_price", { ascending: true })
+            .limit(10);
+          if (mpnAlts) altResults = mpnAlts;
+        }
+
+        if (altResults.length < 5) {
+          const kw = itemName.split(/\s+/).filter((w: string) => w.length > 2).slice(0, 3);
+          if (kw.length > 0) {
+            const { data: nameAlts } = await supabase
+              .from("supplier_sources")
+              .select("supplier_name, product_name, website_price, manufacturer_part_number, source_url")
+              .ilike("product_name", `%${kw.join("%")}%`)
+              .order("website_price", { ascending: true })
+              .limit(10);
+            if (nameAlts) {
+              const existingKeys = new Set(altResults.map((r: any) => `${r.supplier_name}:${r.product_name}`));
+              for (const a of nameAlts) {
+                if (!existingKeys.has(`${a.supplier_name}:${a.product_name}`)) altResults.push(a);
+              }
+            }
+          }
+        }
+
+        // Filter to only cheaper options
+        const cheaper = altResults.filter((r: any) => r.website_price && r.website_price < currentCost);
+
+        if (cheaper.length === 0) {
+          response = {
+            success: true,
+            message: `No cheaper alternatives found for "${itemName}" (current cost: ${currencySymbol}${currentCost.toFixed(2)}). ${altResults.length > 0 ? `Found ${altResults.length} supplier price(s) but none cheaper.` : "No supplier data available for this product."}`,
+            data: []
+          };
+          break;
+        }
+
+        const savings = cheaper.map((r: any) => {
+          const saving = currentCost - r.website_price;
+          const pct = ((saving / currentCost) * 100).toFixed(1);
+          return `${r.supplier_name}: ${currencySymbol}${r.website_price.toFixed(2)} (save ${currencySymbol}${saving.toFixed(2)} / ${pct}%)`;
+        }).join(". ");
+
+        response = {
+          success: true,
+          message: `Found ${cheaper.length} cheaper alternative${cheaper.length > 1 ? "s" : ""} for "${itemName}" (your cost: ${currencySymbol}${currentCost.toFixed(2)}). ${savings}`,
+          data: cheaper
+        };
+        break;
+      }
+
+      // ==================== QUOTE-TO-INVOICE ALIAS ====================
+      case "convert_quote_to_invoice": {
+        // Alias: remap parameters to match create_invoice_from_quote
+        const { quote_id: cqId, display_number: cqNum, due_days: cqDays } = parameters as {
+          quote_id?: string; display_number?: string; due_days?: number;
+        };
+        // Re-assign to match the create_invoice_from_quote handler's expected params
+        const aliasedParams = { quote_id: cqId, quote_number: cqNum || cqId, due_days: cqDays };
+        const { quote_id: aQuoteId, quote_number: aQuoteNum, due_days: aDueDays } = aliasedParams;
+
+        if (!aQuoteId && !aQuoteNum) {
+          response = { success: false, message: "I need a quote ID or quote number to convert to an invoice." };
+          break;
+        }
+
+        let quoteQuery = supabase
+          .from("quotes")
+          .select("id, display_number, customer_id, subtotal, tax_rate, tax_amount, total, notes, job_id, status, customers(name)")
+          .eq("team_id", company_id);
+
+        if (aQuoteId) quoteQuery = quoteQuery.eq("id", aQuoteId);
+        else if (aQuoteNum) quoteQuery = quoteQuery.ilike("display_number", `%${sanitizeIlike(aQuoteNum)}%`);
+
+        const { data: cqQuotes, error: cqErr } = await quoteQuery.limit(1);
+        if (cqErr) throw cqErr;
+
+        if (!cqQuotes || cqQuotes.length === 0) {
+          response = { success: false, message: `I couldn't find a quote matching "${aQuoteNum || aQuoteId}".` };
+          break;
+        }
+
+        const cqQuote = cqQuotes[0] as any;
+
+        if (cqQuote.status === "declined" || cqQuote.status === "expired") {
+          response = { success: false, message: `Quote ${cqQuote.display_number} is ${cqQuote.status} and can't be converted.` };
+          break;
+        }
+
+        const { data: cqItems, error: cqItemsErr } = await supabase
+          .from("quote_items")
+          .select("description, quantity, unit_price, total_price")
+          .eq("quote_id", cqQuote.id);
+        if (cqItemsErr) throw cqItemsErr;
+
+        if (!cqItems || cqItems.length === 0) {
+          response = { success: false, message: `Quote ${cqQuote.display_number} has no line items.` };
+          break;
+        }
+
+        const [{ data: recentInvs }, { count: invCount }] = await Promise.all([
+          supabase.from("invoices").select("display_number").eq("team_id", company_id).order("created_at", { ascending: false }).limit(50),
+          supabase.from("invoices").select("*", { count: "exact", head: true }).eq("team_id", company_id),
+        ]);
+
+        const cqInvNumber = getNextDisplayNumber(recentInvs, "INV-", invCount ?? 0);
+        const cqDueDays = aDueDays || 14;
+        const cqDueDate = new Date(Date.now() + cqDueDays * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const cqIssueDate = new Date().toISOString().split("T")[0];
+
+        const { data: cqInv, error: cqInvErr } = await supabase
+          .from("invoices")
+          .insert({
+            team_id: company_id, customer_id: cqQuote.customer_id, quote_id: cqQuote.id,
+            display_number: cqInvNumber, subtotal: cqQuote.subtotal, tax_rate: cqQuote.tax_rate,
+            tax_amount: cqQuote.tax_amount, total: cqQuote.total,
+            notes: cqQuote.notes || `Created from quote ${cqQuote.display_number}`,
+            issue_date: cqIssueDate, due_date: cqDueDate, status: "draft",
+            job_id: cqQuote.job_id
+          })
+          .select("id, display_number, total")
+          .single();
+
+        if (cqInvErr) throw cqInvErr;
+
+        const invItems = cqItems.map((item: any) => ({
+          invoice_id: cqInv.id, description: item.description,
+          quantity: item.quantity, unit_price: item.unit_price
+        }));
+
+        await supabase.from("invoice_items").insert(invItems);
+        await supabase.from("quotes").update({ status: "accepted" }).eq("id", cqQuote.id);
+
+        const custName = cqQuote.customers?.name || "the client";
+        response = {
+          success: true,
+          message: `Converted quote ${cqQuote.display_number} into invoice ${cqInvNumber} for ${custName}, totaling ${currencySymbol}${cqQuote.total.toFixed(2)}. Due date: ${cqDueDate}.`,
+          data: { invoice: cqInv, from_quote: cqQuote.display_number }
+        };
+        break;
+      }
+
       default:
         response = {
           success: false,
-          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, enquiries, templates, payments, schedules, financial summaries, team assignments, and more.`
+          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, enquiries, templates, payments, schedules, financial summaries, team assignments, catalog search, price comparison, and more.`
         };
     }
 
