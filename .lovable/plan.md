@@ -1,40 +1,45 @@
 
 
-# Add Team/Workforce Management Tools to Foreman AI
+# Implement 7 Missing Tool Handlers in george-webhook
 
-## What this does
+## Context
 
-Adds 3 new voice/chat tools so Foreman AI can manage team assignments, check availability, and log timesheets — all via voice or text commands.
+6 tools are truly unimplemented. The 7th (`convert_quote_to_invoice`) is already handled as `create_invoice_from_quote` — so we just need to alias it.
 
-## New tool definitions
+## Changes — all in `supabase/functions/george-webhook/index.ts`
 
-Added to `supabase/functions/_shared/foreman-tool-definitions.ts` under a new `// ==================== TEAM / WORKFORCE ====================` section:
+### 1. `convert_quote_to_invoice` (alias)
+Add a case that falls through to the existing `create_invoice_from_quote` handler by remapping parameters (`display_number` → `quote_number`).
 
-### 1. `assign_team_member`
-Assign a team member to a job. Parameters: `job_id`, `job_title` (search fallback), `member_name`, `member_id` (optional).
+### 2. `search_catalog`
+Query `team_catalog_items` with `ilike` on `item_name`, optional filters on `category`, `supplier_name`. Return items with sell_price, cost_price, margin info.
 
-### 2. `get_team_availability`
-Check which team members are available on a given date. Parameters: `date` (YYYY-MM-DD, defaults to today), `member_name` (optional filter).
+### 3. `suggest_product`
+Query `team_catalog_items` using keyword extraction from the `description` parameter. Rank by relevance (favourites first, then most recently used). Return top matches with pricing and alternatives.
 
-### 3. `log_timesheet`
-Log a time entry for a team member against a job. Parameters: `member_name`, `job_title` or `job_id`, `date`, `start_time`, `end_time`, `break_minutes`, `notes`.
+### 4. `get_product_price`
+Look up `team_catalog_items` by exact/fuzzy `item_name` or `supplier_sku`. Return cost_price, sell_price, markup, supplier info.
 
-## Execution handlers
+### 5. `add_catalog_to_quote`
+- Find catalog item by name/SKU in `team_catalog_items`
+- If `quote_id`/`display_number` provided, find existing quote; otherwise create a new quote for the customer
+- Insert into `quote_items` using the catalog item's sell_price
+- Recalculate quote totals
 
-Add 3 new `case` blocks in `supabase/functions/george-webhook/index.ts`:
+### 6. `compare_product_prices`
+Call the existing `compare-products` edge function internally (or replicate its logic inline): query `supplier_sources` by MPN and fuzzy name, return ranked results with savings.
 
-- **assign_team_member**: Looks up the member in `team_memberships` + `profiles`, the job in `jobs`, then updates `jobs.assigned_to` (or a junction table if one exists). Returns confirmation.
-- **get_team_availability**: Queries `team_memberships` for the team, cross-references `jobs` and `time_entries` for the requested date, returns who's free vs booked.
-- **log_timesheet**: Inserts into `time_entries` with the resolved `user_id`, `job_id`, clock-in/out times, and break duration.
+### 7. `suggest_cheaper_alternative`
+- Look up the user's catalog item from `team_catalog_items`
+- Query `supplier_sources` for same MPN or similar product name
+- Return any options cheaper than the user's current cost_price, with savings calculation
 
 ## Files changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/_shared/foreman-tool-definitions.ts` | Add 3 tool definitions |
-| `supabase/functions/george-webhook/index.ts` | Add 3 case handlers |
+| `supabase/functions/george-webhook/index.ts` | Add 7 case handlers before the `default:` block |
 
-## Auto-sync
-
-No additional work needed — the existing `useAutoSyncTools` hook will automatically push the updated definitions to ElevenLabs on next session load.
+## Deployment
+Deploy `george-webhook` after changes. Auto-sync will handle ElevenLabs tool registration.
 
