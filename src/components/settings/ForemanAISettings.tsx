@@ -18,7 +18,7 @@ export function ForemanAISettings() {
   const [prefs, setPrefs] = useState<ForemanPreferences>(DEFAULT_FOREMAN_PREFERENCES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user || !profile?.team_id) return;
