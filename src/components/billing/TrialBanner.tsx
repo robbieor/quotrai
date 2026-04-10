@@ -92,8 +92,13 @@ export function TrialBanner() {
         </div>
       </AlertDescription>
       <button
-        onClick={handleDismiss}
-        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleDismiss();
+        }}
+        className="absolute top-3 right-3 z-10 p-1 rounded-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" />
