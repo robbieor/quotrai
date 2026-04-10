@@ -73,7 +73,7 @@ serve(async (req) => {
         minutes: "30",
         type: "voice_topup",
       },
-      success_url: `${origin}/foreman-ai?topup=success`,
+      success_url: `${origin}/foreman-ai?topup=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/foreman-ai?topup=cancelled`,
     });
 
