@@ -32,15 +32,15 @@ serve(async (req) => {
     if (userError || !user) throw new Error("Unauthorized");
     const userId = user.id;
 
-    // --- Resolve user's org membership (v2 table) ---
+    // --- Resolve user's org membership, ensuring org exists in teams table ---
     const { data: orgMembers } = await supabaseClient
       .from("org_members_v2")
-      .select("org_id, role, seat_type")
+      .select("org_id, role, seat_type, teams!inner(id)")
       .eq("user_id", userId)
       .eq("status", "active")
       .limit(1);
     const orgMember = orgMembers?.[0];
-    if (!orgMember?.org_id) throw new Error("User not in an organization");
+    if (!orgMember?.org_id) throw new Error("User not in an organization with a valid team");
 
     // Only owners/CEOs can manage Connect
     if (orgMember.role !== "ceo" && orgMember.role !== "owner") {
