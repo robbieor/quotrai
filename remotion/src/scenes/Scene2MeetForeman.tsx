@@ -84,8 +84,8 @@ export const Scene2MeetForeman: React.FC = () => {
             fontSize: 100,
             fontWeight: 800,
             color: "white",
-            opacity: quotrOpacity,
-            transform: `translateX(${quotrX}px)`,
+            opacity: foremanOpacity,
+            transform: `translateX(${foremanX}px)`,
             letterSpacing: "-0.05em",
             textShadow: "0 0 80px rgba(0,255,178,0.2)",
           }}
