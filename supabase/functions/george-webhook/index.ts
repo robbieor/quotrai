@@ -4377,10 +4377,219 @@ serve(async (req) => {
         break;
       }
 
+      // ==================== TEAM / WORKFORCE ====================
+      case "assign_team_member": {
+        const { job_id, job_title, member_name, member_id } = args;
+
+        // Resolve member
+        let resolvedMemberId = member_id;
+        let resolvedMemberName = member_name;
+        if (!resolvedMemberId && member_name) {
+          const { data: members } = await supabase
+            .from("team_memberships")
+            .select("user_id, profiles!inner(full_name)")
+            .eq("team_id", team_id)
+            .ilike("profiles.full_name", `%${sanitizeIlike(member_name)}%`);
+          if (!members || members.length === 0) {
+            response = { success: false, message: `No team member found matching "${member_name}".` };
+            break;
+          }
+          if (members.length > 1) {
+            const names = members.map((m: any) => m.profiles?.full_name).join(", ");
+            response = { success: false, message: `Multiple members match "${member_name}": ${names}. Please be more specific.` };
+            break;
+          }
+          resolvedMemberId = members[0].user_id;
+          resolvedMemberName = (members[0] as any).profiles?.full_name || member_name;
+        }
+
+        // Resolve job
+        let resolvedJobId = job_id;
+        let jobTitle = job_title;
+        if (!resolvedJobId && job_title) {
+          const { data: jobs } = await supabase
+            .from("jobs")
+            .select("id, title")
+            .eq("team_id", team_id)
+            .ilike("title", `%${sanitizeIlike(job_title)}%`)
+            .limit(2);
+          if (!jobs || jobs.length === 0) {
+            response = { success: false, message: `No job found matching "${job_title}".` };
+            break;
+          }
+          if (jobs.length > 1) {
+            response = { success: false, message: `Multiple jobs match "${job_title}". Please be more specific.` };
+            break;
+          }
+          resolvedJobId = jobs[0].id;
+          jobTitle = jobs[0].title;
+        }
+
+        if (!resolvedJobId) {
+          response = { success: false, message: "Please provide a job name or ID to assign the member to." };
+          break;
+        }
+
+        const { error: assignErr } = await supabase
+          .from("jobs")
+          .update({ assigned_to: resolvedMemberId })
+          .eq("id", resolvedJobId)
+          .eq("team_id", team_id);
+
+        if (assignErr) {
+          response = { success: false, message: `Failed to assign member: ${assignErr.message}` };
+        } else {
+          response = { success: true, message: `Assigned ${resolvedMemberName} to job "${jobTitle || resolvedJobId}".` };
+        }
+        break;
+      }
+
+      case "get_team_availability": {
+        const checkDate = args.date || new Date().toISOString().split("T")[0];
+        const memberFilter = args.member_name;
+
+        // Get all team members
+        let membersQuery = supabase
+          .from("team_memberships")
+          .select("user_id, profiles!inner(full_name)")
+          .eq("team_id", team_id);
+
+        if (memberFilter) {
+          membersQuery = membersQuery.ilike("profiles.full_name", `%${sanitizeIlike(memberFilter)}%`);
+        }
+
+        const { data: members } = await membersQuery;
+        if (!members || members.length === 0) {
+          response = { success: false, message: memberFilter ? `No team member found matching "${memberFilter}".` : "No team members found." };
+          break;
+        }
+
+        // Get jobs scheduled for that date
+        const { data: scheduledJobs } = await supabase
+          .from("jobs")
+          .select("id, title, assigned_to, scheduled_date, scheduled_time")
+          .eq("team_id", team_id)
+          .eq("scheduled_date", checkDate)
+          .not("assigned_to", "is", null);
+
+        // Get time entries for that date
+        const dayStart = `${checkDate}T00:00:00`;
+        const dayEnd = `${checkDate}T23:59:59`;
+        const { data: timeEntries } = await supabase
+          .from("time_entries")
+          .select("user_id, job_id, clock_in, clock_out")
+          .eq("team_id", team_id)
+          .gte("clock_in", dayStart)
+          .lte("clock_in", dayEnd);
+
+        const busyUserIds = new Set<string>();
+        (scheduledJobs || []).forEach((j: any) => { if (j.assigned_to) busyUserIds.add(j.assigned_to); });
+        (timeEntries || []).forEach((t: any) => { if (t.user_id) busyUserIds.add(t.user_id); });
+
+        const available: string[] = [];
+        const booked: { name: string; jobs: string[] }[] = [];
+
+        for (const m of members) {
+          const name = (m as any).profiles?.full_name || "Unknown";
+          if (busyUserIds.has(m.user_id)) {
+            const memberJobs = (scheduledJobs || [])
+              .filter((j: any) => j.assigned_to === m.user_id)
+              .map((j: any) => `${j.title}${j.scheduled_time ? ` at ${j.scheduled_time}` : ""}`);
+            booked.push({ name, jobs: memberJobs });
+          } else {
+            available.push(name);
+          }
+        }
+
+        const lines: string[] = [`Team availability for ${checkDate}:`];
+        if (available.length > 0) lines.push(`✅ Available: ${available.join(", ")}`);
+        if (booked.length > 0) {
+          for (const b of booked) {
+            lines.push(`🔴 ${b.name}: ${b.jobs.length > 0 ? b.jobs.join("; ") : "has time entries logged"}`);
+          }
+        }
+        if (available.length === 0 && booked.length === 0) lines.push("No members found for this date.");
+
+        response = { success: true, message: lines.join("\n"), data: { date: checkDate, available, booked } };
+        break;
+      }
+
+      case "log_timesheet": {
+        const { member_name: tsName, job_id: tsJobId, job_title: tsJobTitle, date: tsDate, start_time, end_time, break_minutes, notes } = args;
+        const entryDate = tsDate || new Date().toISOString().split("T")[0];
+
+        // Resolve member
+        const { data: tsMembers } = await supabase
+          .from("team_memberships")
+          .select("user_id, profiles!inner(full_name)")
+          .eq("team_id", team_id)
+          .ilike("profiles.full_name", `%${sanitizeIlike(tsName)}%`);
+
+        if (!tsMembers || tsMembers.length === 0) {
+          response = { success: false, message: `No team member found matching "${tsName}".` };
+          break;
+        }
+        if (tsMembers.length > 1) {
+          const names = tsMembers.map((m: any) => m.profiles?.full_name).join(", ");
+          response = { success: false, message: `Multiple members match "${tsName}": ${names}. Please be more specific.` };
+          break;
+        }
+        const tsUserId = tsMembers[0].user_id;
+        const tsFullName = (tsMembers[0] as any).profiles?.full_name || tsName;
+
+        // Resolve job
+        let tsResolvedJobId = tsJobId;
+        let tsResolvedJobTitle = tsJobTitle;
+        if (!tsResolvedJobId && tsJobTitle) {
+          const { data: tsJobs } = await supabase
+            .from("jobs")
+            .select("id, title")
+            .eq("team_id", team_id)
+            .ilike("title", `%${sanitizeIlike(tsJobTitle)}%`)
+            .limit(2);
+          if (!tsJobs || tsJobs.length === 0) {
+            response = { success: false, message: `No job found matching "${tsJobTitle}".` };
+            break;
+          }
+          if (tsJobs.length > 1) {
+            response = { success: false, message: `Multiple jobs match "${tsJobTitle}". Please be more specific.` };
+            break;
+          }
+          tsResolvedJobId = tsJobs[0].id;
+          tsResolvedJobTitle = tsJobs[0].title;
+        }
+
+        const clockIn = `${entryDate}T${start_time}:00`;
+        const clockOut = `${entryDate}T${end_time}:00`;
+
+        const { error: tsErr } = await supabase
+          .from("time_entries")
+          .insert({
+            user_id: tsUserId,
+            team_id,
+            job_id: tsResolvedJobId || null,
+            clock_in: clockIn,
+            clock_out: clockOut,
+            break_minutes: break_minutes || 0,
+            notes: notes || null,
+          });
+
+        if (tsErr) {
+          response = { success: false, message: `Failed to log timesheet: ${tsErr.message}` };
+        } else {
+          const duration = ((new Date(clockOut).getTime() - new Date(clockIn).getTime()) / 3600000 - (break_minutes || 0) / 60).toFixed(1);
+          response = {
+            success: true,
+            message: `Logged ${duration}h for ${tsFullName} on ${entryDate} (${start_time}–${end_time})${tsResolvedJobTitle ? ` on job "${tsResolvedJobTitle}"` : ""}.`,
+          };
+        }
+        break;
+      }
+
       default:
         response = {
           success: false,
-          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, enquiries, templates, payments, schedules, financial summaries, and more.`
+          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, enquiries, templates, payments, schedules, financial summaries, team assignments, and more.`
         };
     }
 
