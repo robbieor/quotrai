@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomerPortalData, useIsCustomer } from "@/hooks/useCustomerPortal";
 import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const quoteStatusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -218,7 +219,7 @@ export default function CustomerDashboard() {
                           <p className="font-medium">{quote.display_number}</p>
                           <p className="text-sm text-muted-foreground">
                             {format(new Date(quote.created_at), "MMM d, yyyy")}
-                            {quote.valid_until && ` • Valid until ${format(new Date(quote.valid_until), "MMM d, yyyy")}`}
+                            {quote.valid_until && ` • Valid until ${safeFormatDate(quote.valid_until, "MMM d, yyyy")}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
@@ -263,7 +264,7 @@ export default function CustomerDashboard() {
                           <div>
                             <p className="font-medium">{invoice.display_number}</p>
                             <p className="text-sm text-muted-foreground">
-                              Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                              Due {safeFormatDate(invoice.due_date, "MMM d, yyyy")}
                             </p>
                           </div>
                           <div className="flex items-center gap-4">

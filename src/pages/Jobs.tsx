@@ -55,6 +55,7 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { InsightAlerts } from "@/components/dashboard/InsightAlerts";
 import { useJobInsights } from "@/hooks/usePageInsights";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusBadgeVariant: Record<JobStatus, "warning" | "default" | "secondary" | "success" | "destructive" | "outline"> = {
   pending: "warning",
@@ -349,7 +350,7 @@ export default function Jobs() {
                         </td>
                         <td className="px-2 py-1.5 border-r border-border/20">
                           <span className="text-xs text-muted-foreground">
-                            {job.scheduled_date ? format(new Date(job.scheduled_date), "MMM d, yyyy") : "—"}
+                            {job.scheduled_date ? safeFormatDate(job.scheduled_date, "MMM d, yyyy") : "—"}
                           </span>
                         </td>
                         <td className="px-2 py-1.5 text-right border-r border-border/20">
@@ -406,7 +407,7 @@ export default function Jobs() {
                         </div>
                         <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
                           {job.customers?.name && <span className="truncate">{job.customers.name}</span>}
-                          {job.scheduled_date && <span>{format(new Date(job.scheduled_date), "MMM d")}</span>}
+                          {job.scheduled_date && <span>{safeFormatDate(job.scheduled_date, "MMM d")}</span>}
                           <span className="font-semibold text-foreground">{formatCurrency(job.estimated_value)}</span>
                         </div>
                       </div>

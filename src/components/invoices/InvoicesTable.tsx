@@ -37,6 +37,7 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { useTableSort } from "@/hooks/useTableSort";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { toast } from "sonner";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
@@ -113,8 +114,8 @@ export function InvoicesTable({
         { header: "Subtotal", accessor: (inv) => inv.subtotal },
         { header: "Tax", accessor: (inv) => inv.tax_amount },
         { header: "Total", accessor: (inv) => inv.total },
-        { header: "Issue Date", accessor: (inv) => format(new Date(inv.issue_date), "yyyy-MM-dd") },
-        { header: "Due Date", accessor: (inv) => format(new Date(inv.due_date), "yyyy-MM-dd") },
+        { header: "Issue Date", accessor: (inv) => safeFormatDate(inv.issue_date, "yyyy-MM-dd") },
+        { header: "Due Date", accessor: (inv) => safeFormatDate(inv.due_date, "yyyy-MM-dd") },
         { header: "Notes", accessor: "notes" },
       ],
       `invoices-export-${format(new Date(), "yyyy-MM-dd")}`
@@ -260,7 +261,7 @@ export function InvoicesTable({
                         "text-xs",
                         displayStatus === "overdue" ? "text-destructive font-medium" : "text-muted-foreground"
                       )}>
-                        {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                        {safeFormatDate(invoice.due_date, "MMM d, yyyy")}
                       </span>
                     </td>
                     <td className="px-2 py-2">

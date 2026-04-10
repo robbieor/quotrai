@@ -42,6 +42,7 @@ import { useAutoClockPrompt } from "@/hooks/useAutoClockPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MapPreview } from "@/components/ui/map-preview";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 // Haversine distance in metres
 function haversineDistance(
@@ -501,7 +502,7 @@ export function ClockInOutCard({
           <p className="text-xs text-muted-foreground truncate">
             {job.customers?.name}
             {showDate && job.scheduled_date &&
-              ` · ${format(new Date(job.scheduled_date), "MMM d")}`}
+              ` · ${safeFormatDate(job.scheduled_date, "MMM d")}`}
           </p>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {site ? (
@@ -680,7 +681,7 @@ export function ClockInOutCard({
                       <Coffee className="h-3.5 w-3.5" /> On break
                     </span>
                   ) : (
-                    <>Clocked in since {format(new Date(activeEntry.clock_in_at), "h:mm a")}</>
+                    <>Clocked in since {safeFormatDate(activeEntry.clock_in_at, "h:mm a")}</>
                   )}
                 </p>
               </div>

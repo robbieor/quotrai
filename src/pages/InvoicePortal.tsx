@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { User, Calendar, AlertCircle, Clock, CreditCard, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -173,11 +174,11 @@ export default function InvoicePortal() {
               <div className="space-y-2 text-sm md:text-right">
                 <div className="flex items-center gap-2 md:justify-end text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  Issued {format(new Date(invoice.issue_date), "MMM d, yyyy")}
+                  Issued {safeFormatDate(invoice.issue_date, "MMM d, yyyy")}
                 </div>
                 <div className={`flex items-center gap-2 md:justify-end ${displayStatus === "overdue" ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                   <Clock className="h-4 w-4" />
-                  Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                  Due {safeFormatDate(invoice.due_date, "MMM d, yyyy")}
                 </div>
               </div>
             </div>

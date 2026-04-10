@@ -36,6 +36,7 @@ import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { StripeConnectNudge } from "@/components/invoices/StripeConnectNudge";
 import {
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -452,7 +453,7 @@ export default function Invoices() {
                           </td>
                           <td className="px-3 py-3">
                             <span className={cn("text-sm", isOverdue ? "text-destructive font-medium" : "text-muted-foreground")}>
-                              {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                              {safeFormatDate(invoice.due_date, "MMM d, yyyy")}
                             </span>
                           </td>
                           <td className="px-3 py-3">

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FileText, User, Calendar, AlertCircle, CheckCircle, Loader2, XCircle, PenTool, Eraser } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -154,7 +155,7 @@ export default function QuotePortal() {
                 </div>
                 {quote.valid_until && (
                   <p className="text-muted-foreground">
-                    Valid until {format(new Date(quote.valid_until), "MMM d, yyyy")}
+                    Valid until {safeFormatDate(quote.valid_until, "MMM d, yyyy")}
                   </p>
                 )}
               </div>

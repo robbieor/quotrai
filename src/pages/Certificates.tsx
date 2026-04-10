@@ -47,6 +47,7 @@ import {
 import { CertificateFormDialog } from "@/components/certificates/CertificateFormDialog";
 import { DeleteCertificateDialog } from "@/components/certificates/DeleteCertificateDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const STATUS_STYLES: Record<CertificateStatus, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
   draft: { variant: "secondary", label: "Draft" },
@@ -248,7 +249,7 @@ export default function Certificates() {
                           {cert.property_address}
                         </TableCell>
                         <TableCell>
-                          {format(new Date(cert.issue_date), "dd MMM yyyy")}
+                          {safeFormatDate(cert.issue_date, "dd MMM yyyy")}
                         </TableCell>
                         <TableCell>
                           {cert.expiry_date ? (
@@ -257,7 +258,7 @@ export default function Certificates() {
                                 expiryStatus === "expired" ? "text-destructive" :
                                 expiryStatus === "expiring-soon" ? "text-warning" : ""
                               }>
-                                {format(new Date(cert.expiry_date), "dd MMM yyyy")}
+                                {safeFormatDate(cert.expiry_date, "dd MMM yyyy")}
                               </span>
                               {expiryStatus === "expiring-soon" && (
                                 <AlertTriangle className="h-4 w-4 text-warning" />

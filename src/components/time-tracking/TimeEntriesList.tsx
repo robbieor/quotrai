@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useTimeEntries, useDeleteTimeEntry, type TimeEntry } from "@/hooks/useTimeTracking";
 import { toast } from "sonner";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 export function TimeEntriesList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,11 +129,11 @@ export function TimeEntriesList() {
           ? formatDuration(e.clock_in_at, e.clock_out_at)
           : "In progress";
         return [
-          format(new Date(e.clock_in_at), "yyyy-MM-dd"),
+          safeFormatDate(e.clock_in_at, "yyyy-MM-dd"),
           `"${e.jobs?.title || ""}"`,
           `"${e.jobs?.customers?.name || ""}"`,
-          format(new Date(e.clock_in_at), "HH:mm"),
-          e.clock_out_at ? format(new Date(e.clock_out_at), "HH:mm") : "",
+          safeFormatDate(e.clock_in_at, "HH:mm"),
+          e.clock_out_at ? safeFormatDate(e.clock_out_at, "HH:mm") : "",
           duration,
           e.status,
           e.clock_in_verified ? "Yes" : "No",
@@ -285,7 +286,7 @@ export function TimeEntriesList() {
                       <p className="font-medium">{entry.jobs?.title}</p>
                       <p className="text-sm text-muted-foreground">
                         {entry.jobs?.customers?.name} •{" "}
-                        {format(new Date(entry.clock_in_at), "MMM d, yyyy")}
+                        {safeFormatDate(entry.clock_in_at, "MMM d, yyyy")}
                       </p>
                     </div>
                   </div>
@@ -340,11 +341,11 @@ export function TimeEntriesList() {
                     {/* Time info */}
                     <div className="text-right min-w-[100px]">
                       <p className="text-sm font-medium">
-                        {format(new Date(entry.clock_in_at), "h:mm a")}
+                        {safeFormatDate(entry.clock_in_at, "h:mm a")}
                         {entry.clock_out_at && (
                           <>
                             {" - "}
-                            {format(new Date(entry.clock_out_at), "h:mm a")}
+                            {safeFormatDate(entry.clock_out_at, "h:mm a")}
                           </>
                         )}
                       </p>
