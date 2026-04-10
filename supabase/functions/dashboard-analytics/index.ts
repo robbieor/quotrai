@@ -462,10 +462,19 @@ Deno.serve(async (req) => {
 
     const insights = actionAlerts.map((a: any) => ({ id: a.id, type: a.severity === "critical" ? "warning" : a.severity === "warning" ? "info" : "success", message: a.message, cta: "View", href: a.href }));
 
+    // ── Subscription Covered metric ────────────────────────────────
+    const platformFeeEarned = cashCollected * 0.029;
+    // Count team members via profiles sharing the same team_id
+    const { data: profileData } = await supabase.from("profiles").select("id").limit(100);
+    const memberCount = (profileData || []).length;
+    const subscriptionCost = 39 + Math.max(0, memberCount - 1) * 15;
+    const percentCovered = subscriptionCost > 0 ? Math.round((platformFeeEarned / subscriptionCost) * 100) : 0;
+    const subscriptionCovered = { feeEarned: platformFeeEarned, subscriptionCost, percentCovered };
+
     const result = {
       metrics, controlHeader, kpi, actionAlerts, revenueChartData, jobStatusData, quoteFunnel,
       agingBuckets, agingInvoices, topCustomers, customerProfitability,
-      jobsAtRisk, invoicesAtRisk, revenueByJobType,
+      jobsAtRisk, invoicesAtRisk, revenueByJobType, subscriptionCovered,
       drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList, cashCollected: cashCollectedList, revenueInvoices: revenueInvoicesList },
       jobsDueThisWeek, overdueInvoices: overdueList, insights, healthInsights: [],
     };

@@ -106,6 +106,12 @@ export interface CustomerProfitData {
   invoiceCount: number;
 }
 
+export interface SubscriptionCoveredData {
+  feeEarned: number;
+  subscriptionCost: number;
+  percentCovered: number;
+}
+
 export interface ScatterCustomerData {
   id: string;
   name: string;
@@ -150,6 +156,7 @@ export function useDashboardAnalytics() {
         jobsAtRisk: JobAtRisk[];
         invoicesAtRisk: InvoiceAtRisk[];
         revenueByJobType: RevenueByJobTypeData[];
+        subscriptionCovered: SubscriptionCoveredData;
         drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[]; cashCollected: any[]; revenueInvoices: any[] };
         jobsDueThisWeek: any[];
         overdueInvoices: any[];

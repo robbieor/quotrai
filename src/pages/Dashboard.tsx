@@ -30,6 +30,7 @@ import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
+import { SubscriptionCoveredCard } from "@/components/dashboard/SubscriptionCoveredCard";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import { useEffect } from "react";
@@ -243,7 +244,7 @@ function DashboardContent() {
         <AnimatedSection delay={140}>
           <div className="grid gap-3 lg:grid-cols-2">
             <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
-            <div /> {/* Placeholder for balance */}
+            <SubscriptionCoveredCard data={data?.subscriptionCovered} isLoading={isLoading} />
           </div>
         </AnimatedSection>
 
