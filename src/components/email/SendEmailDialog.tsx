@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Invoice } from "@/hooks/useInvoices";
@@ -93,7 +94,7 @@ export function SendEmailDialog({
 
       if (isInvoice(document)) {
         if (document.due_date) {
-          payload.dueDate = format(new Date(document.due_date), "MMM d, yyyy");
+          payload.dueDate = safeFormatDate(document.due_date, "MMM d, yyyy");
         }
         // Include portal payment link
         if (document.portal_token) {
@@ -101,7 +102,7 @@ export function SendEmailDialog({
           payload.portalUrl = `${origin}/invoice/${document.portal_token}`;
         }
       } else if (document.valid_until) {
-        payload.validUntil = format(new Date(document.valid_until), "MMM d, yyyy");
+        payload.validUntil = safeFormatDate(document.valid_until, "MMM d, yyyy");
       }
 
       const { data, error } = await supabase.functions.invoke("send-document-email", {

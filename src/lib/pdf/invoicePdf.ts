@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import type { Invoice } from "@/hooks/useInvoices";
 import type { CompanyBranding } from "@/hooks/useCompanyBranding";
 import { getBrandingConfig, hexToRgb, addBrandingHeader, addBrandingFooter } from "./pdfBranding";
+import { safeFormatDate } from "./dateUtils";
 
 export async function generateInvoicePdf(
   invoice: Invoice,
@@ -36,8 +37,8 @@ export async function generateInvoicePdf(
 
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
-  doc.text(format(new Date(invoice.issue_date), "MMM d, yyyy"), pageWidth - 20, startY, { align: "right" });
-  doc.text(format(new Date(invoice.due_date), "MMM d, yyyy"), pageWidth - 20, startY + 7, { align: "right" });
+  doc.text(safeFormatDate(invoice.issue_date, "MMM d, yyyy"), pageWidth - 20, startY, { align: "right" });
+  doc.text(safeFormatDate(invoice.due_date, "MMM d, yyyy"), pageWidth - 20, startY + 7, { align: "right" });
   
   // Status with color
   const statusText = invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1);
