@@ -42,6 +42,19 @@ export function SendEmailDialog({
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
+  // Auto-populate email from customer when dialog opens
+  const customerEmail = document?.customer?.email;
+  useState(() => {
+    if (customerEmail) setEmail(customerEmail);
+  });
+
+  // Reset email when document changes
+  const prevDocId = useState<string | null>(null);
+  if (document && document.id !== prevDocId[0]) {
+    prevDocId[1](document.id);
+    setEmail(customerEmail || "");
+  }
+
   if (!document) return null;
 
   const customerName = document.customer?.name || "Customer";
