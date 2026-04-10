@@ -56,7 +56,6 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { DateRangePicker } from "@/components/reports/DateRangePicker";
 import { useDeleteExpense } from "@/hooks/useExpenses";
 import {
-import { safeFormatDate } from "@/lib/pdf/dateUtils";
   BarChart,
   Bar,
   XAxis,
@@ -65,6 +64,7 @@ import { safeFormatDate } from "@/lib/pdf/dateUtils";
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 const categoryColors: Record<ExpenseCategory, string> = {
   materials: "bg-blue-500/10 text-blue-500",
