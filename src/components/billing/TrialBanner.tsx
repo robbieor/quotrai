@@ -1,4 +1,5 @@
-import { AlertTriangle, Clock, Lock, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Clock, Lock, ExternalLink, X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +14,10 @@ export function TrialBanner() {
   const { teamSubscription, trialDaysRemaining, isTrialExpired } = useSubscriptionTier();
   const { data: subscriptionV2 } = useSubscription();
   const isNative = useIsNative();
+  const [dismissed, setDismissed] = useState(() => {
+    const key = `trial_banner_dismissed_${new Date().toISOString().slice(0, 10)}`;
+    return !!localStorage.getItem(key);
+  });
 
   // If user has an active subscription in v2, never show trial banner
   const hasActiveSub = subscriptionV2?.status === "active";
@@ -33,6 +38,13 @@ export function TrialBanner() {
     }
   };
 
+  const handleDismiss = () => {
+    const key = `trial_banner_dismissed_${new Date().toISOString().slice(0, 10)}`;
+    localStorage.setItem(key, "1");
+    setDismissed(true);
+  };
+
+  // Never allow dismissing the expired banner
   if (isExpired) {
     return (
       <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">
@@ -53,10 +65,12 @@ export function TrialBanner() {
     );
   }
 
+  if (dismissed) return null;
+
   const isUrgent = trialDaysRemaining <= 3;
 
   return (
-    <Alert className={`rounded-none border-x-0 border-t-0 ${
+    <Alert className={`rounded-none border-x-0 border-t-0 relative ${
       isUrgent
         ? "border-amber-500/50 bg-amber-500/10"
         : "border-border bg-muted/30"
@@ -77,6 +91,13 @@ export function TrialBanner() {
           </Button>
         </div>
       </AlertDescription>
+      <button
+        onClick={handleDismiss}
+        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label="Dismiss"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </Alert>
   );
 }
