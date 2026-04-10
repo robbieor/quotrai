@@ -116,45 +116,116 @@ serve(async (req) => {
     console.log(`[STANDARD EVENT] type=${event.type}, id=${event.id}`);
 
     switch (event.type) {
-      // --- Subscription updated (upgrade, downgrade, quantity change, pause, cancel_at_period_end) ---
-      case "customer.subscription.updated": {
-        const subscription = event.data.object;
-        // For V2 accounts, use customer_account instead of customer
-        const accountId = subscription.customer_account || subscription.customer;
-        const status = subscription.status;
-        const cancelAtPeriodEnd = subscription.cancel_at_period_end;
-        const priceId = subscription.items?.data?.[0]?.price?.id;
-        const productId = subscription.items?.data?.[0]?.price?.product;
+    // --- Invoice payment via Connect checkout ---
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        console.log(`[WEBHOOK] Checkout completed: ${session.id}, mode=${session.mode}`);
 
-        console.log(`[WEBHOOK] Subscription updated: account=${accountId}, status=${status}, cancel_at_period_end=${cancelAtPeriodEnd}`);
+        if (session.metadata?.type === "invoice_payment") {
+          const invoiceId = session.metadata.invoice_id;
+          const amount = (session.amount_total || 0) / 100;
 
-        // TODO: Update your database with the new subscription state
-        // Example: await supabaseClient.from("subscriptions").upsert({
-        //   account_id: accountId,
-        //   status,
-        //   cancel_at_period_end: cancelAtPeriodEnd,
-        //   price_id: priceId,
-        //   product_id: productId,
-        //   updated_at: new Date().toISOString(),
-        // });
+          if (invoiceId) {
+            await supabaseClient
+              .from("invoices")
+              .update({ status: "paid", updated_at: new Date().toISOString() })
+              .eq("id", invoiceId);
 
-        // Handle pause_collection changes
-        if (subscription.pause_collection) {
-          console.log(`[WEBHOOK] Subscription paused, resumes_at=${subscription.pause_collection.resumes_at}`);
+            const { data: inv } = await supabaseClient
+              .from("invoices")
+              .select("team_id, display_number, total, currency, customer_id, customers(name, email)")
+              .eq("id", invoiceId)
+              .single();
+
+            if (inv) {
+              await supabaseClient.from("payments").insert({
+                invoice_id: invoiceId,
+                team_id: inv.team_id,
+                amount,
+                payment_method: "card",
+                notes: `Stripe Connect checkout ${session.id}`,
+              });
+
+              const curr = inv.currency?.toUpperCase() || "EUR";
+              const symbol = curr === "GBP" ? "£" : curr === "USD" ? "$" : "€";
+              const formattedAmount = `${symbol}${amount.toFixed(2)}`;
+              const invoiceNum = inv.display_number || invoiceId.slice(0, 8);
+
+              // Notify business owner
+              const { data: ownerProfile } = await supabaseClient
+                .from("profiles")
+                .select("email, full_name")
+                .eq("team_id", inv.team_id)
+                .limit(1)
+                .single();
+
+              if (ownerProfile?.email) {
+                const custName = (inv as any).customers?.name || "A customer";
+                const ownerHtml = buildEmailHtml("Payment Received 💰", [
+                  `<strong>${custName}</strong> has paid <strong>Invoice ${invoiceNum}</strong>.`,
+                  `<strong>Amount:</strong> ${formattedAmount}`,
+                  `<strong>Method:</strong> Card (online)`,
+                  `The invoice has been automatically marked as paid.`,
+                ]);
+                try {
+                  await supabaseClient.rpc("enqueue_email", {
+                    p_queue_name: "transactional_emails",
+                    p_message: JSON.stringify({
+                      to: ownerProfile.email,
+                      subject: `Payment received — Invoice ${invoiceNum} (${formattedAmount})`,
+                      html: ownerHtml,
+                      from: "Foreman <support@foreman.ie>",
+                      idempotency_key: `connect-inv-paid-owner-${session.id}`,
+                      purpose: "transactional",
+                    }),
+                  });
+                } catch (e) { console.log("[WEBHOOK] Email enqueue failed (non-fatal)", e); }
+              }
+
+              // Receipt to customer
+              const customerEmail = session.customer_email || (inv as any).customers?.email;
+              const customerName = (inv as any).customers?.name || "Customer";
+              if (customerEmail) {
+                const receiptHtml = buildEmailHtml("Payment Confirmed ✓", [
+                  `Hi ${customerName},`,
+                  `Your payment of <strong>${formattedAmount}</strong> for <strong>Invoice ${invoiceNum}</strong> has been received.`,
+                  `This serves as your payment receipt. No further action is required.`,
+                  `Thank you for your prompt payment.`,
+                ]);
+                try {
+                  await supabaseClient.rpc("enqueue_email", {
+                    p_queue_name: "transactional_emails",
+                    p_message: JSON.stringify({
+                      to: customerEmail,
+                      subject: `Payment confirmed — Invoice ${invoiceNum}`,
+                      html: receiptHtml,
+                      from: "Foreman <support@foreman.ie>",
+                      idempotency_key: `connect-inv-paid-receipt-${session.id}`,
+                      purpose: "transactional",
+                    }),
+                  });
+                } catch (e) { console.log("[WEBHOOK] Email enqueue failed (non-fatal)", e); }
+              }
+            }
+            console.log(`[WEBHOOK] Invoice payment recorded + emails sent: ${invoiceId}, amount=${amount}`);
+          }
         }
         break;
       }
 
-      // --- Subscription deleted (cancelled) ---
+      // --- Subscription updated ---
+      case "customer.subscription.updated": {
+        const subscription = event.data.object;
+        const accountId = subscription.customer_account || subscription.customer;
+        console.log(`[WEBHOOK] Subscription updated: account=${accountId}, status=${subscription.status}`);
+        break;
+      }
+
+      // --- Subscription deleted ---
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
         const accountId = subscription.customer_account || subscription.customer;
         console.log(`[WEBHOOK] Subscription deleted: account=${accountId}`);
-
-        // TODO: Revoke access for the connected account
-        // Example: await supabaseClient.from("subscriptions")
-        //   .update({ status: "canceled", updated_at: new Date().toISOString() })
-        //   .eq("account_id", accountId);
         break;
       }
 
@@ -163,42 +234,6 @@ serve(async (req) => {
         const invoice = event.data.object;
         const accountId = invoice.customer_account || invoice.customer;
         console.log(`[WEBHOOK] Invoice paid: account=${accountId}, amount=${invoice.amount_paid}`);
-        // TODO: Record payment in your database
-        break;
-      }
-
-      // --- Payment method events ---
-      case "payment_method.attached": {
-        console.log(`[WEBHOOK] Payment method attached: ${event.data.object.id}`);
-        break;
-      }
-      case "payment_method.detached": {
-        console.log(`[WEBHOOK] Payment method detached: ${event.data.object.id}`);
-        break;
-      }
-
-      // --- Customer updated ---
-      case "customer.updated": {
-        const customer = event.data.object;
-        console.log(`[WEBHOOK] Customer updated: ${customer.id}`);
-        // Check invoice_settings.default_payment_method for payment method changes
-        // Do NOT use billing email as a login credential
-        break;
-      }
-
-      // --- Billing portal events ---
-      case "billing_portal.configuration.created":
-      case "billing_portal.configuration.updated":
-      case "billing_portal.session.created": {
-        console.log(`[WEBHOOK] Billing portal event: ${event.type}`);
-        break;
-      }
-
-      // --- Tax ID events ---
-      case "customer.tax_id.created":
-      case "customer.tax_id.deleted":
-      case "customer.tax_id.updated": {
-        console.log(`[WEBHOOK] Tax ID event: ${event.type}`);
         break;
       }
 
