@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { getCurrencyFromCountry } from "@/utils/currencyUtils";
 
 export type Quote = Tables<"quotes"> & {
-  customer: { name: string; country_code?: string | null } | null;
+  customer: { name: string; email?: string | null; country_code?: string | null } | null;
   job: { id: string; title: string } | null;
   quote_items: Tables<"quote_items">[];
 };
