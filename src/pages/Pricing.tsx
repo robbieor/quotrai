@@ -16,9 +16,9 @@ import foremanLogo from "@/assets/foreman-logo.png";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 
 const BASE_PRICE = 39;
-const EXTRA_SEAT = 19;
-const BASE_USERS = 3;
-const PLATFORM_FEE = 0.015;
+const EXTRA_SEAT = 15;
+const BASE_USERS = 1;
+const PLATFORM_FEE = 0.029;
 
 const allFeatures = [
   "Unlimited quotes & invoices",
@@ -35,9 +35,9 @@ const allFeatures = [
 
 const teamExamples = [
   { label: "Solo", users: 1, price: BASE_PRICE },
-  { label: "Team of 3", users: 3, price: BASE_PRICE },
-  { label: "Team of 5", users: 5, price: BASE_PRICE + 2 * EXTRA_SEAT },
-  { label: "Team of 10", users: 10, price: BASE_PRICE + 7 * EXTRA_SEAT },
+  { label: "Team of 3", users: 3, price: BASE_PRICE + 2 * EXTRA_SEAT },
+  { label: "Team of 5", users: 5, price: BASE_PRICE + 4 * EXTRA_SEAT },
+  { label: "Team of 10", users: 10, price: BASE_PRICE + 9 * EXTRA_SEAT },
 ];
 
 const faqs = [
@@ -47,11 +47,11 @@ const faqs = [
   },
   {
     q: "How does the platform fee work?",
-    a: "Foreman charges 1.5% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
+    a: "Foreman charges 2.9% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
   },
   {
     q: "How does pricing work for larger teams?",
-    a: "€39/month includes up to 3 users. Each additional team member is just €19/month. Everyone gets full access to every feature.",
+    a: "€39/month includes 1 user. Each additional team member is just €15/month. Everyone gets full access to every feature.",
   },
   {
     q: "Can I cancel anytime?",
@@ -223,7 +223,7 @@ export default function Pricing() {
 
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Platform fee earned (1.5%)</span>
+                <span className="text-muted-foreground">Platform fee earned (2.9%)</span>
                 <span className="font-semibold">€{platformEarnings.toFixed(0)}/mo</span>
               </div>
               <div className="flex justify-between text-sm">
@@ -269,9 +269,9 @@ export default function Pricing() {
               <TableBody>
                 <TableRow className="bg-primary/5 border-l-2 border-l-primary font-medium">
                   <TableCell className="font-bold">Foreman</TableCell>
-                  <TableCell>~1.5%</TableCell>
-                  <TableCell>1.5%</TableCell>
-                  <TableCell className="font-bold text-primary">~3.0%</TableCell>
+                  <TableCell>~1.7%</TableCell>
+                  <TableCell>1.2%</TableCell>
+                  <TableCell className="font-bold text-primary">~2.9%</TableCell>
                   <TableCell className="hidden sm:table-cell">✅ Full platform + AI</TableCell>
                 </TableRow>
                 <TableRow>

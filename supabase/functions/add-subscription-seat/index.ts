@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const EXTRA_SEAT_PRICE = "price_1TIJDzDQETj2awNEtiMhRUPR"; // €19/mo
+const EXTRA_SEAT_PRICE = "price_1TKjaNDQETj2awNEXHD4jFRq"; // €15/mo
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

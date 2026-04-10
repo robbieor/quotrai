@@ -16,8 +16,8 @@ interface PricingPreviewSectionProps {
 }
 
 const BASE_PRICE = 39;
-const EXTRA_SEAT = 19;
-const PLATFORM_FEE = 0.015;
+const EXTRA_SEAT = 15;
+const PLATFORM_FEE = 0.029;
 
 const features = [
   "Unlimited quotes & invoices",
@@ -32,9 +32,9 @@ const features = [
 
 const teamExamples = [
   { label: "Solo", seats: 1, cost: BASE_PRICE },
-  { label: "Team of 3", seats: 3, cost: BASE_PRICE },
-  { label: "Team of 5", seats: 5, cost: BASE_PRICE + 2 * EXTRA_SEAT },
-  { label: "Team of 10", seats: 10, cost: BASE_PRICE + 7 * EXTRA_SEAT },
+  { label: "Team of 3", seats: 3, cost: BASE_PRICE + 2 * EXTRA_SEAT },
+  { label: "Team of 5", seats: 5, cost: BASE_PRICE + 4 * EXTRA_SEAT },
+  { label: "Team of 10", seats: 10, cost: BASE_PRICE + 9 * EXTRA_SEAT },
 ];
 
 export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProps) {
@@ -56,7 +56,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
             </span>
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto text-base">
-            {formatPrice(BASE_PRICE)}/month for your team of up to 3. Just {formatPrice(EXTRA_SEAT)}/mo per extra seat.
+            {formatPrice(BASE_PRICE)}/month for 1 user. Just {formatPrice(EXTRA_SEAT)}/mo per extra seat.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
             <span className="text-4xl font-extrabold text-primary">{formatPrice(BASE_PRICE)}</span>
             <span className="text-sm text-muted-foreground">/month</span>
             <p className="text-sm text-muted-foreground mt-1">
-              Includes 3 team members · +{formatPrice(EXTRA_SEAT)}/mo per extra seat
+              1 user included · +{formatPrice(EXTRA_SEAT)}/mo per extra seat
             </p>
           </div>
 

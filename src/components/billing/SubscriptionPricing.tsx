@@ -156,7 +156,7 @@ export function SubscriptionPricing() {
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            14-day free trial · 1.5% platform fee on payments · Cancel anytime
+            14-day free trial · 2.9% platform fee on payments · Cancel anytime
           </p>
         </CardContent>
       </Card>
