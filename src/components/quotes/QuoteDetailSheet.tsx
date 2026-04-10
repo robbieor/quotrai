@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Quote } from "@/hooks/useQuotes";
 import { QuoteSuggestion } from "@/components/shared/ForemanSuggestion";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
+import { QuoteStatusConfirmDialog } from "./QuoteStatusConfirmDialog";
 
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
