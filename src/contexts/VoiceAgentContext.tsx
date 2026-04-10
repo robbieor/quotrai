@@ -248,6 +248,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   }, [addDebugEvent]);
 
   const handleConnectedCleanup = useCallback(() => {
+    callStartRef.current = Date.now();
     if (keepAliveRef.current) clearInterval(keepAliveRef.current);
     keepAliveRef.current = setInterval(() => {
       try {
