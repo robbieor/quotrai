@@ -1,28 +1,38 @@
 
 
-# Fix: "Draft quotes" query routed to wrong webhook function
+# Fix: Signup page trust points and remaining "Quotr" references
 
-## Problem
+## Issues Found
 
-Line 490 of `george-chat/index.ts` maps the message **"Show me my draft quotes that need to be sent."** to `get_todays_jobs` — so the AI returns "You have no jobs scheduled for today" instead of listing draft quotes.
+1. **`src/pages/Signup.tsx` line 18** — Says "7-day full Pro trial" instead of "14-day free trial"
+2. **`supabase/functions/send-drip-email/index.ts` line 10** — `APP_URL` still points to `https://quotrai.lovable.app` instead of `https://foreman.world`
+3. **Remotion variable names** (`quotrOpacity`, `quotrX`) — cosmetic only; the rendered text already says "Foreman". Low priority rename for code hygiene.
 
-## Root Cause
+The "Join hundreds of tradespeople running their business with Quotr" and the fake electrician testimonial are not in the current codebase — likely a stale browser cache. A hard refresh should clear those.
 
-The short-circuit routing table has a copy-paste error. The webhook already has a `list_quotes` function that accepts a `status` parameter, so we just need to point the short-circuit at the right function with `{ status: "draft" }`.
+## Changes
 
-## Fix
+### 1. `src/pages/Signup.tsx` — Fix trust points (line 18)
 
-**File: `supabase/functions/george-chat/index.ts`** — line 490
-
-Change:
 ```typescript
-"Show me my draft quotes that need to be sent.": { function_name: "get_todays_jobs", parameters: {}, intent: "view_schedule", label: "Draft Quotes" },
+// Before
+{ icon: Clock, text: "7-day full Pro trial" },
+
+// After
+{ icon: Clock, text: "14-day free trial" },
 ```
 
-To:
+### 2. `supabase/functions/send-drip-email/index.ts` — Fix APP_URL (line 10)
+
 ```typescript
-"Show me my draft quotes that need to be sent.": { function_name: "list_quotes", parameters: { status: "draft" }, intent: "draft_quotes", label: "Draft Quotes" },
+// Before
+const APP_URL = "https://quotrai.lovable.app";
+
+// After
+const APP_URL = "https://foreman.world";
 ```
 
-Single line fix. The `list_quotes` handler in `george-webhook` already filters by status and formats a readable response with quote numbers, client names, and totals.
+### 3. `remotion/src/scenes/Scene2MeetForeman.tsx` — Rename legacy variables (optional, code hygiene)
+
+Rename `quotrOpacity` → `foremanOpacity` and `quotrX` → `foremanX` across the file. No visual change.
 
