@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { format } from "date-fns";
+import { safeFormatDate } from "@/lib/pdf/dateUtils";
 
 type ExportEntity = "customers" | "invoices" | "quotes" | "jobs";
 
