@@ -4379,7 +4379,7 @@ serve(async (req) => {
 
       // ==================== TEAM / WORKFORCE ====================
       case "assign_team_member": {
-        const { job_id, job_title, member_name, member_id } = args;
+        const { job_id, job_title, member_name, member_id } = parameters as any;
 
         // Resolve member
         let resolvedMemberId = member_id;
@@ -4388,7 +4388,7 @@ serve(async (req) => {
           const { data: members } = await supabase
             .from("team_memberships")
             .select("user_id, profiles!inner(full_name)")
-            .eq("team_id", team_id)
+            .eq("team_id", company_id)
             .ilike("profiles.full_name", `%${sanitizeIlike(member_name)}%`);
           if (!members || members.length === 0) {
             response = { success: false, message: `No team member found matching "${member_name}".` };
@@ -4434,7 +4434,7 @@ serve(async (req) => {
           .from("jobs")
           .update({ assigned_to: resolvedMemberId })
           .eq("id", resolvedJobId)
-          .eq("team_id", team_id);
+          .eq("team_id", company_id);
 
         if (assignErr) {
           response = { success: false, message: `Failed to assign member: ${assignErr.message}` };
@@ -4445,14 +4445,14 @@ serve(async (req) => {
       }
 
       case "get_team_availability": {
-        const checkDate = args.date || new Date().toISOString().split("T")[0];
-        const memberFilter = args.member_name;
+        const checkDate = (parameters as any).date || new Date().toISOString().split("T")[0];
+        const memberFilter = (parameters as any).member_name;
 
         // Get all team members
         let membersQuery = supabase
           .from("team_memberships")
           .select("user_id, profiles!inner(full_name)")
-          .eq("team_id", team_id);
+          .eq("team_id", company_id);
 
         if (memberFilter) {
           membersQuery = membersQuery.ilike("profiles.full_name", `%${sanitizeIlike(memberFilter)}%`);
@@ -4515,14 +4515,14 @@ serve(async (req) => {
       }
 
       case "log_timesheet": {
-        const { member_name: tsName, job_id: tsJobId, job_title: tsJobTitle, date: tsDate, start_time, end_time, break_minutes, notes } = args;
+        const { member_name: tsName, job_id: tsJobId, job_title: tsJobTitle, date: tsDate, start_time, end_time, break_minutes, notes } = parameters as any;
         const entryDate = tsDate || new Date().toISOString().split("T")[0];
 
         // Resolve member
         const { data: tsMembers } = await supabase
           .from("team_memberships")
           .select("user_id, profiles!inner(full_name)")
-          .eq("team_id", team_id)
+          .eq("team_id", company_id)
           .ilike("profiles.full_name", `%${sanitizeIlike(tsName)}%`);
 
         if (!tsMembers || tsMembers.length === 0) {
@@ -4566,7 +4566,7 @@ serve(async (req) => {
           .from("time_entries")
           .insert({
             user_id: tsUserId,
-            team_id,
+            team_id: company_id,
             job_id: tsResolvedJobId || null,
             clock_in: clockIn,
             clock_out: clockOut,
