@@ -5087,9 +5087,10 @@ serve(async (req) => {
       }
 
       default:
+        console.warn(`george-webhook: unrecognized tool "${function_name}"`, { parameters, user_id, company_id });
         response = {
           success: false,
-          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, enquiries, templates, payments, schedules, financial summaries, team assignments, catalog search, price comparison, and more.`
+          message: `I don't have a handler for "${function_name}" yet. I can help with: jobs, quotes, invoices, expenses, enquiries, customers, templates, payments, schedules, financial summaries, team assignments, catalog search, price comparison, and converting quotes to invoices. Try rephrasing your request.`
         };
     }
 
