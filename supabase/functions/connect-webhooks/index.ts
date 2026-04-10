@@ -4,6 +4,23 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 // No CORS needed — webhooks are server-to-server from Stripe
 
+function buildEmailHtml(title: string, bodyLines: string[]): string {
+  const bodyHtml = bodyLines.map(l => `<p style="margin:0 0 12px;color:#64748b;font-size:14px;line-height:1.6;font-family:'Manrope',Arial,sans-serif">${l}</p>`).join("");
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f4f4f5;font-family:'Manrope',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
+<table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
+<tr><td style="background:#0f172a;padding:30px 32px;text-align:center">
+<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+</td></tr>
+<tr><td style="padding:32px">
+<h1 style="margin:0 0 16px;font-size:20px;color:#0f172a">${title}</h1>
+${bodyHtml}
+</td></tr>
+<tr><td style="padding:16px 32px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0">
+© ${new Date().getFullYear()} Foreman · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
+</td></tr></table></td></tr></table></body></html>`;
+}
+
 serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
