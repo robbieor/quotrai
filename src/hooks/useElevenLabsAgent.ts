@@ -29,12 +29,12 @@ const QUERY_INVALIDATION_MAP: Record<string, string[]> = {
   create_customer: ["customers"],
   update_customer: ["customers"],
   delete_customer: ["customers"],
-  create_enquiry: ["enquiries"],
-  list_enquiries: ["enquiries"],
-  update_enquiry: ["enquiries"],
-  update_enquiry_status: ["enquiries"],
-  convert_enquiry_to_customer: ["enquiries", "customers"],
-  convert_enquiry_to_quote: ["enquiries", "quotes", "customers"],
+  create_enquiry: ["leads"],
+  get_enquiries: ["leads"],
+  update_enquiry: ["leads"],
+  delete_enquiry: ["leads"],
+  convert_enquiry_to_quote: ["leads", "quotes", "customers"],
+  convert_enquiry_to_job: ["leads", "jobs", "customers"],
 };
 
 const ELEVENLABS_AGENT_ID = "agent_2701kffwpjhvf4gvt2cxpsx6j3rb";
