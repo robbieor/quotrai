@@ -19,12 +19,12 @@ const UK_TRADE_BUSINESSES = 300_000;
 const GLOBAL_TRADE_BUSINESSES = 5_000_000;
 const MARKET_CAGR = 0.18;
 
-// Single plan pricing: €39/mo for up to 3 users, +€19/extra seat
-const BASE_PLAN_PRICE = 39; // includes up to 3 users
-const EXTRA_SEAT_PRICE = 19;
-const INCLUDED_SEATS = 3;
+// Single plan pricing: €39/mo for 1 user, +€15/extra seat
+const BASE_PLAN_PRICE = 39; // includes 1 user
+const EXTRA_SEAT_PRICE = 15;
+const INCLUDED_SEATS = 1;
 const ANNUAL_DISCOUNT = 0.15;
-const PLATFORM_FEE_RATE = 0.015; // 1.5% on invoice payments
+const PLATFORM_FEE_RATE = 0.029; // 2.9% on invoice payments
 const VOICE_COST_PER_SEAT = 8;
 
 // Valuation multiples
@@ -92,7 +92,7 @@ const FEATURES_SHIPPED = [
   { icon: Mail, label: "Automated Payment Chasers", detail: "Escalating reminders for overdue invoices" },
   { icon: CalendarDays, label: "Job Calendar & Reminders", detail: "Drag-drop scheduling, customer SMS/email alerts" },
   { icon: Clock, label: "GPS Time Tracking", detail: "Geofenced clock-in/out, staff location map" },
-  { icon: CreditCard, label: "Stripe Connect Payments", detail: "1.5% platform fee on invoice payments" },
+  { icon: CreditCard, label: "Stripe Connect Payments", detail: "2.9% platform fee on invoice payments" },
   { icon: BarChart, label: "Advanced Reports", detail: "Revenue, expenses, quote conversion, job trends" },
   { icon: Megaphone, label: "Lead Management", detail: "Pipeline tracking, source attribution, follow-ups" },
   { icon: Users, label: "Team Management", detail: "Role-based access, seat invitations, activity feed" },
@@ -245,7 +245,7 @@ export default function FounderProjections() {
               </div>
               <div className="p-4 rounded-xl border border-border bg-accent/5">
                 <p className="font-semibold text-foreground">Platform Fee</p>
-                <p className="text-2xl font-bold text-foreground">1.5%<span className="text-sm font-normal text-muted-foreground"> per txn</span></p>
+                <p className="text-2xl font-bold text-foreground">2.9%<span className="text-sm font-normal text-muted-foreground"> per txn</span></p>
                 <p className="text-xs text-muted-foreground mt-1">On all invoice payments via Stripe Connect.</p>
                 <Badge variant="secondary" className="mt-2 text-xs">{formatCurrency(platformFeeMRR)}/mo</Badge>
               </div>
