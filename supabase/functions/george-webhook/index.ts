@@ -4468,7 +4468,7 @@ serve(async (req) => {
         const { data: scheduledJobs } = await supabase
           .from("jobs")
           .select("id, title, assigned_to, scheduled_date, scheduled_time")
-          .eq("team_id", team_id)
+          .eq("team_id", company_id)
           .eq("scheduled_date", checkDate)
           .not("assigned_to", "is", null);
 
@@ -4478,7 +4478,7 @@ serve(async (req) => {
         const { data: timeEntries } = await supabase
           .from("time_entries")
           .select("user_id, job_id, clock_in, clock_out")
-          .eq("team_id", team_id)
+          .eq("team_id", company_id)
           .gte("clock_in", dayStart)
           .lte("clock_in", dayEnd);
 
@@ -4544,7 +4544,7 @@ serve(async (req) => {
           const { data: tsJobs } = await supabase
             .from("jobs")
             .select("id, title")
-            .eq("team_id", team_id)
+            .eq("team_id", company_id)
             .ilike("title", `%${sanitizeIlike(tsJobTitle)}%`)
             .limit(2);
           if (!tsJobs || tsJobs.length === 0) {
