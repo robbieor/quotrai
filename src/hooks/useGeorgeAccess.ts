@@ -74,7 +74,7 @@ export function useGeorgeAccess() {
       const resetDate = teamData?.george_usage_reset_date
         ? new Date(teamData.george_usage_reset_date).toLocaleDateString()
         : "next month";
-      accessMessage = `Team voice minutes exhausted. Resets on ${resetDate}.`;
+      accessMessage = `Voice minutes exhausted. Buy more or wait until ${resetDate}.`;
     }
   }
 

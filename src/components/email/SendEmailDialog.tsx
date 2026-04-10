@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,15 @@ export function SendEmailDialog({
   const [fromName, setFromName] = useState("Foreman");
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
+
+  // Auto-populate email from customer when dialog opens or document changes
+  useEffect(() => {
+    if (open && document?.customer?.email) {
+      setEmail(document.customer.email);
+    } else if (open) {
+      setEmail("");
+    }
+  }, [open, document?.id]);
 
   if (!document) return null;
 

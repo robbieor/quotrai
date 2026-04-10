@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { getCurrencyFromCountry } from "@/utils/currencyUtils";
 
 export type Quote = Tables<"quotes"> & {
-  customer: { name: string; country_code?: string | null } | null;
+  customer: { name: string; email?: string | null; country_code?: string | null } | null;
   job: { id: string; title: string } | null;
   quote_items: Tables<"quote_items">[];
 };
@@ -28,7 +28,7 @@ export function useQuotes() {
           .from("quotes")
           .select(`
             *,
-            customer:customers(name, country_code),
+            customer:customers(name, email, country_code),
             job:jobs!quotes_job_id_fkey(id, title),
             quote_items(*)
           `)
@@ -55,7 +55,7 @@ export function useQuote(id: string | null) {
         .from("quotes")
         .select(`
           *,
-          customer:customers(name, country_code),
+          customer:customers(name, email, country_code),
           job:jobs!quotes_job_id_fkey(id, title),
           quote_items(*)
         `)
