@@ -21,9 +21,6 @@ export function StripeConnectSetup() {
   const [actionLoading, setActionLoading] = useState(false);
   const isNative = useIsNative();
 
-  // Hide payment setup entirely on native (Apple policy)
-  if (isNative) return null;
-
   const fetchStatus = useCallback(async () => {
     try {
       const { data, error } = await supabase.functions.invoke("stripe-connect", {
