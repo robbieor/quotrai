@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Building2, ExternalLink, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Building2, ExternalLink, CheckCircle2, AlertCircle, Loader2, Package, CreditCard } from "lucide-react";
 import { useIsNative } from "@/hooks/useIsNative";
 
 interface ConnectStatus {
   connected: boolean;
   onboarding_complete: boolean;
   charges_enabled?: boolean;
-  payouts_enabled?: boolean;
+  requirements_status?: string;
   details_submitted?: boolean;
 }
 
@@ -20,9 +20,6 @@ export function StripeConnectSetup() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const isNative = useIsNative();
-
-  // Hide payment setup entirely on native (Apple policy)
-  if (isNative) return null;
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -41,6 +38,9 @@ export function StripeConnectSetup() {
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
+
+  // Hide payment setup entirely on native (Apple policy)
+  if (isNative) return null;
 
   const handleOnboard = async () => {
     setActionLoading(true);
@@ -71,6 +71,32 @@ export function StripeConnectSetup() {
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to open dashboard");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSubscriptionPortal = async () => {
+    setActionLoading(true);
+    try {
+      // Get the connect account ID from status
+      const { data: team } = await supabase
+        .from("teams")
+        .select("stripe_connect_account_id")
+        .limit(1)
+        .single();
+      
+      if (!team?.stripe_connect_account_id) throw new Error("No Connect account found");
+
+      const { data, error } = await supabase.functions.invoke("connect-subscription", {
+        body: { action: "portal", accountId: team.stripe_connect_account_id },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to open billing portal");
     } finally {
       setActionLoading(false);
     }
@@ -131,6 +157,9 @@ export function StripeConnectSetup() {
                 <p className="font-medium text-foreground text-sm">Setup incomplete</p>
                 <p className="text-sm text-muted-foreground">
                   You still need to finish verifying your account to receive payments.
+                  {status?.requirements_status && (
+                    <span className="block mt-1">Status: {status.requirements_status}</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -152,10 +181,23 @@ export function StripeConnectSetup() {
                 Your customers can now pay invoices online. Funds are deposited directly to your bank account after a 2.9% platform fee.
               </p>
             </div>
-            <Button variant="outline" onClick={handleDashboard} disabled={actionLoading} className="gap-2">
-              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-              View Payouts Dashboard
-            </Button>
+
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={handleDashboard} disabled={actionLoading} className="gap-2">
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                View Payouts Dashboard
+              </Button>
+              <Button variant="outline" asChild className="gap-2">
+                <a href="/connect/products">
+                  <Package className="h-4 w-4" />
+                  Manage Products
+                </a>
+              </Button>
+              <Button variant="outline" onClick={handleSubscriptionPortal} disabled={actionLoading} className="gap-2">
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                Manage Subscription
+              </Button>
+            </div>
           </>
         )}
       </CardContent>
