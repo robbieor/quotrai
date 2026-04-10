@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGeorgeMessages } from "@/hooks/useGeorge";
 import { useForemanMemory } from "@/hooks/useForemanMemory";
 import { supabase } from "@/integrations/supabase/client";
+import { useVoiceTopupVerification } from "@/hooks/useVoiceTopupVerification";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +54,9 @@ export default function George() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  // Verify voice top-up payment on redirect from Stripe
+  useVoiceTopupVerification();
 
   // Foreman AI memory system
   const {
