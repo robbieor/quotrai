@@ -1,36 +1,40 @@
 
 
-# Auto-Sync Voice Agent Tools on Deploy
+# Add Team/Workforce Management Tools to Foreman AI
 
-You're right — no user should have to manually sync tools. The tools should be automatically pushed to the ElevenLabs agent every time the edge functions are deployed (i.e., whenever we update the definitions).
+## What this does
 
-## What changes
+Adds 3 new voice/chat tools so Foreman AI can manage team assignments, check availability, and log timesheets — all via voice or text commands.
 
-### 1. Make `sync-agent-tools` self-triggering on deploy
+## New tool definitions
 
-Update the `sync-agent-tools` edge function to also accept a **no-auth GET request** with a deploy secret, so it can be called automatically. Alternatively (and simpler): call the sync at the end of `george-webhook` startup or from the shared definitions file.
+Added to `supabase/functions/_shared/foreman-tool-definitions.ts` under a new `// ==================== TEAM / WORKFORCE ====================` section:
 
-**Simplest approach**: Have the `george-webhook` edge function call the ElevenLabs PATCH API directly on its first invocation (or on a schedule), using a hash of the tool definitions to detect changes. But edge functions are stateless, so this adds latency to every call.
+### 1. `assign_team_member`
+Assign a team member to a job. Parameters: `job_id`, `job_title` (search fallback), `member_name`, `member_id` (optional).
 
-**Best approach**: Remove the auth requirement from `sync-agent-tools` (it already has `verify_jwt = false` by default) and **auto-call it from the frontend on app startup** — silently, once per session, no user action needed. This ensures every user always has the latest tools synced.
+### 2. `get_team_availability`
+Check which team members are available on a given date. Parameters: `date` (YYYY-MM-DD, defaults to today), `member_name` (optional filter).
 
-### 2. `src/components/settings/ForemanAISettings.tsx`
+### 3. `log_timesheet`
+Log a time entry for a team member against a job. Parameters: `member_name`, `job_title` or `job_id`, `date`, `start_time`, `end_time`, `break_minutes`, `notes`.
 
-- Remove the "Sync Voice Tools" button entirely (no longer needed).
+## Execution handlers
 
-### 3. `src/App.tsx` or a top-level hook (e.g., `useAutoSyncTools.ts`)
+Add 3 new `case` blocks in `supabase/functions/george-webhook/index.ts`:
 
-- Create a hook that runs once on app mount (for authenticated users only).
-- Calls `supabase.functions.invoke("sync-agent-tools")` silently in the background.
-- Uses `sessionStorage` to avoid calling more than once per browser session.
-- Failures are silent — no toast, no UI disruption.
+- **assign_team_member**: Looks up the member in `team_memberships` + `profiles`, the job in `jobs`, then updates `jobs.assigned_to` (or a junction table if one exists). Returns confirmation.
+- **get_team_availability**: Queries `team_memberships` for the team, cross-references `jobs` and `time_entries` for the requested date, returns who's free vs booked.
+- **log_timesheet**: Inserts into `time_entries` with the resolved `user_id`, `job_id`, clock-in/out times, and break duration.
 
-### 4. `supabase/functions/sync-agent-tools/index.ts`
+## Files changed
 
-- Keep the existing logic but make auth optional (allow both authenticated calls and internal calls).
-- Or simply remove the auth check since the function is already deployed with `verify_jwt = false` and the ElevenLabs API key is the real gate.
+| File | Change |
+|------|--------|
+| `supabase/functions/_shared/foreman-tool-definitions.ts` | Add 3 tool definitions |
+| `supabase/functions/george-webhook/index.ts` | Add 3 case handlers |
 
-## Summary
+## Auto-sync
 
-Every time a user opens Foreman, the latest tool definitions are silently pushed to the voice agent. No manual button. No customer action. Tools are always current.
+No additional work needed — the existing `useAutoSyncTools` hook will automatically push the updated definitions to ElevenLabs on next session load.
 
