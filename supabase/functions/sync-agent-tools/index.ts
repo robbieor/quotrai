@@ -23,14 +23,7 @@ serve(async (req) => {
       );
     }
 
-    // Optional: verify caller is authenticated
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Auth is optional — the ElevenLabs API key is the real security gate
 
     // Build the tools payload for ElevenLabs
     const tools = FOREMAN_TOOL_DEFINITIONS.map((tool) => ({

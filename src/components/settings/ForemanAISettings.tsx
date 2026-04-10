@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Brain, Loader2, RefreshCw } from "lucide-react";
+import { Brain, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -18,7 +18,6 @@ export function ForemanAISettings() {
   const [prefs, setPrefs] = useState<ForemanPreferences>(DEFAULT_FOREMAN_PREFERENCES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!user || !profile?.team_id) return;
@@ -187,32 +186,10 @@ export function ForemanAISettings() {
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Save Preferences
-          </Button>
-          <Button
-            variant="outline"
-            onClick={async () => {
-              setSyncing(true);
-              try {
-                const { data, error } = await supabase.functions.invoke("sync-agent-tools");
-                if (error) throw error;
-                toast.success(`Synced ${data?.tools_pushed ?? 0} tools to voice agent`);
-              } catch {
-                toast.error("Failed to sync tools to voice agent");
-              } finally {
-                setSyncing(false);
-              }
-            }}
-            disabled={syncing}
-            className="w-full sm:w-auto"
-          >
-            {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            Sync Voice Tools
-          </Button>
-        </div>
+        <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          Save Preferences
+        </Button>
       </CardContent>
     </Card>
   );

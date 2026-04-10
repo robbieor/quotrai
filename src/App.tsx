@@ -1,5 +1,6 @@
 import { useEffect, lazy, Suspense } from "react";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { useAutoSyncTools } from "@/hooks/useAutoSyncTools";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -74,6 +75,12 @@ function OfflineSyncInit() {
   return null;
 }
 
+// Silently sync voice agent tools once per session
+function AutoSyncInit() {
+  useAutoSyncTools();
+  return null;
+}
+
 const App = () => {
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
@@ -104,6 +111,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <OfflineSyncInit />
+      <AutoSyncInit />
       <TooltipProvider>
         <Toaster />
         <Sonner />
