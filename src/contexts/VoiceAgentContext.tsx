@@ -130,6 +130,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const cachedTokenRef = useRef<{ token: string; signedUrl?: string; fetchedAt: number } | null>(null);
   const onConnectResolveRef = useRef<(() => void) | null>(null);
   const onConnectRejectRef = useRef<((err: Error) => void) | null>(null);
+  const callStartRef = useRef<number | null>(null);
 
   const addDebugEvent = useCallback((event: string) => {
     const time = new Date().toLocaleTimeString("en-US", {
