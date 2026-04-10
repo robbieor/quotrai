@@ -2,6 +2,7 @@ import { AlertTriangle, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
 import { BuyMoreMinutesButton } from "./BuyMoreMinutesButton";
+import { Link } from "react-router-dom";
 
 export function GeorgeUsageWarning() {
   const { voiceMinutesUsed, voiceMinutesLimit, remainingMinutes, isMinutesExhausted, georgeVoiceSeats } = useGeorgeAccess();
@@ -17,7 +18,7 @@ export function GeorgeUsageWarning() {
       <Alert variant="destructive" className="mb-4">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription className="flex items-center justify-between">
-          <span>Voice minutes exhausted.</span>
+          <span>Voice minutes exhausted. <Link to="/voice-usage" className="underline">View usage</Link></span>
           <BuyMoreMinutesButton variant="outline" size="sm" className="ml-2" />
         </AlertDescription>
       </Alert>
@@ -31,7 +32,7 @@ export function GeorgeUsageWarning() {
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription className="flex items-center justify-between">
           <span>
-            {Math.round(remainingMinutes)} mins remaining ({Math.round(usagePercentage)}% used)
+            {Math.round(remainingMinutes)} mins remaining ({Math.round(usagePercentage)}% used) · <Link to="/voice-usage" className="underline">View usage</Link>
           </span>
           <BuyMoreMinutesButton variant="outline" size="sm" className="ml-2" />
         </AlertDescription>
