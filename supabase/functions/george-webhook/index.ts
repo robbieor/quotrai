@@ -4087,10 +4087,300 @@ serve(async (req) => {
         break;
       }
 
+      // ==================== ENQUIRIES / LEADS ====================
+      case "create_enquiry": {
+        const { name, phone, email, description, address, source, priority, estimated_value, job_type, notes, follow_up_date } = parameters as {
+          name: string; phone?: string; email?: string; description?: string; address?: string;
+          source?: string; priority?: string; estimated_value?: number; job_type?: string; notes?: string; follow_up_date?: string;
+        };
+
+        if (!name) {
+          response = { success: false, message: "I need the name of the person or company to create an enquiry." };
+          break;
+        }
+
+        const { data: newLead, error } = await supabase
+          .from("leads")
+          .insert({
+            team_id: company_id,
+            name,
+            phone: phone || null,
+            email: email || null,
+            description: description || null,
+            address: address || null,
+            source: source || "manual",
+            priority: priority || "medium",
+            estimated_value: estimated_value || null,
+            job_type: job_type || null,
+            notes: notes || null,
+            follow_up_date: follow_up_date || null,
+            status: "new",
+          })
+          .select("id, name, phone, email, description, source, priority, status")
+          .single();
+
+        if (error) throw error;
+
+        let details = [];
+        if (phone) details.push(`phone: ${phone}`);
+        if (email) details.push(`email: ${email}`);
+        if (description) details.push(`for: ${description}`);
+        const detailsStr = details.length > 0 ? ` — ${details.join(", ")}` : "";
+
+        response = {
+          success: true,
+          message: `New enquiry created for "${name}"${detailsStr}. Status: New.`,
+          data: newLead,
+        };
+        break;
+      }
+
+      case "get_enquiries": {
+        const { status, limit } = parameters as { status?: string; limit?: number };
+        const maxResults = limit || 10;
+
+        let query = supabase
+          .from("leads")
+          .select("id, name, phone, email, description, status, priority, source, estimated_value, follow_up_date, created_at")
+          .eq("team_id", company_id)
+          .order("created_at", { ascending: false })
+          .limit(maxResults);
+
+        if (status) {
+          query = query.eq("status", status);
+        }
+
+        const { data: leads, error } = await query;
+        if (error) throw error;
+
+        if (!leads || leads.length === 0) {
+          response = {
+            success: true,
+            message: status ? `No ${status} enquiries found.` : "No enquiries found.",
+            data: [],
+          };
+        } else {
+          const list = leads.map((l: any) =>
+            `${l.name} (${l.status}${l.description ? ` — ${l.description}` : ""}${l.estimated_value ? `, est. ${l.estimated_value}` : ""})`
+          ).join("; ");
+          response = {
+            success: true,
+            message: `Found ${leads.length} enquir${leads.length === 1 ? "y" : "ies"}: ${list}.`,
+            data: leads,
+          };
+        }
+        break;
+      }
+
+      case "update_enquiry": {
+        const { enquiry_id, enquiry_name, status: newStatus, priority: newPriority, description, notes, follow_up_date, estimated_value } = parameters as {
+          enquiry_id?: string; enquiry_name?: string; status?: string; priority?: string;
+          description?: string; notes?: string; follow_up_date?: string; estimated_value?: number;
+        };
+
+        let leadId = enquiry_id;
+        if (!leadId && enquiry_name) {
+          const { data: found } = await supabase
+            .from("leads")
+            .select("id, name")
+            .eq("team_id", company_id)
+            .ilike("name", sanitizeIlike(enquiry_name))
+            .limit(1)
+            .single();
+          if (found) leadId = found.id;
+        }
+
+        if (!leadId) {
+          response = { success: false, message: "I couldn't find that enquiry. Can you give me the name or ID?" };
+          break;
+        }
+
+        const updates: Record<string, any> = {};
+        if (newStatus) updates.status = newStatus;
+        if (newPriority) updates.priority = newPriority;
+        if (description) updates.description = description;
+        if (notes) updates.notes = notes;
+        if (follow_up_date) updates.follow_up_date = follow_up_date;
+        if (estimated_value !== undefined) updates.estimated_value = estimated_value;
+
+        if (Object.keys(updates).length === 0) {
+          response = { success: false, message: "No updates specified. What would you like to change?" };
+          break;
+        }
+
+        const { data: updated, error } = await supabase
+          .from("leads")
+          .update(updates)
+          .eq("id", leadId)
+          .eq("team_id", company_id)
+          .select("id, name, status, priority")
+          .single();
+
+        if (error) throw error;
+
+        const changesList = Object.entries(updates).map(([k, v]) => `${k}: ${v}`).join(", ");
+        response = {
+          success: true,
+          message: `Updated enquiry "${updated.name}" — ${changesList}.`,
+          data: updated,
+        };
+        break;
+      }
+
+      case "delete_enquiry": {
+        const { enquiry_id, enquiry_name } = parameters as { enquiry_id?: string; enquiry_name?: string };
+
+        let leadId = enquiry_id;
+        let leadName = enquiry_name || "Unknown";
+        if (!leadId && enquiry_name) {
+          const { data: found } = await supabase
+            .from("leads")
+            .select("id, name")
+            .eq("team_id", company_id)
+            .ilike("name", sanitizeIlike(enquiry_name))
+            .limit(1)
+            .single();
+          if (found) { leadId = found.id; leadName = found.name; }
+        }
+
+        if (!leadId) {
+          response = { success: false, message: "I couldn't find that enquiry. Can you give me the name or ID?" };
+          break;
+        }
+
+        const { error } = await supabase.from("leads").delete().eq("id", leadId).eq("team_id", company_id);
+        if (error) throw error;
+
+        response = { success: true, message: `Deleted enquiry "${leadName}".` };
+        break;
+      }
+
+      case "convert_enquiry_to_quote": {
+        const { enquiry_id, enquiry_name } = parameters as { enquiry_id?: string; enquiry_name?: string };
+
+        let lead: any = null;
+        if (enquiry_id) {
+          const { data } = await supabase.from("leads").select("*").eq("id", enquiry_id).eq("team_id", company_id).single();
+          lead = data;
+        } else if (enquiry_name) {
+          const { data } = await supabase.from("leads").select("*").eq("team_id", company_id).ilike("name", sanitizeIlike(enquiry_name)).limit(1).single();
+          lead = data;
+        }
+
+        if (!lead) {
+          response = { success: false, message: "I couldn't find that enquiry." };
+          break;
+        }
+
+        // Find or create customer
+        let customerId: string | null = lead.customer_id;
+        if (!customerId) {
+          const { data: existing } = await supabase.from("customers").select("id").eq("team_id", company_id).ilike("name", sanitizeIlike(lead.name)).limit(1).single();
+          if (existing) {
+            customerId = existing.id;
+          } else {
+            const { data: newCust, error: custErr } = await supabase.from("customers")
+              .insert({ team_id: company_id, name: lead.name, email: lead.email, phone: lead.phone, address: lead.address })
+              .select("id").single();
+            if (custErr) throw custErr;
+            customerId = newCust.id;
+          }
+        }
+
+        // Generate quote number
+        const { data: quoteNum } = await supabase.rpc("generate_quote_number", { p_team_id: company_id });
+        const displayNumber = quoteNum || `Q-${Date.now()}`;
+
+        // Create draft quote
+        const { data: newQuote, error: quoteErr } = await supabase.from("quotes")
+          .insert({
+            team_id: company_id,
+            customer_id: customerId,
+            display_number: displayNumber,
+            status: "draft",
+            notes: lead.description || null,
+            total: lead.estimated_value || 0,
+          })
+          .select("id, display_number")
+          .single();
+        if (quoteErr) throw quoteErr;
+
+        // Update lead status and link
+        await supabase.from("leads").update({ status: "quoted", quote_id: newQuote.id, customer_id: customerId }).eq("id", lead.id);
+
+        response = {
+          success: true,
+          message: `Converted enquiry "${lead.name}" into draft quote ${newQuote.display_number}. Customer created/linked.`,
+          data: { lead_id: lead.id, quote_id: newQuote.id, display_number: newQuote.display_number },
+        };
+        break;
+      }
+
+      case "convert_enquiry_to_job": {
+        const { enquiry_id, enquiry_name, scheduled_date, scheduled_time } = parameters as {
+          enquiry_id?: string; enquiry_name?: string; scheduled_date?: string; scheduled_time?: string;
+        };
+
+        let lead: any = null;
+        if (enquiry_id) {
+          const { data } = await supabase.from("leads").select("*").eq("id", enquiry_id).eq("team_id", company_id).single();
+          lead = data;
+        } else if (enquiry_name) {
+          const { data } = await supabase.from("leads").select("*").eq("team_id", company_id).ilike("name", sanitizeIlike(enquiry_name)).limit(1).single();
+          lead = data;
+        }
+
+        if (!lead) {
+          response = { success: false, message: "I couldn't find that enquiry." };
+          break;
+        }
+
+        // Find or create customer
+        let customerId: string | null = lead.customer_id;
+        if (!customerId) {
+          const { data: existing } = await supabase.from("customers").select("id").eq("team_id", company_id).ilike("name", sanitizeIlike(lead.name)).limit(1).single();
+          if (existing) {
+            customerId = existing.id;
+          } else {
+            const { data: newCust, error: custErr } = await supabase.from("customers")
+              .insert({ team_id: company_id, name: lead.name, email: lead.email, phone: lead.phone, address: lead.address })
+              .select("id").single();
+            if (custErr) throw custErr;
+            customerId = newCust.id;
+          }
+        }
+
+        // Create job
+        const { data: newJob, error: jobErr } = await supabase.from("jobs")
+          .insert({
+            team_id: company_id,
+            customer_id: customerId,
+            title: lead.description || `Job for ${lead.name}`,
+            description: lead.notes || lead.description || null,
+            status: scheduled_date ? "scheduled" : "pending",
+            scheduled_date: scheduled_date || null,
+            scheduled_time: scheduled_time || null,
+            estimated_value: lead.estimated_value || null,
+          })
+          .select("id, title, status, scheduled_date")
+          .single();
+        if (jobErr) throw jobErr;
+
+        // Update lead
+        await supabase.from("leads").update({ status: "won", job_id: newJob.id, customer_id: customerId }).eq("id", lead.id);
+
+        response = {
+          success: true,
+          message: `Converted enquiry "${lead.name}" into job "${newJob.title}"${scheduled_date ? ` scheduled for ${scheduled_date}` : ""}. Customer created/linked.`,
+          data: { lead_id: lead.id, job_id: newJob.id },
+        };
+        break;
+      }
+
       default:
         response = {
           success: false,
-          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, templates, payments, schedules, financial summaries, and more.`
+          message: `I don't recognize the function "${function_name}". I can help with: managing customers, jobs, quotes, invoices, expenses, enquiries, templates, payments, schedules, financial summaries, and more.`
         };
     }
 
