@@ -23,8 +23,8 @@ export const Scene2MeetForeman: React.FC = () => {
   const logoScale = spring({ frame, fps, config: { damping: 15, stiffness: 180 } });
   const meetOpacity = interpolate(frame, [15, 35], [0, 1], { extrapolateRight: "clamp" });
   const meetX = interpolate(frame, [15, 35], [-30, 0], { extrapolateRight: "clamp" });
-  const quotrOpacity = interpolate(frame, [30, 50], [0, 1], { extrapolateRight: "clamp" });
-  const quotrX = interpolate(frame, [30, 50], [30, 0], { extrapolateRight: "clamp" });
+  const foremanOpacity = interpolate(frame, [30, 50], [0, 1], { extrapolateRight: "clamp" });
+  const foremanX = interpolate(frame, [30, 50], [30, 0], { extrapolateRight: "clamp" });
   const tagOpacity = interpolate(frame, [60, 80], [0, 1], { extrapolateRight: "clamp" });
   const tagY = interpolate(frame, [60, 80], [20, 0], { extrapolateRight: "clamp" });
 
@@ -84,8 +84,8 @@ export const Scene2MeetForeman: React.FC = () => {
             fontSize: 100,
             fontWeight: 800,
             color: "white",
-            opacity: quotrOpacity,
-            transform: `translateX(${quotrX}px)`,
+            opacity: foremanOpacity,
+            transform: `translateX(${foremanX}px)`,
             letterSpacing: "-0.05em",
             textShadow: "0 0 80px rgba(0,255,178,0.2)",
           }}
