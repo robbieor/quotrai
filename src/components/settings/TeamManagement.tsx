@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Users, Mail, X, UserMinus, Crown, Loader2 } from "lucide-react";
+import { Users, Mail, X, UserMinus, Crown, Shield, ShieldCheck, Loader2 } from "lucide-react";
 import {
   useTeam,
   useTeamMembers,
@@ -223,17 +223,36 @@ export function TeamManagement() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                             <p className="text-sm font-medium">
                               {member.profile?.full_name || member.profile?.email || "Unknown"}
                             </p>
-                            {member.role === "owner" && (
-                              <Badge variant="secondary" className="text-xs">
-                                <Crown className="mr-1 h-3 w-3" />
+                            {(member.role === "owner" || member.role === "ceo") && (
+                              <Badge variant="default" className="text-xs gap-1">
+                                <Crown className="h-3 w-3" />
                                 Owner
                               </Badge>
                             )}
+                            {member.role === "manager" && (
+                              <Badge variant="secondary" className="text-xs gap-1">
+                                <ShieldCheck className="h-3 w-3" />
+                                Manager
+                              </Badge>
+                            )}
+                            {member.role === "member" && (
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <Shield className="h-3 w-3" />
+                                Team Member
+                              </Badge>
+                            )}
                           </div>
+                          <p className="text-[11px] text-muted-foreground">
+                            {(member.role === "owner" || member.role === "ceo")
+                              ? "Full access including billing"
+                              : member.role === "manager"
+                              ? "Full access, no billing"
+                              : "Jobs, calendar & time tracking"}
+                          </p>
                           <p className="text-xs text-muted-foreground">{member.profile?.email}</p>
                         </div>
                       </div>
