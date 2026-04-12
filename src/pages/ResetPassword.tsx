@@ -19,13 +19,25 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check URL hash immediately for recovery type — this is the most
+    // reliable signal because it doesn't depend on listener timing.
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const isRecovery = hashParams.get("type") === "recovery";
+    
+    if (isRecovery) {
+      readyRef.current = true;
+      setReady(true);
+    }
+
+    // Listen for the PASSWORD_RECOVERY event as a secondary signal
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+      if (event === "PASSWORD_RECOVERY") {
         readyRef.current = true;
         setReady(true);
       }
     });
 
+    // Also check for an existing session (e.g. if hash was already consumed)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         readyRef.current = true;
@@ -33,12 +45,13 @@ export default function ResetPassword() {
       }
     });
 
+    // If nothing worked after 8 seconds, the link is invalid
     const timeout = setTimeout(() => {
       if (!readyRef.current) {
         toast.error("Invalid or expired reset link. Please request a new one.");
         navigate("/forgot-password");
       }
-    }, 5000);
+    }, 8000);
 
     return () => {
       subscription.unsubscribe();
