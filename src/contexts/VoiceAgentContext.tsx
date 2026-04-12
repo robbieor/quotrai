@@ -815,6 +815,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      stopMicStream(micStreamRef.current);
+      micStreamRef.current = null;
       void conversationRef.current?.endSession();
     };
   }, []);
