@@ -414,6 +414,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
             ...(sessionOpts as any),
             dynamicVariables,
             clientTools,
+            ...(micStreamRef.current ? { mediaStream: micStreamRef.current } : {}),
             connectionType: ("signedUrl" in sessionOpts ? "websocket" : "webrtc") as "webrtc" | "websocket",
             onConnect: () => {
               if (currentAttemptRef.current !== attemptId) return;
@@ -517,6 +518,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     setRetryAttempt(0);
     setPhase("idle");
     toast.dismiss("voice-retry");
+
+    // Clean up mic stream
+    stopMicStream(micStreamRef.current);
+    micStreamRef.current = null;
 
     if (onConnectRejectRef.current) {
       onConnectRejectRef.current(new Error("Cancelled by user"));
@@ -735,6 +740,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setIsSpeaking(false);
       setStatus("disconnected");
       setPhase("idle");
+
+      // Clean up mic stream
+      stopMicStream(micStreamRef.current);
+      micStreamRef.current = null;
 
       if (keepAliveRef.current) {
         clearInterval(keepAliveRef.current);
