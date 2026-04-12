@@ -194,7 +194,7 @@ export function FloatingTomButton() {
             isConnected 
               ? "bg-destructive text-destructive-foreground shadow-destructive/25 hover:shadow-destructive/30 animate-breathe" 
               : isConnecting
-                ? "bg-destructive/80 text-destructive-foreground"
+                ? "bg-destructive/90 text-destructive-foreground shadow-destructive/25"
                 : isExpanded
                   ? "bg-muted text-foreground border border-border"
                   : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
@@ -204,7 +204,7 @@ export function FloatingTomButton() {
           {isConnected ? (
             <PhoneOff className="h-6 w-6" />
           ) : isConnecting ? (
-            <X className="h-6 w-6" />
+            <PhoneOff className="h-6 w-6" />
           ) : isExpanded ? (
             <X className="h-6 w-6" />
           ) : (
