@@ -79,6 +79,12 @@ const CONNECT_TIMEOUT_MS = 8000;
 const TOKEN_TTL_MS = 30_000;
 const SESSION_TEARDOWN_DELAY_MS = 500;
 
+const stopMicStream = (stream: MediaStream | null) => {
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+};
+
 const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
   reschedule_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
@@ -131,6 +137,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const onConnectResolveRef = useRef<(() => void) | null>(null);
   const onConnectRejectRef = useRef<((err: Error) => void) | null>(null);
   const callStartRef = useRef<number | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
 
   const addDebugEvent = useCallback((event: string) => {
     const time = new Date().toLocaleTimeString("en-US", {
@@ -407,6 +414,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
             ...(sessionOpts as any),
             dynamicVariables,
             clientTools,
+            ...(micStreamRef.current ? { mediaStream: micStreamRef.current } : {}),
             connectionType: ("signedUrl" in sessionOpts ? "websocket" : "webrtc") as "webrtc" | "websocket",
             onConnect: () => {
               if (currentAttemptRef.current !== attemptId) return;
@@ -511,6 +519,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     setPhase("idle");
     toast.dismiss("voice-retry");
 
+    // Clean up mic stream
+    stopMicStream(micStreamRef.current);
+    micStreamRef.current = null;
+
     if (onConnectRejectRef.current) {
       onConnectRejectRef.current(new Error("Cancelled by user"));
       onConnectResolveRef.current = null;
@@ -577,7 +589,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       } catch {
         // noop
       }
-      micStream.getTracks().forEach((track) => track.stop());
+      // Keep micStream alive — pass it to the SDK so it doesn't call getUserMedia again (critical for mobile)
+      micStreamRef.current = micStream;
 
       if (isStale()) return;
       setPhase("fetching_token");
@@ -702,6 +715,11 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setVoiceUnavailable(true);
       handleFailure({ reason: getFailureReason(error), error });
     } finally {
+      // Clean up mic stream if connection didn't succeed
+      if (micStreamRef.current && !conversationRef.current) {
+        stopMicStream(micStreamRef.current);
+        micStreamRef.current = null;
+      }
       if (!isStale()) {
         setRetryAttempt(0);
         toast.dismiss("voice-retry");
@@ -727,6 +745,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setIsSpeaking(false);
       setStatus("disconnected");
       setPhase("idle");
+
+      // Clean up mic stream
+      stopMicStream(micStreamRef.current);
+      micStreamRef.current = null;
 
       if (keepAliveRef.current) {
         clearInterval(keepAliveRef.current);
@@ -793,6 +815,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   useEffect(() => {
     return () => {
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
+      stopMicStream(micStreamRef.current);
+      micStreamRef.current = null;
       void conversationRef.current?.endSession();
     };
   }, []);
