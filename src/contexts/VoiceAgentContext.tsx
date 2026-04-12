@@ -715,6 +715,11 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setVoiceUnavailable(true);
       handleFailure({ reason: getFailureReason(error), error });
     } finally {
+      // Clean up mic stream on any exit path (error, stale, or both transports failed)
+      if (micStreamRef.current && phaseRef.current !== "connected") {
+        stopMicStream(micStreamRef.current);
+        micStreamRef.current = null;
+      }
       if (!isStale()) {
         setRetryAttempt(0);
         toast.dismiss("voice-retry");
