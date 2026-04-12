@@ -1,39 +1,41 @@
 
 
-## Plan: Stripe Connect Payment Webhooks + Email Notifications
+## Problem: Red End-Call Button Not Appearing on Mobile
 
-### What This Does
-When a customer pays an invoice online via Stripe, the system will:
-1. Automatically update the invoice status and record the payment (already working)
-2. Send an email notification to the **business owner** confirming the payment was received
-3. Send a **payment receipt** email to the **customer** confirming their payment
+### Root Cause
 
-### Changes Required
+The `startConversation` flow in `VoiceAgentContext.tsx` has a mobile-specific issue:
 
-#### 1. Update `stripe-webhook/index.ts` — Add email notifications after invoice payment
+1. **Line 553**: `getUserMedia({ audio: true })` is called — this works because it's close to the user gesture
+2. **Line 580**: The mic stream tracks are **immediately stopped** (just used to check permission)
+3. **Lines 596-640**: After multiple `await` calls (token fetch, etc.), the ElevenLabs SDK internally calls `getUserMedia` again to get its own audio stream
+4. **On mobile (especially iOS)**: This second `getUserMedia` call happens outside the user gesture context. Mobile browsers may silently block it, causing the WebRTC connection to fail or hang — so `onConnect` never fires, `status` never becomes `"connected"`, and the red button never appears
 
-In the existing `checkout.session.completed` handler (around line 260-287), after the payment is recorded, add:
+The button itself is coded correctly — it turns red when `isConnected` is true. The problem is the connection never fully establishes on mobile.
 
-- Fetch the invoice details (display_number, total, customer info)
-- Fetch the team owner's email from profiles
-- Send a **"payment received" notification** to the business owner via `enqueue_email` (using the existing email queue infrastructure)
-- Send a **"payment receipt"** to the customer email (from the checkout session's `customer_email`)
+### Fix
 
-Both emails will use branded HTML templates matching the existing Foreman email style (dark header, green CTA buttons).
+**Keep the initial mic stream alive** and pass it to the SDK instead of discarding it and letting the SDK request its own.
 
-#### 2. Update `connect-webhooks/index.ts` — Handle `checkout.session.completed` for Connect payments
+#### Step 1: Pass mic stream through to the SDK session
 
-The current `connect-webhooks` function only handles V2 thin events for onboarding. Add a standard event handler for `checkout.session.completed` that mirrors the logic in `stripe-webhook` — this ensures payments made through Connect checkout sessions are also processed if they arrive on this endpoint.
+In `startConversation` (VoiceAgentContext.tsx):
+- Remove the `micStream.getTracks().forEach(track => track.stop())` on line 580
+- Store the stream and pass it to `startAndWaitForConnect` so the SDK uses the already-authorized stream
+- In `startAndWaitForConnect`, pass `mediaStream: micStream` to `VoiceConversation.startSession()` — the ElevenLabs SDK accepts a `mediaStream` option to avoid calling `getUserMedia` internally
 
-#### 3. No database changes needed
+#### Step 2: Clean up stream on disconnect/cancel
 
-The `payments` and `invoices` tables already have all required columns. The email queue infrastructure (`enqueue_email` RPC) is already set up and working.
+- Stop the mic stream tracks in `stopConversation` and `cancelConnection` callbacks
+- Store the stream in a ref so it can be cleaned up from anywhere
 
-### Technical Details
+#### Step 3: Add a mobile fallback for the floating button
 
-- Email sending uses the existing `enqueue_email` RPC with `SENDER_DOMAIN = "notify.foreman.ie"` and `FROM_DOMAIN = "foreman.ie"`
-- Business owner notification: "Payment received for Invoice {number} — {amount}" with a CTA to view the invoice
-- Customer receipt: "Payment confirmed for Invoice {number}" with amount and a thank-you message
-- All secrets (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) are already configured
-- Edge functions will be redeployed after changes
+As a safety net, in `FloatingTomButton.tsx`:
+- Also check for `isConnecting` state to show the red button — if the connection is in progress for more than a few seconds on mobile, show a "Tap to end" affordance so users aren't stuck
+
+### Files to Change
+
+1. **`src/contexts/VoiceAgentContext.tsx`** — Keep mic stream alive, pass to SDK, clean up on disconnect
+2. **`src/components/layout/FloatingTomButton.tsx`** — Minor: ensure the red button is visible during extended connecting states on mobile
 
