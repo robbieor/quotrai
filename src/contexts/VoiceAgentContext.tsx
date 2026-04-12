@@ -137,6 +137,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const onConnectResolveRef = useRef<(() => void) | null>(null);
   const onConnectRejectRef = useRef<((err: Error) => void) | null>(null);
   const callStartRef = useRef<number | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
 
   const addDebugEvent = useCallback((event: string) => {
     const time = new Date().toLocaleTimeString("en-US", {
