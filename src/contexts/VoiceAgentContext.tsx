@@ -79,6 +79,12 @@ const CONNECT_TIMEOUT_MS = 8000;
 const TOKEN_TTL_MS = 30_000;
 const SESSION_TEARDOWN_DELAY_MS = 500;
 
+const stopMicStream = (stream: MediaStream | null) => {
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+};
+
 const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
   reschedule_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
@@ -577,7 +583,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       } catch {
         // noop
       }
-      micStream.getTracks().forEach((track) => track.stop());
+      // Keep micStream alive — pass it to the SDK so it doesn't call getUserMedia again (critical for mobile)
+      micStreamRef.current = micStream;
 
       if (isStale()) return;
       setPhase("fetching_token");
