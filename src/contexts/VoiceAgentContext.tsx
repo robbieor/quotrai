@@ -716,7 +716,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       handleFailure({ reason: getFailureReason(error), error });
     } finally {
       // Clean up mic stream if connection didn't succeed
-      if (micStreamRef.current && status !== "connected") {
+      if (micStreamRef.current && !conversationRef.current) {
         stopMicStream(micStreamRef.current);
         micStreamRef.current = null;
       }
