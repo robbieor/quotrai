@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -55,17 +54,6 @@ export function useAuth() {
     return { error };
   };
 
-  const signInWithGoogle = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/dashboard`,
-    });
-    if (result.error) {
-      return { data: null, error: result.error as Error };
-    }
-    // If redirected, the browser will navigate away. Otherwise tokens are set.
-    return { data: null, error: null };
-  };
-
   return {
     user,
     session,
@@ -73,6 +61,5 @@ export function useAuth() {
     signUp,
     signIn,
     signOut,
-    signInWithGoogle,
   };
 }
