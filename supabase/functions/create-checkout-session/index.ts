@@ -60,7 +60,10 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Build line items: 1× base plan + extra seats if > 3 users
+    // Build line items — use existing prices but allow Stripe to display
+    // its product name. We rely on the Stripe product description being
+    // accurate; on-the-fly name override would require price_data which
+    // breaks reporting. Instead we set a custom_text below to clarify.
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       { price: priceSet.base, quantity: 1 },
     ];
@@ -131,7 +134,12 @@ serve(async (req) => {
     }
 
     const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
-      metadata: { org_id: orgMember.org_id },
+      metadata: {
+        org_id: orgMember.org_id,
+        user_id: user.id,
+        seat_count: String(seatCount),
+        billing_interval: billingInterval,
+      },
     };
 
     // Preserve any remaining in-app trial (unless user explicitly wants to start paying)
@@ -170,15 +178,32 @@ serve(async (req) => {
       logStep("Bulk discount applied", { seatCount });
     }
 
+    const seatLabel = seatCount === 1 ? "1 user" : `${seatCount} users`;
+    const intervalLabel = billingInterval === "year" ? "year" : "month";
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}&interval=${billingInterval}`,
+      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}&interval=${billingInterval}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/select-plan`,
       subscription_data: subscriptionData,
+      // Mirror metadata on the session itself so webhook + reconcile can resolve org_id
+      metadata: {
+        org_id: orgMember.org_id,
+        user_id: user.id,
+        seat_count: String(seatCount),
+        billing_interval: billingInterval,
+      },
       billing_address_collection: "required",
       payment_method_collection: "always",
+      // Custom message on the Stripe-hosted checkout sheet — overrides
+      // any confusing legacy product description like "up to 3 accounts"
+      custom_text: {
+        submit: {
+          message: `Foreman — ${seatLabel} included. Billed ${intervalLabel === "year" ? "annually" : "monthly"}. Cancel anytime.`,
+        },
+      },
       ...(discounts.length > 0 ? { discounts } : {}),
     });
 
