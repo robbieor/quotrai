@@ -14,42 +14,78 @@ export default function SubscriptionConfirmed() {
   const queryClient = useQueryClient();
   const seats = params.get("seats") || "1";
   const interval = params.get("interval") || "month";
+  const sessionId = params.get("session_id");
 
   const [status, setStatus] = useState<"syncing" | "active" | "pending">("syncing");
 
   useEffect(() => {
     let cancelled = false;
     let attempts = 0;
-    const maxAttempts = 10; // ~20s
+    const maxAttempts = 6; // ~12s, then we trigger reconcile
     const pollMs = 2000;
+    let reconcileTried = false;
+
+    const checkSub = async () => {
+      const { data: orgId } = await supabase.rpc("get_user_org_id_v2");
+      if (!orgId) return null;
+      const { data: sub } = await supabase
+        .from("subscriptions_v2")
+        .select("status, stripe_subscription_id")
+        .eq("org_id", orgId)
+        .maybeSingle();
+      return sub;
+    };
+
+    const tryReconcile = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("reconcile-subscription", {
+          body: { sessionId },
+        });
+        if (error) throw error;
+        console.log("[SubscriptionConfirmed] reconcile result", data);
+        return !!data?.reconciled;
+      } catch (e) {
+        console.error("[SubscriptionConfirmed] reconcile failed", e);
+        return false;
+      }
+    };
 
     const poll = async () => {
       while (!cancelled && attempts < maxAttempts) {
         attempts++;
         try {
-          const { data: orgId } = await supabase.rpc("get_user_org_id_v2");
-          if (orgId) {
-            const { data: sub } = await supabase
-              .from("subscriptions_v2")
-              .select("status, stripe_subscription_id")
-              .eq("org_id", orgId)
-              .maybeSingle();
-
-            if (sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
-              if (!cancelled) {
-                setStatus("active");
-                queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
-                queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
-                queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
-              }
-              return;
+          const sub = await checkSub();
+          if (sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
+            if (!cancelled) {
+              setStatus("active");
+              queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
+              queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
+              queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
             }
+            return;
           }
         } catch (e) {
           console.error("[SubscriptionConfirmed] poll error", e);
         }
         await new Promise((r) => setTimeout(r, pollMs));
       }
+
+      // Polling exhausted — webhook hasn't written. Fall back to direct Stripe reconcile.
+      if (!cancelled && !reconcileTried) {
+        reconcileTried = true;
+        const ok = await tryReconcile();
+        if (ok && !cancelled) {
+          const sub = await checkSub();
+          if (sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
+            setStatus("active");
+            queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
+            queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
+            queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
+            return;
+          }
+        }
+      }
+
       if (!cancelled) setStatus("pending");
     };
 
@@ -57,7 +93,7 @@ export default function SubscriptionConfirmed() {
     return () => {
       cancelled = true;
     };
-  }, [queryClient]);
+  }, [queryClient, sessionId]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
