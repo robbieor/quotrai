@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -55,13 +56,13 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/dashboard`,
     });
-    if (error) {
-      return { data: null, error };
+    if (result.error) {
+      return { data: null, error: result.error as Error };
     }
+    // If redirected, the browser will navigate away. Otherwise tokens are set.
     return { data: null, error: null };
   };
 

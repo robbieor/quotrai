@@ -154,7 +154,7 @@ export default function InvestorForecast() {
             <CardContent className="p-5 text-center space-y-2">
               <p className="text-sm text-muted-foreground">Subscription Revenue</p>
               <p className="text-3xl font-bold text-foreground">€{PLAN_COST_PER_CUSTOMER}/mo</p>
-              <p className="text-xs text-muted-foreground">€{BASE_PLAN} base (3 users included) + €{EXTRA_SEAT}/extra</p>
+              <p className="text-xs text-muted-foreground">€{BASE_PLAN} base (1 user included) + €{EXTRA_SEAT}/extra</p>
               <p className="text-xs text-muted-foreground">One plan, every feature, AI included</p>
             </CardContent>
           </Card>
