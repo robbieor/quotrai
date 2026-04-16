@@ -100,7 +100,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Pricing — One Plan, Every Feature, AI Included"
-        description="€39/month for up to 3 users. Every feature included. Foreman AI built in. 14-day free trial, no credit card required."
+        description={`€${BASE_PRICE}/month — includes 1 user. Add seats for €${EXTRA_SEAT}/mo each. Every feature included. Foreman AI built in. 14-day free trial, no credit card required.`}
         path="/pricing"
       />
 
