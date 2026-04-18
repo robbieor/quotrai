@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { FOREMAN_TOOL_DEFINITIONS } from "../_shared/foreman-tool-definitions.ts";
+import { FOREMAN_TOOL_DEFINITIONS, AGENT_APP_CONTEXT, TOOLS_VERSION } from "../_shared/foreman-tool-definitions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,9 +23,6 @@ serve(async (req) => {
       );
     }
 
-    // Auth is optional — the ElevenLabs API key is the real security gate
-
-    // Build the tools payload for ElevenLabs
     const tools = FOREMAN_TOOL_DEFINITIONS.map((tool) => ({
       type: tool.type,
       name: tool.name,
@@ -33,14 +30,12 @@ serve(async (req) => {
       parameters: tool.parameters,
     }));
 
-    console.log(`sync-agent-tools: Pushing ${tools.length} tools to agent ${AGENT_ID}`);
+    console.log(`sync-agent-tools v${TOOLS_VERSION}: pushing ${tools.length} tools + agent context to ${AGENT_ID}`);
 
-    // First GET the current agent config so we can preserve non-tool settings
+    // Fetch current agent so we can preserve unrelated config
     const getRes = await fetch(
       `https://api.elevenlabs.io/v1/convai/agents/${AGENT_ID}`,
-      {
-        headers: { "xi-api-key": ELEVENLABS_API_KEY },
-      }
+      { headers: { "xi-api-key": ELEVENLABS_API_KEY } }
     );
 
     if (!getRes.ok) {
@@ -53,11 +48,19 @@ serve(async (req) => {
     }
 
     const currentAgent = await getRes.json();
-    const currentToolCount = currentAgent?.conversation_config?.tools?.length || 0;
+    const currentToolCount = currentAgent?.conversation_config?.agent?.prompt?.tools?.length
+      ?? currentAgent?.conversation_config?.tools?.length
+      ?? 0;
 
-    // Build a minimal patch: only set tools, explicitly clear tool_ids
+    // PATCH both the tool list AND the system prompt so George stays in sync with the app.
     const patchBody = {
       conversation_config: {
+        agent: {
+          prompt: {
+            prompt: AGENT_APP_CONTEXT,
+            tools,
+          },
+        },
         tools,
       },
     };
@@ -83,17 +86,17 @@ serve(async (req) => {
       );
     }
 
-    const result = await patchRes.json();
-
     const summary = {
       success: true,
+      version: TOOLS_VERSION,
       agent_id: AGENT_ID,
       tools_pushed: tools.length,
       previous_tool_count: currentToolCount,
+      prompt_pushed: true,
       tool_names: tools.map((t) => t.name),
     };
 
-    console.log("sync-agent-tools: Success", summary);
+    console.log("sync-agent-tools success", summary);
 
     return new Response(JSON.stringify(summary), {
       status: 200,

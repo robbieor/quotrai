@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { LayoutDashboard, Briefcase, Users, Receipt, Wallet, Settings, CalendarDays, Clock, FolderOpen, LogOut, Bot, FileText, UserPlus, Package, LucideIcon } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, Receipt, Wallet, Settings, CalendarDays, Clock, FolderOpen, LogOut, Bot, FileText, UserPlus, Package, Sparkles, LucideIcon } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
@@ -37,6 +37,7 @@ const navGroups: NavGroup[] = [
       { id: "invoices", title: "Revenue", url: "/invoices", icon: Receipt },
       { id: "customers", title: "Clients", url: "/customers", icon: Users },
       { id: "tom", title: "Foreman AI", url: "/foreman-ai", icon: Bot, requiredSeat: "connect" },
+      { id: "george-skills", title: "George Skills", url: "/foreman-ai/capabilities", icon: Sparkles, requiredSeat: "connect" },
     ],
   },
   {
