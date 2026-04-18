@@ -30,6 +30,7 @@ const Invoices = lazy(() => import("./pages/Invoices"));
 const Expenses = lazy(() => import("./pages/Expenses"));
 const Leads = lazy(() => import("./pages/Leads"));
 const George = lazy(() => import("./pages/George"));
+const GeorgeCapabilities = lazy(() => import("./pages/GeorgeCapabilities"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Templates = lazy(() => import("./pages/Templates"));
@@ -185,6 +186,7 @@ const App = () => {
                 {/* Connect+ seat required */}
                 <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />
                 <Route path="/foreman-ai" element={<RoleGuard><SeatGuard requiredSeat="connect"><George /></SeatGuard></RoleGuard>} />
+                <Route path="/foreman-ai/capabilities" element={<RoleGuard><SeatGuard requiredSeat="connect"><GeorgeCapabilities /></SeatGuard></RoleGuard>} />
                 <Route path="/george" element={<Navigate to="/foreman-ai" replace />} />
                 <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
                 <Route path="/voice-usage" element={<RoleGuard><SeatGuard requiredSeat="connect"><VoiceUsage /></SeatGuard></RoleGuard>} />
