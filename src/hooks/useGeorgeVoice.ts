@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useScribe } from "@elevenlabs/react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -79,147 +80,81 @@ export function useGeorgeVoice() {
   };
 }
 
+/**
+ * Dictation hook powered by ElevenLabs Scribe v2 Realtime via the official
+ * @elevenlabs/react SDK. Replaces the hand-rolled WebSocket + ScriptProcessor
+ * pipeline — lower latency (~150ms partials), better iOS support, VAD commits.
+ */
 export function useVoiceInput() {
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [committedText, setCommittedText] = useState("");
   const [partialTranscript, setPartialTranscript] = useState("");
-  const websocketRef = useRef<WebSocket | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
+
+  const scribe = useScribe({
+    modelId: "scribe_v2_realtime",
+    commitStrategy: "vad",
+    onPartialTranscript: (data: { text: string }) => {
+      setPartialTranscript(data.text || "");
+    },
+    onCommittedTranscript: (data: { text: string }) => {
+      const finalText = (data.text || "").trim();
+      if (!finalText) return;
+      setCommittedText((prev) => (prev ? `${prev} ${finalText}` : finalText));
+      setPartialTranscript("");
+    },
+  });
+
+  const isListening = scribe.isConnected;
+
+  const transcript = useMemo(() => {
+    if (partialTranscript) {
+      return committedText ? `${committedText} ${partialTranscript}` : partialTranscript;
+    }
+    return committedText;
+  }, [committedText, partialTranscript]);
 
   const startListening = useCallback(async () => {
+    if (scribe.isConnected || isStarting) return;
+    setIsStarting(true);
     try {
-      // Get microphone permission
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000,
-        } 
-      });
-
-      // Get scribe token
       const { data, error } = await supabase.functions.invoke("elevenlabs-scribe-token");
-
       if (error || !data?.token) {
         throw new Error("Failed to get voice token");
       }
-
-      // Connect to ElevenLabs Scribe WebSocket
-      const ws = new WebSocket(
-        `wss://api.elevenlabs.io/v1/speech-to-text/v1/transcribe?token=${data.token}&model_id=scribe_v2_realtime`
-      );
-      websocketRef.current = ws;
-
-      ws.onopen = () => {
-        console.log("Scribe WebSocket connected");
-        setIsListening(true);
-        
-        // Send initial config
-        ws.send(JSON.stringify({
-          type: "configure",
-          audio_format: "pcm_16000",
-          sample_rate: 16000,
-          encoding: "pcm_s16le",
-          language_code: "en",
-        }));
-
-        // Start recording and sending audio
-        startRecording(stream, ws);
-      };
-
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        
-        if (message.type === "partial_transcript") {
-          setPartialTranscript(message.text || "");
-        } else if (message.type === "final_transcript" || message.type === "committed_transcript") {
-          const finalText = message.text || message.transcript || "";
-          if (finalText) {
-            setTranscript(prev => prev ? `${prev} ${finalText}` : finalText);
-            setPartialTranscript("");
-          }
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error("Scribe WebSocket error:", error);
-        stopListening();
-        toast.error("Voice recognition error");
-      };
-
-      ws.onclose = () => {
-        console.log("Scribe WebSocket closed");
-        stopRecording();
-      };
-
+      await scribe.connect({
+        token: data.token,
+        microphone: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
     } catch (error) {
       console.error("Voice input error:", error);
       toast.error("Could not start voice input. Please check microphone permissions.");
-      setIsListening(false);
+    } finally {
+      setIsStarting(false);
     }
-  }, []);
-
-  const startRecording = (stream: MediaStream, ws: WebSocket) => {
-    audioContextRef.current = new AudioContext({ sampleRate: 16000 });
-    const source = audioContextRef.current.createMediaStreamSource(stream);
-    const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
-
-    source.connect(processor);
-    processor.connect(audioContextRef.current.destination);
-
-    processor.onaudioprocess = (e) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        
-        for (let i = 0; i < inputData.length; i++) {
-          pcmData[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
-        }
-        
-        // Convert to base64
-        const uint8Array = new Uint8Array(pcmData.buffer);
-        let binary = "";
-        for (let i = 0; i < uint8Array.length; i++) {
-          binary += String.fromCharCode(uint8Array[i]);
-        }
-        const base64Audio = btoa(binary);
-        
-        ws.send(JSON.stringify({
-          type: "audio",
-          audio: base64Audio,
-        }));
-      }
-    };
-
-    // Store stream for cleanup
-    mediaRecorderRef.current = { stream } as any;
-  };
-
-  const stopRecording = () => {
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    if (mediaRecorderRef.current?.stream) {
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      mediaRecorderRef.current = null;
-    }
-  };
+  }, [scribe, isStarting]);
 
   const stopListening = useCallback(() => {
-    if (websocketRef.current) {
-      websocketRef.current.close();
-      websocketRef.current = null;
+    if (scribe.isConnected) {
+      scribe.disconnect();
     }
-    stopRecording();
-    setIsListening(false);
+    setPartialTranscript("");
+  }, [scribe]);
+
+  const clearTranscript = useCallback(() => {
+    setCommittedText("");
     setPartialTranscript("");
   }, []);
 
-  const clearTranscript = useCallback(() => {
-    setTranscript("");
-    setPartialTranscript("");
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (scribe.isConnected) scribe.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
@@ -231,3 +166,4 @@ export function useVoiceInput() {
     clearTranscript,
   };
 }
+
