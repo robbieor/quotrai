@@ -21,7 +21,7 @@ export default function SubscriptionConfirmed() {
   useEffect(() => {
     let cancelled = false;
     let attempts = 0;
-    const maxAttempts = 6; // ~12s, then we trigger reconcile
+    const maxAttempts = 6; // ~12s of polling as a final safety net
     const pollMs = 2000;
     let reconcileTried = false;
 
@@ -50,18 +50,46 @@ export default function SubscriptionConfirmed() {
       }
     };
 
-    const poll = async () => {
+    const markActive = () => {
+      setStatus("active");
+      queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
+      queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
+      queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
+    };
+
+    const run = async () => {
+      // 1. Quick first check — webhook may have already fired before page loaded
+      try {
+        const sub = await checkSub();
+        if (!cancelled && sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
+          markActive();
+          return;
+        }
+      } catch (e) {
+        console.error("[SubscriptionConfirmed] initial check error", e);
+      }
+
+      // 2. If we have a session_id, trigger reconcile IMMEDIATELY rather than waiting
+      //    for the webhook poll to time out. This is the fast path.
+      if (sessionId && !cancelled) {
+        reconcileTried = true;
+        const ok = await tryReconcile();
+        if (ok && !cancelled) {
+          const sub = await checkSub();
+          if (sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
+            markActive();
+            return;
+          }
+        }
+      }
+
+      // 3. Fall back to polling for the webhook
       while (!cancelled && attempts < maxAttempts) {
         attempts++;
         try {
           const sub = await checkSub();
           if (sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
-            if (!cancelled) {
-              setStatus("active");
-              queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
-              queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
-              queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
-            }
+            if (!cancelled) markActive();
             return;
           }
         } catch (e) {
@@ -70,17 +98,13 @@ export default function SubscriptionConfirmed() {
         await new Promise((r) => setTimeout(r, pollMs));
       }
 
-      // Polling exhausted — webhook hasn't written. Fall back to direct Stripe reconcile.
+      // 4. Last-ditch reconcile if we hadn't tried yet (no session_id case)
       if (!cancelled && !reconcileTried) {
-        reconcileTried = true;
         const ok = await tryReconcile();
         if (ok && !cancelled) {
           const sub = await checkSub();
           if (sub?.stripe_subscription_id && ACTIVE_STATUSES.has(sub.status)) {
-            setStatus("active");
-            queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
-            queryClient.invalidateQueries({ queryKey: ["teamSubscription"] });
-            queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
+            markActive();
             return;
           }
         }
@@ -89,7 +113,7 @@ export default function SubscriptionConfirmed() {
       if (!cancelled) setStatus("pending");
     };
 
-    poll();
+    run();
     return () => {
       cancelled = true;
     };

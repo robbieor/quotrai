@@ -118,6 +118,14 @@ async function upsertSubscription(
 }
 
 serve(async (req) => {
+  // Diagnostic: log EVERY hit to this endpoint, even before signature verification.
+  // Helps diagnose whether Stripe is reaching us at all.
+  logStep("HTTP request received", {
+    method: req.method,
+    hasSignature: !!req.headers.get("stripe-signature"),
+    userAgent: req.headers.get("user-agent")?.slice(0, 80) ?? null,
+  });
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -126,16 +134,23 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     if (!stripeKey || !webhookSecret) {
+      logStep("ERROR: Missing Stripe configuration", {
+        hasStripeKey: !!stripeKey,
+        hasWebhookSecret: !!webhookSecret,
+      });
       throw new Error("Missing Stripe configuration");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
-    if (!signature) throw new Error("Missing stripe-signature header");
+    if (!signature) {
+      logStep("ERROR: No stripe-signature header — likely manual/browser hit");
+      throw new Error("Missing stripe-signature header");
+    }
 
     const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-    logStep("Event received", { type: event.type, id: event.id });
+    logStep("Event verified", { type: event.type, id: event.id, livemode: event.livemode });
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
