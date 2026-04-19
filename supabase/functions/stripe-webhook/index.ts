@@ -366,14 +366,12 @@ serve(async (req) => {
             await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
 
-            // Build detailed plan info from line items
+            // Build detailed plan info from line items (single-plan pricing)
             const PRICE_TO_PLAN: Record<string, string> = {
-              "price_1TEa4dDQETj2awNErpoa1vHM": "Lite",
-              "price_1TEa57DQETj2awNEESev15XR": "Lite Annual",
-              "price_1TEa5SDQETj2awNE4qhL4fa7": "Connect",
-              "price_1TEa5tDQETj2awNE2zfrsMkY": "Connect Annual",
-              "price_1TEa6HDQETj2awNEycXwPCfc": "Grow",
-              "price_1TEa6oDQETj2awNEHSl42OYl": "Grow Annual",
+              "price_1TIJDeDQETj2awNEWxP4bB43": "Foreman — Base Plan",
+              "price_1TIQvfDQETj2awNEx7bAyHjy": "Foreman — Base Plan (Annual)",
+              "price_1TKjaNDQETj2awNEXHD4jFRq": "Extra Seat",
+              "price_1TIQw1DQETj2awNEth2a6E8y": "Extra Seat (Annual)",
             };
 
             const planLines: string[] = [];
@@ -383,8 +381,13 @@ serve(async (req) => {
               const planName = PRICE_TO_PLAN[priceId] || item.price.nickname || "Foreman";
               const qty = item.quantity || 1;
               totalSeats += qty;
-              const unitAmount = item.price.unit_amount ? `€${(item.price.unit_amount / 100).toFixed(2)}` : "";
-              planLines.push(`<strong>${planName}</strong> × ${qty} seat${qty !== 1 ? "s" : ""} — ${unitAmount}/${item.price.recurring?.interval || "mo"}`);
+              const currency = (item.price.currency || "eur").toUpperCase();
+              const symbol = currency === "GBP" ? "£" : currency === "USD" ? "$" : "€";
+              const unitAmount = item.price.unit_amount
+                ? `${symbol}${(item.price.unit_amount / 100).toFixed(2)}`
+                : "";
+              const interval = item.price.recurring?.interval === "year" ? "yr" : "mo";
+              planLines.push(`<strong>${planName}</strong> × ${qty} — ${unitAmount}/${interval}`);
             }
 
             const billingInterval = stripeSub.items.data[0]?.price.recurring?.interval === "year" ? "annual" : "monthly";
