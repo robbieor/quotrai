@@ -49,6 +49,9 @@ serve(async (req) => {
 
     const { client_name, template_name, additional_notes, valid_days, tax_rate } = await req.json();
 
+    // Escape ILIKE wildcards in user input to prevent pattern injection
+    const escapeILike = (s: string) => String(s).replace(/[\\%_]/g, "\\$&");
+
     if (!client_name) {
       return new Response(
         JSON.stringify({ error: "client_name is required" }),
@@ -73,7 +76,7 @@ serve(async (req) => {
       .from("customers")
       .select("id, name, country_code")
       .eq("team_id", teamId)
-      .ilike("name", `%${client_name}%`)
+      .ilike("name", `%${escapeILike(client_name)}%`)
       .limit(1)
       .single();
 
@@ -93,7 +96,7 @@ serve(async (req) => {
     const { data: directMatch } = await supabase
       .from("templates")
       .select("*, template_items(*)")
-      .ilike("name", `%${template_name}%`)
+      .ilike("name", `%${escapeILike(template_name)}%`)
       .eq("team_id", teamId)
       .limit(1)
       .maybeSingle();

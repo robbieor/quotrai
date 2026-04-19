@@ -12,11 +12,8 @@ export function useXeroConnection() {
     queryKey: ["xero-connection", teamId],
     queryFn: async () => {
       if (!teamId) return null;
-      const { data, error } = await (supabase as any)
-        .from("xero_connections")
-        .select("*")
-        .eq("team_id", teamId)
-        .maybeSingle();
+      // Use SECURITY DEFINER RPC that returns only non-secret metadata
+      const { data, error } = await (supabase as any).rpc("get_my_xero_connection");
       if (error) throw error;
       return data as {
         id: string;

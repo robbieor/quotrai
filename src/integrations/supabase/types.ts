@@ -5445,6 +5445,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       voice_minute_purchases: {
         Row: {
           amount_paid: number
@@ -6385,6 +6406,8 @@ export type Database = {
         }[]
       }
       get_invoice_by_portal_token: { Args: { token: string }; Returns: Json }
+      get_my_quickbooks_connection: { Args: never; Returns: Json }
+      get_my_xero_connection: { Args: never; Returns: Json }
       get_quote_by_portal_token:
         | {
             Args: { token: string }
@@ -6425,6 +6448,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["team_role"]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_voice_minutes: {
         Args: { p_minutes: number; p_team_id: string }
         Returns: undefined
@@ -7125,6 +7155,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "platform_admin"
       certificate_status: "draft" | "issued" | "expired" | "superseded"
       certificate_type:
         | "eicr"
@@ -7349,6 +7380,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["platform_admin"],
       certificate_status: ["draft", "issued", "expired", "superseded"],
       certificate_type: [
         "eicr",
