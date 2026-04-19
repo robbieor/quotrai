@@ -5657,51 +5657,6 @@ export type Database = {
         }
         Relationships: []
       }
-      quickbooks_connections_safe: {
-        Row: {
-          company_name: string | null
-          created_at: string | null
-          id: string | null
-          realm_id: string | null
-          team_id: string | null
-          token_expires_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          company_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          realm_id?: string | null
-          team_id?: string | null
-          token_expires_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          company_name?: string | null
-          created_at?: string | null
-          id?: string | null
-          realm_id?: string | null
-          team_id?: string | null
-          token_expires_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quickbooks_connections_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quickbooks_connections_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: true
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       team_member_profiles: {
         Row: {
           avatar_url: string | null
@@ -6104,57 +6059,6 @@ export type Database = {
           },
         ]
       }
-      xero_connections_safe: {
-        Row: {
-          connected_by: string | null
-          created_at: string | null
-          id: string | null
-          scopes: string | null
-          team_id: string | null
-          token_expires_at: string | null
-          updated_at: string | null
-          xero_tenant_id: string | null
-          xero_tenant_name: string | null
-        }
-        Insert: {
-          connected_by?: string | null
-          created_at?: string | null
-          id?: string | null
-          scopes?: string | null
-          team_id?: string | null
-          token_expires_at?: string | null
-          updated_at?: string | null
-          xero_tenant_id?: string | null
-          xero_tenant_name?: string | null
-        }
-        Update: {
-          connected_by?: string | null
-          created_at?: string | null
-          id?: string | null
-          scopes?: string | null
-          team_id?: string | null
-          token_expires_at?: string | null
-          updated_at?: string | null
-          xero_tenant_id?: string | null
-          xero_tenant_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "xero_connections_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "team_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "xero_connections_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Functions: {
       _postgis_deprecate: {
@@ -6502,44 +6406,8 @@ export type Database = {
         }[]
       }
       get_invoice_by_portal_token: { Args: { token: string }; Returns: Json }
-      get_my_quickbooks_connection: {
-        Args: never
-        Returns: {
-          company_name: string | null
-          created_at: string | null
-          id: string | null
-          realm_id: string | null
-          team_id: string | null
-          token_expires_at: string | null
-          updated_at: string | null
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "quickbooks_connections_safe"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      get_my_xero_connection: {
-        Args: never
-        Returns: {
-          connected_by: string | null
-          created_at: string | null
-          id: string | null
-          scopes: string | null
-          team_id: string | null
-          token_expires_at: string | null
-          updated_at: string | null
-          xero_tenant_id: string | null
-          xero_tenant_name: string | null
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "xero_connections_safe"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
+      get_my_quickbooks_connection: { Args: never; Returns: Json }
+      get_my_xero_connection: { Args: never; Returns: Json }
       get_quote_by_portal_token:
         | {
             Args: { token: string }
