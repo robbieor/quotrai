@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.6.0";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured.");
-    const stripeClient = new Stripe(stripeKey);
+    const stripeClient = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const { accountId, productName, unitAmount, currency, quantity } = await req.json();
 

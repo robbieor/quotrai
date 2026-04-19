@@ -55,8 +55,10 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false } = body;
     const seatCount = Math.max(1, Number(teamSize) || 1);
-    const billingInterval = interval === "year" ? "year" : "month";
-    const priceSet = PRICES[billingInterval];
+    // Stripe price interval is "month" / "year"; DB billing_period uses "monthly" / "annual"
+    const stripeInterval: "month" | "year" = interval === "year" || interval === "annual" ? "year" : "month";
+    const billingPeriod: "monthly" | "annual" = stripeInterval === "year" ? "annual" : "monthly";
+    const priceSet = PRICES[stripeInterval];
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -73,7 +75,7 @@ serve(async (req) => {
       lineItems.push({ price: priceSet.seat, quantity: extraSeats });
     }
 
-    logStep("Line items built", { seatCount, extraSeats, billingInterval, lineItems: lineItems.length });
+    logStep("Line items built", { seatCount, extraSeats, billingPeriod, lineItems: lineItems.length });
 
     // Get or create Stripe customer
     let stripeCustomerId: string;
@@ -106,7 +108,7 @@ serve(async (req) => {
           stripe_customer_id: stripeCustomerId,
           status: "pending",
           seat_count: seatCount,
-          billing_period: billingInterval,
+          billing_period: billingPeriod,
         }, { onConflict: "org_id" });
     }
 
@@ -138,7 +140,8 @@ serve(async (req) => {
         org_id: orgMember.org_id,
         user_id: user.id,
         seat_count: String(seatCount),
-        billing_interval: billingInterval,
+        billing_interval: stripeInterval,
+        billing_period: billingPeriod,
       },
     };
 
@@ -179,13 +182,13 @@ serve(async (req) => {
     }
 
     const seatLabel = seatCount === 1 ? "1 user" : `${seatCount} users`;
-    const intervalLabel = billingInterval === "year" ? "year" : "month";
+    const intervalLabel = stripeInterval === "year" ? "year" : "month";
 
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}&interval=${billingInterval}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/subscription-confirmed?plan=foreman&seats=${seatCount}&interval=${stripeInterval}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/select-plan`,
       subscription_data: subscriptionData,
       // Mirror metadata on the session itself so webhook + reconcile can resolve org_id
@@ -193,7 +196,8 @@ serve(async (req) => {
         org_id: orgMember.org_id,
         user_id: user.id,
         seat_count: String(seatCount),
-        billing_interval: billingInterval,
+        billing_interval: stripeInterval,
+        billing_period: billingPeriod,
       },
       billing_address_collection: "required",
       payment_method_collection: "always",

@@ -88,8 +88,9 @@ async function upsertSubscription(
     ? new Date(subscription.trial_end * 1000).toISOString()
     : null;
 
-  const billingInterval =
-    subscription.items.data[0]?.price.recurring?.interval === "year" ? "year" : "month";
+  // DB constraint requires "monthly" / "annual" — Stripe returns "month" / "year"
+  const billingPeriod: "monthly" | "annual" =
+    subscription.items.data[0]?.price.recurring?.interval === "year" ? "annual" : "monthly";
 
   await supabase.from("subscriptions_v2").upsert(
     {
@@ -100,7 +101,7 @@ async function upsertSubscription(
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       seat_count: totalSeats,
-      billing_period: billingInterval,
+      billing_period: billingPeriod,
       trial_ends_at: trialEnd,
       cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       updated_at: new Date().toISOString(),
@@ -112,7 +113,7 @@ async function upsertSubscription(
     orgId,
     status: subscription.status,
     seats: totalSeats,
-    billing: billingInterval,
+    billing: billingPeriod,
   });
 }
 
