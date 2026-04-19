@@ -93,6 +93,47 @@ Always narrate before you act. Always navigate after you create. Always highligh
 
 
 export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
+  // ==================== LIVE SCREEN CONTROL (client-only UI tools) ====================
+  {
+    type: "client",
+    name: "show_progress_toast",
+    description: "Stream a short status message into the user's Live Action Overlay so they can SEE what you're working on. Call BEFORE every multi-step action (e.g. 'Searching jobs…', 'Found 3 matches', 'Opening invoice 1042'). Keep messages under 8 words.",
+    parameters: {
+      type: "object",
+      properties: {
+        message: { type: "string", description: "Short status sentence under 8 words." },
+        intent: { type: "string", description: "Optional headline for the overlay (e.g. 'Creating invoice', 'Searching jobs')." },
+        complete: { type: "boolean", description: "Set true when the action just finished — marks the previous step as done." },
+      },
+      required: ["message"],
+    },
+  },
+  {
+    type: "client",
+    name: "navigate_to_screen",
+    description: "Take the user to a specific screen in the app. Use after creating or finding a record so the user can see the result. Examples: '/quotes', '/jobs', '/invoices', '/customers', '/calendar', '/foreman-ai'.",
+    parameters: {
+      type: "object",
+      properties: {
+        route: { type: "string", description: "Absolute app route starting with / (e.g. /quotes, /invoices/123)." },
+      },
+      required: ["route"],
+    },
+  },
+  {
+    type: "client",
+    name: "highlight_record",
+    description: "Pulse a 'Just done by Foreman AI' badge on a record row for 5 seconds so the user can see what you just created or updated. Call this right after create/update tool calls.",
+    parameters: {
+      type: "object",
+      properties: {
+        record_type: { type: "string", description: "Record kind, e.g. 'job', 'quote', 'invoice', 'customer', 'expense', 'enquiry'." },
+        record_id: { type: "string", description: "The record's UUID or display number." },
+      },
+      required: ["record_type", "record_id"],
+    },
+  },
+
   // ==================== SUMMARIES ====================
   {
     type: "client",

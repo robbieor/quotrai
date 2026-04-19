@@ -267,6 +267,24 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   }, []);
 
   const clientTools = {
+    // ===== LIVE SCREEN CONTROL =====
+    show_progress_toast: (params: { message: string; intent?: string; complete?: boolean }) => {
+      window.dispatchEvent(new CustomEvent("george:progress", { detail: params }));
+      return "ok";
+    },
+    navigate_to_screen: (params: { route: string }) => {
+      if (typeof params?.route === "string" && params.route.startsWith("/")) {
+        window.dispatchEvent(new CustomEvent("george:navigate", { detail: { route: params.route } }));
+        return `Navigating to ${params.route}`;
+      }
+      return "Invalid route";
+    },
+    highlight_record: (params: { record_type: string; record_id: string }) => {
+      window.dispatchEvent(new CustomEvent("george:highlight", { detail: params }));
+      return "Highlighted";
+    },
+
+    // ===== DATA TOOLS =====
     get_today_summary: async () => await callGeorgeWebhook("get_today_summary", {}, contextRef.current),
     get_week_ahead_summary: async () => await callGeorgeWebhook("get_week_ahead_summary", {}, contextRef.current),
     get_todays_jobs: async () => await callGeorgeWebhook("get_todays_jobs", {}, contextRef.current),
