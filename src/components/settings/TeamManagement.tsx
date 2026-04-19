@@ -33,6 +33,7 @@ import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
 import { PRICING } from "@/hooks/useSubscriptionTier";
+import { RolePreviewControl } from "@/components/admin/RolePreviewControl";
 
 type InviteRole = "member" | "manager" | "owner";
 

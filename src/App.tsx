@@ -214,6 +214,7 @@ const App = () => {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
+                </RolePreviewProvider>
               </BrowserRouter>
             </AgentTaskProvider>
           </HighlightProvider>
