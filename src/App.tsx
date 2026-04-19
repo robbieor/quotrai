@@ -8,6 +8,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { VoiceAgentProvider } from "@/contexts/VoiceAgentContext";
 import { AgentTaskProvider } from "@/contexts/AgentTaskContext";
+import { HighlightProvider } from "@/contexts/HighlightContext";
+import { NavigationBridge } from "@/components/voice/NavigationBridge";
+import { LiveActionOverlay } from "@/components/voice/LiveActionOverlay";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { SeatGuard } from "@/components/auth/SeatGuard";
 import { useIsNative } from "@/hooks/useIsNative";
@@ -126,89 +129,91 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <VoiceAgentProvider>
-          <AgentTaskProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                {/* Public pages */}
-                <Route path="/" element={<RootRedirect />} />
-                <Route path="/trade/:tradeSlug" element={<TradeLanding />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/request-access" element={<RequestAccess />} />
-                {/* App store assets — internal only, moved to protected */}
-                <Route path="/industries" element={<Industries />} />
-                <Route path="/accept-invite" element={<AcceptInvite />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
+        <VoiceAgentProvider>
+          <HighlightProvider>
+            <AgentTaskProvider>
+              <BrowserRouter>
+                <NavigationBridge />
+                <LiveActionOverlay />
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    {/* Public pages */}
+                    <Route path="/" element={<RootRedirect />} />
+                    <Route path="/trade/:tradeSlug" element={<TradeLanding />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/request-access" element={<RequestAccess />} />
+                    <Route path="/industries" element={<Industries />} />
+                    <Route path="/accept-invite" element={<AcceptInvite />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
 
-                {/* Investor deck — gated behind auth */}
-                <Route path="/investor/pitch" element={<RoleGuard><InvestorPitch /></RoleGuard>} />
-                <Route path="/investor/market" element={<RoleGuard><InvestorMarket /></RoleGuard>} />
-                <Route path="/investor/product" element={<RoleGuard><InvestorProduct /></RoleGuard>} />
-                <Route path="/investor/team" element={<RoleGuard><InvestorTeam /></RoleGuard>} />
-                <Route path="/investor/projections" element={<RoleGuard><InvestorProjections /></RoleGuard>} />
-                <Route path="/investor/forecast" element={<RoleGuard><InvestorForecast /></RoleGuard>} />
+                    {/* Investor deck — gated behind auth */}
+                    <Route path="/investor/pitch" element={<RoleGuard><InvestorPitch /></RoleGuard>} />
+                    <Route path="/investor/market" element={<RoleGuard><InvestorMarket /></RoleGuard>} />
+                    <Route path="/investor/product" element={<RoleGuard><InvestorProduct /></RoleGuard>} />
+                    <Route path="/investor/team" element={<RoleGuard><InvestorTeam /></RoleGuard>} />
+                    <Route path="/investor/projections" element={<RoleGuard><InvestorProjections /></RoleGuard>} />
+                    <Route path="/investor/forecast" element={<RoleGuard><InvestorForecast /></RoleGuard>} />
 
-                {/* Portal pages */}
-                <Route path="/quote/:token" element={<QuotePortal />} />
-                <Route path="/invoice/:token" element={<InvoicePortal />} />
-                <Route path="/portal/invoice" element={<InvoicePortal />} />
-                <Route path="/portal/quote" element={<QuotePortal />} />
-                <Route path="/customer/login" element={<CustomerLogin />} />
-                <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+                    {/* Portal pages */}
+                    <Route path="/quote/:token" element={<QuotePortal />} />
+                    <Route path="/invoice/:token" element={<InvoicePortal />} />
+                    <Route path="/portal/invoice" element={<InvoicePortal />} />
+                    <Route path="/portal/quote" element={<QuotePortal />} />
+                    <Route path="/customer/login" element={<CustomerLogin />} />
+                    <Route path="/customer/dashboard" element={<CustomerDashboard />} />
 
-                {/* Onboarding */}
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/select-plan" element={<SelectPlan />} />
-                <Route path="/subscription-confirmed" element={<SubscriptionConfirmed />} />
+                    {/* Onboarding */}
+                    <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path="/select-plan" element={<SelectPlan />} />
+                    <Route path="/subscription-confirmed" element={<SubscriptionConfirmed />} />
 
-                {/* Protected dashboard pages — all seats */}
-                <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
-                <Route path="/jobs" element={<Jobs />} />
-                <Route path="/calendar" element={<JobCalendar />} />
-                <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
-                <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
-                <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
-                <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
-                <Route path="/price-book" element={<RoleGuard><PriceBook /></RoleGuard>} />
-                <Route path="/price-book/:id" element={<RoleGuard><PricebookDetail /></RoleGuard>} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/time-tracking" element={<TimeTracking />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/app-store-assets" element={<RoleGuard><AppStoreAssets /></RoleGuard>} />
+                    {/* Protected dashboard pages — all seats */}
+                    <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
+                    <Route path="/jobs" element={<Jobs />} />
+                    <Route path="/calendar" element={<JobCalendar />} />
+                    <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
+                    <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
+                    <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
+                    <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
+                    <Route path="/price-book" element={<RoleGuard><PriceBook /></RoleGuard>} />
+                    <Route path="/price-book/:id" element={<RoleGuard><PricebookDetail /></RoleGuard>} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/time-tracking" element={<TimeTracking />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/app-store-assets" element={<RoleGuard><AppStoreAssets /></RoleGuard>} />
 
-                {/* Connect+ seat required */}
-                <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />
-                <Route path="/foreman-ai" element={<RoleGuard><SeatGuard requiredSeat="connect"><George /></SeatGuard></RoleGuard>} />
-                <Route path="/foreman-ai/capabilities" element={<RoleGuard><SeatGuard requiredSeat="connect"><GeorgeCapabilities /></SeatGuard></RoleGuard>} />
-                <Route path="/george" element={<Navigate to="/foreman-ai" replace />} />
-                <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
-                <Route path="/voice-usage" element={<RoleGuard><SeatGuard requiredSeat="connect"><VoiceUsage /></SeatGuard></RoleGuard>} />
-                <Route path="/reports" element={<RoleGuard><SeatGuard requiredSeat="connect"><Reports /></SeatGuard></RoleGuard>} />
-                <Route path="/documents" element={<RoleGuard><SeatGuard requiredSeat="connect"><Documents /></SeatGuard></RoleGuard>} />
-                <Route path="/certificates" element={<RoleGuard><SeatGuard requiredSeat="connect"><Certificates /></SeatGuard></RoleGuard>} />
+                    {/* Connect+ seat required */}
+                    <Route path="/expenses" element={<RoleGuard><SeatGuard requiredSeat="connect"><Expenses /></SeatGuard></RoleGuard>} />
+                    <Route path="/foreman-ai" element={<RoleGuard><SeatGuard requiredSeat="connect"><George /></SeatGuard></RoleGuard>} />
+                    <Route path="/foreman-ai/capabilities" element={<RoleGuard><SeatGuard requiredSeat="connect"><GeorgeCapabilities /></SeatGuard></RoleGuard>} />
+                    <Route path="/george" element={<Navigate to="/foreman-ai" replace />} />
+                    <Route path="/ai-audit" element={<RoleGuard><SeatGuard requiredSeat="connect"><AIAuditHistory /></SeatGuard></RoleGuard>} />
+                    <Route path="/voice-usage" element={<RoleGuard><SeatGuard requiredSeat="connect"><VoiceUsage /></SeatGuard></RoleGuard>} />
+                    <Route path="/reports" element={<RoleGuard><SeatGuard requiredSeat="connect"><Reports /></SeatGuard></RoleGuard>} />
+                    <Route path="/documents" element={<RoleGuard><SeatGuard requiredSeat="connect"><Documents /></SeatGuard></RoleGuard>} />
+                    <Route path="/certificates" element={<RoleGuard><SeatGuard requiredSeat="connect"><Certificates /></SeatGuard></RoleGuard>} />
 
-                {/* Grow seat required */}
-                <Route path="/leads" element={<RoleGuard><SeatGuard requiredSeat="grow"><Leads /></SeatGuard></RoleGuard>} />
-                <Route path="/funnel" element={<RoleGuard><FunnelAnalytics /></RoleGuard>} />
-                <Route path="/connect/products" element={<RoleGuard><ConnectProducts /></RoleGuard>} />
+                    {/* Grow seat required */}
+                    <Route path="/leads" element={<RoleGuard><SeatGuard requiredSeat="grow"><Leads /></SeatGuard></RoleGuard>} />
+                    <Route path="/funnel" element={<RoleGuard><FunnelAnalytics /></RoleGuard>} />
+                    <Route path="/connect/products" element={<RoleGuard><ConnectProducts /></RoleGuard>} />
 
-                {/* Public storefront — no auth required */}
-                {/* TODO: In production, use a friendly slug instead of accountId */}
-                <Route path="/storefront/:accountId" element={<Storefront />} />
+                    {/* Public storefront — no auth required */}
+                    <Route path="/storefront/:accountId" element={<Storefront />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </AgentTaskProvider>
-          </VoiceAgentProvider>
-        </BrowserRouter>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </AgentTaskProvider>
+          </HighlightProvider>
+        </VoiceAgentProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

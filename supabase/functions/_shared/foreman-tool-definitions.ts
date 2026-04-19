@@ -30,7 +30,7 @@ export interface ToolDefinition {
  * The frontend uses this version to decide whether to re-push to ElevenLabs
  * (so a fresh deploy propagates to every user on next page load — no UI required).
  */
-export const TOOLS_VERSION = "2025-04-18.1";
+export const TOOLS_VERSION = "2025-04-19.1";
 
 /**
  * App context injected into the ElevenLabs agent system prompt on every sync.
@@ -81,10 +81,59 @@ Foreman is NOT a passive tracker. It actively runs operations, surfaces risks, r
 # Output style
 - One insight, one impact, one action. Then stop.
 - Numbers in plain speech ("twelve thousand four hundred euros", not "€12,400").
-- Never say "as an AI" or apologise for limits — just solve or recommend.`;
+- Never say "as an AI" or apologise for limits — just solve or recommend.
+
+# Live screen control (CRITICAL)
+You have three tools that drive the user's screen so they can SEE you working:
+- show_progress_toast — call this BEFORE every multi-step action (e.g. "Searching jobs…", "Found 3 matches", "Opening invoice 1042"). Stream short status updates so the user knows what you're doing.
+- navigate_to_screen — push the user to the relevant page when you complete an action (e.g. after creating a quote, navigate to /quotes).
+- highlight_record — pulse a "Just done" badge on a row after creating or updating it.
+
+Always narrate before you act. Always navigate after you create. Always highlight what you just touched.`;
 
 
 export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
+  // ==================== LIVE SCREEN CONTROL (client-only UI tools) ====================
+  {
+    type: "client",
+    name: "show_progress_toast",
+    description: "Stream a short status message into the user's Live Action Overlay so they can SEE what you're working on. Call BEFORE every multi-step action (e.g. 'Searching jobs…', 'Found 3 matches', 'Opening invoice 1042'). Keep messages under 8 words.",
+    parameters: {
+      type: "object",
+      properties: {
+        message: { type: "string", description: "Short status sentence under 8 words." },
+        intent: { type: "string", description: "Optional headline for the overlay (e.g. 'Creating invoice', 'Searching jobs')." },
+        complete: { type: "boolean", description: "Set true when the action just finished — marks the previous step as done." },
+      },
+      required: ["message"],
+    },
+  },
+  {
+    type: "client",
+    name: "navigate_to_screen",
+    description: "Take the user to a specific screen in the app. Use after creating or finding a record so the user can see the result. Examples: '/quotes', '/jobs', '/invoices', '/customers', '/calendar', '/foreman-ai'.",
+    parameters: {
+      type: "object",
+      properties: {
+        route: { type: "string", description: "Absolute app route starting with / (e.g. /quotes, /invoices/123)." },
+      },
+      required: ["route"],
+    },
+  },
+  {
+    type: "client",
+    name: "highlight_record",
+    description: "Pulse a 'Just done by Foreman AI' badge on a record row for 5 seconds so the user can see what you just created or updated. Call this right after create/update tool calls.",
+    parameters: {
+      type: "object",
+      properties: {
+        record_type: { type: "string", description: "Record kind, e.g. 'job', 'quote', 'invoice', 'customer', 'expense', 'enquiry'." },
+        record_id: { type: "string", description: "The record's UUID or display number." },
+      },
+      required: ["record_type", "record_id"],
+    },
+  },
+
   // ==================== SUMMARIES ====================
   {
     type: "client",
