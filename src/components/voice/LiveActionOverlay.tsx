@@ -102,8 +102,8 @@ export function LiveActionOverlay() {
             <div key={item.id} className="flex items-start gap-2.5 text-sm animate-in fade-in slide-in-from-left-2 duration-200">
               <div className="mt-0.5 shrink-0">
                 {item.status === "complete" ? (
-                  <div className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                    <Check className="h-3 w-3 text-emerald-600" />
+                  <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-primary" />
                   </div>
                 ) : (
                   <Loader2 className="h-4 w-4 text-primary animate-spin" />

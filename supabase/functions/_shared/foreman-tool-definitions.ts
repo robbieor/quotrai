@@ -30,7 +30,7 @@ export interface ToolDefinition {
  * The frontend uses this version to decide whether to re-push to ElevenLabs
  * (so a fresh deploy propagates to every user on next page load — no UI required).
  */
-export const TOOLS_VERSION = "2025-04-18.1";
+export const TOOLS_VERSION = "2025-04-19.1";
 
 /**
  * App context injected into the ElevenLabs agent system prompt on every sync.
@@ -81,7 +81,15 @@ Foreman is NOT a passive tracker. It actively runs operations, surfaces risks, r
 # Output style
 - One insight, one impact, one action. Then stop.
 - Numbers in plain speech ("twelve thousand four hundred euros", not "€12,400").
-- Never say "as an AI" or apologise for limits — just solve or recommend.`;
+- Never say "as an AI" or apologise for limits — just solve or recommend.
+
+# Live screen control (CRITICAL)
+You have three tools that drive the user's screen so they can SEE you working:
+- show_progress_toast — call this BEFORE every multi-step action (e.g. "Searching jobs…", "Found 3 matches", "Opening invoice 1042"). Stream short status updates so the user knows what you're doing.
+- navigate_to_screen — push the user to the relevant page when you complete an action (e.g. after creating a quote, navigate to /quotes).
+- highlight_record — pulse a "Just done" badge on a row after creating or updating it.
+
+Always narrate before you act. Always navigate after you create. Always highlight what you just touched.`;
 
 
 export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
