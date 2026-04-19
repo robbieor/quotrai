@@ -19,7 +19,7 @@ export function RolePreviewBanner() {
   if (!isPreviewing || !previewRole) return null;
 
   return (
-    <div className="sticky top-0 z-[60] bg-amber-500 text-amber-950 border-b border-amber-600 shadow-sm">
+    <div className="sticky top-0 z-[60] border-b border-warning shadow-sm" style={{ background: "hsl(var(--warning))", color: "hsl(var(--warning-foreground))" }}>
       <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-3 text-sm">
         <div className="flex items-center gap-2 min-w-0">
           <Eye className="h-4 w-4 shrink-0" />
@@ -33,7 +33,8 @@ export function RolePreviewBanner() {
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 hover:bg-amber-600/20 text-amber-950 shrink-0"
+          className="h-7 shrink-0 hover:bg-black/10"
+          style={{ color: "hsl(var(--warning-foreground))" }}
           onClick={() => setPreviewRole(null)}
         >
           <X className="h-3.5 w-3.5 mr-1" />
