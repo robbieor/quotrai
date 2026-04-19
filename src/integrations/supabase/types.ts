@@ -5445,6 +5445,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       voice_minute_purchases: {
         Row: {
           amount_paid: number
@@ -5635,6 +5656,51 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      quickbooks_connections_safe: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          id: string | null
+          realm_id: string | null
+          team_id: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          id?: string | null
+          realm_id?: string | null
+          team_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          id?: string | null
+          realm_id?: string | null
+          team_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quickbooks_connections_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quickbooks_connections_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_member_profiles: {
         Row: {
@@ -6038,6 +6104,57 @@ export type Database = {
           },
         ]
       }
+      xero_connections_safe: {
+        Row: {
+          connected_by: string | null
+          created_at: string | null
+          id: string | null
+          scopes: string | null
+          team_id: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          xero_tenant_id: string | null
+          xero_tenant_name: string | null
+        }
+        Insert: {
+          connected_by?: string | null
+          created_at?: string | null
+          id?: string | null
+          scopes?: string | null
+          team_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          xero_tenant_id?: string | null
+          xero_tenant_name?: string | null
+        }
+        Update: {
+          connected_by?: string | null
+          created_at?: string | null
+          id?: string | null
+          scopes?: string | null
+          team_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          xero_tenant_id?: string | null
+          xero_tenant_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xero_connections_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xero_connections_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _postgis_deprecate: {
@@ -6385,6 +6502,44 @@ export type Database = {
         }[]
       }
       get_invoice_by_portal_token: { Args: { token: string }; Returns: Json }
+      get_my_quickbooks_connection: {
+        Args: never
+        Returns: {
+          company_name: string | null
+          created_at: string | null
+          id: string | null
+          realm_id: string | null
+          team_id: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "quickbooks_connections_safe"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_my_xero_connection: {
+        Args: never
+        Returns: {
+          connected_by: string | null
+          created_at: string | null
+          id: string | null
+          scopes: string | null
+          team_id: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          xero_tenant_id: string | null
+          xero_tenant_name: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "xero_connections_safe"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_quote_by_portal_token:
         | {
             Args: { token: string }
@@ -6425,6 +6580,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["team_role"]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_voice_minutes: {
         Args: { p_minutes: number; p_team_id: string }
         Returns: undefined
@@ -7125,6 +7287,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "platform_admin"
       certificate_status: "draft" | "issued" | "expired" | "superseded"
       certificate_type:
         | "eicr"
@@ -7349,6 +7512,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["platform_admin"],
       certificate_status: ["draft", "issued", "expired", "superseded"],
       certificate_type: [
         "eicr",
