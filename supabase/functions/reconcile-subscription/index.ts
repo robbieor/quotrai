@@ -95,7 +95,9 @@ serve(async (req) => {
 
     const totalSeats = stripeSub.items.data.reduce((sum, it) => sum + (it.quantity || 0), 0);
     const trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null;
-    const billingInterval = stripeSub.items.data[0]?.price.recurring?.interval === "year" ? "year" : "month";
+    // DB constraint requires "monthly" / "annual"
+    const billingPeriod: "monthly" | "annual" =
+      stripeSub.items.data[0]?.price.recurring?.interval === "year" ? "annual" : "monthly";
     const periodStart = stripeSub.current_period_start
       ? new Date(stripeSub.current_period_start * 1000).toISOString()
       : null;
@@ -112,7 +114,7 @@ serve(async (req) => {
         current_period_start: periodStart,
         current_period_end: periodEnd,
         seat_count: totalSeats,
-        billing_period: billingInterval,
+        billing_period: billingPeriod,
         trial_ends_at: trialEnd,
         cancel_at_period_end: stripeSub.cancel_at_period_end ?? false,
         updated_at: new Date().toISOString(),

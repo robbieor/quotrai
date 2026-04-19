@@ -29,7 +29,7 @@ serve(async (req) => {
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured.");
-    const stripeClient = new Stripe(stripeKey);
+    const stripeClient = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -251,6 +251,138 @@ serve(async (req) => {
         const invoice = event.data.object;
         const accountId = invoice.customer_account || invoice.customer;
         console.log(`[WEBHOOK] Invoice paid: account=${accountId}, amount=${invoice.amount_paid}`);
+        break;
+      }
+
+      // --- Standard account.updated (for Connect accounts not on V2 thin events) ---
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        const isComplete = !!(account.charges_enabled && account.details_submitted);
+        await supabaseClient
+          .from("teams")
+          .update({ stripe_connect_onboarding_complete: isComplete })
+          .eq("stripe_connect_account_id", account.id);
+        console.log(`[WEBHOOK] account.updated ${account.id} onboarding_complete=${isComplete}`);
+        break;
+      }
+
+      // --- Client payment failed (card declined when paying an invoice) ---
+      case "payment_intent.payment_failed": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const invoiceId = pi.metadata?.invoice_id;
+        const teamId = pi.metadata?.team_id;
+        const failureMessage = pi.last_payment_error?.message || "Card was declined";
+        console.log(`[WEBHOOK] payment_intent.payment_failed pi=${pi.id} invoice=${invoiceId} reason=${failureMessage}`);
+
+        if (invoiceId && teamId) {
+          // Notify business owner of declined payment
+          const { data: ownerProfile } = await supabaseClient
+            .from("profiles")
+            .select("email")
+            .eq("team_id", teamId)
+            .limit(1)
+            .single();
+
+          const { data: inv } = await supabaseClient
+            .from("invoices")
+            .select("display_number, customers(name)")
+            .eq("id", invoiceId)
+            .single();
+
+          if (ownerProfile?.email && inv) {
+            const invoiceNum = (inv as any).display_number || invoiceId.slice(0, 8);
+            const customerName = (inv as any).customers?.name || "A customer";
+            const html = buildEmailHtml("Card Payment Failed ⚠️", [
+              `<strong>${customerName}</strong> attempted to pay <strong>Invoice ${invoiceNum}</strong> but the payment was declined.`,
+              `<strong>Reason:</strong> ${failureMessage}`,
+              `The invoice remains unpaid. You may want to reach out to your customer to arrange another payment method.`,
+            ]);
+            try {
+              await supabaseClient.rpc("enqueue_email", {
+                p_queue_name: "transactional_emails",
+                p_message: JSON.stringify({
+                  to: ownerProfile.email,
+                  subject: `Payment failed — Invoice ${invoiceNum}`,
+                  html,
+                  from: "Foreman <support@foreman.ie>",
+                  idempotency_key: `payment-failed-${pi.id}`,
+                  purpose: "transactional",
+                }),
+              });
+            } catch (e) { console.log("[WEBHOOK] Email enqueue failed (non-fatal)", e); }
+          }
+        }
+        break;
+      }
+
+      // --- Refund issued from Stripe dashboard or API ---
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        const invoiceId = charge.metadata?.invoice_id || (charge.payment_intent && typeof charge.payment_intent === "object" ? (charge.payment_intent as any).metadata?.invoice_id : undefined);
+        const refundAmount = (charge.amount_refunded || 0) / 100;
+        console.log(`[WEBHOOK] charge.refunded charge=${charge.id} invoice=${invoiceId} amount=${refundAmount}`);
+
+        if (invoiceId) {
+          const fullyRefunded = charge.amount_refunded >= charge.amount;
+          await supabaseClient
+            .from("invoices")
+            .update({
+              status: fullyRefunded ? "draft" : "sent",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", invoiceId);
+
+          // Record reversal payment for audit trail
+          const { data: inv } = await supabaseClient
+            .from("invoices")
+            .select("team_id, display_number, customers(name, email)")
+            .eq("id", invoiceId)
+            .single();
+
+          if (inv) {
+            await supabaseClient.from("payments").insert({
+              invoice_id: invoiceId,
+              team_id: (inv as any).team_id,
+              amount: -refundAmount,
+              payment_method: "card_refund",
+              notes: `Stripe refund ${charge.id}`,
+            });
+
+            // Notify business owner
+            const { data: ownerProfile } = await supabaseClient
+              .from("profiles")
+              .select("email")
+              .eq("team_id", (inv as any).team_id)
+              .limit(1)
+              .single();
+
+            const invoiceNum = (inv as any).display_number || invoiceId.slice(0, 8);
+            const customerName = (inv as any).customers?.name || "Customer";
+            const curr = (charge.currency || "eur").toUpperCase();
+            const symbol = curr === "GBP" ? "£" : curr === "USD" ? "$" : "€";
+            const formattedAmount = `${symbol}${refundAmount.toFixed(2)}`;
+
+            if (ownerProfile?.email) {
+              const html = buildEmailHtml("Refund Processed", [
+                `A refund of <strong>${formattedAmount}</strong> was issued for <strong>Invoice ${invoiceNum}</strong> (${customerName}).`,
+                `The invoice has been ${fullyRefunded ? "reverted to draft" : "marked as partially refunded"}.`,
+              ]);
+              try {
+                await supabaseClient.rpc("enqueue_email", {
+                  p_queue_name: "transactional_emails",
+                  p_message: JSON.stringify({
+                    to: ownerProfile.email,
+                    subject: `Refund processed — Invoice ${invoiceNum} (${formattedAmount})`,
+                    html,
+                    from: "Foreman <support@foreman.ie>",
+                    idempotency_key: `refund-owner-${charge.id}`,
+                    purpose: "transactional",
+                  }),
+                });
+              } catch (e) { console.log("[WEBHOOK] Email enqueue failed (non-fatal)", e); }
+            }
+          }
+        }
         break;
       }
 

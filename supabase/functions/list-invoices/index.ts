@@ -53,7 +53,7 @@ serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const invoices = await stripe.invoices.list({
       customer: subscription.stripe_customer_id,
