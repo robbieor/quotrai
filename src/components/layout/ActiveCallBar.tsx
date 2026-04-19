@@ -196,7 +196,7 @@ export function ActiveCallBar() {
           <ForemanAvatar size="sm" />
           <span className={cn(
             "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card",
-            isSpeaking && !muted ? "bg-green-500 animate-pulse" : "bg-muted-foreground"
+            isSpeaking && !muted ? "bg-primary animate-pulse" : "bg-muted-foreground"
           )} />
         </div>
         <div className="flex flex-col leading-tight pr-1">
