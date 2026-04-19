@@ -62,7 +62,7 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("Stripe not configured");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     await stripe.subscriptions.update(sub.stripe_subscription_id, {
       cancel_at_period_end: shouldCancel,

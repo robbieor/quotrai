@@ -88,6 +88,9 @@ async function upsertSubscription(
     ? new Date(subscription.trial_end * 1000).toISOString()
     : null;
 
+  const billingInterval =
+    subscription.items.data[0]?.price.recurring?.interval === "year" ? "year" : "month";
+
   await supabase.from("subscriptions_v2").upsert(
     {
       org_id: orgId,
@@ -97,13 +100,20 @@ async function upsertSubscription(
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       seat_count: totalSeats,
+      billing_period: billingInterval,
       trial_ends_at: trialEnd,
+      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "org_id" }
   );
 
-  logStep("subscriptions_v2 upserted", { orgId, status: subscription.status, seats: totalSeats });
+  logStep("subscriptions_v2 upserted", {
+    orgId,
+    status: subscription.status,
+    seats: totalSeats,
+    billing: billingInterval,
+  });
 }
 
 serve(async (req) => {
@@ -118,7 +128,7 @@ serve(async (req) => {
       throw new Error("Missing Stripe configuration");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
     if (!signature) throw new Error("Missing stripe-signature header");
