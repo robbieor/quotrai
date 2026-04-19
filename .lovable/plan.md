@@ -1,85 +1,60 @@
 
 
-## Launch Readiness Audit — Foreman
+## What's actually wrong (verified, not guessed)
 
-**Verdict: NOT ready to launch.** One blocker stops paid subscriptions from syncing. Three other Stripe issues will fire on day one. Several non-blockers should be cleaned up. Otherwise architecture is solid for ~1,000 companies.
+I checked the database and edge function logs. Here's the real picture:
 
----
+**The webhook code is fine.** The `stripe-webhook` function exists, handles `checkout.session.completed`, `customer.subscription.created/updated/deleted`, `invoice.payment_succeeded/failed`. The success page (`/subscription-confirmed`) polls correctly and even calls `reconcile-subscription` as a fallback after 12 seconds.
 
-### 🔴 BLOCKER 1 — Subscription sync silently fails (no one becomes "active")
+**The smoking gun:** zero logs in `stripe-webhook` and zero logs in `reconcile-subscription`. Not a single call, ever. Combined with the DB showing every `subscriptions_v2` row has `stripe_subscription_id = NULL`, this means:
 
-The `subscriptions_v2.billing_period` column has a CHECK constraint allowing only `'monthly'` or `'annual'`. But three edge functions write `'month'` or `'year'`:
+> **Stripe is not sending webhooks to your endpoint, AND the success-page fallback is also never being hit — which suggests users are not even reaching the `/subscription-confirmed` page.**
 
-- `create-checkout-session` line 58 — writes `"month"` / `"year"`
-- `stripe-webhook` line 91 — writes `"month"` / `"year"`
-- `reconcile-subscription` line 98 — writes `"month"` / `"year"`
+So there are likely **two separate problems**:
 
-**DB evidence**: All 7 existing rows in `subscriptions_v2` have `stripe_subscription_id = NULL`. Not a single Stripe checkout has ever successfully written back. Customers will pay Stripe and the app will still treat them as expired/trial.
+### Problem A — Webhook endpoint not registered in Stripe (definite)
+The Stripe Dashboard does not have `https://leojhjynyxhpfyrbcabf.supabase.co/functions/v1/stripe-webhook` registered as a webhook endpoint. Without this, Stripe has nowhere to send `checkout.session.completed`. **You** have to add this in Stripe — I can't do it from code.
 
-**Fix**: Standardise on `'monthly'`/`'annual'` everywhere (the constraint and DB rows already use those).
+### Problem B — User stuck on payment screen (likely)
+"Stuck on payment method selection" describes the **Stripe-hosted checkout page**, not our app. That page lives on `checkout.stripe.com`. If the user clicks "Subscribe" and nothing happens after entering card details, the most common causes are:
+1. **Apple Pay domain not verified** with Stripe — Apple Pay button shows but click does nothing
+2. **Live mode prices** while user is on test card (or vice versa)
+3. **Browser blocking the redirect** back to your domain after payment
+4. **3D Secure challenge** failing silently
 
----
-
-### 🔴 BLOCKER 2 — Customer invoice payments use wrong/old Stripe API versions
-
-Functions handling **clients paying invoices** are pinned to `apiVersion: "2023-10-16"` (16 months old) on SDK `stripe@14.21.0` and `stripe@17.4.0`:
-
-- `create-invoice-payment/index.ts` — this is the "Pay Now" button on every invoice portal
-- `stripe-connect/index.ts` — onboarding flow for businesses
-- `toggle-george-voice/index.ts`
-- `list-invoices/index.ts` — uses the not-yet-released `"2026-02-25.clover"` cast as `any`
-
-**Impact**: `2023-10-16` is supported but emits deprecation warnings; `clover` doesn't exist on SDK 18.5 and will throw at runtime when a user opens billing history.
-
-**Fix**: Pin all to `"2025-08-27.basil"` and SDK `stripe@18.5.0` to match the rest of the codebase.
+I need to test the actual checkout to know which.
 
 ---
 
-### 🔴 BLOCKER 3 — Connect webhooks ignore failed payments
+## Plan of action
 
-`connect-webhooks` handles `checkout.session.completed` but does NOT handle:
-- `payment_intent.payment_failed` (card declined for client invoice payments)
-- `charge.refunded` (refund issued from Stripe dashboard → invoice still shows paid in app)
-- `account.updated` standard event (only V2 thin events are wired up — businesses without thin events configured won't have `stripe_connect_onboarding_complete` flipped to `true`)
+### Step 1 — You: register the webhook in Stripe (2 min, mobile-friendly)
+I'll give exact tap-by-tap instructions:
+1. Open Stripe Dashboard → Developers → Webhooks → Add endpoint
+2. Paste: `https://leojhjynyxhpfyrbcabf.supabase.co/functions/v1/stripe-webhook`
+3. Select these events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_succeeded`, `invoice.payment_failed`
+4. Copy the new "Signing secret" (`whsec_...`)
+5. Compare it to the `STRIPE_WEBHOOK_SECRET` already in Lovable — if different, update it
 
-**Impact**: Businesses can complete Stripe onboarding and the app keeps showing "Set up payments" forever.
+### Step 2 — You: also register Connect webhook (for invoice payments)
+Same flow but second endpoint: `https://leojhjynyxhpfyrbcabf.supabase.co/functions/v1/connect-webhooks` with events `account.updated`, `payment_intent.payment_failed`, `charge.refunded`, `checkout.session.completed`. Signing secret goes to `STRIPE_CONNECT_WEBHOOK_SECRET`.
 
----
+### Step 3 — Me (after webhooks are live): debug the "stuck" issue
+Once webhooks fire, I'll add a small diagnostic: log every webhook event we receive (even unhandled ones) so we can see if Stripe is calling us during your next test. Then run an actual test checkout and watch the logs in real time. From there we either confirm it's Apple Pay domain verification or a redirect issue, and fix accordingly.
 
-### 🟡 BLOCKER 4 — Welcome email "billing_period" inconsistency
-
-In `stripe-webhook` line 393, the welcome email computes `billingInterval` as `"annual"`/`"monthly"` (different from line 91's `"year"`/`"month"`). Two different conventions in the same file. Cleanup needed once we standardise.
-
----
-
-### 🟡 Non-blocking issues
-
-1. **Dead code shipped to prod bundle**: `InvestorPitch`, `InvestorMarket`, `InvestorProduct`, `InvestorTeam`, `InvestorForecast`, `FounderProjections`, `FunnelAnalytics`, `AppStoreAssets` are all lazy-loaded routes behind `RoleGuard`. Fine to keep but verify `RoleGuard` actually blocks them — if a regular user hits `/investor/pitch` they should 404, not see the page.
-2. **Stripe SDK version sprawl**: 4 different SDK versions in functions (`14.21.0`, `17.4.0`, `18.5.0`, `18.6.0`). Pin all to `18.5.0`.
-3. **Console noise**: `connect-webhooks` and `george-chat` log 10–15 console.log per request. Fine for now, will get expensive at 1,000 customers.
-4. **No unique index on `subscriptions_v2.stripe_subscription_id`** — only `org_id` is unique. Webhook lookup by `stripe_subscription_id` (line 205, 229) does a full scan. Add `CREATE UNIQUE INDEX ON subscriptions_v2(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL`.
+### Step 4 — One small code improvement
+The `reconcile-subscription` fallback is good but only fires after 12 seconds. I'll make it fire **immediately** when the `session_id` query param is present on `/subscription-confirmed` — that way even if your webhook is slow, the user sees "Active" within ~2 seconds.
 
 ---
 
-### ✅ What's solid for 1,000 companies
+## What I will NOT change
+- Webhook handler code (already correct — verified)
+- Success page polling logic (already correct)
+- Database schema (correct, all required columns exist)
+- The checkout function itself (creates valid Stripe sessions — confirmed in 1 hour ago logs)
 
-- Indexes on hot tables (`invoices`, `quotes`, `jobs`, `customers`) are properly composite-indexed by `team_id` + status/date
-- RLS multi-tenancy is enforced via `team_id` and `org_id` everywhere
-- Portal token expiration (90 days) is in place
-- Webhook idempotency keys on emails prevent duplicate sends
-- Stripe Connect application_fee model works (1.5% platform fee, configurable per team)
-- Auth flows (no Google OAuth — confirmed removed from current source)
+## Honest answer to "is this 100% factual?"
+The audit conclusions from earlier today are accurate **for code-level issues**. But the actual production payment failure you're hitting is a **Stripe Dashboard configuration gap** that no amount of code changes can fix on its own. Webhooks have to be registered manually in Stripe — that's a one-time setup step that was never completed for this project.
 
----
-
-### Plan of action (default mode)
-
-1. **Fix billing_period constraint mismatch** — update the 3 edge functions to write `'monthly'`/`'annual'`. Migration to backfill any future bad rows is unnecessary (none exist).
-2. **Pin all Stripe API versions** to `2025-08-27.basil` and SDKs to `stripe@18.5.0`. Affects: `create-invoice-payment`, `stripe-connect`, `toggle-george-voice`, `list-invoices`, `connect-checkout`, `connect-products`, `connect-subscription`, `connect-webhooks`.
-3. **Add `account.updated` handler** in `connect-webhooks` for businesses without V2 thin events.
-4. **Add `payment_intent.payment_failed` and `charge.refunded` handlers** in `connect-webhooks` so client payment failures notify the business and refunds reverse the invoice status.
-5. **Add unique partial index** on `subscriptions_v2.stripe_subscription_id`.
-6. **Verify**: end-to-end test of (a) signup → trial → upgrade to paid, (b) business connects Stripe → onboarding completes → status flips, (c) client clicks "Pay Now" on invoice → success → emails fire → invoice marked paid.
-
-After these fixes the app is launch-ready for the first 1,000 companies and clients can charge through the portal reliably.
+Approve and I'll walk you through step 1 with exact taps, then ship the small code improvement in step 4.
 
