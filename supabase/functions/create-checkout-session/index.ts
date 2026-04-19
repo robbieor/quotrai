@@ -212,10 +212,24 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to create checkout session";
-    console.error("Error creating checkout session:", error);
+    // Surface Stripe-specific errors with helpful detail
+    let message = "Failed to start checkout. Please try again.";
+    let stripeCode: string | undefined;
+    if (error && typeof error === "object") {
+      const e = error as { message?: string; type?: string; code?: string; raw?: { message?: string; code?: string } };
+      stripeCode = e.code || e.raw?.code;
+      const rawMsg = e.raw?.message || e.message;
+      if (rawMsg) message = rawMsg;
+      // Friendlier messages for the most common failures
+      if (stripeCode === "resource_missing") {
+        message = "A pricing plan is missing in Stripe. Please contact support@foreman.ie.";
+      } else if (stripeCode === "customer_tax_location_invalid") {
+        message = "We couldn't determine your billing country. Please try again with your country selected.";
+      }
+    }
+    console.error("[CHECKOUT] error:", error);
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: message, code: stripeCode }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

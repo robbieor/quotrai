@@ -88,6 +88,9 @@ async function upsertSubscription(
     ? new Date(subscription.trial_end * 1000).toISOString()
     : null;
 
+  const billingInterval =
+    subscription.items.data[0]?.price.recurring?.interval === "year" ? "year" : "month";
+
   await supabase.from("subscriptions_v2").upsert(
     {
       org_id: orgId,
@@ -97,13 +100,20 @@ async function upsertSubscription(
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       seat_count: totalSeats,
+      billing_period: billingInterval,
       trial_ends_at: trialEnd,
+      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "org_id" }
   );
 
-  logStep("subscriptions_v2 upserted", { orgId, status: subscription.status, seats: totalSeats });
+  logStep("subscriptions_v2 upserted", {
+    orgId,
+    status: subscription.status,
+    seats: totalSeats,
+    billing: billingInterval,
+  });
 }
 
 serve(async (req) => {
@@ -118,7 +128,7 @@ serve(async (req) => {
       throw new Error("Missing Stripe configuration");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
     if (!signature) throw new Error("Missing stripe-signature header");
@@ -356,14 +366,12 @@ serve(async (req) => {
             await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
 
-            // Build detailed plan info from line items
+            // Build detailed plan info from line items (single-plan pricing)
             const PRICE_TO_PLAN: Record<string, string> = {
-              "price_1TEa4dDQETj2awNErpoa1vHM": "Lite",
-              "price_1TEa57DQETj2awNEESev15XR": "Lite Annual",
-              "price_1TEa5SDQETj2awNE4qhL4fa7": "Connect",
-              "price_1TEa5tDQETj2awNE2zfrsMkY": "Connect Annual",
-              "price_1TEa6HDQETj2awNEycXwPCfc": "Grow",
-              "price_1TEa6oDQETj2awNEHSl42OYl": "Grow Annual",
+              "price_1TIJDeDQETj2awNEWxP4bB43": "Foreman — Base Plan",
+              "price_1TIQvfDQETj2awNEx7bAyHjy": "Foreman — Base Plan (Annual)",
+              "price_1TKjaNDQETj2awNEXHD4jFRq": "Extra Seat",
+              "price_1TIQw1DQETj2awNEth2a6E8y": "Extra Seat (Annual)",
             };
 
             const planLines: string[] = [];
@@ -373,8 +381,13 @@ serve(async (req) => {
               const planName = PRICE_TO_PLAN[priceId] || item.price.nickname || "Foreman";
               const qty = item.quantity || 1;
               totalSeats += qty;
-              const unitAmount = item.price.unit_amount ? `€${(item.price.unit_amount / 100).toFixed(2)}` : "";
-              planLines.push(`<strong>${planName}</strong> × ${qty} seat${qty !== 1 ? "s" : ""} — ${unitAmount}/${item.price.recurring?.interval || "mo"}`);
+              const currency = (item.price.currency || "eur").toUpperCase();
+              const symbol = currency === "GBP" ? "£" : currency === "USD" ? "$" : "€";
+              const unitAmount = item.price.unit_amount
+                ? `${symbol}${(item.price.unit_amount / 100).toFixed(2)}`
+                : "";
+              const interval = item.price.recurring?.interval === "year" ? "yr" : "mo";
+              planLines.push(`<strong>${planName}</strong> × ${qty} — ${unitAmount}/${interval}`);
             }
 
             const billingInterval = stripeSub.items.data[0]?.price.recurring?.interval === "year" ? "annual" : "monthly";
