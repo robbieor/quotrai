@@ -94,6 +94,7 @@ export function TeamManagement() {
 
   return (
     <div className="space-y-6">
+      <RolePreviewControl />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
