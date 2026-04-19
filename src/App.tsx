@@ -9,6 +9,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { VoiceAgentProvider } from "@/contexts/VoiceAgentContext";
 import { AgentTaskProvider } from "@/contexts/AgentTaskContext";
 import { HighlightProvider } from "@/contexts/HighlightContext";
+import { RolePreviewProvider } from "@/contexts/RolePreviewContext";
+import { RolePreviewBanner } from "@/components/admin/RolePreviewBanner";
 import { NavigationBridge } from "@/components/voice/NavigationBridge";
 import { LiveActionOverlay } from "@/components/voice/LiveActionOverlay";
 import { RoleGuard } from "@/components/auth/RoleGuard";
@@ -133,10 +135,12 @@ const App = () => {
           <HighlightProvider>
             <AgentTaskProvider>
               <BrowserRouter>
-                <NavigationBridge />
-                <LiveActionOverlay />
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
+                <RolePreviewProvider>
+                  <RolePreviewBanner />
+                  <NavigationBridge />
+                  <LiveActionOverlay />
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
                     {/* Public pages */}
                     <Route path="/" element={<RootRedirect />} />
                     <Route path="/trade/:tradeSlug" element={<TradeLanding />} />
@@ -210,6 +214,7 @@ const App = () => {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
+                </RolePreviewProvider>
               </BrowserRouter>
             </AgentTaskProvider>
           </HighlightProvider>

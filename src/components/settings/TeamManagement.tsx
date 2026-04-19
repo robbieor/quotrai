@@ -33,6 +33,7 @@ import { useTeamGeorgeUsers } from "@/hooks/useGeorgeAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { GeorgeVoiceToggle } from "./GeorgeVoiceToggle";
 import { PRICING } from "@/hooks/useSubscriptionTier";
+import { RolePreviewControl } from "@/components/admin/RolePreviewControl";
 
 type InviteRole = "member" | "manager" | "owner";
 
@@ -93,6 +94,7 @@ export function TeamManagement() {
 
   return (
     <div className="space-y-6">
+      <RolePreviewControl />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
