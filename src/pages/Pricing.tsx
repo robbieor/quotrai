@@ -29,11 +29,11 @@ const faqs = [
   },
   {
     q: "What's the difference between the plans?",
-    a: "Solo gets you the core ops tools for one person. Crew adds Foreman AI (text + voice) — most teams pick this. Scale gives you 3 included seats, unlimited AI voice, advanced reporting and API access.",
+    a: "Solo gets you the core ops tools for one person. Crew adds Foreman AI (text + voice) — most teams pick this. Business gives you 3 included seats, unlimited AI voice, advanced reporting & exports, priority support, and a faster AI processing lane.",
   },
   {
     q: "Can I add more team members?",
-    a: "Yes — Crew and Scale support extra seats at €19/mo each. Solo is single-user only; upgrade to Crew when you take someone on.",
+    a: "Yes — Crew and Business support extra seats at €19/mo each. Solo is single-user only; upgrade to Crew when you take someone on.",
   },
   {
     q: "Can I switch tiers or cancel anytime?",
@@ -41,7 +41,7 @@ const faqs = [
   },
   {
     q: "Do you integrate with my accounting software?",
-    a: "Crew and Scale sync with Xero and QuickBooks. Invoices, payments and contacts flow automatically — no double entry.",
+    a: "Crew and Business sync with Xero and QuickBooks. Invoices, payments and contacts flow automatically — no double entry.",
   },
 ];
 
@@ -85,8 +85,8 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Pricing — Solo €29 · Crew €49 · Scale €99 | Foreman"
-        description="Three simple plans for trade businesses. Crew (€49/mo) includes Foreman AI text & voice. Scale (€99/mo) gets unlimited AI voice + 3 seats. 14-day free trial."
+        title="Pricing — Solo €29 · Crew €49 · Business €99 | Foreman"
+        description="Three simple plans for trade businesses. Crew (€49/mo) includes Foreman AI text & voice. Business (€99/mo) gets unlimited AI voice, 3 seats, advanced reports & priority support. 14-day free trial."
         path="/pricing"
       />
 
