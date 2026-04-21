@@ -410,11 +410,19 @@ export function useSubscriptionTier() {
     startTrial: startTrialMutation.mutateAsync,
     isStartingTrial: startTrialMutation.isPending,
     currentPlan: (() => {
-      // Derive from subscriptions_v2 plan_id or fall back to seat type lookup
+      // plan_id from subscriptions_v2 is now one of: solo | crew | business (preferred)
+      // Older rows may still hold lite | connect | grow.
       const planId = teamSubscription?.subscription_tier;
+      // New tiered model
+      if (planId === 'solo') return { ...SOLO_TIER, code: 'lite' as SeatType, price: SOLO_TIER.monthly, annualPrice: SOLO_TIER.annual };
+      if (planId === 'business' || planId === 'scale') {
+        return { ...BUSINESS_TIER, code: 'grow' as SeatType, price: BUSINESS_TIER.monthly, annualPrice: BUSINESS_TIER.annual };
+      }
+      if (planId === 'crew') return { ...CREW_TIER, code: 'connect' as SeatType, price: CREW_TIER.monthly, annualPrice: CREW_TIER.annual };
+      // Legacy seat-type fallbacks
       if (planId === 'lite') return LITE_SEAT_DETAILS;
       if (planId === 'grow') return GROW_SEAT_DETAILS;
-      return CONNECT_SEAT_DETAILS; // default
+      return CONNECT_SEAT_DETAILS;
     })(),
   };
 }
