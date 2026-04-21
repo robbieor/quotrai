@@ -19,7 +19,7 @@ export interface TeamSubscription {
 
 // ============================================================
 // TIERED PRICING MODEL (Apr 2026 launch)
-// Solo €29 · Crew €49 (recommended) · Business €99 (premium)
+// Solo €29 · Crew €49 (recommended) · Business €89 (premium, 3 seats)
 // Extra seat €19/mo (Crew & Business only)
 // NOTE: 'scale' is kept as a deprecated alias of 'business' for one
 // release so any in-flight subscriptions / metadata don't break.
@@ -75,8 +75,8 @@ export const TIER_STRIPE_PRICES: Record<TierId, {
     seatAnnual: 'price_1TIQw1DQETj2awNEth2a6E8y',  // €153 (TODO upgrade to €193.80)
   },
   business: {
-    monthly: 'price_TODO_BUSINESS_MONTHLY', // €99/mo — create in Stripe
-    annual: 'price_TODO_BUSINESS_ANNUAL',   // €1,009.80/yr
+    monthly: 'price_TODO_BUSINESS_MONTHLY', // €89/mo — create in Stripe
+    annual: 'price_TODO_BUSINESS_ANNUAL',   // €907.80/yr (15% off)
     seatMonthly: 'price_TODO_BUSINESS_SEAT_MONTHLY', // €19/mo (4th+ user)
     seatAnnual: 'price_TODO_BUSINESS_SEAT_ANNUAL',   // €193.80/yr
   },
@@ -112,16 +112,16 @@ export const PRICING = {
   // Tier base prices (monthly)
   SOLO: 29,
   CREW: 49,
-  BUSINESS: 99,
+  BUSINESS: 89,
   /** @deprecated use BUSINESS */
-  SCALE: 99,
+  SCALE: 89,
 
   // Annual prices (15% off the 12× monthly)
   ANNUAL_SOLO: 295.80,    // 29 × 12 × 0.85
   ANNUAL_CREW: 499.80,    // 49 × 12 × 0.85
-  ANNUAL_BUSINESS: 1009.80,  // 99 × 12 × 0.85
+  ANNUAL_BUSINESS: 907.80,  // 89 × 12 × 0.85
   /** @deprecated use ANNUAL_BUSINESS */
-  ANNUAL_SCALE: 1009.80,
+  ANNUAL_SCALE: 907.80,
 
   // Seats included per tier
   SOLO_INCLUDED_SEATS: 1,
