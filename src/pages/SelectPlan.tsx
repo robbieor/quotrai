@@ -1,33 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, ArrowRight, ExternalLink, Minus, Plus } from "lucide-react";
+import { CheckCircle2, ArrowRight, ExternalLink, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
 import { track } from "@/utils/analytics";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
 import { supabase } from "@/integrations/supabase/client";
-import { PRICING } from "@/hooks/useSubscriptionTier";
-
-const allFeatures = [
-  "Unlimited quotes & invoices",
-  "Job scheduling & calendar",
-  "Customer management & GPS tracking",
-  "Foreman AI — text & voice assistant",
-  "Expense tracking & receipt capture",
-  "Reports, dashboards & recurring invoices",
-  "Xero & QuickBooks sync",
-  "PDF generation & team collaboration",
-];
+import { ALL_TIERS, computeTierTotal, type TierId, type TierDetails } from "@/hooks/useSubscriptionTier";
 
 export default function SelectPlan() {
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
+  const [selectedTier, setSelectedTier] = useState<TierId>("crew");
   const [teamSize, setTeamSize] = useState(1);
-  const [interval, setInterval] = useState<"month" | "year">("month");
+  const [interval, setInterval] = useState<"month" | "year">("year"); // annual default
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const isNative = useIsNative();
 
@@ -60,24 +49,24 @@ export default function SelectPlan() {
   }
 
   const isAnnual = interval === "year";
-  const basePrice = isAnnual ? PRICING.ANNUAL_BASE_PLAN : PRICING.BASE_PLAN;
-  const seatPrice = isAnnual ? PRICING.ANNUAL_EXTRA_SEAT : PRICING.EXTRA_SEAT;
-  const extraSeats = Math.max(0, teamSize - PRICING.BASE_USERS);
-  const total = basePrice + extraSeats * seatPrice;
+  const tier = ALL_TIERS.find((t) => t.id === selectedTier)!;
+  const effectiveTeamSize = Math.max(teamSize, tier.includedSeats);
+  const total = computeTierTotal(tier, effectiveTeamSize, isAnnual);
   const monthlySavings = isAnnual
-    ? (PRICING.BASE_PLAN * 12 + extraSeats * PRICING.EXTRA_SEAT * 12) - total
+    ? computeTierTotal(tier, effectiveTeamSize, false) * 12 - total
     : 0;
+  const supportsExtraSeats = tier.extraSeatMonthly !== undefined;
 
   const handleCheckout = async () => {
     try {
       setIsCheckingOut(true);
-      track("checkout_started", { plan: "foreman", interval, quantity: teamSize });
+      track("checkout_started", { plan: selectedTier, interval, quantity: effectiveTeamSize });
 
       const searchParams = new URLSearchParams(window.location.search);
       const skipTrial = searchParams.get("skipTrial") === "true";
 
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { teamSize, interval, skipTrial },
+        body: { tier: selectedTier, teamSize: effectiveTeamSize, interval, skipTrial },
       });
 
       if (error) throw error;
@@ -99,7 +88,7 @@ export default function SelectPlan() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-lg py-12 px-4">
+      <div className="container max-w-5xl py-10 px-4">
         <Button
           variant="ghost"
           size="sm"
@@ -116,10 +105,10 @@ export default function SelectPlan() {
             <span className="text-2xl font-bold">Foreman</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-3">
-            One plan. Every feature.
+            Pick the plan that runs your business.
           </h1>
           <p className="text-muted-foreground">
-            {formatCurrency(PRICING.BASE_PLAN)}/month includes {PRICING.BASE_USERS} users. +{formatCurrency(PRICING.EXTRA_SEAT)}/mo per extra seat.
+            Three plans. No seat caps. Cancel anytime.
           </p>
         </div>
 
@@ -144,26 +133,40 @@ export default function SelectPlan() {
             }`}
           >
             Annual
-            <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-700 dark:text-green-400 border-0">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/15 text-green-600 dark:text-green-400">
               Save 15%
-            </Badge>
+            </span>
           </button>
         </div>
 
-        {/* Plan Card */}
-        <Card className="border-primary/50 mb-8">
-          <CardContent className="p-6 sm:p-8 space-y-6">
-            {/* Price */}
+        {/* 3 Tier Cards */}
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          {ALL_TIERS.map((t) => (
+            <SelectableTierCard
+              key={t.id}
+              tier={t}
+              isAnnual={isAnnual}
+              selected={selectedTier === t.id}
+              onSelect={() => {
+                setSelectedTier(t.id);
+                setTeamSize(t.includedSeats);
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Selected plan summary */}
+        <Card className="border-primary/50 max-w-lg mx-auto">
+          <CardContent className="p-6 space-y-5">
             <div className="text-center">
-              <div className="flex items-baseline justify-center gap-1 mb-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                Selected plan
+              </p>
+              <p className="text-lg font-bold">{tier.name}</p>
+              <div className="flex items-baseline justify-center gap-1 mt-2">
                 <span className="text-4xl font-bold">{formatCurrency(total)}</span>
                 <span className="text-muted-foreground">/{isAnnual ? "year" : "month"}</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {teamSize <= PRICING.BASE_USERS
-                  ? `${teamSize} ${teamSize === 1 ? "user" : "users"} — included in base plan`
-                  : `${PRICING.BASE_USERS} included + ${extraSeats} extra ${extraSeats === 1 ? "seat" : "seats"} × ${formatCurrency(seatPrice)}`}
-              </p>
               {isAnnual && monthlySavings > 0 && (
                 <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
                   You save {formatCurrency(monthlySavings)} per year
@@ -171,46 +174,40 @@ export default function SelectPlan() {
               )}
             </div>
 
-            {/* Team size stepper */}
-            <div>
-              <p className="text-sm font-medium text-center mb-3">Team size</p>
-              <div className="flex items-center justify-center gap-4">
-                <button
-                  onClick={() => setTeamSize(Math.max(1, teamSize - 1))}
-                  className="h-10 w-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
-                  disabled={teamSize <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="text-2xl font-bold w-12 text-center">{teamSize}</span>
-                <button
-                  onClick={() => setTeamSize(Math.min(50, teamSize + 1))}
-                  className="h-10 w-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
-                  disabled={teamSize >= 50}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+            {/* Team size stepper — only for tiers with extra seats */}
+            {supportsExtraSeats && (
+              <div>
+                <p className="text-sm font-medium text-center mb-3">Team size</p>
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => setTeamSize(Math.max(tier.includedSeats, effectiveTeamSize - 1))}
+                    className="h-10 w-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+                    disabled={effectiveTeamSize <= tier.includedSeats}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="text-2xl font-bold w-12 text-center">{effectiveTeamSize}</span>
+                  <button
+                    onClick={() => setTeamSize(Math.min(50, effectiveTeamSize + 1))}
+                    className="h-10 w-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
+                    disabled={effectiveTeamSize >= 50}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  {tier.includedSeats} included · extra seats {formatCurrency(isAnnual ? tier.extraSeatAnnual ?? 0 : tier.extraSeatMonthly ?? 0)}/{isAnnual ? "yr" : "mo"} each
+                </p>
               </div>
-            </div>
+            )}
 
-            {/* Features */}
-            <ul className="space-y-2.5">
-              {allFeatures.map((f, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* CTA */}
             <Button
               className="w-full gap-2"
               size="lg"
               onClick={handleCheckout}
               disabled={isCheckingOut}
             >
-              {isCheckingOut ? "Processing..." : "Subscribe Now"}
+              {isCheckingOut ? "Processing..." : `Start ${tier.name} Free Trial`}
               {!isCheckingOut && <ArrowRight className="h-4 w-4" />}
             </Button>
 
@@ -219,41 +216,63 @@ export default function SelectPlan() {
             </p>
           </CardContent>
         </Card>
-
-        {/* FAQ */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-center">Common Questions</h3>
-          <FaqCard
-            q="What's the platform fee?"
-            a="Foreman charges 2.9% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn."
-          />
-          <FaqCard
-            q="What's included in the free trial?"
-            a="Full access to every feature for 14 days — including Foreman AI voice, GPS tracking, and reports. No credit card required. Cancel anytime."
-          />
-          <FaqCard
-            q="Can I add or remove seats later?"
-            a="Yes — adjust your team size anytime from Settings. Changes are pro-rated automatically."
-          />
-          <FaqCard
-            q="Can I switch between monthly and annual?"
-            a="Yes — you can switch billing frequency anytime from Manage Billing. If you switch to annual, you'll get the 15% discount applied immediately."
-          />
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          14-day free trial · Cancel anytime · VAT may apply
-        </p>
       </div>
     </div>
   );
 }
 
-function FaqCard({ q, a }: { q: string; a: string }) {
+function SelectableTierCard({
+  tier,
+  isAnnual,
+  selected,
+  onSelect,
+}: {
+  tier: TierDetails;
+  isAnnual: boolean;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const displayPrice = isAnnual ? tier.annual / 12 : tier.monthly;
+
   return (
-    <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-base">{q}</CardTitle></CardHeader>
-      <CardContent className="text-sm text-muted-foreground">{a}</CardContent>
-    </Card>
+    <button
+      onClick={onSelect}
+      className={`relative text-left p-5 rounded-2xl bg-card transition-all ${
+        selected
+          ? "border-2 border-primary shadow-[0_0_30px_-8px_hsl(159,100%,45%,0.3)]"
+          : tier.highlighted
+          ? "border-2 border-primary/40 hover:border-primary"
+          : "border border-border hover:border-primary/40"
+      }`}
+    >
+      {tier.badge && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className="px-3 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-full whitespace-nowrap">
+            {tier.badge}
+          </span>
+        </div>
+      )}
+
+      <div className="mb-3 pt-1">
+        <h3 className="text-lg font-bold text-foreground">{tier.name}</h3>
+        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tier.tagline}</p>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-baseline gap-1">
+          <span className="text-3xl font-extrabold text-foreground">€{Math.round(displayPrice)}</span>
+          <span className="text-xs text-muted-foreground">/mo</span>
+        </div>
+      </div>
+
+      <ul className="space-y-1.5">
+        {tier.features.slice(0, 4).map((f) => (
+          <li key={f} className="flex items-start gap-2 text-xs">
+            <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+            <span className="text-foreground">{f}</span>
+          </li>
+        ))}
+      </ul>
+    </button>
   );
 }
