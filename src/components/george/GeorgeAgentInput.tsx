@@ -217,7 +217,7 @@ export function GeorgeAgentInput({
                 <Button
                   variant={isConnected ? "destructive" : showVoiceLock ? "secondary" : "default"}
                   size="icon"
-                  className="shrink-0 rounded-full"
+                  className="shrink-0 rounded-full bg-emerald-400 hover:bg-emerald-500 text-emerald-950 data-[variant=destructive]:bg-destructive data-[variant=secondary]:bg-secondary"
                   onClick={toggleConnection}
                   disabled={voiceDisabled}
                 >
