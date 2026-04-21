@@ -7,18 +7,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// New single-plan pricing: €39 base (1 user) + €15/extra seat
-const PRICES = {
-  month: {
-    base: "price_1TIJDeDQETj2awNEWxP4bB43",   // €39/mo
-    seat: "price_1TKjaNDQETj2awNEXHD4jFRq",   // €15/mo
+// 3-tier pricing model (Apr 2026):
+// Solo €29 · Crew €49 (recommended) · Scale €99 · Extra seat €19
+// NOTE: Solo & Scale price IDs are TODO until products are created in
+// Stripe. Crew uses the existing €39/€15 price IDs as a fallback.
+type TierId = "solo" | "crew" | "scale";
+const TIER_PRICES: Record<TierId, {
+  month: { base: string; seat?: string };
+  year: { base: string; seat?: string };
+  includedSeats: number;
+}> = {
+  solo: {
+    month: { base: "price_TODO_SOLO_MONTHLY" },
+    year: { base: "price_TODO_SOLO_ANNUAL" },
+    includedSeats: 1,
   },
-  year: {
-    base: "price_1TIQvfDQETj2awNEx7bAyHjy",   // €397.80/yr (15% off)
-    seat: "price_1TIQw1DQETj2awNEth2a6E8y",   // €153/yr (placeholder)
+  crew: {
+    month: {
+      base: "price_1TIJDeDQETj2awNEWxP4bB43", // €39 (TODO upgrade to €49)
+      seat: "price_1TKjaNDQETj2awNEXHD4jFRq", // €15 (TODO upgrade to €19)
+    },
+    year: {
+      base: "price_1TIQvfDQETj2awNEx7bAyHjy",  // €397.80 (TODO upgrade to €499.80)
+      seat: "price_1TIQw1DQETj2awNEth2a6E8y",  // €153 (TODO upgrade to €193.80)
+    },
+    includedSeats: 1,
+  },
+  scale: {
+    month: {
+      base: "price_TODO_SCALE_MONTHLY",
+      seat: "price_TODO_SCALE_SEAT_MONTHLY",
+    },
+    year: {
+      base: "price_TODO_SCALE_ANNUAL",
+      seat: "price_TODO_SCALE_SEAT_ANNUAL",
+    },
+    includedSeats: 3,
   },
 };
-const BASE_USERS = 1;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -53,29 +79,31 @@ serve(async (req) => {
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
     const body = await req.json().catch(() => ({}));
-    const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false } = body;
+    const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false, tier: tierInput = "crew" } = body;
+    const tier: TierId = (["solo", "crew", "scale"].includes(tierInput) ? tierInput : "crew") as TierId;
     const seatCount = Math.max(1, Number(teamSize) || 1);
     // Stripe price interval is "month" / "year"; DB billing_period uses "monthly" / "annual"
     const stripeInterval: "month" | "year" = interval === "year" || interval === "annual" ? "year" : "month";
     const billingPeriod: "monthly" | "annual" = stripeInterval === "year" ? "annual" : "monthly";
-    const priceSet = PRICES[stripeInterval];
+    const tierConfig = TIER_PRICES[tier];
+    const priceSet = tierConfig[stripeInterval];
+    const includedSeats = tierConfig.includedSeats;
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Build line items — use existing prices but allow Stripe to display
-    // its product name. We rely on the Stripe product description being
-    // accurate; on-the-fly name override would require price_data which
-    // breaks reporting. Instead we set a custom_text below to clarify.
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       { price: priceSet.base, quantity: 1 },
     ];
 
-    const extraSeats = Math.max(0, seatCount - BASE_USERS);
+    const extraSeats = Math.max(0, seatCount - includedSeats);
     if (extraSeats > 0) {
+      if (!priceSet.seat) {
+        throw new Error(`Tier "${tier}" does not support extra seats`);
+      }
       lineItems.push({ price: priceSet.seat, quantity: extraSeats });
     }
 
-    logStep("Line items built", { seatCount, extraSeats, billingPeriod, lineItems: lineItems.length });
+    logStep("Line items built", { tier, seatCount, includedSeats, extraSeats, billingPeriod });
 
     // Get or create Stripe customer
     let stripeCustomerId: string;
@@ -142,6 +170,7 @@ serve(async (req) => {
         seat_count: String(seatCount),
         billing_interval: stripeInterval,
         billing_period: billingPeriod,
+        tier,
       },
     };
 
@@ -198,6 +227,7 @@ serve(async (req) => {
         seat_count: String(seatCount),
         billing_interval: stripeInterval,
         billing_period: billingPeriod,
+        tier,
       },
       billing_address_collection: "required",
       payment_method_collection: "always",

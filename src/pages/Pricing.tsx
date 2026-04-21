@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import {
-  Check,
+  CheckCircle2,
   ArrowRight,
   Zap,
   ExternalLink,
@@ -14,57 +14,40 @@ import {
 } from "lucide-react";
 import foremanLogo from "@/assets/foreman-logo.png";
 import { useIsNative, openExternalUrl } from "@/hooks/useIsNative";
+import { ALL_TIERS, PRICING, type TierDetails } from "@/hooks/useSubscriptionTier";
 
-const BASE_PRICE = 39;
-const EXTRA_SEAT = 15;
-const BASE_USERS = 1;
-const PLATFORM_FEE = 0.029;
-
-const allFeatures = [
-  "Unlimited quotes & invoices",
-  "Job scheduling & calendar",
-  "Customer management & GPS tracking",
-  "Foreman AI — text & voice assistant",
-  "Expense tracking & receipt capture",
-  "Reports, dashboards & recurring invoices",
-  "Xero & QuickBooks sync",
-  "PDF generation, branded emails & team collaboration",
-  "Lead pipeline & advanced reporting",
-  "API access & webhooks",
-];
-
-const teamExamples = [
-  { label: "Solo", users: 1, price: BASE_PRICE },
-  { label: "Team of 3", users: 3, price: BASE_PRICE + 2 * EXTRA_SEAT },
-  { label: "Team of 5", users: 5, price: BASE_PRICE + 4 * EXTRA_SEAT },
-  { label: "Team of 10", users: 10, price: BASE_PRICE + 9 * EXTRA_SEAT },
-];
+const PLATFORM_FEE = PRICING.PLATFORM_FEE / 100;
 
 const faqs = [
   {
     q: "What's included in the 14-day free trial?",
-    a: "Full access to every feature — quotes, invoicing, AI, GPS time tracking. No credit card required. You only pay if you decide to continue after 14 days.",
+    a: "Full Crew plan access — every feature, including Foreman AI text & voice. No credit card required. You only pay if you decide to continue after 14 days.",
   },
   {
     q: "How does the platform fee work?",
-    a: "Foreman charges 2.9% on payments collected through Stripe Connect. No payment, no fee — we only earn when you earn.",
+    a: "Foreman charges 2.9% on payments collected through Stripe Connect — built right into your invoices. No payment, no fee — we only earn when you earn.",
   },
   {
-    q: "How does pricing work for larger teams?",
-    a: "€39/month includes 1 user. Each additional team member is just €15/month. Everyone gets full access to every feature.",
+    q: "What's the difference between the plans?",
+    a: "Solo gets you the core ops tools for one person. Crew adds Foreman AI (text + voice) — most teams pick this. Scale gives you 3 included seats, unlimited AI voice, advanced reporting and API access.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Yes — cancel with one click. You keep access until the end of your current billing period, no questions asked.",
+    q: "Can I add more team members?",
+    a: "Yes — Crew and Scale support extra seats at €19/mo each. Solo is single-user only; upgrade to Crew when you take someone on.",
+  },
+  {
+    q: "Can I switch tiers or cancel anytime?",
+    a: "Yes — change plan or cancel with one click. No contracts, no termination fees. You keep access until the end of your billing period.",
   },
   {
     q: "Do you integrate with my accounting software?",
-    a: "We sync with Xero and QuickBooks. Invoices, payments, and contacts flow automatically — no double entry.",
+    a: "Crew and Scale sync with Xero and QuickBooks. Invoices, payments and contacts flow automatically — no double entry.",
   },
 ];
 
 export default function Pricing() {
   const isNative = useIsNative();
+  const [billing, setBilling] = useState<"month" | "year">("year"); // annual default
   const [monthlyInvoice, setMonthlyInvoice] = useState(5000);
 
   if (isNative) {
@@ -92,15 +75,18 @@ export default function Pricing() {
     );
   }
 
+  const isAnnual = billing === "year";
+  const crew = ALL_TIERS.find((t) => t.id === "crew")!;
+  const crewMonthlyEquiv = isAnnual ? crew.annual / 12 : crew.monthly;
   const platformEarnings = monthlyInvoice * PLATFORM_FEE;
-  const breakeven = Math.ceil(BASE_PRICE / PLATFORM_FEE);
-  const coveragePercent = Math.min((platformEarnings / BASE_PRICE) * 100, 100);
+  const breakeven = Math.ceil(crewMonthlyEquiv / PLATFORM_FEE);
+  const coveragePercent = Math.min((platformEarnings / crewMonthlyEquiv) * 100, 100);
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Pricing — One Plan, Every Feature, AI Included"
-        description={`€${BASE_PRICE}/month — includes 1 user. Add seats for €${EXTRA_SEAT}/mo each. Every feature included. Foreman AI built in. 14-day free trial, no credit card required.`}
+        title="Pricing — Solo €29 · Crew €49 · Scale €99 | Foreman"
+        description="Three simple plans for trade businesses. Crew (€49/mo) includes Foreman AI text & voice. Scale (€99/mo) gets unlimited AI voice + 3 seats. 14-day free trial."
         path="/pricing"
       />
 
@@ -126,69 +112,56 @@ export default function Pricing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-16 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 text-center">
+      <section className="pt-16 sm:pt-20 pb-6 sm:pb-8 px-4 sm:px-6 text-center">
         <div className="container mx-auto max-w-4xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-6">
             <Zap className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">One plan. Every feature. AI included.</span>
+            <span className="text-sm font-semibold text-foreground">Three plans. No seat caps. AI included on Crew.</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
-            €{BASE_PRICE}/month for your whole team.
+            Pick the plan that runs your business.
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Up to {BASE_USERS} users included. Just €{EXTRA_SEAT}/mo per extra seat.
-            <br className="hidden sm:block" />
-            14-day free trial · No credit card required · Cancel anytime.
+            Save 15% on annual. 14-day free trial · No credit card · Cancel anytime.
           </p>
         </div>
       </section>
 
-      {/* Single Plan Card */}
-      <section className="pb-8 px-4 sm:px-6">
-        <div className="container mx-auto max-w-lg">
-          <div className="rounded-2xl border border-primary bg-gradient-to-b from-primary/5 to-transparent shadow-lg p-6 sm:p-8">
-            <div className="text-center mb-6">
-              <div className="flex items-baseline justify-center gap-1 mb-1">
-                <span className="text-5xl font-extrabold">€{BASE_PRICE}</span>
-                <span className="text-muted-foreground text-lg">/month</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Includes {BASE_USERS} team members · +€{EXTRA_SEAT}/mo per extra seat
-              </p>
-            </div>
-
-            <ul className="space-y-3 mb-8">
-              {allFeatures.map((feature, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Link to="/signup">
-              <Button className="w-full" size="lg">
-                Start Free Trial
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-            <p className="text-xs text-center text-muted-foreground mt-3">
-              14-day free trial · No credit card required · Cancel anytime
-            </p>
-          </div>
+      {/* Billing toggle */}
+      <section className="px-4 sm:px-6 mb-8">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setBilling("month")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              !isAnnual
+                ? "bg-primary text-primary-foreground"
+                : "bg-card border border-border text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBilling("year")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+              isAnnual
+                ? "bg-primary text-primary-foreground"
+                : "bg-card border border-border text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            Annual
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/15 text-green-600 dark:text-green-400">
+              Save 15%
+            </span>
+          </button>
         </div>
       </section>
 
-      {/* Team Size Examples */}
-      <section className="pb-8 px-4 sm:px-6">
-        <div className="container mx-auto max-w-lg">
-          <div className="grid grid-cols-4 gap-2 text-center">
-            {teamExamples.map((ex) => (
-              <div key={ex.label} className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground mb-1">{ex.label}</p>
-                <p className="text-lg font-bold">€{ex.price}</p>
-                <p className="text-[10px] text-muted-foreground">/month</p>
-              </div>
+      {/* 3 Tier Cards */}
+      <section className="pb-12 px-4 sm:px-6">
+        <div className="container mx-auto max-w-5xl">
+          <div className="grid md:grid-cols-3 gap-5">
+            {ALL_TIERS.map((tier) => (
+              <PricingTierCard key={tier.id} tier={tier} isAnnual={isAnnual} />
             ))}
           </div>
         </div>
@@ -199,7 +172,7 @@ export default function Pricing() {
         <div className="container mx-auto max-w-lg">
           <div className="flex items-center justify-center gap-2 mb-6">
             <Calculator className="h-5 w-5 text-primary" />
-            <h2 className="text-xl sm:text-2xl font-extrabold">Foreman pays for itself</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold">The Crew plan pays for itself</h2>
           </div>
 
           <p className="text-sm text-muted-foreground text-center mb-6">
@@ -227,8 +200,8 @@ export default function Pricing() {
                 <span className="font-semibold">€{platformEarnings.toFixed(0)}/mo</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subscription cost</span>
-                <span className="font-semibold">€{BASE_PRICE}/mo</span>
+                <span className="text-muted-foreground">Crew subscription</span>
+                <span className="font-semibold">€{crewMonthlyEquiv.toFixed(0)}/mo</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2.5">
                 <div
@@ -356,6 +329,76 @@ export default function Pricing() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function PricingTierCard({ tier, isAnnual }: { tier: TierDetails; isAnnual: boolean }) {
+  const displayPrice = isAnnual ? tier.annual / 12 : tier.monthly;
+  const isHighlighted = tier.highlighted;
+
+  return (
+    <div
+      className={`relative p-6 sm:p-7 rounded-2xl bg-card flex flex-col ${
+        isHighlighted
+          ? "border-2 border-primary shadow-[0_0_40px_-8px_hsl(159,100%,45%,0.25)]"
+          : "border border-border"
+      }`}
+    >
+      {tier.badge && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className="px-3 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-full whitespace-nowrap">
+            {tier.badge}
+          </span>
+        </div>
+      )}
+
+      <div className="mb-4 pt-1">
+        <h3 className="text-xl font-bold text-foreground">{tier.name}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{tier.tagline}</p>
+      </div>
+
+      <div className="mb-5">
+        <div className="flex items-baseline gap-1">
+          <span className="text-5xl font-extrabold text-foreground">
+            €{Math.round(displayPrice)}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            /mo{isAnnual ? ", billed annually" : ""}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          {tier.includedSeats} {tier.includedSeats === 1 ? "user" : "users"} included
+          {tier.extraSeatMonthly !== undefined ? (
+            <> · +€{tier.extraSeatMonthly}/mo per extra seat</>
+          ) : (
+            <> · single-user only</>
+          )}
+        </p>
+      </div>
+
+      <ul className="space-y-2.5 mb-6 flex-1">
+        {tier.features.map((f) => (
+          <li key={f} className="flex items-start gap-2 text-sm">
+            <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <span className="text-foreground">{f}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Link to="/signup" className="mt-auto">
+        <Button
+          className="w-full gap-2"
+          size="lg"
+          variant={isHighlighted ? "default" : "outline"}
+        >
+          Start Free Trial
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </Link>
+      <p className="text-[11px] text-center text-muted-foreground mt-2">
+        14-day trial · No card required
+      </p>
     </div>
   );
 }
