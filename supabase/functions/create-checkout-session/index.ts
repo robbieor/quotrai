@@ -227,6 +227,7 @@ serve(async (req) => {
         seat_count: String(seatCount),
         billing_interval: stripeInterval,
         billing_period: billingPeriod,
+        tier,
       },
       billing_address_collection: "required",
       payment_method_collection: "always",
