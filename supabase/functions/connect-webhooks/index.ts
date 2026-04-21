@@ -63,7 +63,7 @@ serve(async (req) => {
     // ========================================================
     if (connectWebhookSecret) {
       try {
-        const thinEvent = stripeClient.parseThinEvent(body, sig, connectWebhookSecret);
+        const thinEvent = await stripeClient.parseThinEventAsync(body, sig, connectWebhookSecret);
 
         console.log(`[V2 THIN EVENT] type=${thinEvent.type}, id=${thinEvent.id}`);
 
@@ -129,7 +129,7 @@ serve(async (req) => {
       throw new Error("STRIPE_WEBHOOK_SECRET not configured for standard events");
     }
 
-    const event = stripeClient.webhooks.constructEvent(body, sig, standardWebhookSecret);
+    const event = await stripeClient.webhooks.constructEventAsync(body, sig, standardWebhookSecret);
     console.log(`[STANDARD EVENT] type=${event.type}, id=${event.id}`);
 
     switch (event.type) {
