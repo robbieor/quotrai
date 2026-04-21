@@ -14,6 +14,7 @@ import { RevenueExpenseChart } from "@/components/reports/RevenueExpenseChart";
 import { QuoteFunnelChart } from "@/components/reports/QuoteFunnelChart";
 import { JobPerformanceRadar } from "@/components/reports/JobPerformanceRadar";
 import { JobTrendsChart } from "@/components/reports/JobTrendsChart";
+import { ProfitLossCard } from "@/components/reports/ProfitLossCard";
 import {
   useReportStats,
   useMonthlyRevenue,
@@ -112,9 +113,10 @@ export default function Reports() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3 text-xs sm:text-sm">
+          <TabsList className="grid w-full max-w-xl grid-cols-4 text-xs sm:text-sm">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="financial">Financial</TabsTrigger>
+            <TabsTrigger value="financials">Financials</TabsTrigger>
+            <TabsTrigger value="financial">Charts</TabsTrigger>
             <TabsTrigger value="operations">Operations</TabsTrigger>
           </TabsList>
 
@@ -125,6 +127,12 @@ export default function Reports() {
               <JobStatusChart data={jobMetrics || []} isLoading={jobsLoading} />
               <TopCustomersCard data={topCustomers || []} isLoading={customersLoading} />
               <OutstandingInvoicesCard stats={stats} isLoading={statsLoading} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="financials" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ProfitLossCard />
             </div>
           </TabsContent>
 
