@@ -39,9 +39,12 @@ serve(async (req) => {
 
     const now = new Date();
     const today = now.toISOString().split("T")[0];
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     // Parallel data queries
-    const [overdueRes, agingQuotesRes, todayJobsRes, profileRes] = await Promise.all([
+    const [overdueRes, agingQuotesRes, todayJobsRes, profileRes, expensesRecentRes, expensesPriorRes, unreviewedRes, jobsOverBudgetRes] = await Promise.all([
       serviceClient
         .from("invoices")
         .select("id, total, due_date, customers(name)")
@@ -69,12 +72,43 @@ serve(async (req) => {
         .select("full_name")
         .eq("id", user.id)
         .single(),
+      serviceClient
+        .from("expenses")
+        .select("amount, category, expense_date")
+        .eq("team_id", teamId)
+        .gte("expense_date", sevenDaysAgo)
+        .lte("expense_date", today),
+      serviceClient
+        .from("expenses")
+        .select("amount, category")
+        .eq("team_id", teamId)
+        .gte("expense_date", fourteenDaysAgo)
+        .lt("expense_date", sevenDaysAgo),
+      serviceClient
+        .from("expenses")
+        .select("id")
+        .eq("team_id", teamId)
+        .is("vendor", null)
+        .gte("created_at", fourteenDaysAgo),
+      serviceClient
+        .from("v_job_profitability" as any)
+        .select("id, title, estimated_value, total_cost, profit, profit_margin_pct")
+        .eq("team_id", teamId)
+        .lt("profit_margin_pct", 10)
+        .not("total_cost", "is", null)
+        .gt("total_cost", 0)
+        .order("profit", { ascending: true })
+        .limit(5),
     ]);
 
     const overdueInvoices = overdueRes.data || [];
     const agingQuotes = agingQuotesRes.data || [];
     const todayJobs = todayJobsRes.data || [];
     const firstName = profileRes.data?.full_name?.split(" ")[0] || "boss";
+    const expensesRecent = expensesRecentRes.data || [];
+    const expensesPrior = expensesPriorRes.data || [];
+    const unreviewedReceipts = unreviewedRes.data || [];
+    const jobsOverBudget = jobsOverBudgetRes.data || [];
 
     // Build data snapshot for AI
     const dataSnapshot: string[] = [];
@@ -102,6 +136,44 @@ serve(async (req) => {
       dataSnapshot.push(`TODAY'S SCHEDULE: ${todayJobs.length} job${todayJobs.length > 1 ? "s" : ""} scheduled`);
     }
 
+    // ── Cost / expense insights ────────────────────────────────────
+    const recentTotal = expensesRecent.reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0);
+    const priorTotal = expensesPrior.reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0);
+    if (recentTotal > 0) {
+      const yesterdayTotal = expensesRecent
+        .filter((e: any) => e.expense_date === yesterday)
+        .reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0);
+      const yesterdayCount = expensesRecent.filter((e: any) => e.expense_date === yesterday).length;
+      const changePct = priorTotal > 0 ? Math.round(((recentTotal - priorTotal) / priorTotal) * 100) : null;
+
+      const catMap: Record<string, number> = {};
+      expensesRecent.forEach((e: any) => {
+        const c = e.category || "other";
+        catMap[c] = (catMap[c] || 0) + (Number(e.amount) || 0);
+      });
+      const topCat = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
+
+      const lines = [`Last 7 days: €${Math.round(recentTotal).toLocaleString()} across ${expensesRecent.length} expense${expensesRecent.length !== 1 ? "s" : ""}`];
+      if (yesterdayTotal > 0) lines.push(`Yesterday: €${Math.round(yesterdayTotal).toLocaleString()} across ${yesterdayCount} expense${yesterdayCount !== 1 ? "s" : ""}`);
+      if (changePct !== null) lines.push(`Trend: ${changePct >= 0 ? "+" : ""}${changePct}% vs prior 7 days`);
+      if (topCat) lines.push(`Top category: ${topCat[0]} (€${Math.round(topCat[1]).toLocaleString()})`);
+      dataSnapshot.push(`MONEY OUT:\n${lines.map((l) => `- ${l}`).join("\n")}`);
+    }
+
+    if (unreviewedReceipts.length > 0) {
+      dataSnapshot.push(`UNFILED RECEIPTS: ${unreviewedReceipts.length} receipt${unreviewedReceipts.length > 1 ? "s" : ""} with no vendor — need to be reviewed`);
+    }
+
+    if (jobsOverBudget.length > 0) {
+      const details = jobsOverBudget.slice(0, 3).map((j: any) => {
+        const quoted = Number(j.estimated_value) || 0;
+        const spent = Number(j.total_cost) || 0;
+        const margin = j.profit_margin_pct != null ? `${Math.round(Number(j.profit_margin_pct))}% margin` : "no margin";
+        return `- ${j.title || "Untitled"}: quoted €${Math.round(quoted).toLocaleString()}, spent €${Math.round(spent).toLocaleString()} (${margin})`;
+      }).join("\n");
+      dataSnapshot.push(`JOBS OVER/NEAR BUDGET (${jobsOverBudget.length}):\n${details}`);
+    }
+
     // If no data to report, return empty
     if (dataSnapshot.length === 0) {
       return new Response(JSON.stringify({ nudges: [] }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -125,11 +197,12 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are George, an Irish foreman AI business partner. Generate 2-3 short, punchy nudges based on the business data below. Each nudge should:
+            content: `You are George, an Irish foreman AI business partner. Generate 2-4 short, punchy nudges based on the business data below. Cover a mix of revenue, jobs, AND money-out (costs/expenses) where data exists. Each nudge should:
 - Reference specific names, amounts, and timeframes
 - Be direct and practical — like a smart mate pointing something out
-- Include an urgency level: "high" (money at risk), "medium" (needs attention soon), "low" (informational)
-- Include a suggested action name from this list: get_overdue_invoices, get_todays_jobs, or null for general advice
+- Follow Insight → Impact → Action: state what's happening, why it matters, then suggest a move
+- Include an urgency level: "high" (money at risk, jobs over budget), "medium" (needs attention soon), "low" (informational)
+- Include a suggested action name from this list: get_overdue_invoices, get_todays_jobs, review_expenses, view_pnl, or null for general advice
 - Include a short action_label (2-3 words) for the button
 
 The user's first name is "${firstName}".
