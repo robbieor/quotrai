@@ -331,14 +331,35 @@ export function useSubscriptionTier() {
 
       if (!profile?.team_id) return null;
 
+      // Voice minutes still live on `teams` (legacy column set).
       const { data: team, error } = await supabase
         .from('teams')
-        .select('id, name, subscription_tier, george_voice_minutes_limit, george_voice_minutes_used, george_usage_reset_date, trial_ends_at, is_trial, george_voice_seats')
+        .select('id, name, george_voice_minutes_limit, george_voice_minutes_used, george_usage_reset_date, is_trial, george_voice_seats')
         .eq('id', profile.team_id)
         .single();
 
       if (error) throw error;
-      return team as TeamSubscription;
+
+      // Authoritative subscription state comes from subscriptions_v2 via the v2 org.
+      const { data: orgId } = await supabase.rpc('get_user_org_id_v2');
+      let subscription_tier = 'crew';
+      let trial_ends_at: string | null = null;
+
+      if (orgId) {
+        const { data: sub } = await supabase
+          .from('subscriptions_v2')
+          .select('plan_id, trial_ends_at, status')
+          .eq('org_id', orgId)
+          .maybeSingle();
+        if (sub?.plan_id) subscription_tier = sub.plan_id;
+        trial_ends_at = sub?.trial_ends_at ?? null;
+      }
+
+      return {
+        ...team,
+        subscription_tier,
+        trial_ends_at,
+      } as TeamSubscription;
     },
     enabled: !!user,
   });
