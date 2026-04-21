@@ -159,12 +159,20 @@ function TierCard({
       className={`relative p-6 rounded-2xl bg-card flex flex-col ${
         isHighlighted
           ? "border-2 border-primary shadow-[0_0_30px_-5px_hsl(159,100%,45%,0.2)]"
+          : tier.id === 'business'
+          ? "border-2 border-amber-500/40 shadow-[0_0_30px_-8px_hsl(38,92%,50%,0.2)]"
           : "border border-border"
       }`}
     >
       {tier.badge && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="px-3 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-full whitespace-nowrap">
+          <span
+            className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap ${
+              tier.id === 'business'
+                ? 'bg-amber-500 text-white'
+                : 'bg-primary text-primary-foreground'
+            }`}
+          >
             {tier.badge}
           </span>
         </div>

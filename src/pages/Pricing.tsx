@@ -342,12 +342,20 @@ function PricingTierCard({ tier, isAnnual }: { tier: TierDetails; isAnnual: bool
       className={`relative p-6 sm:p-7 rounded-2xl bg-card flex flex-col ${
         isHighlighted
           ? "border-2 border-primary shadow-[0_0_40px_-8px_hsl(159,100%,45%,0.25)]"
+          : tier.id === 'business'
+          ? "border-2 border-amber-500/40 shadow-[0_0_40px_-12px_hsl(38,92%,50%,0.25)]"
           : "border border-border"
       }`}
     >
       {tier.badge && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="px-3 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-full whitespace-nowrap">
+          <span
+            className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap ${
+              tier.id === 'business'
+                ? 'bg-amber-500 text-white shadow-[0_4px_14px_-2px_hsl(38,92%,50%,0.4)]'
+                : 'bg-primary text-primary-foreground'
+            }`}
+          >
             {tier.badge}
           </span>
         </div>

@@ -160,11 +160,19 @@ function CompactTierCard({
       className={`relative text-left p-4 rounded-xl bg-card transition-all ${
         selected
           ? "border-2 border-primary"
+          : tier.id === 'business'
+          ? "border-2 border-amber-500/40 hover:border-amber-500"
           : "border border-border hover:border-primary/40"
       }`}
     >
       {tier.badge && (
-        <span className="absolute -top-2 left-3 px-2 py-0.5 text-[10px] font-bold bg-primary text-primary-foreground rounded-full">
+        <span
+          className={`absolute -top-2 left-3 px-2 py-0.5 text-[10px] font-bold rounded-full ${
+            tier.id === 'business'
+              ? 'bg-amber-500 text-white'
+              : 'bg-primary text-primary-foreground'
+          }`}
+        >
           {tier.badge}
         </span>
       )}
