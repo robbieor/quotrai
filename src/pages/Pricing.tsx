@@ -85,8 +85,8 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Pricing — Solo €29 · Crew €49 · Business €99 | Foreman"
-        description="Three simple plans for trade businesses. Crew (€49/mo) includes Foreman AI text & voice. Business (€99/mo) gets unlimited AI voice, 3 seats, advanced reports & priority support. 14-day free trial."
+        title="Pricing — Solo €29 · Crew €49 · Business €89 | Foreman"
+        description="Three simple plans for trade businesses. Crew (€49/mo) includes Foreman AI text & voice. Business (€89/mo) gets unlimited AI voice, 3 seats, advanced reports & priority support. 14-day free trial."
         path="/pricing"
       />
 
