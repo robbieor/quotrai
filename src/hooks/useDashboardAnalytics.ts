@@ -44,6 +44,15 @@ export interface KPIData {
   comparisonLabel: string;
   activeJobs: number;
   stuckJobs: number;
+  moneyOut: number;
+  moneyOutCount: number;
+  unreviewedReceipts: number;
+}
+
+export interface ExpenseCategoryBreakdown {
+  category: string;
+  amount: number;
+  count: number;
 }
 
 export interface RevenueByJobTypeData {
@@ -157,7 +166,8 @@ export function useDashboardAnalytics() {
         invoicesAtRisk: InvoiceAtRisk[];
         revenueByJobType: RevenueByJobTypeData[];
         subscriptionCovered: SubscriptionCoveredData;
-        drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[]; cashCollected: any[]; revenueInvoices: any[] };
+        expensesByCategory: ExpenseCategoryBreakdown[];
+        drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[]; cashCollected: any[]; revenueInvoices: any[]; expenses: any[] };
         jobsDueThisWeek: any[];
         overdueInvoices: any[];
         insights: any[];
