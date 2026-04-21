@@ -429,19 +429,12 @@ serve(async (req) => {
             await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
 
-            // Build detailed plan info from line items (single-plan pricing)
-            const PRICE_TO_PLAN: Record<string, string> = {
-              "price_1TIJDeDQETj2awNEWxP4bB43": "Foreman — Base Plan",
-              "price_1TIQvfDQETj2awNEx7bAyHjy": "Foreman — Base Plan (Annual)",
-              "price_1TKjaNDQETj2awNEXHD4jFRq": "Extra Seat",
-              "price_1TIQw1DQETj2awNEth2a6E8y": "Extra Seat (Annual)",
-            };
-
+            // Build detailed plan info from line items using shared price-label map.
             const planLines: string[] = [];
             let totalSeats = 0;
             for (const item of stripeSub.items.data) {
               const priceId = item.price.id;
-              const planName = PRICE_TO_PLAN[priceId] || item.price.nickname || "Foreman";
+              const planName = PRICE_TO_PLAN_LABEL[priceId] || item.price.nickname || "Foreman";
               const qty = item.quantity || 1;
               totalSeats += qty;
               const currency = (item.price.currency || "eur").toUpperCase();
