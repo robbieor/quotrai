@@ -102,7 +102,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
           email,
           name: name || "there",
           teamSize,
-          adminHoursPerWeek,
+          adminHoursPerPersonPerWeek,
           recommendedTier,
           monthlyNetSavings: netMonthlySavings,
           annualSavings,
@@ -152,14 +152,14 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>Admin hours saved/week (total team)</span>
-                <span className="font-semibold">{adminHoursPerWeek} hrs</span>
+                <span>Admin hours saved/person/week</span>
+                <span className="font-semibold">{adminHoursPerPersonPerWeek} hrs</span>
               </div>
               <Slider
-                value={[adminHoursPerWeek]}
-                onValueChange={(v) => setAdminHoursPerWeek(v[0])}
-                min={2}
-                max={15}
+                value={[adminHoursPerPersonPerWeek]}
+                onValueChange={(v) => setAdminHoursPerPersonPerWeek(v[0])}
+                min={1}
+                max={MAX_HOURS_SAVED_PER_PERSON_PER_WEEK}
                 step={1}
                 className="w-full"
               />
@@ -226,22 +226,22 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <label className="text-sm font-medium">Admin Hours Saved/Week</label>
+                  <label className="text-sm font-medium">Admin Hours Saved per Person / Week</label>
                 </div>
                 <Badge variant="secondary" className="text-sm font-semibold">
-                  {adminHoursPerWeek} hrs total
+                  {adminHoursPerPersonPerWeek} hrs / person
                 </Badge>
               </div>
               <Slider
-                value={[adminHoursPerWeek]}
-                onValueChange={(v) => setAdminHoursPerWeek(v[0])}
-                min={2}
-                max={15}
+                value={[adminHoursPerPersonPerWeek]}
+                onValueChange={(v) => setAdminHoursPerPersonPerWeek(v[0])}
+                min={1}
+                max={MAX_HOURS_SAVED_PER_PERSON_PER_WEEK}
                 step={1}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Total team hours saved on quotes, invoices, scheduling, etc.
+                Hours each person saves on quotes, invoices, scheduling — total scales with team size ({Math.round(potentialHoursSavedPerWeek)} hrs/week across {teamSize} {teamSize === 1 ? "person" : "people"}).
               </p>
             </div>
 
