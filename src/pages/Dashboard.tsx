@@ -31,6 +31,7 @@ import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
 import { SubscriptionCoveredCard } from "@/components/dashboard/SubscriptionCoveredCard";
+import { ExpenseBreakdownCard } from "@/components/dashboard/ExpenseBreakdownCard";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
 import { useEffect } from "react";
@@ -173,6 +174,14 @@ function DashboardContent() {
       ], data?.drillData?.revenueInvoices || data?.drillData?.outstanding || [], "/invoices");
     } else if (metric === "jobs") {
       openDrill("Active Jobs", jobColsWithFmt, data?.drillData?.activeJobs || [], "/jobs");
+    } else if (metric === "expenses") {
+      openDrill("Money Out — Expenses in Period", [
+        { key: "date", label: "Date" },
+        { key: "vendor", label: "Vendor" },
+        { key: "description", label: "Description" },
+        { key: "category", label: "Category" },
+        { key: "amount", label: "Amount", align: "right", format: fmtCol },
+      ], data?.drillData?.expenses || [], "/expenses");
     }
   };
 
@@ -240,10 +249,11 @@ function DashboardContent() {
           </div>
         </AnimatedSection>
 
-        {/* 4b. Revenue by Job Type */}
+        {/* 4b. Revenue by Job Type + Money Out + Subscription Covered */}
         <AnimatedSection delay={140}>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-3">
             <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
+            <ExpenseBreakdownCard data={data?.expensesByCategory} isLoading={isLoading} total={data?.kpi?.moneyOut || 0} />
             <SubscriptionCoveredCard data={data?.subscriptionCovered} isLoading={isLoading} />
           </div>
         </AnimatedSection>
