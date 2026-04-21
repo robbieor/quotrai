@@ -112,11 +112,11 @@ export function ProfitLossCard() {
               </div>
               <div className="rounded-lg border bg-card p-3">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Net Profit</p>
-                <p className={cn("text-lg font-bold tabular-nums mt-1", data.profit.net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
+                <p className={cn("text-lg font-bold tabular-nums mt-1", data.profit.net >= 0 ? "text-primary" : "text-destructive")}>
                   {formatCurrency(data.profit.net)}
                 </p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  {data.profit.net >= 0 ? <TrendingUp className="h-3 w-3 text-emerald-500" /> : <TrendingDown className="h-3 w-3 text-destructive" />}
+                  {data.profit.net >= 0 ? <TrendingUp className="h-3 w-3 text-primary" /> : <TrendingDown className="h-3 w-3 text-destructive" />}
                   <span className="text-[10px] text-muted-foreground">{data.profit.marginPct}% margin</span>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export function ProfitLossCard() {
               <div className="flex items-center justify-between text-base">
                 <span className="font-bold">Net Profit</span>
                 <div className="flex items-center gap-2">
-                  <span className={cn("font-bold tabular-nums", data.profit.net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive")}>
+                  <span className={cn("font-bold tabular-nums", data.profit.net >= 0 ? "text-primary" : "text-destructive")}>
                     {formatCurrency(data.profit.net)}
                   </span>
                   <Badge variant={data.profit.net >= 0 ? "default" : "destructive"} className="text-[10px]">
