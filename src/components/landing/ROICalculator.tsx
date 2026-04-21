@@ -27,43 +27,79 @@ const TIER_PRICING = {
   BUSINESS_INCLUDED_SEATS: 3,
 };
 
+type TierKey = "auto" | "solo" | "crew" | "business";
+
+// Each tier multiplies baseline admin savings by a feature-impact factor.
+// Solo = manual admin replacement only (1.0x)
+// Crew = + AI quoting, receipt scanning, voice 60min/seat (1.5x)
+// Business = + unlimited voice, advanced reporting, priority lane (1.8x)
+const TIER_FEATURE_MULTIPLIER: Record<Exclude<TierKey, "auto">, number> = {
+  solo: 1.0,
+  crew: 1.5,
+  business: 1.8,
+};
+
+const TIER_FEATURE_HIGHLIGHTS: Record<Exclude<TierKey, "auto">, string> = {
+  solo: "Replaces manual admin: quotes, invoices, scheduling, GPS time tracking.",
+  crew: "Adds Foreman AI for quoting, receipt scanning, voice (60min/seat) — saves more per person.",
+  business: "Adds unlimited Foreman AI voice, advanced reports & faster AI lane — biggest per-person uplift.",
+};
+
 interface ROICalculatorProps {
   variant?: "full" | "compact";
   /** @deprecated Voice is bundled into Crew/Business — prop kept for backward compat */
   showVoice?: boolean;
 }
 
-/** Pick the cheapest tier that fits the team size, then add extra seats. */
-function calculateForemanCost(teamSize: number): { cost: number; tier: string; breakdown: string } {
-  if (teamSize <= 1) {
-    return { cost: TIER_PRICING.SOLO, tier: "Solo", breakdown: "1 user · Solo plan" };
-  }
-  // Crew: €49 base + €19 per extra seat beyond 1
-  const crewCost = TIER_PRICING.CREW + (teamSize - TIER_PRICING.CREW_INCLUDED_SEATS) * TIER_PRICING.EXTRA_SEAT;
-  // Business: €89 base (3 seats incl.) + €19 per extra seat beyond 3
-  const extraOverBusiness = Math.max(0, teamSize - TIER_PRICING.BUSINESS_INCLUDED_SEATS);
-  const businessCost = TIER_PRICING.BUSINESS + extraOverBusiness * TIER_PRICING.EXTRA_SEAT;
-
-  if (businessCost <= crewCost) {
+/** Cost for a SPECIFIC tier given team size. */
+function costForTier(tier: Exclude<TierKey, "auto">, teamSize: number): { cost: number; breakdown: string } {
+  if (tier === "solo") {
+    // Solo is single-user only — show base price even if team > 1, with a note.
     return {
-      cost: businessCost,
-      tier: "Business",
-      breakdown:
-        extraOverBusiness > 0
-          ? `Business €${TIER_PRICING.BUSINESS} + ${extraOverBusiness} extra × €${TIER_PRICING.EXTRA_SEAT}`
-          : `Business €${TIER_PRICING.BUSINESS} · 3 seats included`,
+      cost: TIER_PRICING.SOLO,
+      breakdown: teamSize > 1
+        ? `Solo €${TIER_PRICING.SOLO} · single-user plan (team needs Crew or Business)`
+        : `Solo €${TIER_PRICING.SOLO} · 1 user`,
     };
   }
+  if (tier === "crew") {
+    const extra = Math.max(0, teamSize - TIER_PRICING.CREW_INCLUDED_SEATS);
+    const cost = TIER_PRICING.CREW + extra * TIER_PRICING.EXTRA_SEAT;
+    return {
+      cost,
+      breakdown: extra > 0
+        ? `Crew €${TIER_PRICING.CREW} + ${extra} extra × €${TIER_PRICING.EXTRA_SEAT}`
+        : `Crew €${TIER_PRICING.CREW} · 1 user`,
+    };
+  }
+  // business
+  const extra = Math.max(0, teamSize - TIER_PRICING.BUSINESS_INCLUDED_SEATS);
+  const cost = TIER_PRICING.BUSINESS + extra * TIER_PRICING.EXTRA_SEAT;
   return {
-    cost: crewCost,
-    tier: "Crew",
-    breakdown: `Crew €${TIER_PRICING.CREW} + ${teamSize - 1} extra × €${TIER_PRICING.EXTRA_SEAT}`,
+    cost,
+    breakdown: extra > 0
+      ? `Business €${TIER_PRICING.BUSINESS} + ${extra} extra × €${TIER_PRICING.EXTRA_SEAT}`
+      : `Business €${TIER_PRICING.BUSINESS} · 3 seats included`,
   };
+}
+
+/** Auto-pick the cheapest tier that fits the team size. */
+function autoPickTier(teamSize: number): { tier: Exclude<TierKey, "auto">; cost: number; breakdown: string } {
+  if (teamSize <= 1) {
+    const { cost, breakdown } = costForTier("solo", 1);
+    return { tier: "solo", cost, breakdown };
+  }
+  const crew = costForTier("crew", teamSize);
+  const business = costForTier("business", teamSize);
+  return business.cost <= crew.cost
+    ? { tier: "business", ...business }
+    : { tier: "crew", ...crew };
 }
 
 export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [teamSize, setTeamSize] = useState(5);
   const [adminHoursPerPersonPerWeek, setAdminHoursPerPersonPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_PERSON_PER_WEEK);
+  const [selectedTier, setSelectedTier] = useState<TierKey>("auto");
 
   // Email capture state
   const [email, setEmail] = useState("");
@@ -71,14 +107,22 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Calculate savings — per-person hours × team size, gives true linear scaling.
+  // Resolve tier — either user-selected or auto-recommended (cheapest fit).
+  const auto = autoPickTier(teamSize);
+  const activeTier: Exclude<TierKey, "auto"> = selectedTier === "auto" ? auto.tier : selectedTier;
+  const { cost: foremanMonthlyCost, breakdown: costBreakdown } =
+    selectedTier === "auto"
+      ? { cost: auto.cost, breakdown: auto.breakdown }
+      : costForTier(activeTier, teamSize);
+
+  // Calculate savings — per-person hours × team size × tier-feature multiplier.
   const cappedHoursPerPerson = Math.min(adminHoursPerPersonPerWeek, MAX_HOURS_SAVED_PER_PERSON_PER_WEEK);
-  const potentialHoursSavedPerWeek = cappedHoursPerPerson * teamSize;
+  const tierMultiplier = TIER_FEATURE_MULTIPLIER[activeTier];
+  const potentialHoursSavedPerWeek = cappedHoursPerPerson * teamSize * tierMultiplier;
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
 
-  // Foreman cost — cheapest tier that fits the team
-  const { cost: foremanMonthlyCost, tier: recommendedTier, breakdown: costBreakdown } = calculateForemanCost(teamSize);
+  const recommendedTier = activeTier.charAt(0).toUpperCase() + activeTier.slice(1);
 
   // Net savings
   const netMonthlySavings = potentialMoneySavedPerMonth - foremanMonthlyCost;
@@ -245,15 +289,44 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
               </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-xs font-medium text-foreground">
-                  Recommended plan: <span className="font-semibold">{recommendedTier}</span>
-                </p>
+            {/* Tier picker — explore savings by plan */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+                <label className="text-sm font-medium">Plan to evaluate</label>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {([
+                  { key: "auto", label: "Auto" },
+                  { key: "solo", label: "Solo" },
+                  { key: "crew", label: "Crew" },
+                  { key: "business", label: "Business" },
+                ] as { key: TierKey; label: string }[]).map(({ key, label }) => {
+                  const isActive = selectedTier === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedTier(key)}
+                      className={`px-2 py-2 rounded-md text-xs font-medium border transition-colors ${
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted border-border text-foreground"
+                      }`}
+                    >
+                      {label}
+                      {key === "auto" && selectedTier === "auto" && (
+                        <span className="block text-[10px] opacity-80 mt-0.5">{recommendedTier}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <p className="text-xs text-muted-foreground">
-                Foreman AI voice is included — no separate seats to buy.
+                {selectedTier === "auto"
+                  ? `Auto-picks the cheapest fit (currently ${recommendedTier}). `
+                  : ""}
+                {TIER_FEATURE_HIGHLIGHTS[activeTier]}
               </p>
             </div>
           </div>
