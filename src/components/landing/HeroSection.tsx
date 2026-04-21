@@ -69,7 +69,7 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
             </h1>
 
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Run your entire trade business by voice — quotes, jobs, expenses, invoices — while you're on the tools.
+              Run your entire service business by voice — quotes, jobs, expenses, invoices — while you're on the move.
             </p>
 
             {/* CTAs */}
