@@ -212,11 +212,12 @@ export function ActiveCallBar() {
           z-[60] keeps it above AgentTaskPanel/FloatingTomButton. */}
       <div
         className={cn(
-          "fixed z-[60] left-1/2 -translate-x-1/2 bottom-4 sm:bottom-6",
+          "fixed z-[60] left-1/2 -translate-x-1/2",
           "flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 pr-2 py-2 rounded-full bg-card border border-border shadow-2xl",
           "max-w-[calc(100vw-1rem)]",
           "animate-fade-in"
         )}
+        style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <div className="relative">
           <ForemanAvatar size="sm" />
