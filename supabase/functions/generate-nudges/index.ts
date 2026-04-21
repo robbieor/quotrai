@@ -136,6 +136,44 @@ serve(async (req) => {
       dataSnapshot.push(`TODAY'S SCHEDULE: ${todayJobs.length} job${todayJobs.length > 1 ? "s" : ""} scheduled`);
     }
 
+    // ── Cost / expense insights ────────────────────────────────────
+    const recentTotal = expensesRecent.reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0);
+    const priorTotal = expensesPrior.reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0);
+    if (recentTotal > 0) {
+      const yesterdayTotal = expensesRecent
+        .filter((e: any) => e.expense_date === yesterday)
+        .reduce((s: number, e: any) => s + (Number(e.amount) || 0), 0);
+      const yesterdayCount = expensesRecent.filter((e: any) => e.expense_date === yesterday).length;
+      const changePct = priorTotal > 0 ? Math.round(((recentTotal - priorTotal) / priorTotal) * 100) : null;
+
+      const catMap: Record<string, number> = {};
+      expensesRecent.forEach((e: any) => {
+        const c = e.category || "other";
+        catMap[c] = (catMap[c] || 0) + (Number(e.amount) || 0);
+      });
+      const topCat = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
+
+      const lines = [`Last 7 days: €${Math.round(recentTotal).toLocaleString()} across ${expensesRecent.length} expense${expensesRecent.length !== 1 ? "s" : ""}`];
+      if (yesterdayTotal > 0) lines.push(`Yesterday: €${Math.round(yesterdayTotal).toLocaleString()} across ${yesterdayCount} expense${yesterdayCount !== 1 ? "s" : ""}`);
+      if (changePct !== null) lines.push(`Trend: ${changePct >= 0 ? "+" : ""}${changePct}% vs prior 7 days`);
+      if (topCat) lines.push(`Top category: ${topCat[0]} (€${Math.round(topCat[1]).toLocaleString()})`);
+      dataSnapshot.push(`MONEY OUT:\n${lines.map((l) => `- ${l}`).join("\n")}`);
+    }
+
+    if (unreviewedReceipts.length > 0) {
+      dataSnapshot.push(`UNFILED RECEIPTS: ${unreviewedReceipts.length} receipt${unreviewedReceipts.length > 1 ? "s" : ""} with no vendor — need to be reviewed`);
+    }
+
+    if (jobsOverBudget.length > 0) {
+      const details = jobsOverBudget.slice(0, 3).map((j: any) => {
+        const quoted = Number(j.estimated_value) || 0;
+        const spent = Number(j.total_cost) || 0;
+        const margin = j.profit_margin_pct != null ? `${Math.round(Number(j.profit_margin_pct))}% margin` : "no margin";
+        return `- ${j.title || "Untitled"}: quoted €${Math.round(quoted).toLocaleString()}, spent €${Math.round(spent).toLocaleString()} (${margin})`;
+      }).join("\n");
+      dataSnapshot.push(`JOBS OVER/NEAR BUDGET (${jobsOverBudget.length}):\n${details}`);
+    }
+
     // If no data to report, return empty
     if (dataSnapshot.length === 0) {
       return new Response(JSON.stringify({ nudges: [] }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
