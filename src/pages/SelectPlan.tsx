@@ -207,13 +207,23 @@ export default function SelectPlan() {
               onClick={handleCheckout}
               disabled={isCheckingOut}
             >
-              {isCheckingOut ? "Processing..." : `Start ${tier.name} Free Trial`}
+              {isCheckingOut
+                ? "Processing..."
+                : selectedTier === 'business'
+                ? "Unlock Business — Unlimited AI + Priority Support"
+                : `Start ${tier.name} Free Trial`}
               {!isCheckingOut && <ArrowRight className="h-4 w-4" />}
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
-              14-day free trial · Cancel anytime · VAT may apply
-            </p>
+            {selectedTier === 'business' ? (
+              <p className="text-xs text-center text-muted-foreground">
+                Includes 3 seats · Unlimited Foreman AI voice · Same-day priority support + WhatsApp · Advanced reports & monthly P&L · Priority AI lane
+              </p>
+            ) : (
+              <p className="text-xs text-center text-muted-foreground">
+                14-day free trial · Cancel anytime · VAT may apply
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
