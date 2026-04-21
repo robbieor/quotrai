@@ -10,10 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Conservative defaults validated against industry benchmarks (Jobber, Tradify)
-const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
+// Hours saved are interpreted as PER PERSON per week — total team savings scale with team size.
+const DEFAULT_HOURS_SAVED_PER_PERSON_PER_WEEK = 2; // ~2 hrs/person/week of admin
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
 const WEEKS_PER_MONTH = 4.33;
-const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
+const MAX_HOURS_SAVED_PER_PERSON_PER_WEEK = 5; // realistic upper bound per person
 
 // Tiered pricing (Apr 2026): Solo €29 · Crew €49 · Business €89
 // Extra seat €19/mo on Crew & Business. Voice is bundled in Crew (60min/seat) and Business (unlimited).
@@ -62,7 +63,7 @@ function calculateForemanCost(teamSize: number): { cost: number; tier: string; b
 
 export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [teamSize, setTeamSize] = useState(5);
-  const [adminHoursPerWeek, setAdminHoursPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_WEEK);
+  const [adminHoursPerPersonPerWeek, setAdminHoursPerPersonPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_PERSON_PER_WEEK);
 
   // Email capture state
   const [email, setEmail] = useState("");
@@ -70,9 +71,9 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Calculate savings — hours saved is total team, scales gently with size
-  const scaleFactor = Math.min(teamSize, 10) / 5; // gentle scaling, caps at 2x for 10+ people
-  const potentialHoursSavedPerWeek = Math.min(adminHoursPerWeek * scaleFactor, MAX_HOURS_SAVED_PER_WEEK * scaleFactor);
+  // Calculate savings — per-person hours × team size, gives true linear scaling.
+  const cappedHoursPerPerson = Math.min(adminHoursPerPersonPerWeek, MAX_HOURS_SAVED_PER_PERSON_PER_WEEK);
+  const potentialHoursSavedPerWeek = cappedHoursPerPerson * teamSize;
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
 
