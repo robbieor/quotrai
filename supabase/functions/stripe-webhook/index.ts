@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { PRICE_TO_PLAN_LABEL } from "../_shared/pricing.ts";
+
+// Invoice statuses that may legitimately transition to "paid" via Stripe payment.
+// If a checkout.session.completed event arrives for an invoice in any other state
+// (draft, void, cancelled), we ignore it instead of silently flipping it to paid.
+const PAYABLE_INVOICE_STATUSES = new Set(["sent", "overdue", "partially_paid", "viewed"]);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
