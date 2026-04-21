@@ -122,15 +122,37 @@ serve(async (req) => {
     }
 
     // ========================================================
-    // Standard (non-thin) webhook events for subscriptions
-    // These come from the platform's own webhook endpoint
+    // Standard (non-thin) webhook events
+    // Try both secrets — the Connect endpoint sends standard v1 events
+    // (e.g. account.updated) signed with STRIPE_CONNECT_WEBHOOK_SECRET,
+    // while the platform's own endpoint uses STRIPE_WEBHOOK_SECRET.
     // ========================================================
-    if (!standardWebhookSecret) {
-      throw new Error("STRIPE_WEBHOOK_SECRET not configured for standard events");
+    let event: Stripe.Event | null = null;
+    let lastVerifyErr: unknown = null;
+
+    const secretsToTry = [
+      { name: "STRIPE_CONNECT_WEBHOOK_SECRET", value: connectWebhookSecret },
+      { name: "STRIPE_WEBHOOK_SECRET", value: standardWebhookSecret },
+    ].filter(s => !!s.value);
+
+    if (secretsToTry.length === 0) {
+      throw new Error("No webhook secret configured (need STRIPE_CONNECT_WEBHOOK_SECRET or STRIPE_WEBHOOK_SECRET)");
     }
 
-    const event = await stripeClient.webhooks.constructEventAsync(body, sig, standardWebhookSecret);
-    console.log(`[STANDARD EVENT] type=${event.type}, id=${event.id}`);
+    for (const s of secretsToTry) {
+      try {
+        event = await stripeClient.webhooks.constructEventAsync(body, sig, s.value!);
+        console.log(`[STANDARD EVENT] verified with ${s.name}: type=${event.type}, id=${event.id}`);
+        break;
+      } catch (e) {
+        lastVerifyErr = e;
+        console.log(`[STANDARD EVENT] signature did not match ${s.name}, trying next…`);
+      }
+    }
+
+    if (!event) {
+      throw lastVerifyErr ?? new Error("Webhook signature verification failed");
+    }
 
     switch (event.type) {
     // --- Invoice payment via Connect checkout ---
