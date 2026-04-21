@@ -99,6 +99,7 @@ function autoPickTier(teamSize: number): { tier: Exclude<TierKey, "auto">; cost:
 export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [teamSize, setTeamSize] = useState(5);
   const [adminHoursPerPersonPerWeek, setAdminHoursPerPersonPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_PERSON_PER_WEEK);
+  const [selectedTier, setSelectedTier] = useState<TierKey>("auto");
 
   // Email capture state
   const [email, setEmail] = useState("");
@@ -106,14 +107,22 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Calculate savings — per-person hours × team size, gives true linear scaling.
+  // Resolve tier — either user-selected or auto-recommended (cheapest fit).
+  const auto = autoPickTier(teamSize);
+  const activeTier: Exclude<TierKey, "auto"> = selectedTier === "auto" ? auto.tier : selectedTier;
+  const { cost: foremanMonthlyCost, breakdown: costBreakdown } =
+    selectedTier === "auto"
+      ? { cost: auto.cost, breakdown: auto.breakdown }
+      : costForTier(activeTier, teamSize);
+
+  // Calculate savings — per-person hours × team size × tier-feature multiplier.
   const cappedHoursPerPerson = Math.min(adminHoursPerPersonPerWeek, MAX_HOURS_SAVED_PER_PERSON_PER_WEEK);
-  const potentialHoursSavedPerWeek = cappedHoursPerPerson * teamSize;
+  const tierMultiplier = TIER_FEATURE_MULTIPLIER[activeTier];
+  const potentialHoursSavedPerWeek = cappedHoursPerPerson * teamSize * tierMultiplier;
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
 
-  // Foreman cost — cheapest tier that fits the team
-  const { cost: foremanMonthlyCost, tier: recommendedTier, breakdown: costBreakdown } = calculateForemanCost(teamSize);
+  const recommendedTier = activeTier.charAt(0).toUpperCase() + activeTier.slice(1);
 
   // Net savings
   const netMonthlySavings = potentialMoneySavedPerMonth - foremanMonthlyCost;
