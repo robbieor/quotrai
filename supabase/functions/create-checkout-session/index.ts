@@ -170,6 +170,7 @@ serve(async (req) => {
         seat_count: String(seatCount),
         billing_interval: stripeInterval,
         billing_period: billingPeriod,
+        tier,
       },
     };
 
