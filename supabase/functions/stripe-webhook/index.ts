@@ -294,6 +294,33 @@ serve(async (req) => {
           const amount = (session.amount_total || 0) / 100;
 
           if (invoiceId) {
+            // Re-read the invoice and only flip to paid if it was in a payable
+            // state. This prevents draft/void invoices from being marked paid
+            // by a stale or replayed Stripe event.
+            const { data: existing } = await supabase
+              .from("invoices")
+              .select("status")
+              .eq("id", invoiceId)
+              .single();
+
+            if (!existing) {
+              logStep("Invoice not found for payment session", { invoiceId });
+              break;
+            }
+
+            if (existing.status === "paid") {
+              logStep("Invoice already paid — skipping duplicate webhook", { invoiceId });
+              break;
+            }
+
+            if (!PAYABLE_INVOICE_STATUSES.has(existing.status)) {
+              logStep("Refusing to mark non-payable invoice as paid", {
+                invoiceId,
+                status: existing.status,
+              });
+              break;
+            }
+
             await supabase
               .from("invoices")
               .update({ status: "paid", updated_at: new Date().toISOString() })
@@ -306,13 +333,27 @@ serve(async (req) => {
               .single();
 
             if (inv) {
-              await supabase.from("payments").insert({
+              // Idempotent insert — uq_payments_invoice_notes guarantees a
+              // single row per (invoice_id, "Stripe checkout cs_..."). If
+              // Stripe retries the same event we silently skip the duplicate.
+              const paymentNote = `Stripe checkout ${session.id}`;
+              const { error: payErr } = await supabase.from("payments").insert({
                 invoice_id: invoiceId,
                 team_id: inv.team_id,
                 amount,
                 payment_method: "card",
-                notes: `Stripe checkout ${session.id}`,
+                notes: paymentNote,
               });
+
+              if (payErr) {
+                // Postgres unique_violation = 23505 → expected on Stripe retry
+                if ((payErr as any).code === "23505") {
+                  logStep("Duplicate payment webhook — already recorded", { invoiceId, sessionId: session.id });
+                  break;
+                }
+                logStep("ERROR inserting payment", { invoiceId, error: payErr.message });
+                throw payErr;
+              }
 
               // Format currency amount
               const curr = inv.currency?.toUpperCase() || "EUR";
