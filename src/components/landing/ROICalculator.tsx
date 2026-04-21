@@ -27,38 +27,73 @@ const TIER_PRICING = {
   BUSINESS_INCLUDED_SEATS: 3,
 };
 
+type TierKey = "auto" | "solo" | "crew" | "business";
+
+// Each tier multiplies baseline admin savings by a feature-impact factor.
+// Solo = manual admin replacement only (1.0x)
+// Crew = + AI quoting, receipt scanning, voice 60min/seat (1.5x)
+// Business = + unlimited voice, advanced reporting, priority lane (1.8x)
+const TIER_FEATURE_MULTIPLIER: Record<Exclude<TierKey, "auto">, number> = {
+  solo: 1.0,
+  crew: 1.5,
+  business: 1.8,
+};
+
+const TIER_FEATURE_HIGHLIGHTS: Record<Exclude<TierKey, "auto">, string> = {
+  solo: "Replaces manual admin: quotes, invoices, scheduling, GPS time tracking.",
+  crew: "Adds Foreman AI for quoting, receipt scanning, voice (60min/seat) — saves more per person.",
+  business: "Adds unlimited Foreman AI voice, advanced reports & faster AI lane — biggest per-person uplift.",
+};
+
 interface ROICalculatorProps {
   variant?: "full" | "compact";
   /** @deprecated Voice is bundled into Crew/Business — prop kept for backward compat */
   showVoice?: boolean;
 }
 
-/** Pick the cheapest tier that fits the team size, then add extra seats. */
-function calculateForemanCost(teamSize: number): { cost: number; tier: string; breakdown: string } {
-  if (teamSize <= 1) {
-    return { cost: TIER_PRICING.SOLO, tier: "Solo", breakdown: "1 user · Solo plan" };
-  }
-  // Crew: €49 base + €19 per extra seat beyond 1
-  const crewCost = TIER_PRICING.CREW + (teamSize - TIER_PRICING.CREW_INCLUDED_SEATS) * TIER_PRICING.EXTRA_SEAT;
-  // Business: €89 base (3 seats incl.) + €19 per extra seat beyond 3
-  const extraOverBusiness = Math.max(0, teamSize - TIER_PRICING.BUSINESS_INCLUDED_SEATS);
-  const businessCost = TIER_PRICING.BUSINESS + extraOverBusiness * TIER_PRICING.EXTRA_SEAT;
-
-  if (businessCost <= crewCost) {
+/** Cost for a SPECIFIC tier given team size. */
+function costForTier(tier: Exclude<TierKey, "auto">, teamSize: number): { cost: number; breakdown: string } {
+  if (tier === "solo") {
+    // Solo is single-user only — show base price even if team > 1, with a note.
     return {
-      cost: businessCost,
-      tier: "Business",
-      breakdown:
-        extraOverBusiness > 0
-          ? `Business €${TIER_PRICING.BUSINESS} + ${extraOverBusiness} extra × €${TIER_PRICING.EXTRA_SEAT}`
-          : `Business €${TIER_PRICING.BUSINESS} · 3 seats included`,
+      cost: TIER_PRICING.SOLO,
+      breakdown: teamSize > 1
+        ? `Solo €${TIER_PRICING.SOLO} · single-user plan (team needs Crew or Business)`
+        : `Solo €${TIER_PRICING.SOLO} · 1 user`,
     };
   }
+  if (tier === "crew") {
+    const extra = Math.max(0, teamSize - TIER_PRICING.CREW_INCLUDED_SEATS);
+    const cost = TIER_PRICING.CREW + extra * TIER_PRICING.EXTRA_SEAT;
+    return {
+      cost,
+      breakdown: extra > 0
+        ? `Crew €${TIER_PRICING.CREW} + ${extra} extra × €${TIER_PRICING.EXTRA_SEAT}`
+        : `Crew €${TIER_PRICING.CREW} · 1 user`,
+    };
+  }
+  // business
+  const extra = Math.max(0, teamSize - TIER_PRICING.BUSINESS_INCLUDED_SEATS);
+  const cost = TIER_PRICING.BUSINESS + extra * TIER_PRICING.EXTRA_SEAT;
   return {
-    cost: crewCost,
-    tier: "Crew",
-    breakdown: `Crew €${TIER_PRICING.CREW} + ${teamSize - 1} extra × €${TIER_PRICING.EXTRA_SEAT}`,
+    cost,
+    breakdown: extra > 0
+      ? `Business €${TIER_PRICING.BUSINESS} + ${extra} extra × €${TIER_PRICING.EXTRA_SEAT}`
+      : `Business €${TIER_PRICING.BUSINESS} · 3 seats included`,
   };
+}
+
+/** Auto-pick the cheapest tier that fits the team size. */
+function autoPickTier(teamSize: number): { tier: Exclude<TierKey, "auto">; cost: number; breakdown: string } {
+  if (teamSize <= 1) {
+    const { cost, breakdown } = costForTier("solo", 1);
+    return { tier: "solo", cost, breakdown };
+  }
+  const crew = costForTier("crew", teamSize);
+  const business = costForTier("business", teamSize);
+  return business.cost <= crew.cost
+    ? { tier: "business", ...business }
+    : { tier: "crew", ...crew };
 }
 
 export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
