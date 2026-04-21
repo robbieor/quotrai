@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAcceptInvitation } from "@/hooks/useTeam";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle, XCircle, Users } from "lucide-react";
@@ -31,9 +32,48 @@ export default function AcceptInvite() {
 
     // Accept the invitation
     acceptInvitation.mutate(token, {
-      onSuccess: (data) => {
+      onSuccess: (data: any) => {
         setStatus("success");
         setMessage(data.message || "Successfully joined the team!");
+
+        // Clear the pending token so future sign-ins behave normally
+        sessionStorage.removeItem("pending_invite_token");
+
+        // Fire welcome email (team_invite variant) — once per user+team
+        const teamId = data?.team_id || data?.teamId || "team";
+        const teamName = data?.team_name || data?.teamName || null;
+        const inviterName = data?.inviter_name || data?.inviterName || null;
+        const role = data?.role || null;
+        const fullName =
+          (user.user_metadata as any)?.full_name ||
+          (user.user_metadata as any)?.name ||
+          null;
+        const sentKey = `welcome_invite_sent_${user.id}_${teamId}`;
+        // Also block the self-signup welcome from firing on this user
+        localStorage.setItem(`welcome_sent_${user.id}`, "1");
+
+        if (!localStorage.getItem(sentKey)) {
+          localStorage.setItem(sentKey, "1");
+          supabase.functions
+            .invoke("send-transactional-email", {
+              body: {
+                templateName: "welcome",
+                recipientEmail: user.email,
+                idempotencyKey: `welcome-invite-${user.id}-${teamId}`,
+                templateData: {
+                  variant: "team_invite",
+                  name: fullName,
+                  teamName,
+                  inviterName,
+                  role,
+                },
+              },
+            })
+            .catch((err) => {
+              localStorage.removeItem(sentKey);
+              console.warn("Welcome (invite) email send failed", err);
+            });
+        }
       },
       onError: (error) => {
         setStatus("error");

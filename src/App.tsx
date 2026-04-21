@@ -64,6 +64,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const FunnelAnalytics = lazy(() => import("./pages/FunnelAnalytics"));
 const ConnectProducts = lazy(() => import("./pages/ConnectProducts"));
 const Storefront = lazy(() => import("./pages/Storefront"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
 const queryClient = new QueryClient();
 
@@ -149,6 +150,7 @@ const App = () => {
                     <Route path="/industries" element={<Industries />} />
                     <Route path="/accept-invite" element={<AcceptInvite />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="/unsubscribe" element={<Unsubscribe />} />
 
                     {/* Portal pages */}
                     <Route path="/quote/:token" element={<QuotePortal />} />
