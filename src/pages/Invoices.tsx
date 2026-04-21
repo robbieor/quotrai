@@ -510,7 +510,9 @@ export default function Invoices() {
       </div>
 
       <Separator className="my-6" />
-      <RecurringInvoicesSection />
+      <PlanGate requiredSeat="connect" featureLabel="Recurring Invoices (Crew+)">
+        <RecurringInvoicesSection />
+      </PlanGate>
 
       <InvoiceFormDialog open={formOpen} onOpenChange={setFormOpen} invoice={selectedInvoice} />
       <DeleteInvoiceDialog open={deleteOpen} onOpenChange={setDeleteOpen} invoice={selectedInvoice} />

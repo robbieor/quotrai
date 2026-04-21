@@ -14,9 +14,9 @@ interface SeatGuardProps {
 }
 
 const SEAT_LABELS: Record<SeatType, string> = {
-  lite: "Lite",
-  connect: "Connect",
-  grow: "Grow",
+  lite: "Solo",
+  connect: "Crew",
+  grow: "Business",
 };
 
 /**
@@ -55,14 +55,14 @@ export function SeatGuard({ requiredSeat, children }: SeatGuardProps) {
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
-                onClick={() => openExternalUrl("https://foreman.ie/settings?tab=team-billing")}
+                onClick={() => openExternalUrl("https://foreman.ie/pricing")}
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Open in Browser
               </Button>
             ) : (
               <Button asChild variant="outline" size="sm">
-                <Link to="/settings?tab=team-billing">View Plans</Link>
+                <Link to="/pricing">View Plans</Link>
               </Button>
             )}
           </CardContent>
