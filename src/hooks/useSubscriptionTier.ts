@@ -331,14 +331,35 @@ export function useSubscriptionTier() {
 
       if (!profile?.team_id) return null;
 
+      // Voice minutes still live on `teams` (legacy column set).
       const { data: team, error } = await supabase
         .from('teams')
-        .select('id, name, subscription_tier, george_voice_minutes_limit, george_voice_minutes_used, george_usage_reset_date, trial_ends_at, is_trial, george_voice_seats')
+        .select('id, name, george_voice_minutes_limit, george_voice_minutes_used, george_usage_reset_date, is_trial, george_voice_seats')
         .eq('id', profile.team_id)
         .single();
 
       if (error) throw error;
-      return team as TeamSubscription;
+
+      // Authoritative subscription state comes from subscriptions_v2 via the v2 org.
+      const { data: orgId } = await supabase.rpc('get_user_org_id_v2');
+      let subscription_tier = 'crew';
+      let trial_ends_at: string | null = null;
+
+      if (orgId) {
+        const { data: sub } = await supabase
+          .from('subscriptions_v2')
+          .select('plan_id, trial_ends_at, status')
+          .eq('org_id', orgId)
+          .maybeSingle();
+        if (sub?.plan_id) subscription_tier = sub.plan_id;
+        trial_ends_at = sub?.trial_ends_at ?? null;
+      }
+
+      return {
+        ...team,
+        subscription_tier,
+        trial_ends_at,
+      } as TeamSubscription;
     },
     enabled: !!user,
   });
@@ -389,11 +410,19 @@ export function useSubscriptionTier() {
     startTrial: startTrialMutation.mutateAsync,
     isStartingTrial: startTrialMutation.isPending,
     currentPlan: (() => {
-      // Derive from subscriptions_v2 plan_id or fall back to seat type lookup
+      // plan_id from subscriptions_v2 is now one of: solo | crew | business (preferred)
+      // Older rows may still hold lite | connect | grow.
       const planId = teamSubscription?.subscription_tier;
+      // New tiered model
+      if (planId === 'solo') return { ...SOLO_TIER, code: 'lite' as SeatType, price: SOLO_TIER.monthly, annualPrice: SOLO_TIER.annual };
+      if (planId === 'business' || planId === 'scale') {
+        return { ...BUSINESS_TIER, code: 'grow' as SeatType, price: BUSINESS_TIER.monthly, annualPrice: BUSINESS_TIER.annual };
+      }
+      if (planId === 'crew') return { ...CREW_TIER, code: 'connect' as SeatType, price: CREW_TIER.monthly, annualPrice: CREW_TIER.annual };
+      // Legacy seat-type fallbacks
       if (planId === 'lite') return LITE_SEAT_DETAILS;
       if (planId === 'grow') return GROW_SEAT_DETAILS;
-      return CONNECT_SEAT_DETAILS; // default
+      return CONNECT_SEAT_DETAILS;
     })(),
   };
 }
