@@ -19,11 +19,15 @@ export interface TeamSubscription {
 
 // ============================================================
 // TIERED PRICING MODEL (Apr 2026 launch)
-// Solo €29 · Crew €49 (recommended) · Scale €99
-// Extra seat €19/mo (Crew & Scale only)
+// Solo €29 · Crew €49 (recommended) · Business €99 (premium)
+// Extra seat €19/mo (Crew & Business only)
+// NOTE: 'scale' is kept as a deprecated alias of 'business' for one
+// release so any in-flight subscriptions / metadata don't break.
 // ============================================================
 
-export type TierId = 'solo' | 'crew' | 'scale';
+export type TierId = 'solo' | 'crew' | 'business';
+/** @deprecated use 'business' instead — kept for one release of backward compat */
+export type LegacyTierId = TierId | 'scale';
 
 // Stripe Price IDs per tier — TODO: replace placeholders with real IDs
 // once products are created in Stripe. Crew currently maps to the
@@ -46,13 +50,16 @@ export const TIER_STRIPE_PRICES: Record<TierId, {
     seatMonthly: 'price_1TKjaNDQETj2awNEXHD4jFRq', // €15 (TODO upgrade to €19)
     seatAnnual: 'price_1TIQw1DQETj2awNEth2a6E8y',  // €153 (TODO upgrade to €193.80)
   },
-  scale: {
-    monthly: 'price_TODO_SCALE_MONTHLY', // €99/mo — create in Stripe
-    annual: 'price_TODO_SCALE_ANNUAL',   // €1,009.80/yr
-    seatMonthly: 'price_TODO_SCALE_SEAT_MONTHLY', // €19/mo (4th+ user)
-    seatAnnual: 'price_TODO_SCALE_SEAT_ANNUAL',   // €193.80/yr
+  business: {
+    monthly: 'price_TODO_BUSINESS_MONTHLY', // €99/mo — create in Stripe
+    annual: 'price_TODO_BUSINESS_ANNUAL',   // €1,009.80/yr
+    seatMonthly: 'price_TODO_BUSINESS_SEAT_MONTHLY', // €19/mo (4th+ user)
+    seatAnnual: 'price_TODO_BUSINESS_SEAT_ANNUAL',   // €193.80/yr
   },
 };
+
+/** @deprecated alias kept for backward compat — use TIER_STRIPE_PRICES.business */
+export const TIER_STRIPE_PRICES_SCALE_ALIAS = TIER_STRIPE_PRICES.business;
 
 // Legacy single-plan exports kept for backward compatibility
 export const STRIPE_PRICE_BASE_PLAN = TIER_STRIPE_PRICES.crew.monthly;
@@ -81,25 +88,33 @@ export const PRICING = {
   // Tier base prices (monthly)
   SOLO: 29,
   CREW: 49,
+  BUSINESS: 99,
+  /** @deprecated use BUSINESS */
   SCALE: 99,
 
   // Annual prices (15% off the 12× monthly)
   ANNUAL_SOLO: 295.80,    // 29 × 12 × 0.85
   ANNUAL_CREW: 499.80,    // 49 × 12 × 0.85
-  ANNUAL_SCALE: 1009.80,  // 99 × 12 × 0.85
+  ANNUAL_BUSINESS: 1009.80,  // 99 × 12 × 0.85
+  /** @deprecated use ANNUAL_BUSINESS */
+  ANNUAL_SCALE: 1009.80,
 
   // Seats included per tier
   SOLO_INCLUDED_SEATS: 1,
   CREW_INCLUDED_SEATS: 1,
+  BUSINESS_INCLUDED_SEATS: 3,
+  /** @deprecated use BUSINESS_INCLUDED_SEATS */
   SCALE_INCLUDED_SEATS: 3,
 
-  // Extra seat pricing (Crew & Scale only)
+  // Extra seat pricing (Crew & Business only)
   EXTRA_SEAT: 19,
   ANNUAL_EXTRA_SEAT: 193.80,
 
   // Voice minutes
   VOICE_MINUTES_PER_SEAT: 60,
-  SCALE_VOICE_MINUTES: -1, // unlimited
+  BUSINESS_VOICE_MINUTES: -1, // unlimited
+  /** @deprecated use BUSINESS_VOICE_MINUTES */
+  SCALE_VOICE_MINUTES: -1,
 
   // Platform / discount
   ANNUAL_DISCOUNT: 0.15,
@@ -176,27 +191,31 @@ export const CREW_TIER: TierDetails = {
   badge: 'Most Popular',
 };
 
-export const SCALE_TIER: TierDetails = {
-  id: 'scale',
-  name: 'Scale',
-  tagline: 'For crews running serious volume.',
-  monthly: PRICING.SCALE,
-  annual: PRICING.ANNUAL_SCALE,
-  includedSeats: PRICING.SCALE_INCLUDED_SEATS,
+export const BUSINESS_TIER: TierDetails = {
+  id: 'business',
+  name: 'Business',
+  tagline: 'For operators running a real business.',
+  monthly: PRICING.BUSINESS,
+  annual: PRICING.ANNUAL_BUSINESS,
+  includedSeats: PRICING.BUSINESS_INCLUDED_SEATS,
   extraSeatMonthly: PRICING.EXTRA_SEAT,
   extraSeatAnnual: PRICING.ANNUAL_EXTRA_SEAT,
-  voiceMinutesPerSeat: PRICING.SCALE_VOICE_MINUTES,
+  voiceMinutesPerSeat: PRICING.BUSINESS_VOICE_MINUTES,
   features: [
     'Everything in Crew',
     '3 seats included',
     'Unlimited Foreman AI voice minutes',
-    'Lead pipeline & advanced reporting',
-    'API access & webhooks',
-    'Priority support',
+    'Priority support — same-day + WhatsApp',
+    'Advanced reports, exports & monthly P&L',
+    'Priority AI processing (faster lane)',
   ],
+  badge: 'Premium',
 };
 
-export const ALL_TIERS: TierDetails[] = [SOLO_TIER, CREW_TIER, SCALE_TIER];
+/** @deprecated use BUSINESS_TIER — alias kept for one release */
+export const SCALE_TIER = BUSINESS_TIER;
+
+export const ALL_TIERS: TierDetails[] = [SOLO_TIER, CREW_TIER, BUSINESS_TIER];
 
 // Helper: compute total cost for a tier + team size
 export function computeTierTotal(

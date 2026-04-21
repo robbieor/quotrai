@@ -8,10 +8,11 @@ const corsHeaders = {
 };
 
 // 3-tier pricing model (Apr 2026):
-// Solo €29 · Crew €49 (recommended) · Scale €99 · Extra seat €19
-// NOTE: Solo & Scale price IDs are TODO until products are created in
+// Solo €29 · Crew €49 (recommended) · Business €99 (premium) · Extra seat €19
+// NOTE: Solo & Business price IDs are TODO until products are created in
 // Stripe. Crew uses the existing €39/€15 price IDs as a fallback.
-type TierId = "solo" | "crew" | "scale";
+// 'scale' is accepted as a deprecated alias of 'business' for one release.
+type TierId = "solo" | "crew" | "business";
 const TIER_PRICES: Record<TierId, {
   month: { base: string; seat?: string };
   year: { base: string; seat?: string };
@@ -33,14 +34,14 @@ const TIER_PRICES: Record<TierId, {
     },
     includedSeats: 1,
   },
-  scale: {
+  business: {
     month: {
-      base: "price_TODO_SCALE_MONTHLY",
-      seat: "price_TODO_SCALE_SEAT_MONTHLY",
+      base: "price_TODO_BUSINESS_MONTHLY",
+      seat: "price_TODO_BUSINESS_SEAT_MONTHLY",
     },
     year: {
-      base: "price_TODO_SCALE_ANNUAL",
-      seat: "price_TODO_SCALE_SEAT_ANNUAL",
+      base: "price_TODO_BUSINESS_ANNUAL",
+      seat: "price_TODO_BUSINESS_SEAT_ANNUAL",
     },
     includedSeats: 3,
   },
@@ -80,7 +81,9 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false, tier: tierInput = "crew" } = body;
-    const tier: TierId = (["solo", "crew", "scale"].includes(tierInput) ? tierInput : "crew") as TierId;
+    // Accept 'scale' as a deprecated alias for 'business'
+    const normalisedTierInput = tierInput === "scale" ? "business" : tierInput;
+    const tier: TierId = (["solo", "crew", "business"].includes(normalisedTierInput) ? normalisedTierInput : "crew") as TierId;
     const seatCount = Math.max(1, Number(teamSize) || 1);
     // Stripe price interval is "month" / "year"; DB billing_period uses "monthly" / "annual"
     const stripeInterval: "month" | "year" = interval === "year" || interval === "annual" ? "year" : "month";
