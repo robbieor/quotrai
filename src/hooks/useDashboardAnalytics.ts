@@ -138,11 +138,41 @@ export interface ScatterCustomerData {
 
 export function useDashboardAnalytics() {
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const queryClient = useQueryClient();
   const { dateRange, customerId, staffId, jobType, segment, crossFilter, filterQueryKey } = useDashboardFilters();
+
+  // Invalidate dashboard cache when team subscription tier or members change
+  // (so Subscription Covered card reflects new pricing/seat count immediately)
+  useEffect(() => {
+    if (!profile?.team_id) return;
+    const teamId = profile.team_id;
+
+    const channel = supabase
+      .channel(`dashboard-pricing-${teamId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "teams", filter: `id=eq.${teamId}` },
+        () => queryClient.invalidateQueries({ queryKey: ["dashboard-analytics"] }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles", filter: `team_id=eq.${teamId}` },
+        () => queryClient.invalidateQueries({ queryKey: ["dashboard-analytics"] }),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.team_id, queryClient]);
 
   return useQuery({
     queryKey: ["dashboard-analytics", ...filterQueryKey],
     enabled: !!user,
+    staleTime: 60_000, // 1 min — pricing/metric drift kept tight
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined;
       const toDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
