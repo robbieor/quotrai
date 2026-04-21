@@ -218,7 +218,7 @@ export const CREW_TIER: TierDetails = {
 export const BUSINESS_TIER: TierDetails = {
   id: 'business',
   name: 'Business',
-  tagline: 'For operators running a real business.',
+  tagline: 'For growing crews that need more seats and unlimited AI.',
   monthly: PRICING.BUSINESS,
   annual: PRICING.ANNUAL_BUSINESS,
   includedSeats: PRICING.BUSINESS_INCLUDED_SEATS,
