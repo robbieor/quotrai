@@ -29,6 +29,30 @@ export type TierId = 'solo' | 'crew' | 'business';
 /** @deprecated use 'business' instead — kept for one release of backward compat */
 export type LegacyTierId = TierId | 'scale';
 
+// ============================================================
+// SINGLE SOURCE OF TRUTH — tier display names
+// Use these everywhere a tier label is rendered (UI, emails,
+// Stripe metadata, analytics) so a rename only happens here.
+// ============================================================
+export const TIER_LABELS: Record<TierId, string> = {
+  solo: 'Solo',
+  crew: 'Crew',
+  business: 'Business',
+};
+
+/** Normalises a possibly-legacy tier id (e.g. 'scale') to the canonical id. */
+export function normaliseTierId(input: string | null | undefined): TierId {
+  const v = (input ?? '').toString().toLowerCase().trim();
+  if (v === 'scale') return 'business'; // legacy alias
+  if (v === 'solo' || v === 'crew' || v === 'business') return v;
+  return 'crew'; // safe default
+}
+
+/** Returns the canonical display name for any tier id (handles legacy). */
+export function getTierLabel(input: string | null | undefined): string {
+  return TIER_LABELS[normaliseTierId(input)];
+}
+
 // Stripe Price IDs per tier — TODO: replace placeholders with real IDs
 // once products are created in Stripe. Crew currently maps to the
 // existing €39 base / €15 seat price IDs as a fallback to avoid breaking
