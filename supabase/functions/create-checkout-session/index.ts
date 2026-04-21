@@ -79,29 +79,31 @@ serve(async (req) => {
     if (!orgMember?.org_id) throw new Error("User not in an organization");
 
     const body = await req.json().catch(() => ({}));
-    const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false } = body;
+    const { teamSize = 1, interval = "month", isUpgrade = false, skipTrial = false, tier: tierInput = "crew" } = body;
+    const tier: TierId = (["solo", "crew", "scale"].includes(tierInput) ? tierInput : "crew") as TierId;
     const seatCount = Math.max(1, Number(teamSize) || 1);
     // Stripe price interval is "month" / "year"; DB billing_period uses "monthly" / "annual"
     const stripeInterval: "month" | "year" = interval === "year" || interval === "annual" ? "year" : "month";
     const billingPeriod: "monthly" | "annual" = stripeInterval === "year" ? "annual" : "monthly";
-    const priceSet = PRICES[stripeInterval];
+    const tierConfig = TIER_PRICES[tier];
+    const priceSet = tierConfig[stripeInterval];
+    const includedSeats = tierConfig.includedSeats;
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Build line items — use existing prices but allow Stripe to display
-    // its product name. We rely on the Stripe product description being
-    // accurate; on-the-fly name override would require price_data which
-    // breaks reporting. Instead we set a custom_text below to clarify.
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       { price: priceSet.base, quantity: 1 },
     ];
 
-    const extraSeats = Math.max(0, seatCount - BASE_USERS);
+    const extraSeats = Math.max(0, seatCount - includedSeats);
     if (extraSeats > 0) {
+      if (!priceSet.seat) {
+        throw new Error(`Tier "${tier}" does not support extra seats`);
+      }
       lineItems.push({ price: priceSet.seat, quantity: extraSeats });
     }
 
-    logStep("Line items built", { seatCount, extraSeats, billingPeriod, lineItems: lineItems.length });
+    logStep("Line items built", { tier, seatCount, includedSeats, extraSeats, billingPeriod });
 
     // Get or create Stripe customer
     let stripeCustomerId: string;
