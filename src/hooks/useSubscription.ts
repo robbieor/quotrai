@@ -138,16 +138,31 @@ export function useSeatUsage() {
   return useQuery({
     queryKey: ["seat-usage"],
     queryFn: async (): Promise<SeatUsage | null> => {
-      const { data: teamId } = await supabase.rpc("get_user_team_id");
-      if (!teamId) return null;
+      // Source of truth = subscriptions_v2.seat_count + active org_members_v2 count.
+      // Avoids drift from the legacy `teams.*` fields.
+      const { data: orgId } = await supabase.rpc("get_user_org_id_v2");
+      if (!orgId) return null;
 
-      const { data, error } = await supabase.rpc("get_team_seat_usage", {
-        target_team_id: teamId,
-      });
+      const [{ data: sub }, { count: usedSeats }] = await Promise.all([
+        supabase
+          .from("subscriptions_v2")
+          .select("seat_count")
+          .eq("org_id", orgId)
+          .maybeSingle(),
+        supabase
+          .from("org_members_v2")
+          .select("id", { count: "exact", head: true })
+          .eq("org_id", orgId)
+          .eq("status", "active"),
+      ]);
 
-      if (error) throw error;
-      const result = Array.isArray(data) ? data[0] : data;
-      return result as SeatUsage;
+      const total = sub?.seat_count ?? 0;
+      const used = usedSeats ?? 0;
+      return {
+        used_seats: used,
+        total_seats: total,
+        can_add_member: used < total,
+      };
     },
   });
 }
@@ -168,6 +183,7 @@ export function useAddSeat() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription-v2"] });
       queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
+      queryClient.invalidateQueries({ queryKey: ["org-members-v2"] });
       toast.success("Seat added successfully");
     },
     onError: (error: Error) => {

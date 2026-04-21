@@ -165,6 +165,133 @@ serve(async (req) => {
     );
 
     switch (event.type) {
+      case "customer.subscription.trial_will_end": {
+        // Fired ~3 days before trial_end. Email the customer.
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
+        logStep("Trial will end soon", { id: subscription.id, trialEnd: subscription.trial_end });
+
+        const customer = await stripe.customers.retrieve(customerId);
+        if (!customer.deleted && (customer as Stripe.Customer).email) {
+          const email = (customer as Stripe.Customer).email!;
+          const trialEndDate = subscription.trial_end
+            ? new Date(subscription.trial_end * 1000).toLocaleDateString("en-IE", {
+                year: "numeric", month: "long", day: "numeric",
+              })
+            : "soon";
+          await sendBrandedEmail(
+            supabase,
+            email,
+            "Your Foreman trial ends soon",
+            brandedEmailHtml("Your trial is ending soon", [
+              `Heads up — your Foreman free trial ends on <strong>${trialEndDate}</strong>.`,
+              "Your subscription will start automatically using the payment method on file. No action needed if you'd like to keep going.",
+              "Want to change your plan or update your card? You can do that anytime from Settings → Billing.",
+              '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Manage Billing</a>',
+              "If you've decided Foreman isn't for you, just cancel from the same page before the trial ends and you won't be charged.",
+            ]),
+            `trial-ending-${subscription.id}`
+          );
+        }
+        break;
+      }
+
+      case "charge.refunded": {
+        // A charge was refunded (full or partial). If it was tied to one of our
+        // invoices, record the refund as a negative payment so the balance
+        // reflects reality.
+        const charge = event.data.object as Stripe.Charge;
+        const refundedAmount = (charge.amount_refunded || 0) / 100;
+        logStep("Charge refunded", {
+          id: charge.id,
+          amountRefunded: refundedAmount,
+          paymentIntent: charge.payment_intent,
+        });
+
+        // Try to find the originating invoice via the checkout session's payment_intent
+        const piId = typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent?.id;
+        if (!piId) {
+          logStep("Refund: no payment_intent on charge — skipping", { chargeId: charge.id });
+          break;
+        }
+
+        // Find the original payment row by stripe session note
+        const sessions = await stripe.checkout.sessions.list({ payment_intent: piId, limit: 1 });
+        const session = sessions.data[0];
+        if (!session?.metadata?.invoice_id) {
+          logStep("Refund: no matching checkout session with invoice_id", { piId });
+          break;
+        }
+
+        const invoiceId = session.metadata.invoice_id;
+        const refundNote = `Stripe refund ${charge.id}`;
+
+        const { data: inv } = await supabase
+          .from("invoices")
+          .select("team_id, status, total")
+          .eq("id", invoiceId)
+          .single();
+
+        if (!inv) {
+          logStep("Refund: invoice not found", { invoiceId });
+          break;
+        }
+
+        // Insert a negative payment row (idempotent via uq_payments_invoice_notes)
+        const { error: refundErr } = await supabase.from("payments").insert({
+          invoice_id: invoiceId,
+          team_id: inv.team_id,
+          amount: -refundedAmount,
+          payment_method: "card",
+          notes: refundNote,
+        });
+        if (refundErr && (refundErr as any).code !== "23505") {
+          logStep("ERROR inserting refund payment", { invoiceId, error: refundErr.message });
+          throw refundErr;
+        }
+
+        // If fully refunded, flip invoice status back to "sent" so it appears
+        // outstanding again — owner can void or follow up.
+        const fullyRefunded = refundedAmount >= Number(inv.total || 0);
+        if (fullyRefunded) {
+          await supabase
+            .from("invoices")
+            .update({ status: "sent", updated_at: new Date().toISOString() })
+            .eq("id", invoiceId);
+        }
+        logStep("Refund recorded", { invoiceId, refundedAmount, fullyRefunded });
+        break;
+      }
+
+      case "invoice.payment_action_required": {
+        // 3DS / SCA challenge — customer must authenticate. Notify them.
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = typeof invoice.customer === "string"
+          ? invoice.customer
+          : invoice.customer?.id;
+        if (!customerId) break;
+
+        const customer = await stripe.customers.retrieve(customerId);
+        if (!customer.deleted && (customer as Stripe.Customer).email) {
+          const email = (customer as Stripe.Customer).email!;
+          await sendBrandedEmail(
+            supabase,
+            email,
+            "Action required — confirm your Foreman payment",
+            brandedEmailHtml("Confirm your payment", [
+              "Your bank needs you to confirm your latest Foreman payment (3D Secure).",
+              "Until you confirm, the payment hasn't gone through. Tap below to complete it.",
+              `<a href="${invoice.hosted_invoice_url || 'https://foreman.world/settings?tab=billing'}" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Confirm Payment</a>`,
+              "If you don't recognise this, ignore the email and contact support@foreman.ie.",
+            ]),
+            `payment-action-required-${invoice.id}`
+          );
+        }
+        break;
+      }
+
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
@@ -504,8 +631,19 @@ serve(async (req) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     logStep("ERROR", { message: msg });
+
+    // 400 only for signature/parse problems Stripe shouldn't retry.
+    // Everything else (DB hiccups, transient errors) returns 500 so Stripe
+    // retries with exponential backoff for up to 3 days.
+    const isSignatureError =
+      msg.includes("stripe-signature") ||
+      msg.includes("Missing Stripe configuration") ||
+      msg.includes("No signatures found") ||
+      msg.includes("Webhook payload");
+    const status = isSignatureError ? 400 : 500;
+
     return new Response(JSON.stringify({ error: msg }), {
-      status: 400,
+      status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
