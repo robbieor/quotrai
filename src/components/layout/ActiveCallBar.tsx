@@ -61,9 +61,32 @@ export function ActiveCallBar() {
   // Initial top-right position
   useEffect(() => {
     if (isConnected && !pos) {
-      setPos({ x: window.innerWidth - 320 - 24, y: 24 });
+      const w = Math.min(320, window.innerWidth - 32);
+      setPos({ x: Math.max(8, window.innerWidth - w - 24), y: 24 });
     }
   }, [isConnected, pos]);
+
+  // Re-clamp position when viewport changes so card never escapes the screen
+  useEffect(() => {
+    if (!isConnected) return;
+    const onResize = () => {
+      setPos((p) => {
+        if (!p) return p;
+        const w = cardRef.current?.offsetWidth ?? 320;
+        const h = cardRef.current?.offsetHeight ?? 280;
+        return {
+          x: Math.max(8, Math.min(window.innerWidth - w - 8, p.x)),
+          y: Math.max(8, Math.min(window.innerHeight - h - 8, p.y)),
+        };
+      });
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [isConnected]);
 
   // Space-to-mute (matches design caption "Space to mute")
   useEffect(() => {
@@ -184,11 +207,14 @@ export function ActiveCallBar() {
         </div>
       )}
 
-      {/* Compact bottom pill (always visible during call, mirrors design's bottom bar) */}
+      {/* Compact bottom pill — ALWAYS visible during a call so End Call is reachable
+          even if the floating card is dragged off-screen or hidden behind another panel.
+          z-[60] keeps it above AgentTaskPanel/FloatingTomButton. */}
       <div
         className={cn(
-          "fixed z-40 left-1/2 -translate-x-1/2 bottom-6",
-          "flex items-center gap-3 pl-3 pr-2 py-2 rounded-full bg-card border border-border shadow-2xl",
+          "fixed z-[60] left-1/2 -translate-x-1/2 bottom-4 sm:bottom-6",
+          "flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 pr-2 py-2 rounded-full bg-card border border-border shadow-2xl",
+          "max-w-[calc(100vw-1rem)]",
           "animate-fade-in"
         )}
       >
@@ -199,14 +225,18 @@ export function ActiveCallBar() {
             isSpeaking && !muted ? "bg-primary animate-pulse" : "bg-muted-foreground"
           )} />
         </div>
-        <div className="flex flex-col leading-tight pr-1">
-          <span className="text-sm font-semibold text-foreground">
+        <div className="hidden sm:flex flex-col leading-tight pr-1 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">
             Foreman AI {muted ? "muted" : isSpeaking ? "speaking" : "listening"}
           </span>
-          <span className="text-[11px] text-muted-foreground tabular-nums">
+          <span className="text-[11px] text-muted-foreground tabular-nums truncate">
             {formatDuration(elapsed)} · Space to mute
           </span>
         </div>
+        {/* Mobile-only compact timer keeps the pill narrow so End Call stays on-screen */}
+        <span className="sm:hidden text-xs font-mono font-semibold tabular-nums text-foreground pr-1">
+          {formatDuration(elapsed)}
+        </span>
         <button
           onClick={() => setMuted((m) => !m)}
           className="h-9 w-9 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
