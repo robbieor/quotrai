@@ -327,6 +327,8 @@ Deno.serve(async (req) => {
     const nwJobs = jobs.filter((j: any) => { if (!j.scheduled_date) return false; const d = new Date(j.scheduled_date); return d >= nw && d <= tw && ["pending","scheduled","in_progress"].includes(j.status); });
     if (nwJobs.length === 0 && activeJobs.length > 0) actionAlerts.push({ id: "opp-schedule-gap", severity: "opportunity", message: "No jobs scheduled next week — fill the gap", value: `${pendingQuotes.length} pending quotes`, href: "/jobs?status=scheduled" });
 
+    if (unreviewedReceipts > 0) actionAlerts.push({ id: "warning-unreviewed-receipts", severity: "warning", message: `${unreviewedReceipts} receipt${unreviewedReceipts > 1 ? "s" : ""} need${unreviewedReceipts > 1 ? "" : "s"} review`, value: "", href: "/expenses" });
+
     // ── REVENUE CHART (dynamic buckets based on date range) ─────────
     const chartFrom = rangeFrom || subMonths(now, 5);
     const chartTo = rangeTo;
@@ -513,7 +515,8 @@ Deno.serve(async (req) => {
       metrics, controlHeader, kpi, actionAlerts, revenueChartData, jobStatusData, quoteFunnel,
       agingBuckets, agingInvoices, topCustomers, customerProfitability,
       jobsAtRisk, invoicesAtRisk, revenueByJobType, subscriptionCovered,
-      drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList, cashCollected: cashCollectedList, revenueInvoices: revenueInvoicesList },
+      expensesByCategory,
+      drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList, cashCollected: cashCollectedList, revenueInvoices: revenueInvoicesList, expenses: expensesDrillList },
       jobsDueThisWeek, overdueInvoices: overdueList, insights, healthInsights: [],
     };
 
