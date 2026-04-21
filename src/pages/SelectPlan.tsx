@@ -274,7 +274,7 @@ function SelectableTierCard({
       </div>
 
       <ul className="space-y-1.5">
-        {tier.features.slice(0, 4).map((f) => (
+        {(tier.id === 'business' ? tier.features : tier.features.slice(0, 4)).map((f) => (
           <li key={f} className="flex items-start gap-2 text-xs">
             <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
             <span className="text-foreground">{f}</span>

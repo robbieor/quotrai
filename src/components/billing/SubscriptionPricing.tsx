@@ -182,7 +182,7 @@ function CompactTierCard({
         <span className="text-xs text-muted-foreground">/mo</span>
       </div>
       <ul className="space-y-1">
-        {tier.features.slice(0, 3).map((f) => (
+        {(tier.id === 'business' ? tier.features : tier.features.slice(0, 3)).map((f) => (
           <li key={f} className="flex items-start gap-1.5 text-xs">
             <CheckCircle2 className="h-3 w-3 text-primary shrink-0 mt-0.5" />
             <span className="text-foreground line-clamp-1">{f}</span>
