@@ -55,15 +55,22 @@ serve(async (req) => {
       throw new Error("User not in a team");
     }
 
-    // Verify caller is an owner
-    const { data: membership } = await supabaseClient
-      .from("team_memberships")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("team_id", callerProfile.team_id)
-      .single();
-
-    if (!membership || membership.role !== "owner") {
+    // Verify caller is an owner via the v2 model — single source of truth.
+    // Use a user-scoped client so the RPC sees auth.uid().
+    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: orgId } = await userClient.rpc("get_user_org_id_v2");
+    if (!orgId) {
+      return new Response(
+        JSON.stringify({ error: "User not in an organisation" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { data: isOwner, error: ownerErr } = await userClient.rpc("is_org_owner_v2", {
+      _org_id: orgId,
+    });
+    if (ownerErr || !isOwner) {
       return new Response(
         JSON.stringify({ error: "Only team owners can manage Tom Voice access" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
