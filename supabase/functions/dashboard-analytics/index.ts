@@ -259,6 +259,42 @@ Deno.serve(async (req) => {
 
     const controlHeader = { totalOverdue, overdueCount: allOverdue.length, quotesNeedFollowUp: staleQuotes.length, quotesFollowUpValue: staleQuotesValue, stuckJobs: stuckJobs.length, aiRecommendation };
 
+    // ── EXPENSES (money out) ────────────────────────────────────────
+    const allExpenses = (expensesR.data || []) as any[];
+    const periodFromStr = fromDate || fmt(startOfMonth(now), "yyyy-MM-dd");
+    const periodToStr = toDate || fmt(now, "yyyy-MM-dd");
+    const expensesInRange = allExpenses.filter((e: any) => {
+      const d = e.expense_date || "";
+      return d >= periodFromStr && d <= periodToStr;
+    });
+    const moneyOut = expensesInRange.reduce((s, e: any) => s + (Number(e.amount) || 0), 0);
+
+    // Category breakdown
+    const expCatMap: Record<string, { amount: number; count: number }> = {};
+    expensesInRange.forEach((e: any) => {
+      const cat = e.category || "other";
+      if (!expCatMap[cat]) expCatMap[cat] = { amount: 0, count: 0 };
+      expCatMap[cat].amount += Number(e.amount) || 0;
+      expCatMap[cat].count += 1;
+    });
+    const expensesByCategory = Object.entries(expCatMap)
+      .map(([category, d]) => ({ category, amount: d.amount, count: d.count }))
+      .sort((a, b) => b.amount - a.amount);
+
+    // Unreviewed receipts: receipt_url present but description still default-looking
+    const unreviewedReceipts = allExpenses.filter((e: any) =>
+      e.receipt_url && (!e.description || e.description.length < 5 || e.description === "Receipt")
+    ).length;
+
+    const expensesDrillList = expensesInRange.map((e: any) => ({
+      id: e.id,
+      date: e.expense_date,
+      vendor: e.vendor || "—",
+      description: e.description,
+      category: e.category,
+      amount: Number(e.amount) || 0,
+    }));
+
     const kpi = {
       cashCollectedMTD: cashCollected, cashCollectedCount: payments.length,
       outstandingAR: outstandingAmount, outstandingARCount: outstandingInvoices.length,
@@ -266,6 +302,7 @@ Deno.serve(async (req) => {
       revenueMTD: revenueInRange, revenueLastMonth: compRevenue, revenueChangePercent,
       comparisonLabel,
       activeJobs: activeJobs.length, stuckJobs: stuckJobs.length,
+      moneyOut, moneyOutCount: expensesInRange.length, unreviewedReceipts,
     };
 
     // ── ACTION ALERTS ───────────────────────────────────────────────
