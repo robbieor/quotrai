@@ -53,10 +53,8 @@ export function getTierLabel(input: string | null | undefined): string {
   return TIER_LABELS[normaliseTierId(input)];
 }
 
-// Stripe Price IDs per tier — TODO: replace placeholders with real IDs
-// once products are created in Stripe. Crew currently maps to the
-// existing €39 base / €15 seat price IDs as a fallback to avoid breaking
-// checkout. Update these as soon as the new Stripe products are live.
+// Stripe Price IDs per tier — single source of truth.
+// MUST stay in sync with supabase/functions/_shared/pricing.ts → TIER_PRICES.
 export const TIER_STRIPE_PRICES: Record<TierId, {
   monthly: string;
   annual: string;
@@ -64,21 +62,20 @@ export const TIER_STRIPE_PRICES: Record<TierId, {
   seatAnnual?: string;
 }> = {
   solo: {
-    monthly: 'price_TODO_SOLO_MONTHLY', // €29/mo — create in Stripe
-    annual: 'price_TODO_SOLO_ANNUAL',   // €295.80/yr (15% off)
+    monthly: 'price_1T7afYDQETj2awNEcXocEe7h', // €29/mo
+    annual: 'price_1T7apqDQETj2awNEXdefYkfs',  // €295.80/yr
   },
   crew: {
-    // Fallback to legacy base IDs until new €49 prices are created
-    monthly: 'price_1TIJDeDQETj2awNEWxP4bB43',
-    annual: 'price_1TIQvfDQETj2awNEx7bAyHjy',
-    seatMonthly: 'price_1TKjaNDQETj2awNEXHD4jFRq', // €15 (TODO upgrade to €19)
-    seatAnnual: 'price_1TIQw1DQETj2awNEth2a6E8y',  // €153 (TODO upgrade to €193.80)
+    monthly: 'price_1T7agsDQETj2awNEeLQafzg5',     // €49/mo
+    annual: 'price_1T7ahZDQETj2awNE5gr1v6DI',      // €499.80/yr
+    seatMonthly: 'price_1TIJDzDQETj2awNEtiMhRUPR', // €19/mo
+    seatAnnual: 'price_1TIQw1DQETj2awNEth2a6E8y',  // €193.80/yr
   },
   business: {
-    monthly: 'price_1TOmfHDQETj2awNEmqLaXq87', // €89/mo
-    annual: 'price_1TOmfTDQETj2awNEXqEyiiVk',  // €907.80/yr (15% off)
-    seatMonthly: 'price_TODO_BUSINESS_SEAT_MONTHLY', // €19/mo (4th+ user) — TODO create
-    seatAnnual: 'price_TODO_BUSINESS_SEAT_ANNUAL',   // €193.80/yr — TODO create
+    monthly: 'price_1TOmfHDQETj2awNEmqLaXq87',     // €89/mo
+    annual: 'price_1TOmfTDQETj2awNEXqEyiiVk',      // €907.80/yr
+    seatMonthly: 'price_1TIJDzDQETj2awNEtiMhRUPR', // €19/mo (shared seat SKU)
+    seatAnnual: 'price_1TIQw1DQETj2awNEth2a6E8y',  // €193.80/yr
   },
 };
 

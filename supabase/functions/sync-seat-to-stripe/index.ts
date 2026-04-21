@@ -1,16 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import {
+  TIER_PRICES,
+  detectTierFromItems,
+  LEGACY_BASE_PRICES,
+  LEGACY_SEAT_PRICES,
+} from "../_shared/pricing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-// New single-plan pricing
-const BASE_PLAN_PRICE = "price_1TIJDeDQETj2awNEWxP4bB43"; // €39/mo
-const EXTRA_SEAT_PRICE = "price_1TKjaNDQETj2awNEXHD4jFRq"; // €15/mo
-const BASE_USERS = 1;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -66,48 +67,71 @@ serve(async (req) => {
       .eq("status", "active");
 
     const totalMembers = count || (members?.length ?? 0);
-    const desiredExtraSeats = Math.max(0, totalMembers - BASE_USERS);
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get current subscription from Stripe
     const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
 
-    // Find current items by price
+    // Detect the active tier + interval from the existing line items so we
+    // never silently downgrade a Business or Solo subscription to Crew.
+    const detected = detectTierFromItems(stripeSub.items.data);
+    if (!detected) {
+      return new Response(
+        JSON.stringify({
+          error: "Could not detect subscription tier from Stripe line items. Please contact support.",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { tier, interval } = detected;
+    const tierConfig = TIER_PRICES[tier];
+    const intervalKey = interval === "year" ? "year" : "month";
+    const priceSet = tierConfig[intervalKey];
+    const includedSeats = tierConfig.includedSeats;
+    const desiredExtraSeats = Math.max(0, totalMembers - includedSeats);
+
+    // Build a current-items map keyed by price id
     const currentItems: Record<string, { id: string; quantity: number }> = {};
     for (const item of stripeSub.items.data) {
       currentItems[item.price.id] = { id: item.id, quantity: item.quantity || 0 };
     }
 
-    // Calculate updates
     const items: Stripe.SubscriptionUpdateParams.Item[] = [];
 
     // Ensure base plan exists with quantity 1
-    if (currentItems[BASE_PLAN_PRICE]) {
-      if (currentItems[BASE_PLAN_PRICE].quantity !== 1) {
-        items.push({ id: currentItems[BASE_PLAN_PRICE].id, quantity: 1 });
+    if (currentItems[priceSet.base]) {
+      if (currentItems[priceSet.base].quantity !== 1) {
+        items.push({ id: currentItems[priceSet.base].id, quantity: 1 });
       }
     } else {
-      items.push({ price: BASE_PLAN_PRICE, quantity: 1 });
+      items.push({ price: priceSet.base, quantity: 1 });
     }
 
-    // Sync extra seats
-    if (desiredExtraSeats > 0) {
-      if (currentItems[EXTRA_SEAT_PRICE]) {
-        if (currentItems[EXTRA_SEAT_PRICE].quantity !== desiredExtraSeats) {
-          items.push({ id: currentItems[EXTRA_SEAT_PRICE].id, quantity: desiredExtraSeats });
+    // Sync extra seats (only if this tier supports them)
+    if (priceSet.seat) {
+      if (desiredExtraSeats > 0) {
+        if (currentItems[priceSet.seat]) {
+          if (currentItems[priceSet.seat].quantity !== desiredExtraSeats) {
+            items.push({ id: currentItems[priceSet.seat].id, quantity: desiredExtraSeats });
+          }
+        } else {
+          items.push({ price: priceSet.seat, quantity: desiredExtraSeats });
         }
-      } else {
-        items.push({ price: EXTRA_SEAT_PRICE, quantity: desiredExtraSeats });
+      } else if (currentItems[priceSet.seat]) {
+        // Remove seat line item if no longer needed
+        items.push({ id: currentItems[priceSet.seat].id, deleted: true });
       }
-    } else if (currentItems[EXTRA_SEAT_PRICE]) {
-      // Remove extra seat line item if no longer needed
-      items.push({ id: currentItems[EXTRA_SEAT_PRICE].id, deleted: true });
     }
 
-    // Remove any legacy tier items that aren't the new prices
+    // Clean up ONLY recognised legacy items (never delete unknown items —
+    // they may be add-ons we don't know about and deleting them silently
+    // changes what the customer is paying for).
     for (const [priceId, item] of Object.entries(currentItems)) {
-      if (priceId !== BASE_PLAN_PRICE && priceId !== EXTRA_SEAT_PRICE) {
+      if (priceId === priceSet.base) continue;
+      if (priceId === priceSet.seat) continue;
+      if (LEGACY_BASE_PRICES.has(priceId) || LEGACY_SEAT_PRICES.has(priceId)) {
         items.push({ id: item.id, deleted: true });
       }
     }
@@ -132,7 +156,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        tier,
+        interval,
         total_members: totalMembers,
+        included_seats: includedSeats,
         extra_seats: desiredExtraSeats,
         changes: items.length,
       }),

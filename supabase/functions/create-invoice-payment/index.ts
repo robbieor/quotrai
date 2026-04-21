@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Statuses for which a customer is permitted to pay an invoice via portal.
+// Anything else (draft, void, cancelled, paid) is rejected to prevent the
+// webhook from silently flipping a non-payable invoice to "paid".
+const PAYABLE_STATUSES = new Set(["sent", "overdue", "partially_paid", "viewed"]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,6 +38,16 @@ serve(async (req) => {
 
     if (invoice.status === "paid") {
       throw new Error("This invoice has already been paid");
+    }
+
+    // Reject draft, void, cancelled — only allow currently-payable invoices.
+    if (!PAYABLE_STATUSES.has(invoice.status)) {
+      return new Response(
+        JSON.stringify({
+          error: `This invoice is not currently payable (status: ${invoice.status}). Please contact the business that issued it.`,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

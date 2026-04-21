@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { PRICE_TO_PLAN_LABEL } from "../_shared/pricing.ts";
+
+// Invoice statuses that may legitimately transition to "paid" via Stripe payment.
+// If a checkout.session.completed event arrives for an invoice in any other state
+// (draft, void, cancelled), we ignore it instead of silently flipping it to paid.
+const PAYABLE_INVOICE_STATUSES = new Set(["sent", "overdue", "partially_paid", "viewed"]);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -288,6 +294,33 @@ serve(async (req) => {
           const amount = (session.amount_total || 0) / 100;
 
           if (invoiceId) {
+            // Re-read the invoice and only flip to paid if it was in a payable
+            // state. This prevents draft/void invoices from being marked paid
+            // by a stale or replayed Stripe event.
+            const { data: existing } = await supabase
+              .from("invoices")
+              .select("status")
+              .eq("id", invoiceId)
+              .single();
+
+            if (!existing) {
+              logStep("Invoice not found for payment session", { invoiceId });
+              break;
+            }
+
+            if (existing.status === "paid") {
+              logStep("Invoice already paid — skipping duplicate webhook", { invoiceId });
+              break;
+            }
+
+            if (!PAYABLE_INVOICE_STATUSES.has(existing.status)) {
+              logStep("Refusing to mark non-payable invoice as paid", {
+                invoiceId,
+                status: existing.status,
+              });
+              break;
+            }
+
             await supabase
               .from("invoices")
               .update({ status: "paid", updated_at: new Date().toISOString() })
@@ -300,13 +333,27 @@ serve(async (req) => {
               .single();
 
             if (inv) {
-              await supabase.from("payments").insert({
+              // Idempotent insert — uq_payments_invoice_notes guarantees a
+              // single row per (invoice_id, "Stripe checkout cs_..."). If
+              // Stripe retries the same event we silently skip the duplicate.
+              const paymentNote = `Stripe checkout ${session.id}`;
+              const { error: payErr } = await supabase.from("payments").insert({
                 invoice_id: invoiceId,
                 team_id: inv.team_id,
                 amount,
                 payment_method: "card",
-                notes: `Stripe checkout ${session.id}`,
+                notes: paymentNote,
               });
+
+              if (payErr) {
+                // Postgres unique_violation = 23505 → expected on Stripe retry
+                if ((payErr as any).code === "23505") {
+                  logStep("Duplicate payment webhook — already recorded", { invoiceId, sessionId: session.id });
+                  break;
+                }
+                logStep("ERROR inserting payment", { invoiceId, error: payErr.message });
+                throw payErr;
+              }
 
               // Format currency amount
               const curr = inv.currency?.toUpperCase() || "EUR";
@@ -382,19 +429,12 @@ serve(async (req) => {
             await upsertSubscription(supabase, orgId, stripeSub, customerId);
             logStep("Subscription activated via checkout", { orgId });
 
-            // Build detailed plan info from line items (single-plan pricing)
-            const PRICE_TO_PLAN: Record<string, string> = {
-              "price_1TIJDeDQETj2awNEWxP4bB43": "Foreman — Base Plan",
-              "price_1TIQvfDQETj2awNEx7bAyHjy": "Foreman — Base Plan (Annual)",
-              "price_1TKjaNDQETj2awNEXHD4jFRq": "Extra Seat",
-              "price_1TIQw1DQETj2awNEth2a6E8y": "Extra Seat (Annual)",
-            };
-
+            // Build detailed plan info from line items using shared price-label map.
             const planLines: string[] = [];
             let totalSeats = 0;
             for (const item of stripeSub.items.data) {
               const priceId = item.price.id;
-              const planName = PRICE_TO_PLAN[priceId] || item.price.nickname || "Foreman";
+              const planName = PRICE_TO_PLAN_LABEL[priceId] || item.price.nickname || "Foreman";
               const qty = item.quantity || 1;
               totalSeats += qty;
               const currency = (item.price.currency || "eur").toUpperCase();
