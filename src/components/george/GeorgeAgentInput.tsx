@@ -282,7 +282,7 @@ export function GeorgeAgentInput({
           {/* Send Button */}
           <Button
             size="icon"
-            className="shrink-0 rounded-full"
+            className="shrink-0 rounded-full bg-emerald-400 hover:bg-emerald-500 text-emerald-950"
             onClick={handleSendMessage}
             disabled={!message.trim() || isProcessing}
           >
