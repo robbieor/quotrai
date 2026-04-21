@@ -10,10 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Conservative defaults validated against industry benchmarks (Jobber, Tradify)
-const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
+// Hours saved are interpreted as PER PERSON per week — total team savings scale with team size.
+const DEFAULT_HOURS_SAVED_PER_PERSON_PER_WEEK = 2; // ~2 hrs/person/week of admin
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
 const WEEKS_PER_MONTH = 4.33;
-const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
+const MAX_HOURS_SAVED_PER_PERSON_PER_WEEK = 5; // realistic upper bound per person
 
 // Tiered pricing (Apr 2026): Solo €29 · Crew €49 · Business €89
 // Extra seat €19/mo on Crew & Business. Voice is bundled in Crew (60min/seat) and Business (unlimited).
@@ -62,7 +63,7 @@ function calculateForemanCost(teamSize: number): { cost: number; tier: string; b
 
 export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [teamSize, setTeamSize] = useState(5);
-  const [adminHoursPerWeek, setAdminHoursPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_WEEK);
+  const [adminHoursPerPersonPerWeek, setAdminHoursPerPersonPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_PERSON_PER_WEEK);
 
   // Email capture state
   const [email, setEmail] = useState("");
@@ -70,9 +71,9 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  // Calculate savings — hours saved is total team, scales gently with size
-  const scaleFactor = Math.min(teamSize, 10) / 5; // gentle scaling, caps at 2x for 10+ people
-  const potentialHoursSavedPerWeek = Math.min(adminHoursPerWeek * scaleFactor, MAX_HOURS_SAVED_PER_WEEK * scaleFactor);
+  // Calculate savings — per-person hours × team size, gives true linear scaling.
+  const cappedHoursPerPerson = Math.min(adminHoursPerPersonPerWeek, MAX_HOURS_SAVED_PER_PERSON_PER_WEEK);
+  const potentialHoursSavedPerWeek = cappedHoursPerPerson * teamSize;
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
 
@@ -101,7 +102,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
           email,
           name: name || "there",
           teamSize,
-          adminHoursPerWeek,
+          adminHoursPerPersonPerWeek,
           recommendedTier,
           monthlyNetSavings: netMonthlySavings,
           annualSavings,
@@ -151,14 +152,14 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>Admin hours saved/week (total team)</span>
-                <span className="font-semibold">{adminHoursPerWeek} hrs</span>
+                <span>Admin hours saved/person/week</span>
+                <span className="font-semibold">{adminHoursPerPersonPerWeek} hrs</span>
               </div>
               <Slider
-                value={[adminHoursPerWeek]}
-                onValueChange={(v) => setAdminHoursPerWeek(v[0])}
-                min={2}
-                max={15}
+                value={[adminHoursPerPersonPerWeek]}
+                onValueChange={(v) => setAdminHoursPerPersonPerWeek(v[0])}
+                min={1}
+                max={MAX_HOURS_SAVED_PER_PERSON_PER_WEEK}
                 step={1}
                 className="w-full"
               />
@@ -225,22 +226,22 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <label className="text-sm font-medium">Admin Hours Saved/Week</label>
+                  <label className="text-sm font-medium">Admin Hours Saved per Person / Week</label>
                 </div>
                 <Badge variant="secondary" className="text-sm font-semibold">
-                  {adminHoursPerWeek} hrs total
+                  {adminHoursPerPersonPerWeek} hrs / person
                 </Badge>
               </div>
               <Slider
-                value={[adminHoursPerWeek]}
-                onValueChange={(v) => setAdminHoursPerWeek(v[0])}
-                min={2}
-                max={15}
+                value={[adminHoursPerPersonPerWeek]}
+                onValueChange={(v) => setAdminHoursPerPersonPerWeek(v[0])}
+                min={1}
+                max={MAX_HOURS_SAVED_PER_PERSON_PER_WEEK}
                 step={1}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Total team hours saved on quotes, invoices, scheduling, etc.
+                Hours each person saves on quotes, invoices, scheduling — total scales with team size ({Math.round(potentialHoursSavedPerWeek)} hrs/week across {teamSize} {teamSize === 1 ? "person" : "people"}).
               </p>
             </div>
 
