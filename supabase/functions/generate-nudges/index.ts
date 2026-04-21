@@ -39,9 +39,12 @@ serve(async (req) => {
 
     const now = new Date();
     const today = now.toISOString().split("T")[0];
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     // Parallel data queries
-    const [overdueRes, agingQuotesRes, todayJobsRes, profileRes] = await Promise.all([
+    const [overdueRes, agingQuotesRes, todayJobsRes, profileRes, expensesRecentRes, expensesPriorRes, unreviewedRes, jobsOverBudgetRes] = await Promise.all([
       serviceClient
         .from("invoices")
         .select("id, total, due_date, customers(name)")
