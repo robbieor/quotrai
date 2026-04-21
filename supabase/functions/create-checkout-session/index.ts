@@ -7,18 +7,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// New single-plan pricing: €39 base (1 user) + €15/extra seat
-const PRICES = {
-  month: {
-    base: "price_1TIJDeDQETj2awNEWxP4bB43",   // €39/mo
-    seat: "price_1TKjaNDQETj2awNEXHD4jFRq",   // €15/mo
+// 3-tier pricing model (Apr 2026):
+// Solo €29 · Crew €49 (recommended) · Scale €99 · Extra seat €19
+// NOTE: Solo & Scale price IDs are TODO until products are created in
+// Stripe. Crew uses the existing €39/€15 price IDs as a fallback.
+type TierId = "solo" | "crew" | "scale";
+const TIER_PRICES: Record<TierId, {
+  month: { base: string; seat?: string };
+  year: { base: string; seat?: string };
+  includedSeats: number;
+}> = {
+  solo: {
+    month: { base: "price_TODO_SOLO_MONTHLY" },
+    year: { base: "price_TODO_SOLO_ANNUAL" },
+    includedSeats: 1,
   },
-  year: {
-    base: "price_1TIQvfDQETj2awNEx7bAyHjy",   // €397.80/yr (15% off)
-    seat: "price_1TIQw1DQETj2awNEth2a6E8y",   // €153/yr (placeholder)
+  crew: {
+    month: {
+      base: "price_1TIJDeDQETj2awNEWxP4bB43", // €39 (TODO upgrade to €49)
+      seat: "price_1TKjaNDQETj2awNEXHD4jFRq", // €15 (TODO upgrade to €19)
+    },
+    year: {
+      base: "price_1TIQvfDQETj2awNEx7bAyHjy",  // €397.80 (TODO upgrade to €499.80)
+      seat: "price_1TIQw1DQETj2awNEth2a6E8y",  // €153 (TODO upgrade to €193.80)
+    },
+    includedSeats: 1,
+  },
+  scale: {
+    month: {
+      base: "price_TODO_SCALE_MONTHLY",
+      seat: "price_TODO_SCALE_SEAT_MONTHLY",
+    },
+    year: {
+      base: "price_TODO_SCALE_ANNUAL",
+      seat: "price_TODO_SCALE_SEAT_ANNUAL",
+    },
+    includedSeats: 3,
   },
 };
-const BASE_USERS = 1;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
