@@ -111,11 +111,12 @@ Deno.serve(async (req) => {
       compInvoicesQ = compInvoicesQ.eq("customer_id", customerId);
     }
 
-    const [jobsR, invoicesR, quotesR, paymentsR, paymentScoresR, profitR, compInvR, compPayR] = await Promise.all([
+    const [jobsR, invoicesR, quotesR, paymentsR, paymentScoresR, profitR, compInvR, compPayR, expensesR] = await Promise.all([
       jobsQ, invoicesQ, quotesQ, paymentsQ,
       supabase.from("customer_payment_scores").select("customer_id, avg_days_to_pay, late_payments_count, total_invoices_paid"),
       supabase.from("v_job_profitability" as any).select("customer_id, customer_name, estimated_value, total_cost, profit, profit_margin_pct"),
       compInvoicesQ, compPaymentsQ,
+      supabase.from("expenses").select("id, amount, category, expense_date, vendor, description, receipt_url"),
     ]);
 
     if (jobsR.error) throw jobsR.error;
