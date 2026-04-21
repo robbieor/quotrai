@@ -72,12 +72,43 @@ serve(async (req) => {
         .select("full_name")
         .eq("id", user.id)
         .single(),
+      serviceClient
+        .from("expenses")
+        .select("amount, category, expense_date")
+        .eq("team_id", teamId)
+        .gte("expense_date", sevenDaysAgo)
+        .lte("expense_date", today),
+      serviceClient
+        .from("expenses")
+        .select("amount, category")
+        .eq("team_id", teamId)
+        .gte("expense_date", fourteenDaysAgo)
+        .lt("expense_date", sevenDaysAgo),
+      serviceClient
+        .from("expenses")
+        .select("id")
+        .eq("team_id", teamId)
+        .is("vendor", null)
+        .gte("created_at", fourteenDaysAgo),
+      serviceClient
+        .from("v_job_profitability" as any)
+        .select("id, title, estimated_value, total_cost, profit, profit_margin_pct")
+        .eq("team_id", teamId)
+        .lt("profit_margin_pct", 10)
+        .not("total_cost", "is", null)
+        .gt("total_cost", 0)
+        .order("profit", { ascending: true })
+        .limit(5),
     ]);
 
     const overdueInvoices = overdueRes.data || [];
     const agingQuotes = agingQuotesRes.data || [];
     const todayJobs = todayJobsRes.data || [];
     const firstName = profileRes.data?.full_name?.split(" ")[0] || "boss";
+    const expensesRecent = expensesRecentRes.data || [];
+    const expensesPrior = expensesPriorRes.data || [];
+    const unreviewedReceipts = unreviewedRes.data || [];
+    const jobsOverBudget = jobsOverBudgetRes.data || [];
 
     // Build data snapshot for AI
     const dataSnapshot: string[] = [];
