@@ -23,6 +23,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { RecurringInvoicesSection } from "@/components/invoices/RecurringInvoicesSection";
+import { PlanGate } from "@/components/dashboard/PlanGate";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";

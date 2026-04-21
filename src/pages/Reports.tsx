@@ -30,6 +30,7 @@ import {
 } from "@/hooks/useAdvancedReports";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlanGate } from "@/components/dashboard/PlanGate";
 
 function StatCardSkeleton() {
   return (
@@ -131,18 +132,22 @@ export default function Reports() {
           </TabsContent>
 
           <TabsContent value="financials" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <ProfitLossCard />
-            </div>
+            <PlanGate requiredSeat="grow" featureLabel="Profit & Loss (Business+)">
+              <div className="grid gap-6 lg:grid-cols-2">
+                <ProfitLossCard />
+              </div>
+            </PlanGate>
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <RevenueExpenseChart data={revenueExpenses || []} isLoading={revenueExpensesLoading} />
-              <QuoteFunnelChart data={quoteFunnel || []} isLoading={funnelLoading} />
-              <RevenueChart data={monthlyRevenue || []} isLoading={revenueLoading} />
-              <OutstandingInvoicesCard stats={stats} isLoading={statsLoading} />
-            </div>
+            <PlanGate requiredSeat="grow" featureLabel="Advanced Charts (Business+)">
+              <div className="grid gap-6 lg:grid-cols-2">
+                <RevenueExpenseChart data={revenueExpenses || []} isLoading={revenueExpensesLoading} />
+                <QuoteFunnelChart data={quoteFunnel || []} isLoading={funnelLoading} />
+                <RevenueChart data={monthlyRevenue || []} isLoading={revenueLoading} />
+                <OutstandingInvoicesCard stats={stats} isLoading={statsLoading} />
+              </div>
+            </PlanGate>
           </TabsContent>
 
           <TabsContent value="operations" className="space-y-6">
