@@ -75,10 +75,10 @@ export const TIER_STRIPE_PRICES: Record<TierId, {
     seatAnnual: 'price_1TIQw1DQETj2awNEth2a6E8y',  // €153 (TODO upgrade to €193.80)
   },
   business: {
-    monthly: 'price_TODO_BUSINESS_MONTHLY', // €89/mo — create in Stripe
-    annual: 'price_TODO_BUSINESS_ANNUAL',   // €907.80/yr (15% off)
-    seatMonthly: 'price_TODO_BUSINESS_SEAT_MONTHLY', // €19/mo (4th+ user)
-    seatAnnual: 'price_TODO_BUSINESS_SEAT_ANNUAL',   // €193.80/yr
+    monthly: 'price_1TOmfHDQETj2awNEmqLaXq87', // €89/mo
+    annual: 'price_1TOmfTDQETj2awNEXqEyiiVk',  // €907.80/yr (15% off)
+    seatMonthly: 'price_TODO_BUSINESS_SEAT_MONTHLY', // €19/mo (4th+ user) — TODO create
+    seatAnnual: 'price_TODO_BUSINESS_SEAT_ANNUAL',   // €193.80/yr — TODO create
   },
 };
 
