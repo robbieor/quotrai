@@ -1,67 +1,86 @@
 
 
-## Plan: Rename "Scale" → "Business" + add premium value
+## The honest answer
 
-Reframe the €99 tier from "expensive Scale" to "premium Business" by stacking in genuine value that justifies the price and signals it's for serious operators, not just bigger crews.
+You're right. Expenses works in isolation but doesn't feed anywhere meaningful. There's no P&L, no link to job profitability, no unified "money in vs money out" view. It looks like a feature ticked off a list, not part of an operating system.
 
-### What changes
+For a premium AI Ops platform, that's a credibility problem. Tradespeople smell it instantly — "another app where I type stuff in and nothing happens."
 
-**1. Rename the tier**
-- `Scale` → `Business` everywhere (UI, code, Stripe metadata).
-- Tagline shifts from "for bigger crews" to **"For operators running a real business."**
+## What's actually wired today
 
-**2. Add 4 value stacks unique to Business** (none of these exist on Solo/Crew)
+- Expenses page exists, AI can log expenses, receipts scan via Gemini, fuel cards import.
+- **But:** expenses don't appear on the dashboard, don't reduce job profit, don't show in Reports, don't appear in the daily AI briefing, no P&L statement, no category breakdown, no tax-time export.
+- Revenue lives in `dashboard-analytics` edge function. Expenses live in their own silo. The two never meet.
 
-| New benefit | Why it matters |
-|---|---|
-| **Unlimited Foreman AI voice minutes** | Crew gets 60 min/seat/mo. Business removes the cap entirely — power users never think about it. (already in plan, keep) |
-| **Priority support — same-day response** | Crew gets standard support. Business gets a guaranteed same-business-day reply + direct WhatsApp line for owners. |
-| **Advanced reports & exports** | Profit-by-job breakdown, customer profitability ranking, CSV/Excel exports of any view, monthly P&L PDF auto-emailed. Crew sees the dashboard; Business gets the boardroom view. |
-| **Priority AI processing** | Foreman AI requests run on the faster Gemini Pro lane (vs. Flash for Crew) — quotes, summaries, and voice replies feel noticeably snappier. |
+## The fix — make Expenses part of the operating system
 
-Also keep what's already in the plan: **3 seats included** + extra seats at €19.
+Four connected pieces. Each one closes a loop the user can feel.
 
-**3. Updated tier table**
+### 1. Profit & Loss (the headline missing piece)
+
+New page at `/reports` → "Financials" tab → **Profit & Loss** card.
 
 ```text
-                Solo            Crew (most popular)      Business (premium)
-              ─────────         ──────────────────       ──────────────────
-Price         €29/mo            €49/mo                   €99/mo
-Users         1                 1 + €19/extra            3 + €19/extra
-Foreman AI    —                 ✓ (60 min voice/seat)    ✓ Unlimited voice
-Support       Email             Email                    Priority + WhatsApp
-Reports       Standard          Standard                 Advanced + exports + P&L
-AI speed      —                 Standard                 Priority lane
+Revenue (paid invoices)        €24,500
+─ Materials                    €8,200
+─ Labour (timesheets × rate)   €6,400
+─ Expenses (overheads)         €2,100
+─ Subscription                 €39
+═══════════════════════════════
+Net Profit                     €7,761    (31.7% margin)
 ```
 
-**4. UI treatment on the pricing page**
+Period selector (This month / Last month / Quarter / Year). Drill into any row. Export CSV for the accountant.
 
-- Business card gets a subtle "Premium" pill (gold/cream accent), distinct from Crew's green "Most Popular" badge.
-- Card lists the 4 differentiators with checkmarks against Crew (visual "what you also get").
-- One-line headline above the card: **"For trades doing €250k+ a year who want every edge."**
+### 2. Expenses on the Dashboard (Operations)
 
-### Files to edit
+Add to the Operations dashboard:
+- **"Money Out This Month"** KPI tile next to "Cash Collected MTD"
+- **Expense category donut** (Fuel / Materials / Tools / Subscriptions / Other)
+- **"Unreviewed receipts"** action alert when scans are sitting in draft
 
-- `src/hooks/useSubscriptionTier.ts` — rename `TierId` value `'scale'` → `'business'` (string + `TIER_STRIPE_PRICES.business` key + `PRICING.SCALE_*` → `PRICING.BUSINESS_*`). Keep `'scale'` as a deprecated alias for one release so any in-flight subscriptions don't break.
-- `src/pages/Pricing.tsx` — update tier card label, tagline, feature list, "Premium" pill.
-- `src/components/landing/PricingPreviewSection.tsx` — same label/tagline updates.
-- `src/pages/SelectPlan.tsx` — tier picker label + the seat stepper "starts at 3" copy.
-- `src/components/billing/SubscriptionPricing.tsx` — settings → billing tier label.
-- `supabase/functions/create-checkout-session/index.ts` — accept `'business'` in the tier param (keep `'scale'` accepted as alias).
+### 3. Job-level profitability (the killer feature)
 
-### What's NOT changing
+On every Job Detail sheet, add a **Profitability** strip:
 
-- **Price stays €99/mo** (€74.25 with launch discount for first 12 months).
-- **Crew €49 stays the recommended tier** — Business exists to anchor it, not to outsell it.
-- **No Stripe ID changes needed yet** — placeholders are already `price_TODO_SCALE_*`; we'll just rename them to `price_TODO_BUSINESS_*` in the constants. Real Stripe products still need creating later (separate step).
-- **No backend / RLS changes** — purely a naming + presentation update plus the 4 new feature flags (which Crew already lacks, so no removal needed).
+```text
+Quoted: €3,200  ·  Materials: €820  ·  Labour: 12h (€480)  ·  Expenses: €145
+Profit: €1,755  (54.8% margin)   [HEALTHY]
+```
 
-### Implementation order
+Requires linking expenses to a `job_id` (column likely already exists — needs verification). Add a "Job" picker on the expense form and on receipt scan confirmation.
 
-1. Update `useSubscriptionTier.ts` (rename + alias)
-2. Update the 4 UI surfaces with new label, pill, and feature stack
-3. Update edge function alias
-4. Visual QA on `/pricing`, `/select-plan`, settings → billing
+### 4. Daily AI Briefing includes money out
 
-Total: ~15 min, zero risk to live subscribers (alias keeps old `'scale'` references working).
+Foreman AI's morning summary already covers revenue and overdue. Add:
+- "Spent €340 yesterday across 4 expenses — fuel up 22% this week"
+- "3 receipts waiting to be filed"
+- "Job #1284 is over budget — €1,200 quoted, €1,450 spent"
+
+This is the **Insight → Impact → Action** pattern your product spec demands, applied to costs.
+
+## How this justifies the premium price
+
+Today: "Logbook with AI sprinkled on top."
+After: **"The system that tells me if I'm actually making money on every job, every week, every month."**
+
+That's what tradespeople pay €39+/mo for. Jobber and Tradify don't do live job profitability. None of them give a one-tap P&L.
+
+## Build order (ship in 4 atomic steps)
+
+1. **Schema check + link** — ensure `expenses.job_id` exists, backfill where possible, add Job picker to expense form.
+2. **P&L edge function + Reports tab** — new `financial-pnl` function aggregating invoices, expenses, timesheet labour. New "Financials" tab in Reports with the P&L card and CSV export.
+3. **Dashboard wiring** — add Money Out KPI, expense donut, unreviewed-receipts alert into `dashboard-analytics`.
+4. **Job profitability strip + AI briefing extension** — strip on JobDetailSheet; extend `generate-nudges` and the morning summary to include cost insights.
+
+## Technical notes
+
+- All four pieces reuse existing infra: `dashboard-analytics`, `generate-nudges`, `expenses` table, `time_entries`, `invoices`. No new tables expected (pending schema verification on `expenses.job_id` and a `category` enum).
+- P&L computation lives server-side in a new edge function so the same numbers power dashboard tiles, Reports page, and AI briefing — single source of truth, no drift.
+- Currency + date formatting via existing `safeFormatDate` and team currency settings. Irish VAT handled per-line as already standardised.
+- All queries scoped by `team_id` RLS — no policy changes needed.
+
+## What I need from you
+
+Pick the starting point — I recommend shipping all four in order, but if you want to feel a win fast, **#2 (P&L) lands the biggest perceived value in one step.**
 
