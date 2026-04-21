@@ -1,14 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { TIER_PRICES, detectTierFromItems } from "../_shared/pricing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const EXTRA_SEAT_PRICE = "price_1TKjaNDQETj2awNEXHD4jFRq"; // €15/mo
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -36,27 +35,24 @@ serve(async (req) => {
     const { data: orgId } = await supabaseClient.rpc("get_user_org_id_v2");
     if (!orgId) throw new Error("User not in an organisation");
 
-    // Verify owner role
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("team_id")
-      .eq("id", user.id)
-      .single();
+    // Verify owner role using the v2 model — single source of truth
+    const { data: isOwner, error: ownerErr } = await supabaseClient.rpc("is_org_owner_v2", {
+      _org_id: orgId,
+    });
 
-    if (profile?.team_id) {
-      const { data: membership } = await supabaseClient
-        .from("team_memberships")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("team_id", profile.team_id)
-        .single();
+    if (ownerErr) {
+      console.error("is_org_owner_v2 error:", ownerErr);
+      return new Response(
+        JSON.stringify({ error: "Could not verify ownership" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-      if (!membership || !["owner", "ceo"].includes(membership.role)) {
-        return new Response(
-          JSON.stringify({ error: "Only team owners can add subscription seats" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    if (!isOwner) {
+      return new Response(
+        JSON.stringify({ error: "Only team owners can add subscription seats" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Get subscription
@@ -75,22 +71,46 @@ serve(async (req) => {
     // Get current subscription from Stripe
     const stripeSub = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
 
-    // Find the extra seat line item
+    // Detect tier + interval from existing line items
+    const detected = detectTierFromItems(stripeSub.items.data);
+    if (!detected) {
+      return new Response(
+        JSON.stringify({
+          error: "Could not detect subscription tier. Please contact support.",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { tier, interval } = detected;
+    const tierConfig = TIER_PRICES[tier];
+    const priceSet = tierConfig[interval === "year" ? "year" : "month"];
+
+    if (!priceSet.seat) {
+      return new Response(
+        JSON.stringify({
+          error: `The ${tier} plan does not support adding extra seats. Please upgrade.`,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const seatPriceId = priceSet.seat;
+
+    // Find the seat line item for THIS tier (not legacy)
     const extraSeatItem = stripeSub.items.data.find(
-      (item) => item.price.id === EXTRA_SEAT_PRICE
+      (item) => item.price.id === seatPriceId
     );
 
     if (extraSeatItem) {
-      // Increment existing extra seat quantity
       const newQuantity = (extraSeatItem.quantity || 0) + 1;
       await stripe.subscriptions.update(subscription.stripe_subscription_id, {
         items: [{ id: extraSeatItem.id, quantity: newQuantity }],
         proration_behavior: "create_prorations",
       });
     } else {
-      // Add extra seat line item with quantity 1
       await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-        items: [{ price: EXTRA_SEAT_PRICE, quantity: 1 }],
+        items: [{ price: seatPriceId, quantity: 1 }],
         proration_behavior: "create_prorations",
       });
     }
@@ -106,7 +126,7 @@ serve(async (req) => {
       .eq("org_id", orgId);
 
     return new Response(
-      JSON.stringify({ success: true, new_seat_count: newSeatCount }),
+      JSON.stringify({ success: true, new_seat_count: newSeatCount, tier, interval }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
