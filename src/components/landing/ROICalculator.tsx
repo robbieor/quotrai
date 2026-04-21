@@ -102,7 +102,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
           name: name || "there",
           teamSize,
           adminHoursPerWeek,
-          voiceUsers,
+          recommendedTier,
           monthlyNetSavings: netMonthlySavings,
           annualSavings,
           roiMultiple,
@@ -210,10 +210,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
               </div>
               <Slider
                 value={[teamSize]}
-                onValueChange={(v) => {
-                  setTeamSize(v[0]);
-                  if (voiceUsers > v[0]) setVoiceUsers(v[0]);
-                }}
+                onValueChange={(v) => setTeamSize(v[0])}
                 min={1}
                 max={50}
                 step={1}
@@ -247,30 +244,17 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
               </p>
             </div>
 
-            {showVoice && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
-                    <label className="text-sm font-medium">Foreman AI Voice Users</label>
-                  </div>
-                  <Badge variant="secondary" className="text-sm font-semibold">
-                    {voiceUsers} {voiceUsers === 1 ? "user" : "users"}
-                  </Badge>
-                </div>
-                <Slider
-                  value={[voiceUsers]}
-                  onValueChange={(v) => setVoiceUsers(v[0])}
-                  min={0}
-                  max={teamSize}
-                  step={1}
-                  className="w-full"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Team members with hands-free voice access
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <p className="text-xs font-medium text-foreground">
+                  Recommended plan: <span className="font-semibold">{recommendedTier}</span>
                 </p>
               </div>
-            )}
+              <p className="text-xs text-muted-foreground">
+                Foreman AI voice is included — no separate seats to buy.
+              </p>
+            </div>
           </div>
 
           {/* Results */}
@@ -341,8 +325,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
                 €{foremanMonthlyCost}/month
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamSize} seats × €{FOREMAN_SEAT_PRICE}
-                {showVoice && voiceUsers > 0 && ` + ${voiceUsers} voice × €${FOREMAN_VOICE_PRICE}`}
+                {costBreakdown}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50">
