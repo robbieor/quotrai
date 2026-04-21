@@ -15,9 +15,9 @@ interface PlanGateProps {
 }
 
 const SEAT_LABELS: Record<SeatType, string> = {
-  lite: "Lite",
-  connect: "Connect",
-  grow: "Grow",
+  lite: "Solo",
+  connect: "Crew",
+  grow: "Business",
 };
 
 /**
@@ -50,7 +50,7 @@ export function PlanGate({ requiredSeat, children, inline, featureLabel }: PlanG
         Upgrade to {SEAT_LABELS[requiredSeat]} to unlock this.
       </p>
       <Button asChild size="sm" variant="outline" className="gap-1 text-xs h-7">
-        <Link to="/settings?tab=team-billing">
+        <Link to="/pricing">
           Upgrade <ArrowRight className="h-3 w-3" />
         </Link>
       </Button>

@@ -23,6 +23,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { toast } from "sonner";
 import { UpgradePromptBanner } from "@/components/billing/UpgradePromptBanner";
 import { RecurringInvoicesSection } from "@/components/invoices/RecurringInvoicesSection";
+import { PlanGate } from "@/components/dashboard/PlanGate";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { cn } from "@/lib/utils";
 import { formatCurrencyValue, getCurrencyFromCountry } from "@/utils/currencyUtils";
@@ -510,7 +511,9 @@ export default function Invoices() {
       </div>
 
       <Separator className="my-6" />
-      <RecurringInvoicesSection />
+      <PlanGate requiredSeat="connect" featureLabel="Recurring Invoices (Crew+)">
+        <RecurringInvoicesSection />
+      </PlanGate>
 
       <InvoiceFormDialog open={formOpen} onOpenChange={setFormOpen} invoice={selectedInvoice} />
       <DeleteInvoiceDialog open={deleteOpen} onOpenChange={setDeleteOpen} invoice={selectedInvoice} />
