@@ -58,12 +58,6 @@ const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const AIAuditHistory = lazy(() => import("./pages/AIAuditHistory"));
 const VoiceUsage = lazy(() => import("./pages/VoiceUsage"));
 const Industries = lazy(() => import("./pages/Industries"));
-const InvestorPitch = lazy(() => import("./pages/InvestorPitch"));
-const InvestorMarket = lazy(() => import("./pages/InvestorMarket"));
-const InvestorProduct = lazy(() => import("./pages/InvestorProduct"));
-const InvestorTeam = lazy(() => import("./pages/InvestorTeam"));
-const InvestorProjections = lazy(() => import("./pages/FounderProjections"));
-const InvestorForecast = lazy(() => import("./pages/InvestorForecast"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const SubscriptionConfirmed = lazy(() => import("./pages/SubscriptionConfirmed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -155,14 +149,6 @@ const App = () => {
                     <Route path="/industries" element={<Industries />} />
                     <Route path="/accept-invite" element={<AcceptInvite />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
-
-                    {/* Investor deck — gated behind auth */}
-                    <Route path="/investor/pitch" element={<RoleGuard><InvestorPitch /></RoleGuard>} />
-                    <Route path="/investor/market" element={<RoleGuard><InvestorMarket /></RoleGuard>} />
-                    <Route path="/investor/product" element={<RoleGuard><InvestorProduct /></RoleGuard>} />
-                    <Route path="/investor/team" element={<RoleGuard><InvestorTeam /></RoleGuard>} />
-                    <Route path="/investor/projections" element={<RoleGuard><InvestorProjections /></RoleGuard>} />
-                    <Route path="/investor/forecast" element={<RoleGuard><InvestorForecast /></RoleGuard>} />
 
                     {/* Portal pages */}
                     <Route path="/quote/:token" element={<QuotePortal />} />
