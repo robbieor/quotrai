@@ -72,8 +72,8 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
 
   if (isLoading) {
     return (
-      <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:overflow-visible sm:pb-0">
-        {[...Array(5)].map((_, i) => (
+      <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible sm:pb-0">
+        {[...Array(6)].map((_, i) => (
           <div key={i} className="bg-card border border-border rounded-lg p-3 min-w-[170px] shrink-0 snap-start sm:min-w-0 sm:shrink">
             <Skeleton className="h-3 w-16 mb-2" />
             <Skeleton className="h-6 w-20 mb-1" />
@@ -90,12 +90,20 @@ export function KPIStrip({ data, isLoading, onDrillDown }: KPIStripProps) {
   const changePct = Math.abs(data.revenueChangePercent).toFixed(0);
 
   return (
-    <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:overflow-visible sm:pb-0">
+    <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-1 sm:grid sm:gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible sm:pb-0">
       <KPICard
         label={`Cash Collected ${suffix}`}
         value={formatCurrency(data.cashCollectedMTD)}
         subMetric={`${data.cashCollectedCount} payment${data.cashCollectedCount !== 1 ? "s" : ""}`}
         onClick={() => onDrillDown?.("cash")}
+      />
+      <KPICard
+        label={`Money Out ${suffix}`}
+        value={formatCurrency(data.moneyOut || 0)}
+        subMetric={`${data.moneyOutCount || 0} expense${(data.moneyOutCount || 0) !== 1 ? "s" : ""}`}
+        context={data.unreviewedReceipts > 0 ? `${data.unreviewedReceipts} receipt${data.unreviewedReceipts > 1 ? "s" : ""} to review` : "All filed"}
+        contextType={data.unreviewedReceipts > 0 ? "negative" : "positive"}
+        onClick={() => onDrillDown?.("expenses")}
       />
       <KPICard
         label="Outstanding AR"
