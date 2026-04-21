@@ -225,14 +225,18 @@ export function ActiveCallBar() {
             isSpeaking && !muted ? "bg-primary animate-pulse" : "bg-muted-foreground"
           )} />
         </div>
-        <div className="flex flex-col leading-tight pr-1">
-          <span className="text-sm font-semibold text-foreground">
+        <div className="hidden sm:flex flex-col leading-tight pr-1 min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">
             Foreman AI {muted ? "muted" : isSpeaking ? "speaking" : "listening"}
           </span>
-          <span className="text-[11px] text-muted-foreground tabular-nums">
+          <span className="text-[11px] text-muted-foreground tabular-nums truncate">
             {formatDuration(elapsed)} · Space to mute
           </span>
         </div>
+        {/* Mobile-only compact timer keeps the pill narrow so End Call stays on-screen */}
+        <span className="sm:hidden text-xs font-mono font-semibold tabular-nums text-foreground pr-1">
+          {formatDuration(elapsed)}
+        </span>
         <button
           onClick={() => setMuted((m) => !m)}
           className="h-9 w-9 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
