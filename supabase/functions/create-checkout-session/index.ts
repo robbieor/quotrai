@@ -13,6 +13,15 @@ const corsHeaders = {
 // Stripe. Crew uses the existing €39/€15 price IDs as a fallback.
 // 'scale' is accepted as a deprecated alias of 'business' for one release.
 type TierId = "solo" | "crew" | "business";
+
+// Single source of truth for tier display names — keep in sync with
+// src/hooks/useSubscriptionTier.ts → TIER_LABELS. Used in Stripe
+// metadata + custom_text so the dashboard shows "Business" not "business".
+const TIER_LABELS: Record<TierId, string> = {
+  solo: "Solo",
+  crew: "Crew",
+  business: "Business",
+};
 const TIER_PRICES: Record<TierId, {
   month: { base: string; seat?: string };
   year: { base: string; seat?: string };
@@ -166,6 +175,8 @@ serve(async (req) => {
       }
     }
 
+    const tierLabel = TIER_LABELS[tier];
+
     const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
       metadata: {
         org_id: orgMember.org_id,
@@ -174,6 +185,7 @@ serve(async (req) => {
         billing_interval: stripeInterval,
         billing_period: billingPeriod,
         tier,
+        tier_name: tierLabel,
       },
     };
 
@@ -231,6 +243,7 @@ serve(async (req) => {
         billing_interval: stripeInterval,
         billing_period: billingPeriod,
         tier,
+        tier_name: tierLabel,
       },
       billing_address_collection: "required",
       payment_method_collection: "always",
@@ -238,7 +251,7 @@ serve(async (req) => {
       // any confusing legacy product description like "up to 3 accounts"
       custom_text: {
         submit: {
-          message: `Foreman — ${seatLabel} included. Billed ${intervalLabel === "year" ? "annually" : "monthly"}. Cancel anytime.`,
+          message: `Foreman ${tierLabel} — ${seatLabel} included. Billed ${intervalLabel === "year" ? "annually" : "monthly"}. Cancel anytime.`,
         },
       },
       ...(discounts.length > 0 ? { discounts } : {}),
