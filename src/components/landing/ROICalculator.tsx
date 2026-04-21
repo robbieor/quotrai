@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Calculator, TrendingUp, Clock, Users, Sparkles, Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PRICING } from "@/hooks/useSubscriptionTier";
 
 // Conservative defaults validated against industry benchmarks (Jobber, Tradify)
 // Hours saved are interpreted as PER PERSON per week — total team savings scale with team size.
@@ -16,15 +17,15 @@ const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
 const WEEKS_PER_MONTH = 4.33;
 const MAX_HOURS_SAVED_PER_PERSON_PER_WEEK = 5; // realistic upper bound per person
 
-// Tiered pricing (Apr 2026): Solo €29 · Crew €49 · Business €89
-// Extra seat €19/mo on Crew & Business. Voice is bundled in Crew (60min/seat) and Business (unlimited).
+// Tier pricing — sourced from the single source of truth (useSubscriptionTier.PRICING)
+// so this component never drifts from billing.
 const TIER_PRICING = {
-  SOLO: 29,
-  CREW: 49,
-  BUSINESS: 89,
-  EXTRA_SEAT: 19,
-  CREW_INCLUDED_SEATS: 1,
-  BUSINESS_INCLUDED_SEATS: 3,
+  SOLO: PRICING.SOLO,
+  CREW: PRICING.CREW,
+  BUSINESS: PRICING.BUSINESS,
+  EXTRA_SEAT: PRICING.EXTRA_SEAT,
+  CREW_INCLUDED_SEATS: PRICING.CREW_INCLUDED_SEATS,
+  BUSINESS_INCLUDED_SEATS: PRICING.BUSINESS_INCLUDED_SEATS,
 };
 
 type TierKey = "auto" | "solo" | "crew" | "business";
