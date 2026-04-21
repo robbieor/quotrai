@@ -503,13 +503,30 @@ Deno.serve(async (req) => {
     const insights = actionAlerts.map((a: any) => ({ id: a.id, type: a.severity === "critical" ? "warning" : a.severity === "warning" ? "info" : "success", message: a.message, cta: "View", href: a.href }));
 
     // ── Subscription Covered metric ────────────────────────────────
+    // Foreman earns a 2.9% application fee on payments processed via Stripe Connect.
+    // Subscription cost: €39 base + €15 per extra seat (members beyond the owner).
+    // Member count is scoped to the caller's team via RLS on the profiles table.
+    const userId = claimsData.claims.sub as string;
+    const { data: callerProfile } = await supabase
+      .from("profiles")
+      .select("team_id")
+      .eq("id", userId)
+      .maybeSingle();
+    const callerTeamId = callerProfile?.team_id as string | undefined;
+
+    let memberCount = 1;
+    if (callerTeamId) {
+      const { count } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("team_id", callerTeamId);
+      memberCount = Math.max(1, count || 1);
+    }
+
     const platformFeeEarned = cashCollected * 0.029;
-    // Count team members via profiles sharing the same team_id
-    const { data: profileData } = await supabase.from("profiles").select("id").limit(100);
-    const memberCount = (profileData || []).length;
     const subscriptionCost = 39 + Math.max(0, memberCount - 1) * 15;
     const percentCovered = subscriptionCost > 0 ? Math.round((platformFeeEarned / subscriptionCost) * 100) : 0;
-    const subscriptionCovered = { feeEarned: platformFeeEarned, subscriptionCost, percentCovered };
+    const subscriptionCovered = { feeEarned: platformFeeEarned, subscriptionCost, percentCovered, memberCount };
 
     const result = {
       metrics, controlHeader, kpi, actionAlerts, revenueChartData, jobStatusData, quoteFunnel,
