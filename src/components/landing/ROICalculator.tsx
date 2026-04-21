@@ -12,21 +12,58 @@ import { toast } from "sonner";
 // Conservative defaults validated against industry benchmarks (Jobber, Tradify)
 const DEFAULT_HOURS_SAVED_PER_WEEK = 4; // Total team hours saved (not per person)
 const AVERAGE_HOURLY_RATE = 25; // €25/hour — conservative admin cost
-const FOREMAN_SEAT_PRICE = 29; // €29/month per seat
-const FOREMAN_VOICE_PRICE = 20; // €20/month per voice seat
 const WEEKS_PER_MONTH = 4.33;
 const MAX_HOURS_SAVED_PER_WEEK = 6; // Cap at 6hrs/week total team savings
 
+// Tiered pricing (Apr 2026): Solo €29 · Crew €49 · Business €89
+// Extra seat €19/mo on Crew & Business. Voice is bundled in Crew (60min/seat) and Business (unlimited).
+const TIER_PRICING = {
+  SOLO: 29,
+  CREW: 49,
+  BUSINESS: 89,
+  EXTRA_SEAT: 19,
+  CREW_INCLUDED_SEATS: 1,
+  BUSINESS_INCLUDED_SEATS: 3,
+};
+
 interface ROICalculatorProps {
   variant?: "full" | "compact";
+  /** @deprecated Voice is bundled into Crew/Business — prop kept for backward compat */
   showVoice?: boolean;
 }
 
-export function ROICalculator({ variant = "full", showVoice = true }: ROICalculatorProps) {
+/** Pick the cheapest tier that fits the team size, then add extra seats. */
+function calculateForemanCost(teamSize: number): { cost: number; tier: string; breakdown: string } {
+  if (teamSize <= 1) {
+    return { cost: TIER_PRICING.SOLO, tier: "Solo", breakdown: "1 user · Solo plan" };
+  }
+  // Crew: €49 base + €19 per extra seat beyond 1
+  const crewCost = TIER_PRICING.CREW + (teamSize - TIER_PRICING.CREW_INCLUDED_SEATS) * TIER_PRICING.EXTRA_SEAT;
+  // Business: €89 base (3 seats incl.) + €19 per extra seat beyond 3
+  const extraOverBusiness = Math.max(0, teamSize - TIER_PRICING.BUSINESS_INCLUDED_SEATS);
+  const businessCost = TIER_PRICING.BUSINESS + extraOverBusiness * TIER_PRICING.EXTRA_SEAT;
+
+  if (businessCost <= crewCost) {
+    return {
+      cost: businessCost,
+      tier: "Business",
+      breakdown:
+        extraOverBusiness > 0
+          ? `Business €${TIER_PRICING.BUSINESS} + ${extraOverBusiness} extra × €${TIER_PRICING.EXTRA_SEAT}`
+          : `Business €${TIER_PRICING.BUSINESS} · 3 seats included`,
+    };
+  }
+  return {
+    cost: crewCost,
+    tier: "Crew",
+    breakdown: `Crew €${TIER_PRICING.CREW} + ${teamSize - 1} extra × €${TIER_PRICING.EXTRA_SEAT}`,
+  };
+}
+
+export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
   const [teamSize, setTeamSize] = useState(5);
   const [adminHoursPerWeek, setAdminHoursPerWeek] = useState(DEFAULT_HOURS_SAVED_PER_WEEK);
-  const [voiceUsers, setVoiceUsers] = useState(2);
-  
+
   // Email capture state
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -38,10 +75,10 @@ export function ROICalculator({ variant = "full", showVoice = true }: ROICalcula
   const potentialHoursSavedPerWeek = Math.min(adminHoursPerWeek * scaleFactor, MAX_HOURS_SAVED_PER_WEEK * scaleFactor);
   const potentialHoursSavedPerMonth = potentialHoursSavedPerWeek * WEEKS_PER_MONTH;
   const potentialMoneySavedPerMonth = potentialHoursSavedPerMonth * AVERAGE_HOURLY_RATE;
-  
-  // Foreman cost
-  const foremanMonthlyCost = (teamSize * FOREMAN_SEAT_PRICE) + (showVoice ? voiceUsers * FOREMAN_VOICE_PRICE : 0);
-  
+
+  // Foreman cost — cheapest tier that fits the team
+  const { cost: foremanMonthlyCost, tier: recommendedTier, breakdown: costBreakdown } = calculateForemanCost(teamSize);
+
   // Net savings
   const netMonthlySavings = potentialMoneySavedPerMonth - foremanMonthlyCost;
   const annualSavings = netMonthlySavings * 12;
