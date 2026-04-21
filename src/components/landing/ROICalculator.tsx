@@ -289,15 +289,44 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
               </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-xs font-medium text-foreground">
-                  Recommended plan: <span className="font-semibold">{recommendedTier}</span>
-                </p>
+            {/* Tier picker — explore savings by plan */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+                <label className="text-sm font-medium">Plan to evaluate</label>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {([
+                  { key: "auto", label: "Auto" },
+                  { key: "solo", label: "Solo" },
+                  { key: "crew", label: "Crew" },
+                  { key: "business", label: "Business" },
+                ] as { key: TierKey; label: string }[]).map(({ key, label }) => {
+                  const isActive = selectedTier === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelectedTier(key)}
+                      className={`px-2 py-2 rounded-md text-xs font-medium border transition-colors ${
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted border-border text-foreground"
+                      }`}
+                    >
+                      {label}
+                      {key === "auto" && selectedTier === "auto" && (
+                        <span className="block text-[10px] opacity-80 mt-0.5">{recommendedTier}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <p className="text-xs text-muted-foreground">
-                Foreman AI voice is included — no separate seats to buy.
+                {selectedTier === "auto"
+                  ? `Auto-picks the cheapest fit (currently ${recommendedTier}). `
+                  : ""}
+                {TIER_FEATURE_HIGHLIGHTS[activeTier]}
               </p>
             </div>
           </div>
