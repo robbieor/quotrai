@@ -69,27 +69,37 @@ export function ActiveCallBar() {
     }
   }, [isConnected, pos]);
 
-  // Re-clamp position when viewport changes so card never escapes the screen
+  // Re-clamp position when viewport changes (resize, rotation, tab visibility,
+  // route change) so the card never escapes the screen and the user can always
+  // see/grab it. If it ends up too close to an edge, snap it back to top-right.
   useEffect(() => {
     if (!isConnected) return;
-    const onResize = () => {
+    const reclamp = () => {
       setPos((p) => {
-        if (!p) return p;
         const w = cardRef.current?.offsetWidth ?? 320;
         const h = cardRef.current?.offsetHeight ?? 280;
+        const maxX = Math.max(8, window.innerWidth - w - 8);
+        const maxY = Math.max(8, window.innerHeight - h - 8);
+        // No prior position OR off-screen → snap to top-right corner.
+        if (!p || p.x < 8 || p.y < 8 || p.x > window.innerWidth - 40 || p.y > window.innerHeight - 40) {
+          return { x: maxX - 16, y: 24 };
+        }
         return {
-          x: Math.max(8, Math.min(window.innerWidth - w - 8, p.x)),
-          y: Math.max(8, Math.min(window.innerHeight - h - 8, p.y)),
+          x: Math.max(8, Math.min(maxX, p.x)),
+          y: Math.max(8, Math.min(maxY, p.y)),
         };
       });
     };
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
+    const onVis = () => { if (document.visibilityState === "visible") reclamp(); };
+    window.addEventListener("resize", reclamp);
+    window.addEventListener("orientationchange", reclamp);
+    document.addEventListener("visibilitychange", onVis);
     return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
+      window.removeEventListener("resize", reclamp);
+      window.removeEventListener("orientationchange", reclamp);
+      document.removeEventListener("visibilitychange", onVis);
     };
-  }, [isConnected]);
+  }, [isConnected, location.pathname]);
 
   // Space-to-mute (matches design caption "Space to mute")
   useEffect(() => {
