@@ -428,10 +428,35 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       void (async () => {
         try {
+          // Voice-specific persona overrides — keep George conversational on phone calls.
+          // (Requires "Allow overrides" toggled on for First Message + System Prompt
+          // in the ElevenLabs agent settings; if disabled, these are silently ignored.)
+          const userName = contextRef.current.userName?.trim();
+          const firstName = userName ? userName.split(/\s+/)[0] : "";
+          const greeting = firstName
+            ? `Hey ${firstName}, George here. What can I sort for you?`
+            : `Hey, George here. What can I sort for you?`;
+          const voicePromptAddon = [
+            "You are on a live phone call — speak naturally, like a mate on the other end of the line.",
+            "ALWAYS open with a short greeting on the very first turn (a hello + offer to help). Never dive straight into business.",
+            "Speak in short, conversational sentences. NO 'Insight / Impact / Action' headers. NO bullet points. NO markdown. NO numbered lists.",
+            "Say numbers and currency naturally — 'four thousand two hundred euro', not 'EUR 4,200.00'. Say invoice numbers as 'invoice oh forty-eight', not 'Q-0048'.",
+            "Before you send, delete, mark paid, or change anyone's status, confirm out loud first ('want me to send that now?').",
+            "Keep replies under two sentences unless the user asks for detail. If you have a tool to use, just use it and tell them in one line.",
+          ].join(" ");
+          const voiceOverrides = {
+            agent: {
+              firstMessage: greeting,
+              prompt: { prompt: voicePromptAddon },
+              language: "en",
+            },
+          };
+
           const conv = await VoiceConversation.startSession({
             ...(sessionOpts as any),
             dynamicVariables,
             clientTools,
+            overrides: voiceOverrides,
             ...(micStreamRef.current ? { mediaStream: micStreamRef.current } : {}),
             connectionType: ("signedUrl" in sessionOpts ? "websocket" : "webrtc") as "webrtc" | "websocket",
             onConnect: () => {
