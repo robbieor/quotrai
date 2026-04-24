@@ -221,48 +221,58 @@ export function ActiveCallBar() {
         </div>
       )}
 
-      {/* Compact bottom pill — ALWAYS visible during a call so End Call is reachable
-          even if the floating card is dragged off-screen or hidden behind another panel.
-          z-[60] keeps it above AgentTaskPanel/FloatingTomButton. */}
+      {/* Compact bottom pill — ALWAYS visible during a call (every route) so End Call
+          is reachable even if the floating card is dragged off-screen, hidden behind
+          another panel, or the user navigates to a marketing/auth route mid-call.
+          z-[70] keeps it above AgentTaskPanel/FloatingTomButton and the iOS URL bar. */}
       <div
         className={cn(
-          "fixed z-[60] left-1/2 -translate-x-1/2",
-          "flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 pr-2 py-2 rounded-full bg-card border border-border shadow-2xl",
+          "fixed z-[70] left-1/2 -translate-x-1/2",
+          "flex items-center gap-2 pl-2 pr-2 py-2 rounded-full bg-card border border-border shadow-2xl",
           "max-w-[calc(100vw-1rem)]",
           "animate-fade-in"
         )}
-        style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+        style={{ bottom: "max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))" }}
+        role="status"
+        aria-live="polite"
       >
-        <div className="relative">
-          <ForemanAvatar size="sm" />
+        {/* Avatar with stronger pulsing live ring — unmistakable at a glance */}
+        <div className="relative shrink-0">
+          {isSpeaking && !muted && (
+            <span className="absolute inset-0 rounded-full ring-2 ring-primary/60 animate-ping" />
+          )}
+          <span className={cn(
+            "absolute inset-0 rounded-full ring-2",
+            muted ? "ring-muted-foreground/40" : isSpeaking ? "ring-primary" : "ring-primary/50"
+          )} />
+          <ForemanAvatar size="sm" className="relative" />
           <span className={cn(
             "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card",
-            isSpeaking && !muted ? "bg-primary animate-pulse" : "bg-muted-foreground"
+            muted ? "bg-muted-foreground" : isSpeaking ? "bg-primary animate-pulse" : "bg-primary/70"
           )} />
         </div>
-        <div className="hidden sm:flex flex-col leading-tight pr-1 min-w-0">
-          <span className="text-sm font-semibold text-foreground truncate">
-            Foreman AI {muted ? "muted" : isSpeaking ? "speaking" : "listening"}
+
+        {/* Status label — visible on every viewport so user always knows the call is live */}
+        <div className="flex flex-col leading-tight pr-1 min-w-0">
+          <span className="text-xs sm:text-sm font-semibold text-foreground truncate">
+            Foreman AI · {muted ? "Muted" : isSpeaking ? "Speaking" : "Listening"}
           </span>
-          <span className="text-[11px] text-muted-foreground tabular-nums truncate">
-            {formatDuration(elapsed)} · Space to mute
+          <span className="text-[10px] sm:text-[11px] text-muted-foreground tabular-nums truncate">
+            {formatDuration(elapsed)}<span className="hidden sm:inline"> · Space to mute</span>
           </span>
         </div>
-        {/* Mobile-only compact timer keeps the pill narrow so End Call stays on-screen */}
-        <span className="sm:hidden text-xs font-mono font-semibold tabular-nums text-foreground pr-1">
-          {formatDuration(elapsed)}
-        </span>
+
         <button
           onClick={() => setMuted((m) => !m)}
-          className="h-9 w-9 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
+          className="h-9 w-9 shrink-0 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
           aria-label={muted ? "Unmute" : "Mute"}
         >
           {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </button>
-        {collapsed && (
+        {collapsed && !isCardExcluded && (
           <button
             onClick={() => setCollapsed(false)}
-            className="h-9 w-9 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
+            className="h-9 w-9 shrink-0 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
             aria-label="Expand call card"
           >
             <ChevronUp className="h-4 w-4" />
@@ -270,7 +280,7 @@ export function ActiveCallBar() {
         )}
         <button
           onClick={stopConversation}
-          className="h-10 w-10 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground flex items-center justify-center shadow-md active:scale-95 transition-all"
+          className="h-10 w-10 shrink-0 rounded-full bg-destructive hover:bg-destructive/90 text-destructive-foreground flex items-center justify-center shadow-md active:scale-95 transition-all"
           aria-label="End call"
         >
           <PhoneOff className="h-4 w-4" />
