@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
 
-const EXCLUDED_PATHS = ["/", "/login", "/signup", "/request-access", "/forgot-password", "/reset-password", "/portal", "/customer"];
+// Routes where the FULL draggable call card is hidden (marketing/auth/portal).
+// NOTE: the bottom pill remains visible on every route while a call is live so
+// the user can always end the call — see render block below.
+const CARD_EXCLUDED_PATHS = ["/", "/login", "/signup", "/request-access", "/forgot-password", "/reset-password", "/portal", "/customer"];
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
