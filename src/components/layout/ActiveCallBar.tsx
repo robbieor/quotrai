@@ -104,7 +104,7 @@ export function ActiveCallBar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isConnected]);
 
-  if (!isConnected || isExcluded) return null;
+  if (!isConnected) return null;
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!cardRef.current || !pos) return;
