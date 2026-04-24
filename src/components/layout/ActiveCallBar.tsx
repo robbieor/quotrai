@@ -45,7 +45,7 @@ export function ActiveCallBar() {
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const isExcluded = EXCLUDED_PATHS.some((p) =>
+  const isCardExcluded = CARD_EXCLUDED_PATHS.some((p) =>
     location.pathname === p || location.pathname.startsWith("/portal/") || location.pathname.startsWith("/customer")
   );
   const isConnected = status === "connected";
