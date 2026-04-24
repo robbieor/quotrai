@@ -137,8 +137,9 @@ export function ActiveCallBar() {
 
   return (
     <>
-      {/* Floating draggable call card */}
-      {!collapsed && pos && (
+      {/* Floating draggable call card — hidden on marketing/auth/portal routes,
+          but the bottom pill below stays visible so the call is never lost. */}
+      {!collapsed && pos && !isCardExcluded && (
         <div
           ref={cardRef}
           className={cn(
