@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.elevenlabs-agent-token]
 verify_jwt = false
 
+[functions.elevenlabs-agent-admin]
+verify_jwt = false
+
 [functions.elevenlabs-scribe-token]
 verify_jwt = false
 
