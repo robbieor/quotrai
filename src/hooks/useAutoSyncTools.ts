@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
  * so a new deploy re-pushes tools + agent context to ElevenLabs on next page load
  * for every user — silently, no UI involvement.
  */
-const TOOLS_VERSION = "2025-04-18.1";
+const TOOLS_VERSION = "2025-04-19.1";
 const STORAGE_KEY = "__foreman_tools_synced_version__";
 
 export function useAutoSyncTools() {
