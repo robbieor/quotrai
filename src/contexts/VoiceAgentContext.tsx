@@ -686,48 +686,26 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         minute: "2-digit",
       });
 
-      if (isStale()) return;
-      setRetryAttempt(1);
-      setPhase("dialing_webrtc");
-      updateDebug({ transportPath: "webrtc" });
-      addDebugEvent("🚀 Trying WebRTC...");
-
-      try {
-        await startAndWaitForConnect({ conversationToken: token, connectionType: "webrtc" }, dynamicVariables, "WebRTC", attemptId);
-        if (isStale()) return;
-        await createConversationRecord();
-        return;
-      } catch (webrtcErr) {
-        if (isStale()) return;
-        const errMsg = webrtcErr instanceof Error ? webrtcErr.message : String(webrtcErr);
-        addDebugEvent(`⚠️ WebRTC failed: ${errMsg}`);
-        updateDebug({ lastError: errMsg });
-      }
-
-      addDebugEvent("🔄 Tearing down before fallback...");
-      try {
-        await conversationRef.current?.endSession();
-      } catch {
-        // noop
-      }
-      conversationRef.current = null;
-      await new Promise((resolve) => setTimeout(resolve, SESSION_TEARDOWN_DELAY_MS));
-
+      // WebRTC path is currently broken upstream ("v1 RTC path not found" from
+      // ElevenLabs' LiveKit server against the bundled @elevenlabs/client).
+      // It always times out after 8s and falls back to WebSocket anyway, so
+      // we skip it entirely and go straight to WebSocket for a fast, reliable
+      // connect. Re-enable when the SDK is upgraded.
       if (isStale()) return;
       if (!signedUrl) {
-        addDebugEvent("❌ No signed URL for fallback");
-        updateDebug({ lastError: "No WebSocket fallback available" });
+        addDebugEvent("❌ No signed URL available");
+        updateDebug({ lastError: "No WebSocket signed URL available" });
         setStatus("error");
         setPhase("failed");
         setVoiceUnavailable(true);
-        toast.error("Unable to connect to Foreman AI", { description: "WebRTC failed and no fallback is available." });
+        toast.error("Unable to connect to Foreman AI", { description: "Voice session could not be initialised." });
         return;
       }
 
-      setRetryAttempt(2);
+      setRetryAttempt(1);
       setPhase("dialing_websocket");
       updateDebug({ transportPath: "websocket" });
-      addDebugEvent("🔄 Trying WebSocket fallback...");
+      addDebugEvent("🚀 Connecting via WebSocket...");
 
       try {
         await startAndWaitForConnect({ signedUrl, connectionType: "websocket" }, dynamicVariables, "WebSocket", attemptId);
