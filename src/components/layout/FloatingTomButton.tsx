@@ -172,63 +172,38 @@ export function FloatingTomButton() {
         </div>
       )}
 
-      {/* Main Floating Button */}
-      <div className="fixed right-6 z-50" style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
-        {/* Pulsing rings when connecting */}
-        {isConnecting && (
-          <>
-            <span className="absolute inset-0 rounded-full bg-primary/30 animate-ring-pulse" />
-            <span className="absolute inset-0 rounded-full bg-primary/20 animate-ring-pulse-delay-1" />
-            <span className="absolute inset-0 rounded-full bg-primary/10 animate-ring-pulse-delay-2" />
-          </>
-        )}
-        <button
-          onClick={handleMainButtonClick}
-          className={cn(
-            "relative h-14 w-14 rounded-full",
-            "shadow-[0_4px_12px_rgba(13,155,106,0.3)]",
-            "flex items-center justify-center",
-            "hover:scale-110 hover:shadow-xl",
-            "active:scale-95",
-            "transition-all duration-200",
-            isConnected 
-              ? "bg-destructive text-destructive-foreground shadow-destructive/25 hover:shadow-destructive/30 animate-breathe" 
-              : isConnecting
-                ? "bg-destructive/90 text-destructive-foreground shadow-destructive/25"
-                : isExpanded
-                  ? "bg-muted text-foreground border border-border"
-                  : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
-          )}
-          aria-label={isConnected ? "End call" : isConnecting ? "Cancel call" : "Talk to Foreman AI"}
-        >
-          {isConnected ? (
-            <PhoneOff className="h-6 w-6" />
-          ) : isConnecting ? (
-            <PhoneOff className="h-6 w-6" />
-          ) : isExpanded ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Phone className="h-6 w-6" />
-          )}
-        </button>
-      </div>
-
-      {/* Connecting phase indicator */}
-      {isConnecting && (
-        <div
-          className={cn(
-            "fixed right-6 z-50",
-            "px-4 py-2 rounded-full",
-            "bg-card border border-border shadow-lg",
-            "flex items-center gap-2",
-            "animate-fade-in"
-          )}
-          style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
-        >
-          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-ping" />
-          <span className="text-sm font-medium">{phaseLabel}</span>
+      {/* Main Floating Button — hidden once a call is active or connecting.
+          The bottom-center ActiveCallBar pill becomes the single in-call control
+          surface (mute / open chat / end call) so we don't show three call widgets
+          at once on mobile. */}
+      {!isConnected && !isConnecting && (
+        <div className="fixed right-6 z-50" style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
+          <button
+            onClick={handleMainButtonClick}
+            className={cn(
+              "relative h-14 w-14 rounded-full",
+              "shadow-[0_4px_12px_rgba(13,155,106,0.3)]",
+              "flex items-center justify-center",
+              "hover:scale-110 hover:shadow-xl",
+              "active:scale-95",
+              "transition-all duration-200",
+              isExpanded
+                ? "bg-muted text-foreground border border-border"
+                : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
+            )}
+            aria-label="Talk to Foreman AI"
+          >
+            {isExpanded ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Phone className="h-6 w-6" />
+            )}
+          </button>
         </div>
       )}
+      {/* Connecting/connected status pills removed — the bottom-center
+          ActiveCallBar pill now shows phase, "Speaking/Listening", duration,
+          mute and End Call. Avoids three competing call widgets on mobile. */}
 
       {/* Voice Activity Indicator */}
       {isConnected && (
