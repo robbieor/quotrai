@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { VoiceDebugPanel } from "@/components/george/VoiceDebugPanel";
+import { VoiceDiagnosticStrip } from "@/components/george/VoiceDiagnosticStrip";
 import { useAgentTask } from "@/contexts/AgentTaskContext";
 import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -396,6 +397,7 @@ export default function George() {
             <ContextIndicator />
             <GeorgeUsageWarning />
             <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
+            <VoiceDiagnosticStrip />
 
             {memoryPanel}
 
@@ -479,6 +481,7 @@ export default function George() {
                 </Button>
               </div>
               <VoiceFallbackBanner onFocusTextInput={focusTextInput} />
+              <VoiceDiagnosticStrip />
 
               {memoryPanel}
 
