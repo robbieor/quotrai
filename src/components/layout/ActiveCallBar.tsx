@@ -137,89 +137,10 @@ export function ActiveCallBar() {
 
   return (
     <>
-      {/* Floating draggable call card — hidden on marketing/auth/portal routes,
-          but the bottom pill below stays visible so the call is never lost. */}
-      {!collapsed && pos && !isCardExcluded && (
-        <div
-          ref={cardRef}
-          className={cn(
-            "fixed z-50 w-80 rounded-2xl bg-card border border-border shadow-2xl overflow-hidden",
-            "animate-scale-in"
-          )}
-          style={{ left: pos.x, top: pos.y }}
-        >
-          {/* Header (drag handle) */}
-          <div
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground cursor-grab active:cursor-grabbing select-none"
-          >
-            <GripVertical className="h-4 w-4 opacity-80" />
-            <span className="text-xs font-bold tracking-wider uppercase flex-1">Foreman AI Call</span>
-            <Wifi className="h-4 w-4 opacity-90" />
-            <button
-              onClick={() => setCollapsed(true)}
-              className="h-7 w-7 rounded-full hover:bg-white/15 flex items-center justify-center transition-colors"
-              aria-label="Collapse call"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </button>
-            <button
-              onClick={stopConversation}
-              className="h-7 w-7 rounded-full bg-destructive/95 hover:bg-destructive flex items-center justify-center transition-colors"
-              aria-label="End call"
-            >
-              <PhoneOff className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="px-6 py-5 flex flex-col items-center gap-3">
-            <div className="relative">
-              <span className="absolute inset-0 rounded-full ring-2 ring-primary/40 animate-ping" />
-              <span className="absolute inset-0 rounded-full ring-2 ring-primary/60" />
-              <ForemanAvatar size="xl" className="relative" />
-            </div>
-            <div className="text-base font-semibold text-foreground">Foreman AI</div>
-            <div className="text-3xl font-mono font-semibold tabular-nums tracking-wider text-foreground">
-              {formatDuration(elapsed)}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <SignalBars active={isSpeaking && !muted} />
-              <span>{muted ? "Muted" : isSpeaking ? "Speaking…" : "Listening…"}</span>
-            </div>
-
-            {/* Action row */}
-            <div className="flex items-center gap-4 mt-2">
-              <button
-                onClick={() => setMuted((m) => !m)}
-                className={cn(
-                  "h-12 w-12 rounded-full flex items-center justify-center border border-border transition-all active:scale-95",
-                  muted ? "bg-muted text-foreground" : "bg-background hover:bg-muted text-foreground"
-                )}
-                aria-label={muted ? "Unmute" : "Mute"}
-              >
-                {muted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-              </button>
-              <button
-                onClick={stopConversation}
-                className="h-14 w-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:shadow-xl active:scale-95 transition-all"
-                aria-label="End call"
-              >
-                <PhoneOff className="h-6 w-6" />
-              </button>
-              <button
-                onClick={() => navigate("/foreman-ai")}
-                className="h-12 w-12 rounded-full bg-background hover:bg-muted text-foreground flex items-center justify-center border border-border transition-all active:scale-95"
-                aria-label="Open chat"
-              >
-                <MessageSquare className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* NOTE: The large floating draggable call card was removed (2026-04-27) per
+          product feedback — it was too big on mobile and duplicated the bottom pill.
+          The compact bottom pill below is now the SINGLE in-call control surface.
+          Mute, expand-to-chat, and End Call are all reachable from it. */}
 
       {/* Compact bottom pill — ALWAYS visible during a call (every route) so End Call
           is reachable even if the floating card is dragged off-screen, hidden behind
@@ -269,13 +190,15 @@ export function ActiveCallBar() {
         >
           {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </button>
-        {collapsed && !isCardExcluded && (
+        {/* Expand-to-chat: jump to the full Foreman AI screen for context/history.
+            Replaces the old "expand floating card" affordance now that the card is gone. */}
+        {!isCardExcluded && (
           <button
-            onClick={() => setCollapsed(false)}
+            onClick={() => navigate("/foreman-ai")}
             className="h-9 w-9 shrink-0 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
-            aria-label="Expand call card"
+            aria-label="Open Foreman AI chat"
           >
-            <ChevronUp className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </button>
         )}
         <button
