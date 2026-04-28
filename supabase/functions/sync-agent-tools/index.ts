@@ -52,16 +52,20 @@ serve(async (req) => {
       ?? currentAgent?.conversation_config?.tools?.length
       ?? 0;
 
-    // PATCH both the tool list AND the system prompt so George stays in sync with the app.
+    // ElevenLabs migrated agents to a Tools library: agents now reference tools
+    // by `tool_ids` (pointers to documents in the library). Stale ids on this
+    // agent point to deleted tool documents, causing 404 "document_not_found"
+    // on every PATCH. We clear `tool_ids` and send our definitions inline via
+    // `prompt.tools` (the legacy-but-still-supported field).
     const patchBody = {
       conversation_config: {
         agent: {
           prompt: {
             prompt: AGENT_APP_CONTEXT,
             tools,
+            tool_ids: [],
           },
         },
-        tools,
       },
     };
 
