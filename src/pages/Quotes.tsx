@@ -218,7 +218,7 @@ export default function Quotes() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 md:space-y-6">
+      <div className="space-y-4 md:space-y-6" data-section="pending-quotes">
         <UpgradePromptBanner />
 
         {/* === HEADER === */}

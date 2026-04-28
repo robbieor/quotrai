@@ -4,6 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoiceFailureHandler } from "@/hooks/useVoiceFailureHandler";
+import {
+  AGENT_ROUTES,
+  AGENT_RECORDS,
+  AGENT_SECTIONS,
+  isRoute,
+  isRecord,
+  isSection,
+} from "@/lib/agentRegistry";
+import {
+  emitAgentNavigate,
+  emitAgentScroll,
+  emitAgentHighlight,
+  emitAgentProgress,
+} from "@/lib/agentEvents";
 
 interface AgentContext {
   userId?: string;
@@ -267,7 +281,45 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   }, []);
 
   const clientTools = {
-    // ===== LIVE SCREEN CONTROL =====
+    // ===== REGISTRY-DRIVEN SCREEN CONTROL (controlled vocabulary) =====
+    navigate_to: (params: { route: string; reason?: string }) => {
+      if (!params || !isRoute(params.route)) {
+        return `Unknown route: ${params?.route}. Allowed: ${Object.keys(AGENT_ROUTES).join(", ")}`;
+      }
+      const { path, label } = AGENT_ROUTES[params.route];
+      emitAgentNavigate(path, params.reason ?? `Opening ${label}`);
+      return `Navigated to ${label}`;
+    },
+    open_record: (params: { type: string; id: string; reason?: string }) => {
+      if (!params || !isRecord(params.type)) {
+        return `Unknown record type: ${params?.type}. Allowed: ${Object.keys(AGENT_RECORDS).join(", ")}`;
+      }
+      if (!params.id) return "Missing record id";
+      const path = AGENT_RECORDS[params.type](params.id);
+      emitAgentNavigate(path, params.reason ?? `Opening ${params.type} ${params.id}`);
+      return `Opened ${params.type} ${params.id}`;
+    },
+    scroll_to: (params: { section: string }) => {
+      if (!params || !isSection(params.section)) {
+        return `Unknown section: ${params?.section}. Allowed: ${Object.keys(AGENT_SECTIONS).join(", ")}`;
+      }
+      emitAgentScroll(params.section);
+      return `Scrolled to ${AGENT_SECTIONS[params.section]}`;
+    },
+    highlight_element: (params: { section: string; label?: string }) => {
+      if (!params || !isSection(params.section)) {
+        return `Unknown section: ${params?.section}. Allowed: ${Object.keys(AGENT_SECTIONS).join(", ")}`;
+      }
+      emitAgentHighlight(params.section, params.label ?? AGENT_SECTIONS[params.section]);
+      return `Highlighted ${AGENT_SECTIONS[params.section]}`;
+    },
+    report_progress: (params: { message: string; status?: "running" | "done" | "error" }) => {
+      if (!params?.message) return "Missing message";
+      emitAgentProgress(params.message, params.status ?? "running");
+      return "Progress reported";
+    },
+
+    // ===== LEGACY SCREEN CONTROL (kept for backwards compatibility) =====
     show_progress_toast: (params: { message: string; intent?: string; complete?: boolean }) => {
       window.dispatchEvent(new CustomEvent("george:progress", { detail: params }));
       return "ok";

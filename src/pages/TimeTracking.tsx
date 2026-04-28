@@ -120,7 +120,7 @@ export default function TimeTracking() {
   return (
     <DashboardLayout>
       <TimeTrackingErrorBoundary>
-        <div className="space-y-6">
+        <div className="space-y-6" data-section="workforce-status">
           <div>
             <h1 className="text-[28px] font-bold tracking-[-0.02em]">Time Tracking</h1>
           </div>

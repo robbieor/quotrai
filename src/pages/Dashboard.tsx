@@ -218,7 +218,9 @@ function DashboardContent() {
 
         {/* Morning Briefing */}
         <AnimatedSection delay={0}>
-          <MorningBriefingCard />
+          <div data-section="ai-briefing">
+            <MorningBriefingCard />
+          </div>
         </AnimatedSection>
 
         {/* Weekly Planning Strip */}
@@ -233,12 +235,16 @@ function DashboardContent() {
 
         {/* 2. KPI Strip — 5 key metrics */}
         <AnimatedSection delay={40}>
-          <KPIStrip data={data?.kpi} isLoading={isLoading} onDrillDown={handleKPIDrillDown} />
+          <div data-section="revenue-kpis">
+            <KPIStrip data={data?.kpi} isLoading={isLoading} onDrillDown={handleKPIDrillDown} />
+          </div>
         </AnimatedSection>
 
         {/* 3. Action Panel — priority alerts */}
         <AnimatedSection delay={80}>
-          <ActionPanel alerts={data?.actionAlerts} />
+          <div data-section="todays-jobs">
+            <ActionPanel alerts={data?.actionAlerts} />
+          </div>
         </AnimatedSection>
 
         {/* 4. Analytics Zone — Revenue + Quote Pipeline */}
@@ -285,7 +291,9 @@ function DashboardContent() {
         </AnimatedSection>
 
         <AnimatedSection delay={240}>
-          <TopCustomersTable data={data?.topCustomers} />
+          <div data-section="recent-customers">
+            <TopCustomersTable data={data?.topCustomers} />
+          </div>
         </AnimatedSection>
       </div>
 

@@ -13,6 +13,9 @@ import { RolePreviewProvider } from "@/contexts/RolePreviewContext";
 import { RolePreviewBanner } from "@/components/admin/RolePreviewBanner";
 import { NavigationBridge } from "@/components/voice/NavigationBridge";
 import { LiveActionOverlay } from "@/components/voice/LiveActionOverlay";
+import { AgentNavigationBridge } from "@/components/agent/AgentNavigationBridge";
+import { AgentHighlightOverlay } from "@/components/agent/AgentHighlightOverlay";
+import { AgentProgressToast } from "@/components/agent/AgentProgressToast";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { SeatGuard } from "@/components/auth/SeatGuard";
 import { useIsNative } from "@/hooks/useIsNative";
@@ -133,6 +136,9 @@ const App = () => {
                 <RolePreviewProvider>
                   <RolePreviewBanner />
                   <NavigationBridge />
+                  <AgentNavigationBridge />
+                  <AgentHighlightOverlay />
+                  <AgentProgressToast />
                   <LiveActionOverlay />
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
