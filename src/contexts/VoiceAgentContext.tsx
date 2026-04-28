@@ -4,6 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVoiceFailureHandler } from "@/hooks/useVoiceFailureHandler";
+import {
+  AGENT_ROUTES,
+  AGENT_RECORDS,
+  AGENT_SECTIONS,
+  isRoute,
+  isRecord,
+  isSection,
+} from "@/lib/agentRegistry";
+import {
+  emitAgentNavigate,
+  emitAgentScroll,
+  emitAgentHighlight,
+  emitAgentProgress,
+} from "@/lib/agentEvents";
 
 interface AgentContext {
   userId?: string;
