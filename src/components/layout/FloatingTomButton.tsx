@@ -36,7 +36,6 @@ export function FloatingTomButton() {
   
   const { 
     status, 
-    isSpeaking, 
     isConnecting, 
     connectionPhase,
     startConversation, 
@@ -201,28 +200,8 @@ export function FloatingTomButton() {
           </button>
         </div>
       )}
-      {/* Connecting/connected status pills removed — the bottom-center
-          ActiveCallBar pill now shows phase, "Speaking/Listening", duration,
-          mute and End Call. Avoids three competing call widgets on mobile. */}
-
-      {/* Voice Activity Indicator */}
-      {isConnected && (
-        <div
-          className={cn(
-            "fixed right-6 z-50",
-            "px-4 py-2 rounded-full",
-            "bg-card border border-border shadow-lg",
-            "flex items-center gap-2",
-            "animate-fade-in"
-          )}
-          style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
-        >
-          <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm font-medium">
-            {isSpeaking ? "Foreman AI is speaking..." : "Listening..."}
-          </span>
-        </div>
-      )}
+      {/* In-call UI fully owned by ActiveCallBar (bottom-center pill).
+          No right-side speaking/listening pill, no floating phone button. */}
     </>
   );
 }
