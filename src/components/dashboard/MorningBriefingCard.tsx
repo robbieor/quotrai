@@ -22,6 +22,7 @@ export function MorningBriefingCard() {
   const { profile } = useProfile();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
+  const { data: briefing } = useDailyBriefing();
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -43,9 +44,13 @@ export function MorningBriefingCard() {
   const firstName = profile?.full_name?.split(" ")[0] || "boss";
   const greeting = getGreeting();
 
-  // Build summary lines
+  // Prefer AI-generated headline + top priority; fall back to metric lines.
   const lines: string[] = [];
-  if (metrics) {
+  if (briefing?.headline) {
+    lines.push(briefing.headline);
+    const top = briefing.priorities?.[0];
+    if (top) lines.push(`**${top.title}** — ${top.action}`);
+  } else if (metrics) {
     if (metrics.activeJobs > 0) {
       lines.push(`You've got **${metrics.activeJobs} active job${metrics.activeJobs > 1 ? "s" : ""}** on the books.`);
     }
