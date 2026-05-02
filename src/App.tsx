@@ -70,6 +70,7 @@ const Storefront = lazy(() => import("./pages/Storefront"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Briefing = lazy(() => import("./pages/Briefing"));
 const Ask = lazy(() => import("./pages/Ask"));
+const Automations = lazy(() => import("./pages/Automations"));
 
 const queryClient = new QueryClient();
 
