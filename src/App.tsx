@@ -68,6 +68,8 @@ const FunnelAnalytics = lazy(() => import("./pages/FunnelAnalytics"));
 const ConnectProducts = lazy(() => import("./pages/ConnectProducts"));
 const Storefront = lazy(() => import("./pages/Storefront"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const Briefing = lazy(() => import("./pages/Briefing"));
+const Ask = lazy(() => import("./pages/Ask"));
 
 const queryClient = new QueryClient();
 
