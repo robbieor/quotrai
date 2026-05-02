@@ -403,7 +403,14 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Notes</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="overdue_chase"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Payment terms, instructions, etc..."
