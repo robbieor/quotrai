@@ -685,9 +685,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     setPhase("idle");
     toast.dismiss("voice-retry");
 
-    // Clean up mic stream
+    // Clean up mic stream + audio keep-alive + wake lock
     stopMicStream(micStreamRef.current);
     micStreamRef.current = null;
+    stopCallAudioKeepAlive(callAudioRef.current);
+    callAudioRef.current = null;
+    void releaseWakeLock(wakeLockRef.current);
+    wakeLockRef.current = null;
+    cachedTokenRef.current = null;
 
     if (onConnectRejectRef.current) {
       onConnectRejectRef.current(new Error("Cancelled by user"));
