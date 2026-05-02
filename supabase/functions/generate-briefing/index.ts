@@ -137,8 +137,11 @@ Deno.serve(async (req) => {
       (x: any) => x.scheduled_date && x.scheduled_date.slice(0, 10) === todayDate,
     );
     const quotesSent7d = q.filter(
-      (x: any) => x.sent_at && x.sent_at >= sevenDaysAgo,
+      (x: any) => x.status === "sent" && x.updated_at && x.updated_at >= sevenDaysAgo,
     ).length;
+    const ar = autoRuns.data ?? [];
+    const autoRunsLive = ar.filter((r: any) => !r.preview && r.success).length;
+    const autoRunsPreview = ar.filter((r: any) => r.preview).length;
     const invoicesPaid7d = inv.filter(
       (x: any) =>
         x.status === "paid" && x.updated_at && x.updated_at >= sevenDaysAgo,
