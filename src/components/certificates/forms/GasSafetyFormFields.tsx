@@ -100,7 +100,7 @@ export function GasSafetyFormFields({ data, onChange, certificateType }: Props) 
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Gas Type</Label>
               <Select
@@ -229,7 +229,7 @@ export function GasSafetyFormFields({ data, onChange, certificateType }: Props) 
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Flue Type</Label>
                 <Select
@@ -280,7 +280,7 @@ export function GasSafetyFormFields({ data, onChange, certificateType }: Props) 
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Operation</Label>
                 <Select

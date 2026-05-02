@@ -83,7 +83,7 @@ export function EICRFormFields({ data, onChange, certificateType }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Supply Type</Label>
               <Select
@@ -152,7 +152,7 @@ export function EICRFormFields({ data, onChange, certificateType }: Props) {
           <CardTitle className="text-base">Test Results</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Ze (Ω)</Label>
               <Input

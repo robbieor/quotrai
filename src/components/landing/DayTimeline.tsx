@@ -169,7 +169,7 @@ export function DayTimeline() {
         </div>
 
         {/* Timeline cards */}
-        <div className="grid grid-cols-6 gap-4 px-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4 px-4">
           {timelineSteps.map((step, index) => {
             const isActive = index === activeStep;
             

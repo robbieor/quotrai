@@ -98,7 +98,7 @@ export function EndOfDaySummary() {
       {expanded && (
         <CardContent className="space-y-3 pt-0">
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <div className="text-center p-2 rounded-lg bg-background/80">
               <Briefcase className="h-4 w-4 mx-auto text-primary mb-1" />
               <p className="text-lg font-bold">{summary.completedJobs.length}</p>
