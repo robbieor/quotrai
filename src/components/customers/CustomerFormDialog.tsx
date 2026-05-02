@@ -669,7 +669,14 @@ export function CustomerFormDialog({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Notes</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="customer_note"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Any additional notes about this customer..."
