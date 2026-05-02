@@ -434,7 +434,14 @@ export function JobFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="job_description"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Job details and notes..."
