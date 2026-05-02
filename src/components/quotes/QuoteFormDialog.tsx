@@ -423,7 +423,14 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Notes</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="quote_followup"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Additional notes or terms..."
