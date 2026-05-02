@@ -95,10 +95,10 @@ Deno.serve(async (req) => {
     // Gather metrics
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
 
-    const [jobs, quotes, invoices, expenses] = await Promise.all([
+    const [jobs, quotes, invoices, expenses, autoRuns] = await Promise.all([
       admin.from("jobs").select("id,status,scheduled_date,created_at,total")
         .eq("team_id", profile.team_id),
-      admin.from("quotes").select("id,status,total,created_at,sent_at")
+      admin.from("quotes").select("id,status,total,created_at,updated_at")
         .eq("team_id", profile.team_id),
       admin.from("invoices").select("id,status,total,due_date,created_at,updated_at")
         .eq("team_id", profile.team_id),
@@ -106,6 +106,10 @@ Deno.serve(async (req) => {
         .eq("team_id", profile.team_id)
         .gte("created_at", sevenDaysAgo)
         .limit(200),
+      admin.from("automation_runs").select("action,preview,success,ran_at")
+        .eq("team_id", profile.team_id)
+        .gte("ran_at", new Date(Date.now() - 86400_000).toISOString())
+        .limit(50),
     ]);
 
     const j = jobs.data ?? [];
@@ -133,8 +137,11 @@ Deno.serve(async (req) => {
       (x: any) => x.scheduled_date && x.scheduled_date.slice(0, 10) === todayDate,
     );
     const quotesSent7d = q.filter(
-      (x: any) => x.sent_at && x.sent_at >= sevenDaysAgo,
+      (x: any) => x.status === "sent" && x.updated_at && x.updated_at >= sevenDaysAgo,
     ).length;
+    const ar = autoRuns.data ?? [];
+    const autoRunsLive = ar.filter((r: any) => !r.preview && r.success).length;
+    const autoRunsPreview = ar.filter((r: any) => r.preview).length;
     const invoicesPaid7d = inv.filter(
       (x: any) =>
         x.status === "paid" && x.updated_at && x.updated_at >= sevenDaysAgo,

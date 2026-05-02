@@ -242,6 +242,95 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_runs: {
+        Row: {
+          action: string
+          automation_id: string
+          error: string | null
+          id: string
+          metadata: Json | null
+          preview: boolean
+          ran_at: string
+          success: boolean
+          target_id: string | null
+          target_table: string | null
+          team_id: string
+        }
+        Insert: {
+          action: string
+          automation_id: string
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          preview?: boolean
+          ran_at?: string
+          success?: boolean
+          target_id?: string | null
+          target_table?: string | null
+          team_id: string
+        }
+        Update: {
+          action?: string
+          automation_id?: string
+          error?: string | null
+          id?: string
+          metadata?: Json | null
+          preview?: boolean
+          ran_at?: string
+          success?: boolean
+          target_id?: string | null
+          target_table?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "team_automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_suggestions: {
+        Row: {
+          confidence: number
+          created_at: string
+          description: string
+          evidence: Json
+          id: string
+          pattern_key: string
+          status: string
+          team_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          description: string
+          evidence?: Json
+          id?: string
+          pattern_key: string
+          status?: string
+          team_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          description?: string
+          evidence?: Json
+          id?: string
+          pattern_key?: string
+          status?: string
+          team_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       burned_accounts: {
         Row: {
           deleted_at: string
@@ -4724,6 +4813,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_automations: {
+        Row: {
+          action_config: Json
+          created_at: string
+          created_by: string
+          enabled: boolean
+          id: string
+          name: string
+          pattern_key: string
+          preview_mode: boolean
+          run_count: number
+          team_id: string
+          trigger_config: Json
+          updated_at: string
+        }
+        Insert: {
+          action_config?: Json
+          created_at?: string
+          created_by: string
+          enabled?: boolean
+          id?: string
+          name: string
+          pattern_key: string
+          preview_mode?: boolean
+          run_count?: number
+          team_id: string
+          trigger_config?: Json
+          updated_at?: string
+        }
+        Update: {
+          action_config?: Json
+          created_at?: string
+          created_by?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          pattern_key?: string
+          preview_mode?: boolean
+          run_count?: number
+          team_id?: string
+          trigger_config?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       team_catalog_items: {
         Row: {

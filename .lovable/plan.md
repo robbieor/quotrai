@@ -1,81 +1,91 @@
-# Phase 2 — Productize Existing AI Wins
+# Phase 3 — Suggested Automations
 
-Goal: Take the AI capabilities Foreman already has buried inside the dashboard and turn them into named, marketable, standalone surfaces — matching how Jobber merchandises "Copilot", "Insights", etc., but with deeper trade-grounded substance.
+Foreman watches what users do, spots repetitive patterns, and **proposes automations** ("You always send a follow-up 3 days after a quote — want me to do it for you?"). The user one-click approves, and Foreman runs it from then on.
 
-Three deliverables: **Daily Briefing**, **Ask Foreman**, **Trade Benchmarks**.
+This is the moat Jobber doesn't have: AI that learns *your* workflow and offers to take it over, with explicit approval gates.
 
 ---
 
-## 1. Daily Briefing — `/briefing`
+## What ships
 
-Today: `MorningBriefingCard` is a dismissible card on the dashboard pulling from `useDashboardMetrics`. It's basic (active jobs, pending quotes, outstanding invoices, MTD revenue) and not AI-generated.
+### 1. Pattern detection (nightly)
+A new edge function `automation-pattern-detector` runs on a `pg_cron` schedule per team. It analyses the last 30 days of activity and writes proposed rules to `automation_suggestions`.
 
-Upgrade:
-- New route `/briefing` with a full-page briefing report.
-- New edge function `generate-briefing` (Gemini 2.5 Flash) that takes the same metrics + last 7 days of activity (jobs created, quotes sent, invoices paid, overdue counts, weather-sensitive jobs) and produces a structured briefing following the **Insight → Impact → Action** framework.
-- Output sections: *Today's Priorities* (top 3), *Revenue at Risk*, *Workforce Status*, *What Foreman Did Overnight* (auto-generated nudges, drip emails sent, recurring invoices created).
-- Cache result per team per day in a new `daily_briefings` table (team_id, date, content jsonb, generated_at). Regenerate only on demand or when stale > 6 hrs.
-- Dashboard `MorningBriefingCard` shows the AI-generated headline + "View full briefing →" CTA into `/briefing`.
-- Optional email delivery: reuse `process-email-queue` to ship the briefing at 7am team-local time (gated behind a profile preference `briefing_email_enabled`, default off — to be wired in a later step, NOT this phase).
+Patterns it detects (V1 — all data-driven, no AI guesswork):
 
-## 2. Ask Foreman — `/ask`
+| Pattern | Trigger condition |
+|---|---|
+| **Quote follow-up** | User has manually sent ≥3 follow-ups on quotes 2–4 days after `sent_at` |
+| **Overdue chase** | User has manually sent ≥3 reminders on invoices 1–3 days after `due_date` |
+| **Recurring customer** | Same customer has ≥3 jobs in 90 days at similar intervals |
+| **Quote → Job conversion** | User converts ≥80% of accepted quotes to jobs within 24h |
+| **Receipt logged late** | User logs expenses 5+ days after receipt date repeatedly |
 
-Today: Foreman AI chat is embedded behind a floating button. Power users can ask "what's my revenue this month" but it's not discoverable.
+Each suggestion is stored with a *confidence score*, a sample of the events it's based on, and a proposed rule definition.
 
-Upgrade:
-- New route `/ask` — a clean, search-bar-first page ("Ask Foreman anything about your business") with example query chips: *"Which customers haven't paid in 60+ days?"*, *"What was my best month this year?"*, *"Show me jobs running over budget"*.
-- Reuses existing `george-chat` edge function and `useForemanChat` hook — no new backend.
-- Difference from the floating chat: full-width result rendering, persistent query history sidebar (last 20 questions for the team, stored in existing `ai_conversations`), and one-click "Save as Insight" to pin an answer to the dashboard.
-- New table `pinned_insights` (id, team_id, question, answer_markdown, pinned_by, created_at) with team-scoped RLS.
-- Sidebar nav entry "Ask" added under the AI section.
+### 2. `/automations` page
+New route showing two tabs:
 
-## 3. Trade Benchmarks — Anonymous peer comparison
+- **Suggested** — cards for each pending suggestion. Each card shows: pattern title, plain-English description, "Based on X events", sample events, and three buttons: **Enable**, **Customise**, **Dismiss**.
+- **Active** — automations the user has enabled. Toggle on/off, view run history, delete.
 
-Today: No comparative data. Users have no idea if their close rate, average ticket, or response time is good.
+Following the **Working Visibility** principle: when an automation runs, it logs a row to `automation_runs` and surfaces it in the daily briefing's "What Foreman did overnight" section.
 
-Upgrade:
-- New materialized view `team_metrics_aggregated` keyed by `trade_category` and `country`, surfacing:
-  - quote → won conversion rate (median, p25, p75)
-  - average quote value
-  - average days from quote sent → first response
-  - invoice paid-on-time %
-  - jobs per active member per week
-- Refreshed nightly via a `pg_cron` job calling a new `refresh-benchmarks` edge function.
-- Only includes teams with ≥10 quotes and ≥5 invoices in the trailing 90 days (privacy floor, prevents identification).
-- New section on `/briefing` called *How you compare*: shows the team's own number alongside the trade median for their country, with an "above / below median" pill. Trade-aware (electrician benchmarks vs other electricians, not a global average).
-- New RPC `get_team_benchmarks(team_uuid)` returns `{ team_metrics, peer_metrics }`. RLS-safe — team's own raw data + only aggregated peer data, never another team's row.
+### 3. Execution engine
+A new edge function `run-automations` runs on a schedule (every 30 min). It:
+1. Loads all `team_automations` where `enabled = true`.
+2. Evaluates each rule's trigger against current data (e.g. "quotes sent 3 days ago, no reply").
+3. For each match, executes the action (send follow-up email via existing `send-quote-notification` / `send-payment-reminder` functions).
+4. Writes to `automation_runs` for audit.
+
+Only actions Foreman *already* knows how to do (send email, create reminder, log nudge) are eligible — no new integrations.
+
+### 4. Confirmation gates (mandatory per project rules)
+- Suggestions never auto-enable. User must click Enable.
+- Each automation has a "preview mode" toggle: when on, it shows what it *would* do in the briefing without actually sending. Default ON for the first 3 runs of any new automation.
+- Sending automations (email follow-ups) always log a row in `automation_runs` and show in the briefing.
 
 ---
 
 ## Technical summary
 
-**New edge functions**
-- `generate-briefing` — Gemini 2.5 Flash, structured JSON output, caches into `daily_briefings`.
-- `refresh-benchmarks` — recomputes `team_metrics_aggregated`, scheduled nightly via `pg_cron`.
-
 **New tables**
-- `daily_briefings(team_id, briefing_date, content jsonb, generated_at)` — RLS: own team only.
-- `pinned_insights(id, team_id, question, answer_markdown, pinned_by, created_at)` — RLS: own team only.
-- `team_metrics_aggregated` (materialized view) — readable by all authenticated users; only contains aggregates, no team_id.
 
-**New routes / pages**
-- `src/pages/Briefing.tsx`
-- `src/pages/Ask.tsx`
+- `automation_suggestions(id, team_id, pattern_key, title, description, evidence jsonb, confidence numeric, status text, created_at)`
+  - status: `pending` / `enabled` / `dismissed`
+  - team-scoped RLS
+- `team_automations(id, team_id, pattern_key, name, trigger_config jsonb, action_config jsonb, enabled bool, preview_mode bool, created_by, created_at)`
+  - team-scoped RLS, only owners/managers can create
+- `automation_runs(id, automation_id, team_id, ran_at, target_table, target_id, action text, preview bool, success bool, error text)`
+  - team-scoped read; insert via service role only
 
-**New hooks**
-- `useDailyBriefing()` — fetches/triggers cached briefing.
-- `useTradeBenchmarks()` — calls `get_team_benchmarks` RPC.
+**New edge functions**
+
+- `automation-pattern-detector` — scheduled nightly, analyses recent activity, writes suggestions. No AI calls — pure SQL pattern matching.
+- `run-automations` — scheduled every 30 min, evaluates and executes enabled rules. Calls existing `send-quote-notification` / `send-payment-reminder` functions for email actions.
+
+**New pages / hooks**
+
+- `src/pages/Automations.tsx` — Suggested + Active tabs
+- `src/hooks/useAutomations.ts` — list/enable/dismiss/toggle/delete
 
 **Existing files touched**
-- `src/components/dashboard/MorningBriefingCard.tsx` — replace static lines with AI summary headline + CTA.
-- `src/components/layout/AppSidebar.tsx` — add "Briefing" and "Ask" nav entries.
-- `src/App.tsx` — register new routes.
 
-**Memory updates**
-- `mem://strategy/jobber-competitive-response.md` — mark Phase 2 in progress, note Briefing/Ask/Benchmarks scope.
+- `src/App.tsx` — register `/automations` route
+- `src/components/layout/AppSidebar.tsx` — add "Automations" entry under MORE (gated to owners/managers)
+- `supabase/functions/generate-briefing/index.ts` — pull recent `automation_runs` into the "overnight" section so users see what Foreman did
+- `mem://strategy/jobber-competitive-response.md` — mark Phase 3 in progress
 
-**Out of scope for this phase** (parked for Phase 3+)
-- AI Receptionist (parked indefinitely per user)
-- Suggested Automations (`team_automations` table, pattern detector)
-- Email delivery of briefing (toggle exists in DB only, no UI yet)
-- Marketing landing page for these features
+**pg_cron jobs** (registered via insert tool, not migration, since they contain project-specific URL + anon key per project rules)
+
+- `automation-pattern-detector` daily at 03:00 UTC
+- `run-automations` every 30 min
+
+---
+
+## Out of scope for this phase
+
+- AI-suggested automations beyond the 5 hard-coded patterns (later, when we have enough run data to train on)
+- Cross-team / global automation templates ("most plumbers in Ireland do X")
+- Automation marketplace
+- Phase 4/5 marketing reset — separate next step
