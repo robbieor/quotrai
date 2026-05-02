@@ -911,9 +911,13 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setStatus("disconnected");
       setPhase("idle");
 
-      // Clean up mic stream
+      // Clean up mic stream + audio keep-alive + wake lock
       stopMicStream(micStreamRef.current);
       micStreamRef.current = null;
+      stopCallAudioKeepAlive(callAudioRef.current);
+      callAudioRef.current = null;
+      void releaseWakeLock(wakeLockRef.current);
+      wakeLockRef.current = null;
 
       if (keepAliveRef.current) {
         clearInterval(keepAliveRef.current);
