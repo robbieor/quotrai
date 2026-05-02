@@ -328,10 +328,29 @@
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0.75rem);
   }
-  
+
   .safe-area-pt {
     padding-top: env(safe-area-inset-top, 0);
   }
+
+  .safe-area-px {
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
+  /* Mobile-first card padding — used everywhere a Card wraps content. */
+  .card-pad {
+    @apply p-4 sm:p-5 md:p-6;
+  }
+
+  /* Tap target floor for native (Apple HIG = 44pt). Apply to icon-only buttons. */
+  .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Auto-stack any grid that has 3+ cols on mobile by default — opt out with no-stack. */
+  .grid-stack-mobile > * { width: 100%; }
 
   /* Tabular numbers for monetary values */
   .tabular-nums {

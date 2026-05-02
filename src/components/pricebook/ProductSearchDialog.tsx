@@ -170,7 +170,7 @@ export function ProductSearchDialog({ open, onOpenChange, onImport }: ProductSea
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-2 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div>
                   <span className="text-muted-foreground">Web Price</span>
                   <p className="font-medium">{scrapedProduct.website_price ? formatCurrency(scrapedProduct.website_price) : "—"}</p>

@@ -97,7 +97,7 @@ export function LeadFormDialog({ open, onOpenChange, lead, onSubmit, isLoading }
             </div>
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Source</Label>
               <Select value={source} onValueChange={setSource}>

@@ -639,7 +639,7 @@ export function CreatePricebookWizard({ open, onOpenChange, onComplete }: Create
                 {/* Live preview */}
                 <div className="border-t border-border pt-3">
                   <p className="text-xs font-medium text-muted-foreground mb-2">PRICING PREVIEW</p>
-                  <div className="grid grid-cols-4 gap-3 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div>
                       <span className="text-muted-foreground">List Price</span>
                       <p className="font-medium">€100.00</p>

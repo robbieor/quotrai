@@ -155,7 +155,7 @@ export function VoiceUsageDashboard() {
             </p>
           ) : (
             <div className="space-y-1">
-              <div className="grid grid-cols-4 gap-4 text-xs font-medium text-muted-foreground px-2 py-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs font-medium text-muted-foreground px-2 py-1.5">
                 <span>Date</span>
                 <span>Minutes</span>
                 <span>Amount</span>
@@ -164,7 +164,7 @@ export function VoiceUsageDashboard() {
               {purchases.map((purchase) => (
                 <div
                   key={purchase.id}
-                  className="grid grid-cols-4 gap-4 text-sm px-2 py-2 rounded-md hover:bg-muted/50"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm px-2 py-2 rounded-md hover:bg-muted/50"
                 >
                   <span className="tabular-nums">
                     {format(new Date(purchase.purchased_at), "MMM d, yyyy")}
@@ -200,7 +200,7 @@ export function VoiceUsageDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              <div className="grid grid-cols-4 gap-4 text-xs font-medium text-muted-foreground px-2 py-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs font-medium text-muted-foreground px-2 py-1.5">
                 <span>Period</span>
                 <span>Used</span>
                 <span>Limit</span>
@@ -213,7 +213,7 @@ export function VoiceUsageDashboard() {
                 return (
                   <div
                     key={snapshot.id}
-                    className="grid grid-cols-4 gap-4 text-sm px-2 py-2 rounded-md hover:bg-muted/50 items-center"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm px-2 py-2 rounded-md hover:bg-muted/50 items-center"
                   >
                     <span className="tabular-nums">
                       {format(new Date(snapshot.period_start), "MMM yyyy")}
