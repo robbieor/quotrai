@@ -2,8 +2,12 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
+import { initNativeChrome } from "./lib/native";
 
 console.log("[Foreman] Starting app...");
+
+// Native iOS/Android polish (no-op on web).
+initNativeChrome();
 
 // Purge any legacy service workers and caches unconditionally.
 // If stale SW assets are found, reload once so the user never sees an old UI.
