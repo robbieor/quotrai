@@ -140,10 +140,19 @@ export function MorningBriefingCard() {
               size="sm"
               variant="ghost"
               className="gap-1.5 text-xs text-primary"
-              onClick={() => navigate("/foreman-ai")}
+              onClick={() => navigate("/ask")}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Ask Foreman AI
+              Ask Foreman
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-xs text-primary"
+              onClick={() => navigate("/briefing")}
+            >
+              Full briefing
+              <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
