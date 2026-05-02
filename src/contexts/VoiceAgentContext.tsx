@@ -554,6 +554,18 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               if (currentAttemptRef.current !== attemptId && phaseRef.current !== "connected") return;
               const detailText = details ? `: ${JSON.stringify(details).substring(0, 160)}` : "";
               addDebugEvent(`🔌 Disconnected${detailText}`);
+
+              // Extract a human-friendly reason from the SDK details payload
+              // e.g. { reason: "error", message: "...payment issue...", closeCode: 1002 }
+              const d = (details as any) || {};
+              const reasonMsg: string =
+                d.message || d.reason || (typeof details === "string" ? details : "") || "Connection closed";
+              const closeCode = d.closeCode ? ` (code ${d.closeCode})` : "";
+
+              // If we dropped before ever fully connecting, that's a connection
+              // failure — surface it to the user instead of silently dying.
+              const wasConnecting = phaseRef.current !== "connected";
+
               updateDebug({
                 sessionConnected: false,
                 onConnectFired: false,
@@ -568,6 +580,31 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               if (keepAliveRef.current) {
                 clearInterval(keepAliveRef.current);
                 keepAliveRef.current = null;
+              }
+
+              // Tear down the silent audio keep-alive + wake lock on every disconnect
+              stopCallAudioKeepAlive(callAudioRef.current);
+              callAudioRef.current = null;
+              void releaseWakeLock(wakeLockRef.current);
+              wakeLockRef.current = null;
+
+              // Always invalidate the cached token so the next attempt mints a
+              // fresh one (prevents a token issued under a previously-blocked
+              // billing state from being reused).
+              cachedTokenRef.current = null;
+
+              if (wasConnecting) {
+                setPhase("failed");
+                toast.error("Voice disconnected", {
+                  description: `${reasonMsg}${closeCode}`.slice(0, 200),
+                  duration: 7000,
+                });
+                // Reject the pending connect promise so the outer flow knows
+                if (onConnectRejectRef.current) {
+                  onConnectRejectRef.current(new Error(`${reasonMsg}${closeCode}`));
+                  onConnectResolveRef.current = null;
+                  onConnectRejectRef.current = null;
+                }
               }
             },
             onError: (message, context) => {
