@@ -986,6 +986,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
       stopMicStream(micStreamRef.current);
       micStreamRef.current = null;
+      stopCallAudioKeepAlive(callAudioRef.current);
+      callAudioRef.current = null;
+      void releaseWakeLock(wakeLockRef.current);
+      wakeLockRef.current = null;
       void conversationRef.current?.endSession();
     };
   }, []);
