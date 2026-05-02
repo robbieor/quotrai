@@ -34,6 +34,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RewriteButton } from "@/components/ai/RewriteButton";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -402,7 +403,14 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Notes</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="overdue_chase"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Payment terms, instructions, etc..."

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RewriteButton } from "@/components/ai/RewriteButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Lead, LeadInsert } from "@/hooks/useLeads";
 
@@ -90,7 +91,10 @@ export function LeadFormDialog({ open, onOpenChange, lead, onSubmit, isLoading }
             <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description">Description</Label>
+              <RewriteButton value={description} onAccept={setDescription} context="new_lead_reply" />
+            </div>
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -130,7 +134,10 @@ export function LeadFormDialog({ open, onOpenChange, lead, onSubmit, isLoading }
             <Input id="followUp" type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="notes">Notes</Label>
+              <RewriteButton value={notes} onAccept={setNotes} context="customer_note" />
+            </div>
             <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
           <DialogFooter>

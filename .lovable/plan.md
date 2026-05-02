@@ -1,45 +1,114 @@
-## Why George doesn't greet you
+# Foreman AI — Beating Jobber Plan (Receptionist excluded)
 
-When you tap "Call Foreman AI", the connection succeeds (`✅ onConnect fired` in your logs). But ElevenLabs only speaks first if the agent has a **First message** configured. Our `sync-agent-tools` function pushes the system prompt + tools to the agent, but it never sets `first_message` — so the agent waits silently for you to speak.
+## The verdict
 
-The agent prompt in `AGENT_APP_CONTEXT` describes George's personality but contains no opening line, and nothing in the codebase tells ElevenLabs to greet the user.
+Jobber didn't catch up — they caught up to **voice + chat**. They're still behind on **trust, personality, proactivity, trade depth, and photo-to-quote**. With Receptionist parked, the real near-term gap is **Rewrite** (one-click message polish). Everything else is depth and marketing, not capability.
 
-## Plan
+We don't beat them by copying. We ship Rewrite, then **lean into what George does that Jobber can't**.
 
-### 1. Add a first_message to the synced agent config
+---
 
-In `supabase/functions/_shared/foreman-tool-definitions.ts`:
-- Add `export const AGENT_FIRST_MESSAGE = "Howya {{user_name}}, George here. What can I sort for ya?"` (using ElevenLabs dynamic variable syntax — `user_name` is already passed in `dynamicVariables`).
-- Bump `TOOLS_VERSION` to `2025-04-19.2` so every client re-syncs on next page load.
+## Phase 1 — Close the one remaining gap
 
-In `supabase/functions/sync-agent-tools/index.ts`:
-- Import `AGENT_FIRST_MESSAGE`.
-- Include it in the PATCH body under `conversation_config.agent.first_message` so it persists on the agent.
+### Rewrite (1-2 days, huge perceived value)
 
-### 2. Also send it as a per-session override (belt + braces)
+A single "✨ Rewrite" button on every message composer (SMS, email, customer notes, quote/invoice notes, lead replies).
 
-In `src/contexts/VoiceAgentContext.tsx` inside `startAndWaitForConnect` (the `VoiceConversation.startSession({...})` call ~line 537), add:
+- Edge function `foreman-rewrite` — Gemini 2.5 Flash. Inputs: raw text, tone (Professional / Friendly / Firm / Apologetic), context tag (quote follow-up / overdue chase / new lead reply / generic).
+- Inline diff UI — show original vs rewritten, accept/reject, regenerate with different tone.
+- Surfaces in: `SendEmailDialog`, message composer in customer detail, lead reply box, quote/invoice notes, comms templates.
+- Free for all tiers — it's a hook, not a moat.
 
-```ts
-overrides: {
-  agent: {
-    firstMessage: contextRef.current.userName
-      ? `Howya ${contextRef.current.userName}, George here. What can I sort for ya?`
-      : "Howya, George here. What can I sort for ya?",
-  },
-},
+---
+
+## Phase 2 — Make our existing wins visible (1 week)
+
+We already do things Jobber doesn't. We just don't market or surface them.
+
+### 2.1 Daily Briefing as a real product
+
+- 7am push notification + email: "Insight: 3 quotes aging past 14 days (€4,200). Impact: close rate drops from 60% to 22% after day 14. Action: send follow-ups now."
+- One-tap actions inside the briefing.
+- Already partially built (proactive nudges + AI business intelligence engine) — promote to first-class product surface with its own page `/briefing` and consistent morning delivery.
+
+### 2.2 "Ask Foreman" landing surface
+
+George is currently a floating button. Add a dedicated `/ask` page styled like Jobber's chat hero — big input, suggested prompts ("Why are my margins down this month?", "Which customer owes me the most?", "What jobs make me the least money?"), citation-style answers showing which records were used.
+
+### 2.3 Benchmarks (the one thing they explicitly beat us on)
+
+Anonymised cross-team comparisons: "Your average quote-to-cash is 9 days. Median for Irish electricians is 14. You're top quartile."
+
+- Aggregation edge function reading from a new `team_metrics_aggregated` materialised view (no PII, only counts/medians/quartiles by trade + region).
+- Surface inline in dashboard, briefing, and Ask answers.
+
+---
+
+## Phase 3 — Suggested Automations (matches their "learns how you run")
+
+A new `/automations` surface where Foreman watches behaviour and proposes rules:
+
+- "You've manually sent 'thanks for paying' messages to 12 customers this month. Automate it?"
+- "You always schedule plumbing jobs as 2-hour slots. Apply this default?"
+- "Quotes from referrals close 3× more often. Auto-flag and prioritise?"
+
+Pattern detection runs nightly via edge function, surfaces as cards, one-click enable. Each rule writes to a `team_automations` table consumed by existing triggers and the george-webhook engine.
+
+---
+
+## Phase 4 — Differentiation moats (where we go further than Jobber)
+
+### 4.1 Voice agent on speakerphone in the van
+
+Jobber's voice is mobile-app-bound. We already have `voice-agent-hands-free-driving` (silent audio loop + wakeLock). Market it as **"George rides shotgun"** — full demo of a sparkie driving between jobs, asking "what's on for tomorrow", logging materials, sending a quote, all hands-free.
+
+### 4.2 Photo-to-quote in seconds
+
+Jobber doesn't have Gemini Vision photo-to-quote. We do. Surface it on the marketing page, in onboarding, and in a 30-second demo loop.
+
+### 4.3 Live Action Mode confirmation gates
+
+Jobber's automations "just do things". Foreman shows every step before commit. Position as **trust** — "AI that asks before it acts". Ties directly into the Working Visibility Principle already in our memory.
+
+---
+
+## Phase 5 — Marketing reset
+
+Capability is even. Marketing isn't.
+
+- **Rewrite the AI landing page** mirroring Jobber's structure: hero claim → 3 pillars → 5 practical features → testimonial → integrations.
+- **Three 30-second loop videos**: photo-to-quote, hands-free driving, daily briefing.
+- **Side-by-side comparison page** `/foreman-vs-jobber`: trade-aware (yes/no), region-aware (yes/no), photo-to-quote (yes/no), action gates (yes/no), Irish standards (yes/no), benchmarks (yes/no).
+- **Personality angle**: George the Irish foreman vs Jobber's faceless AI. Lean in. It's a moat they can't copy without rebranding.
+
+---
+
+## Suggested sequencing
+
+```text
+Week 1:    Rewrite                           ──► immediate user-visible AI win
+Week 2:    Daily Briefing surface + /ask     ──► promote what we already do
+Week 3:    Benchmarks                        ──► neutralise their data-advantage claim
+Weeks 4-5: Suggested Automations             ──► capability parity
+Week 6:    Marketing relaunch                ──► tell the story we earned
 ```
 
-This guarantees a greeting even if the agent-level field hasn't propagated yet, and personalises it with the actual user name (no template variable substitution needed). Note: ElevenLabs requires "Overrides → First message" to be enabled in the agent settings for this to take effect — if it isn't, step 1 alone still fixes it.
+## Files / surfaces this plan would touch
 
-### 3. Verify
+(Implementation-only — not done in this plan)
 
-After deploy, the `useAutoSyncTools` hook fires once on next login (because `TOOLS_VERSION` bumped), pushing `first_message` to ElevenLabs. The next call should open with George speaking the greeting within ~1s of `onConnect`.
+- New edge functions: `foreman-rewrite`, `automation-pattern-detector`, `team-benchmarks`
+- New pages: `src/components/ai/RewriteButton.tsx`, `src/pages/Ask.tsx`, `src/pages/Automations.tsx`, `src/pages/Briefing.tsx` (promoted from dashboard widget)
+- New tables / views: `team_automations`, `team_metrics_aggregated` (materialised view, no PII)
+- Updated: landing AI page, comparison page, onboarding to include AI tour
 
-## Files changed
+## What this plan does NOT do
 
-- `supabase/functions/_shared/foreman-tool-definitions.ts` — add `AGENT_FIRST_MESSAGE`, bump version
-- `supabase/functions/sync-agent-tools/index.ts` — include `first_message` in PATCH body
-- `src/contexts/VoiceAgentContext.tsx` — add `overrides.agent.firstMessage` to `startSession`
+- Doesn't build AI Receptionist (parked per your call).
+- Doesn't try to out-feature Jobber on count. We win on **judgement, trust, and trade depth**.
+- Doesn't rebuild what works (george-webhook, voice context, memory architecture).
+- Doesn't bloat the agent — every new tool goes through the existing `foreman-tool-definitions.ts` source of truth.
 
-No DB changes, no new secrets.
+---
+
+**Recommendation**: approve Phase 1 (Rewrite) first — small, ships in days, immediately visible to users. Phase 2 is the highest-leverage follow-up because it monetises capability we already have.

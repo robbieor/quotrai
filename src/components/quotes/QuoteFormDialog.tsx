@@ -47,6 +47,7 @@ import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayMo
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
 import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
 import { safeFormatDate } from "@/lib/pdf/dateUtils";
+import { RewriteButton } from "@/components/ai/RewriteButton";
 
 const quoteStatuses = Constants.public.Enums.quote_status;
 
@@ -422,7 +423,14 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Notes</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="quote_followup"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Additional notes or terms..."

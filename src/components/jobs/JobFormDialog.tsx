@@ -37,6 +37,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RewriteButton } from "@/components/ai/RewriteButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -433,7 +434,14 @@ export function JobFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description</FormLabel>
+                    <RewriteButton
+                      value={field.value ?? ""}
+                      onAccept={(v) => field.onChange(v)}
+                      context="job_description"
+                    />
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Job details and notes..."
