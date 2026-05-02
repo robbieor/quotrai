@@ -1,74 +1,56 @@
-# Registry-Driven Voice Agent Screen Control
+## Why this is still failing on mobile
 
-Goal: Give Foreman AI a controlled vocabulary for navigation, record opening, scrolling, highlighting, and progress reporting. The agent never sees raw paths or selectors — only enum keys validated against a single source of truth.
+Console shows nothing because the user is on `/index` (marketing page) where the floating button mounts — the disconnect happens, but no toast surfaces it and the timeline UI lives behind the chat page. Last time the close reason was a clean ElevenLabs payment block (`closeCode: 1002`). Now that billing is sorted, the most likely remaining causes — given the code in `VoiceAgentContext.tsx` — are:
 
-This builds on what already exists (`VoiceAgentContext` already dispatches `george:navigate` and `NavigationBridge` is already mounted) and replaces the loose `navigate_to_screen({ route: "/jobs" })` style with strictly validated enum-driven tools.
+1. **Stale pre-warmed token reused after payment fix.** `preWarmToken()` runs the moment the FAB is expanded and caches the token for 30s. A token minted while the account was in the payment-blocked state can still be returned (or rejected) when redialed. We never clear the cache after a failed connect.
+2. **iOS audio session not held open.** The current code opens an `AudioContext`, resumes, then immediately `close()`s it (lines 661–663). On iOS Safari this releases the audio session before the WS opens, so the agent's first audio frame fails silently and the SDK drops the socket within ~1s. The hands-free silent-audio loop only runs on `/foreman-ai` per memory `voice-agent-hands-free-driving`.
+3. **No keep-alive / wake lock on the landing route.** Calling from the FAB on `/index` means the OS may aggressively suspend the tab, which closes the WS before `onConnect` even resolves on slower mobile networks (>8s timeout fires).
+4. **Silent UX:** all of the above currently look identical to the user — "nothing happens" — because the disconnect detail is only written to the in-memory debug timeline, never toasted.
 
-## What gets built
+## What this plan does
 
-### 1. New files
+### 1. Always show the real failure reason
 
-**`src/lib/agentRegistry.ts`** — single source of truth
-- `AGENT_ROUTES` — 8 keyed routes (dashboard, jobs, invoices, customers, quotes, workforce, reports, settings) mapped to actual app paths. We map `dashboard → /dashboard`, `workforce → /time-tracking` (existing route), and the rest 1:1.
-- `AGENT_RECORDS` — 4 record builders (invoice, job, customer, quote) that return the URL for an id. Note: this app currently uses detail sheets, not detail routes, so these will navigate to the list page with a `?open=<id>` query param the list pages can read to auto-open the sheet (kept simple — listed pages do this in a follow-up if not already wired).
-- `AGENT_SECTIONS` — 7 keyed sections (overdue-invoices, todays-jobs, revenue-kpis, workforce-status, recent-customers, ai-briefing, pending-quotes).
-- `isRoute`, `isRecord`, `isSection` type guards.
+In `src/contexts/VoiceAgentContext.tsx` `onDisconnect`, when the disconnect happens **while we were trying to connect** (phase ≠ `connected`), surface a `toast.error` with the actual `details` payload (reason / closeCode / message). This alone turns "silent failure" into actionable information for any future incident.
 
-**`src/lib/agentEvents.ts`** — typed `window.dispatchEvent` helpers for `foreman-agent-navigate`, `foreman-agent-scroll`, `foreman-agent-highlight`, `foreman-agent-progress`.
+### 2. Drop the cached token on every failure
 
-**`src/components/agent/AgentNavigationBridge.tsx`** — listens for nav + scroll events inside `<BrowserRouter>`, calls `useNavigate()`, and `scrollIntoView` on `[data-section="..."]` elements. Shows a sonner toast with the reason on navigate.
+- Clear `cachedTokenRef.current = null` inside the `onDisconnect` early-drop branch and inside the WebSocket catch block, not just on success.
+- Add a `force` flag to `preWarmToken()` and call it with `force=true` after `stopConversation()` so the next attempt always mints a fresh token.
 
-**`src/components/agent/AgentHighlightOverlay.tsx`** — fixed-position overlay that draws a pulsing primary-green ring around the matched `[data-section]` element for ~3.5s, with an optional label chip. Uses Foreman primary green (#22c55e) per brand identity.
+### 3. Hold an iOS-friendly audio session for the duration of the call
 
-**`src/components/agent/AgentProgressToast.tsx`** — listens for progress events and dispatches sonner toasts (`info` / `success` / `error` based on status).
+Replace the throwaway `AudioContext` block with a sustained one:
 
-### 2. App.tsx wiring
+- Create a single module-level `AudioContext`, `resume()` it inside the click handler (still synchronous to the gesture).
+- Start a tiny silent `OscillatorNode → GainNode(gain=0)` that runs for the lifetime of the call (already proven pattern in `voice-agent-hands-free-driving`).
+- Stop and `close()` it in `stopConversation()` and in `onDisconnect`.
 
-Inside `<BrowserRouter>`, alongside the existing `<NavigationBridge />` and `<LiveActionOverlay />`, mount:
+This keeps the iOS audio session alive across the WS handshake on Safari and Chrome iOS.
+
+### 4. Engage `navigator.wakeLock` for the call, regardless of route
+
+Move the wake-lock acquisition out of the `/foreman-ai` page hook and into `VoiceAgentContext` so it's active whenever a call is connected from the FAB on `/index`, `/dashboard`, etc. Release on `stopConversation` / `onDisconnect`.
+
+### 5. Add a one-shot diagnostic toast on connect timeout
+
+If the 8 s connect timeout fires, toast `"Voice didn't connect (timed out). Reason: <last debug event>"` so the user (and we) can see whether it was mic, token, or WS that hung.
+
+## Files touched
+
 ```
-<AgentNavigationBridge />
-<AgentHighlightOverlay />
-<AgentProgressToast />
+src/contexts/VoiceAgentContext.tsx     core changes (1–5)
 ```
 
-The existing `NavigationBridge` (listens to `george:navigate`) stays — it powers the legacy `navigate_to_screen` tool. The new bridge handles the new controlled-vocabulary tools.
+No DB / edge-function changes required — the previous `sync-agent-tools` fix and the ElevenLabs billing fix already addressed the server-side issues.
 
-### 3. Tag DOM sections with `data-section`
+## Verification steps after the change
 
-Add `data-section="..."` attributes on the relevant containers:
-- `src/pages/Dashboard.tsx` — wrap the AI briefing card (`ai-briefing`), revenue KPI row (`revenue-kpis`), today's jobs list (`todays-jobs`), recent customers list (`recent-customers`).
-- `src/pages/Invoices.tsx` — overdue list/filter container (`overdue-invoices`).
-- `src/pages/Quotes.tsx` — pending quotes container (`pending-quotes`).
-- `src/pages/TimeTracking.tsx` — clock-in status panel (`workforce-status`).
+1. Open the deployed site on mobile Safari → tap "Call Foreman AI".
+2. Expected: spinner → "Connected to Foreman AI" toast → speak → reply.
+3. If it fails: a toast now shows the exact disconnect reason (closeCode + message). Paste that and I'll know whether it's billing, quota, or audio-session.
 
-Missing sections no-op with a console warning (per spec) — no crash.
+## Out of scope
 
-### 4. Register the 5 new client tools
-
-In `src/contexts/VoiceAgentContext.tsx` `clientTools` block, add:
-- `navigate_to({ route, reason? })`
-- `open_record({ type, id, reason? })`
-- `scroll_to({ section })`
-- `highlight_element({ section, label? })`
-- `report_progress({ message, status? })`
-
-All inputs validated via `isRoute` / `isRecord` / `isSection`. Invalid input returns a clear error string instead of dispatching. The legacy tools (`navigate_to_screen`, `highlight_record`, `show_progress_toast`) remain for backwards compatibility with the existing ElevenLabs agent config until the dashboard is updated.
-
-### 5. ElevenLabs dashboard (manual user step)
-
-The ElevenLabs agent config must add the 5 new tools with the enum parameters listed in the spec. We will surface a clear note in the response telling the user to add these via the ElevenLabs dashboard (we cannot edit it from code). The system prompt update is also a manual ElevenLabs dashboard step — we'll provide the exact prompt text.
-
-## Technical notes
-
-- The voice provider (`VoiceAgentProvider`) sits above `<BrowserRouter>` in `App.tsx`, so the window-event bridge pattern (already used by `NavigationBridge`) is mandatory — `useNavigate()` must be called from inside the router.
-- Highlight overlay renders into a portal-free fixed div at z-index above sonner (`z-[9999]`) so it sits above `ActiveCallBar` (`z-[70]`) and modals.
-- `AGENT_RECORDS` URLs assume future detail-route support; for now they navigate to `/invoices?open=<id>` style — list pages can read this in a future follow-up. The validation/contract is what matters now.
-- No changes to `useElevenLabsAgent.ts` (deprecated path); only `VoiceAgentContext.tsx` (the active voice path).
-
-## Acceptance
-
-- "Open invoices" → `/invoices` + nav toast
-- "Show overdue invoices" → navigates to `/invoices`, then green pulsing ring on overdue section
-- Multi-step work → running/done toasts via `report_progress`
-- Invalid `route: "foobar"` → returns `"Unknown route: foobar"`, no crash
-- Adding a new page = one entry in `AGENT_ROUTES` + one ElevenLabs enum update
+- The `/foreman-ai` chat route already has its own keep-alive; we'll consolidate later, not in this fix.
+- WebRTC path stays disabled (upstream SDK bug, per the existing comment).
