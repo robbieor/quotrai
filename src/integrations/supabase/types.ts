@@ -1175,6 +1175,33 @@ export type Database = {
           },
         ]
       }
+      daily_briefings: {
+        Row: {
+          briefing_date: string
+          content: Json
+          created_at: string
+          generated_at: string
+          id: string
+          team_id: string
+        }
+        Insert: {
+          briefing_date: string
+          content: Json
+          created_at?: string
+          generated_at?: string
+          id?: string
+          team_id: string
+        }
+        Update: {
+          briefing_date?: string
+          content?: Json
+          created_at?: string
+          generated_at?: string
+          id?: string
+          team_id?: string
+        }
+        Relationships: []
+      }
       dashboard_layouts: {
         Row: {
           created_at: string
@@ -3398,6 +3425,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pinned_insights: {
+        Row: {
+          answer_markdown: string
+          created_at: string
+          id: string
+          pinned_by: string
+          question: string
+          team_id: string
+        }
+        Insert: {
+          answer_markdown: string
+          created_at?: string
+          id?: string
+          pinned_by: string
+          question: string
+          team_id: string
+        }
+        Update: {
+          answer_markdown?: string
+          created_at?: string
+          id?: string
+          pinned_by?: string
+          question?: string
+          team_id?: string
+        }
+        Relationships: []
       }
       plan_prices_v2: {
         Row: {
@@ -5685,6 +5739,19 @@ export type Database = {
           },
         ]
       }
+      team_metrics_aggregated: {
+        Row: {
+          avg_quote_value_median: number | null
+          close_rate_median: number | null
+          close_rate_p25: number | null
+          close_rate_p75: number | null
+          country: string | null
+          paid_on_time_median: number | null
+          team_count: number | null
+          trade_type: string | null
+        }
+        Relationships: []
+      }
       team_public: {
         Row: {
           created_at: string | null
@@ -6421,6 +6488,7 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.get_quote_by_portal_token(token => text), public.get_quote_by_portal_token(token => uuid). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
+      get_team_benchmarks: { Args: { _team_id: string }; Returns: Json }
       get_team_george_users: {
         Args: { target_team_id: string }
         Returns: {
@@ -6546,6 +6614,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_team_benchmarks: { Args: never; Returns: undefined }
       seed_new_category_templates: {
         Args: { p_team_id: string }
         Returns: undefined
