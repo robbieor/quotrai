@@ -15,6 +15,7 @@ import { DemoVideoSection } from "@/components/landing/DemoVideoSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { SolutionSection } from "@/components/landing/SolutionSection";
 import { ForemanAISection } from "@/components/landing/ForemanAISection";
+import { DifferentiatorsSection } from "@/components/landing/DifferentiatorsSection";
 import { OutcomesSection } from "@/components/landing/OutcomesSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { SocialProofSection } from "@/components/landing/SocialProofSection";
@@ -175,6 +176,9 @@ export default function Landing() {
 
       {/* Section 4: Foreman AI */}
       <ForemanAISection formatPrice={formatPrice} />
+
+      {/* Section 4b: Differentiators (Phase 4 marketing) */}
+      <DifferentiatorsSection />
 
       {/* Section 5: Outcomes */}
       <OutcomesSection />
