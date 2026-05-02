@@ -4,8 +4,9 @@ import { useDashboardMetrics } from "@/hooks/useDashboardData";
 import { useProfile } from "@/hooks/useProfile";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Button } from "@/components/ui/button";
-import { X, Calendar, Receipt, FileText, Sparkles } from "lucide-react";
+import { X, Calendar, Receipt, FileText, Sparkles, ArrowRight } from "lucide-react";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
+import { useDailyBriefing } from "@/hooks/useDailyBriefing";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -21,6 +22,7 @@ export function MorningBriefingCard() {
   const { profile } = useProfile();
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
+  const { data: briefing } = useDailyBriefing();
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -42,9 +44,13 @@ export function MorningBriefingCard() {
   const firstName = profile?.full_name?.split(" ")[0] || "boss";
   const greeting = getGreeting();
 
-  // Build summary lines
+  // Prefer AI-generated headline + top priority; fall back to metric lines.
   const lines: string[] = [];
-  if (metrics) {
+  if (briefing?.headline) {
+    lines.push(briefing.headline);
+    const top = briefing.priorities?.[0];
+    if (top) lines.push(`**${top.title}** — ${top.action}`);
+  } else if (metrics) {
     if (metrics.activeJobs > 0) {
       lines.push(`You've got **${metrics.activeJobs} active job${metrics.activeJobs > 1 ? "s" : ""}** on the books.`);
     }
@@ -134,10 +140,19 @@ export function MorningBriefingCard() {
               size="sm"
               variant="ghost"
               className="gap-1.5 text-xs text-primary"
-              onClick={() => navigate("/foreman-ai")}
+              onClick={() => navigate("/ask")}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              Ask Foreman AI
+              Ask Foreman
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-xs text-primary"
+              onClick={() => navigate("/briefing")}
+            >
+              Full briefing
+              <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
