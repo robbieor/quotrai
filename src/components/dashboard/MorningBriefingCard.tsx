@@ -4,8 +4,9 @@ import { useDashboardMetrics } from "@/hooks/useDashboardData";
 import { useProfile } from "@/hooks/useProfile";
 import { useCurrency } from "@/hooks/useCurrency";
 import { Button } from "@/components/ui/button";
-import { X, Calendar, Receipt, FileText, Sparkles } from "lucide-react";
+import { X, Calendar, Receipt, FileText, Sparkles, ArrowRight } from "lucide-react";
 import { ForemanAvatar } from "@/components/shared/ForemanAvatar";
+import { useDailyBriefing } from "@/hooks/useDailyBriefing";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
