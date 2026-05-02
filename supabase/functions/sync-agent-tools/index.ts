@@ -60,6 +60,7 @@ serve(async (req) => {
     const patchBody = {
       conversation_config: {
         agent: {
+          first_message: AGENT_FIRST_MESSAGE,
           prompt: {
             prompt: AGENT_APP_CONTEXT,
             tools,
