@@ -859,9 +859,15 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setStatus("error");
       setPhase("failed");
       setVoiceUnavailable(true);
-      toast.error("Unable to connect to Foreman AI", {
-        description: "Both WebRTC and WebSocket failed. Please try again or use text chat.",
-      });
+      // The onDisconnect handler already toasts the precise reason when the SDK
+      // emits one. We only fall back to this generic toast if no disconnect
+      // detail was captured (e.g. the connect simply timed out).
+      const lastErr = (debugState as any)?.lastError as string | undefined;
+      if (!lastErr || !/Disconnected/i.test(lastErr)) {
+        toast.error("Unable to connect to Foreman AI", {
+          description: lastErr ? lastErr.slice(0, 200) : "Connection timed out. Please try again or use text chat.",
+        });
+      }
     } catch (error) {
       if (isStale()) return;
       const errMsg = error instanceof Error ? error.message : String(error);
