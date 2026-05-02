@@ -57,8 +57,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <UserMenu />
               </div>
             </header>
-            <main className="flex-1 overflow-auto">
-              <div className="mx-auto w-full max-w-7xl px-5 md:px-6 py-4 md:py-6 space-y-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+            <main className="flex-1 overflow-auto safe-area-px">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 py-3 sm:py-4 md:py-6 space-y-4 sm:space-y-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
                 {children}
               </div>
             </main>
