@@ -134,7 +134,10 @@ export function LeadFormDialog({ open, onOpenChange, lead, onSubmit, isLoading }
             <Input id="followUp" type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="notes">Notes</Label>
+              <RewriteButton value={notes} onAccept={setNotes} context="customer_note" />
+            </div>
             <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
           <DialogFooter>
