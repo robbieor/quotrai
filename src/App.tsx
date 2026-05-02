@@ -178,6 +178,7 @@ const App = () => {
                     <Route path="/dashboard" element={<RoleGuard><Dashboard /></RoleGuard>} />
                     <Route path="/briefing" element={<RoleGuard><Briefing /></RoleGuard>} />
                     <Route path="/ask" element={<RoleGuard><SeatGuard requiredSeat="connect"><Ask /></SeatGuard></RoleGuard>} />
+                    <Route path="/automations" element={<RoleGuard><SeatGuard requiredSeat="connect"><Automations /></SeatGuard></RoleGuard>} />
                     <Route path="/jobs" element={<Jobs />} />
                     <Route path="/calendar" element={<JobCalendar />} />
                     <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
