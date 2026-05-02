@@ -91,7 +91,10 @@ export function LeadFormDialog({ open, onOpenChange, lead, onSubmit, isLoading }
             <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description">Description</Label>
+              <RewriteButton value={description} onAccept={setDescription} context="new_lead_reply" />
+            </div>
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
           <div className="grid grid-cols-3 gap-4">
