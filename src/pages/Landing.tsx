@@ -65,8 +65,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
-        title="Foreman — AI-Powered Job Management for Field Service Businesses"
-        description="Talk to your business. It talks back. Quotes, invoices, expenses, scheduling — all voice-powered, all in one app. Built for field service pros."
+        title="Foreman — The AI Operating System for Field Service Businesses"
+        description="Foreman runs your business in the background — chases payments, briefs you each morning, and learns your workflow. Hands-free voice, photo-to-quote, automations."
         path="/"
       />
 
