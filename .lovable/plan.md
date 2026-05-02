@@ -1,56 +1,73 @@
-## Why this is still failing on mobile
+# Read-Only & Grace-Period Handling for Stripe Failures
 
-Console shows nothing because the user is on `/index` (marketing page) where the floating button mounts — the disconnect happens, but no toast surfaces it and the timeline UI lives behind the chat page. Last time the close reason was a clean ElevenLabs payment block (`closeCode: 1002`). Now that billing is sorted, the most likely remaining causes — given the code in `VoiceAgentContext.tsx` — are:
+## Current state (already in place)
 
-1. **Stale pre-warmed token reused after payment fix.** `preWarmToken()` runs the moment the FAB is expanded and caches the token for 30s. A token minted while the account was in the payment-blocked state can still be returned (or rejected) when redialed. We never clear the cache after a failed connect.
-2. **iOS audio session not held open.** The current code opens an `AudioContext`, resumes, then immediately `close()`s it (lines 661–663). On iOS Safari this releases the audio session before the WS opens, so the agent's first audio frame fails silently and the SDK drops the socket within ~1s. The hands-free silent-audio loop only runs on `/foreman-ai` per memory `voice-agent-hands-free-driving`.
-3. **No keep-alive / wake lock on the landing route.** Calling from the FAB on `/index` means the OS may aggressively suspend the tab, which closes the WS before `onConnect` even resolves on slower mobile networks (>8s timeout fires).
-4. **Silent UX:** all of the above currently look identical to the user — "nothing happens" — because the disconnect detail is only written to the in-memory debug timeline, never toasted.
+- `stripe-webhook` handles `invoice.payment_failed` → sets `subscriptions_v2.status = 'past_due'` and emails the customer.
+- `stripe-webhook` handles `customer.subscription.deleted` → sets status to `canceled`.
+- `stripe-webhook` handles `invoice.payment_succeeded` (renewals) → resets status to `active`.
+- `useReadOnly()` already grants a **3-day grace** after `current_period_end` for `past_due` accounts, then locks the app.
+- `ReadOnlyBanner` and `ReadOnlyGuard` already lock the UI when read-only.
 
-## What this plan does
+## Gaps to close
 
-### 1. Always show the real failure reason
+1. **Banner copy is trial-only.** When Stripe reports `past_due` and grace is exhausted, users see "Your trial has ended" — confusing and wrong.
+2. **No grace-period warning.** During the 3-day grace window the user has full access but sees no nudge to fix their card, so they are blindsided when the lockout hits.
+3. **`unpaid` and `incomplete_expired` not handled.** Stripe transitions a subscription to `unpaid` after the dunning retries are exhausted. Today the row stays at `past_due` indefinitely (still inside the 3-day grace from the *last* `current_period_end`, but Stripe's signal is more authoritative).
+4. **`customer.subscription.updated` is not switched on.** This event carries authoritative status flips (`past_due` → `unpaid`, manual cancel toggles, plan changes) that we currently miss between renewals.
 
-In `src/contexts/VoiceAgentContext.tsx` `onDisconnect`, when the disconnect happens **while we were trying to connect** (phase ≠ `connected`), surface a `toast.error` with the actual `details` payload (reason / closeCode / message). This alone turns "silent failure" into actionable information for any future incident.
+## What this plan changes
 
-### 2. Drop the cached token on every failure
+### 1. Webhook hardening (`supabase/functions/stripe-webhook/index.ts`)
 
-- Clear `cachedTokenRef.current = null` inside the `onDisconnect` early-drop branch and inside the WebSocket catch block, not just on success.
-- Add a `force` flag to `preWarmToken()` and call it with `force=true` after `stopConversation()` so the next attempt always mints a fresh token.
+Add a `customer.subscription.updated` case that calls the existing `upsertSubscription` helper. This automatically syncs `status`, `current_period_end`, `cancel_at_period_end`, and seat counts on every Stripe-side change — covering `past_due → unpaid`, `active → canceled (at period end)`, plan upgrades, and dunning exhaustion.
 
-### 3. Hold an iOS-friendly audio session for the duration of the call
+No other webhook changes — `invoice.payment_failed` and `customer.subscription.deleted` already do the right thing.
 
-Replace the throwaway `AudioContext` block with a sustained one:
+### 2. Read-only logic (`src/hooks/useReadOnly.ts`)
 
-- Create a single module-level `AudioContext`, `resume()` it inside the click handler (still synchronous to the gesture).
-- Start a tiny silent `OscillatorNode → GainNode(gain=0)` that runs for the lifetime of the call (already proven pattern in `voice-agent-hands-free-driving`).
-- Stop and `close()` it in `stopConversation()` and in `onDisconnect`.
+Extend the hook to also lock the account immediately when status is `unpaid`, `incomplete_expired`, or `canceled` with `current_period_end` in the past. Keep the 3-day grace for `past_due` only.
 
-This keeps the iOS audio session alive across the WS handshake on Safari and Chrome iOS.
+Return shape changes from `boolean` to:
 
-### 4. Engage `navigator.wakeLock` for the call, regardless of route
+```ts
+{ isReadOnly: boolean; reason: 'trial_expired' | 'past_due_grace' | 'unpaid' | 'canceled' | null; graceEndsAt: Date | null }
+```
 
-Move the wake-lock acquisition out of the `/foreman-ai` page hook and into `VoiceAgentContext` so it's active whenever a call is connected from the FAB on `/index`, `/dashboard`, etc. Release on `stopConversation` / `onDisconnect`.
+Add a thin `useReadOnly()` boolean wrapper for backwards compatibility so existing call sites in `ReadOnlyGuard` / `ReadOnlyBanner` keep working. New callers use `useReadOnlyState()` for the rich object.
 
-### 5. Add a one-shot diagnostic toast on connect timeout
+### 3. Banner copy (`src/components/billing/ReadOnlyBanner.tsx`)
 
-If the 8 s connect timeout fires, toast `"Voice didn't connect (timed out). Reason: <last debug event>"` so the user (and we) can see whether it was mic, token, or WS that hung.
+Switch on `reason` and show the right message:
+
+- `trial_expired` → existing copy.
+- `past_due_grace` → **warning** banner (amber, not destructive): "Payment failed. Update your card before {graceEndsAt} to avoid losing access." CTA = "Update Payment".
+- `unpaid` → destructive banner: "Your subscription is unpaid. Update your card to restore access." CTA = "Update Payment".
+- `canceled` → existing copy variant: "Your subscription ended. Resubscribe to regain access." CTA = "Choose Plan".
+
+The grace banner is shown **even when the app is not yet read-only** (because grace is the warning window). `ReadOnlyGuard` continues to gate writes only when `isReadOnly === true`.
+
+### 4. Settings → Billing surface
+
+Add a small `PaymentStatusCard` in `src/components/billing/SubscriptionOverview.tsx` (or co-located) that mirrors the banner reason and links to the Stripe customer portal so users can replace their card without leaving the app. (Customer portal session creation already exists in another edge function — reuse it if present, otherwise add a one-line `create-billing-portal-session` call.)
 
 ## Files touched
 
-```
-src/contexts/VoiceAgentContext.tsx     core changes (1–5)
-```
-
-No DB / edge-function changes required — the previous `sync-agent-tools` fix and the ElevenLabs billing fix already addressed the server-side issues.
-
-## Verification steps after the change
-
-1. Open the deployed site on mobile Safari → tap "Call Foreman AI".
-2. Expected: spinner → "Connected to Foreman AI" toast → speak → reply.
-3. If it fails: a toast now shows the exact disconnect reason (closeCode + message). Paste that and I'll know whether it's billing, quota, or audio-session.
+- `supabase/functions/stripe-webhook/index.ts` — add `customer.subscription.updated` handler.
+- `src/hooks/useReadOnly.ts` — extend to return reason + grace end; keep boolean export.
+- `src/components/billing/ReadOnlyBanner.tsx` — branch copy on reason, add amber grace variant.
+- `src/components/billing/SubscriptionOverview.tsx` — add Payment Status row tied to the same hook.
+- (Optional, only if missing) `supabase/functions/create-billing-portal-session/index.ts` — quick portal-session creator for the "Update Payment" CTA.
 
 ## Out of scope
 
-- The `/foreman-ai` chat route already has its own keep-alive; we'll consolidate later, not in this fix.
-- WebRTC path stays disabled (upstream SDK bug, per the existing comment).
+- No DB migration needed — `subscriptions_v2.status` already accepts the Stripe status strings written by the webhook.
+- No changes to trial logic, seat sync, or Connect (platform-side payments).
+- No polling fallback — the webhook + reconcile-subscription function we already have is sufficient; we'd only add polling if we start seeing missed events in logs.
+
+## Acceptance criteria
+
+1. A test card that fails on renewal flips the org to `past_due`; user sees an **amber banner with the grace deadline** but can still use the app.
+2. After the 3-day grace, the app locks and the banner switches to the destructive "subscription unpaid" variant.
+3. If Stripe's dunning fully fails before the 3 days (status → `unpaid`), the app locks immediately on the next webhook.
+4. Re-paying via the portal flips the org back to `active` on `invoice.payment_succeeded` and the banner disappears.
+5. Manual cancel from Stripe dashboard (`customer.subscription.updated` with `cancel_at_period_end=true`) is reflected in the UI without waiting for the period to end.
