@@ -99,6 +99,58 @@ const stopMicStream = (stream: MediaStream | null) => {
   }
 };
 
+// iOS/Android keep audio session + screen alive for the duration of a call.
+// On mobile Safari, opening + closing an AudioContext briefly does NOT keep the
+// audio session active long enough for the WS handshake — we need a persistent
+// silent oscillator running through the call to prevent the browser from
+// dropping the WebSocket immediately after onConnect.
+type CallAudioKeepAlive = {
+  ctx: AudioContext;
+  osc: OscillatorNode;
+  gain: GainNode;
+};
+
+const startCallAudioKeepAlive = async (): Promise<CallAudioKeepAlive | null> => {
+  try {
+    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return null;
+    const ctx: AudioContext = new Ctx();
+    if (ctx.state === "suspended") await ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.value = 0; // fully silent
+    osc.frequency.value = 440;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    return { ctx, osc, gain };
+  } catch {
+    return null;
+  }
+};
+
+const stopCallAudioKeepAlive = (ka: CallAudioKeepAlive | null) => {
+  if (!ka) return;
+  try { ka.osc.stop(); } catch { /* noop */ }
+  try { ka.osc.disconnect(); } catch { /* noop */ }
+  try { ka.gain.disconnect(); } catch { /* noop */ }
+  try { void ka.ctx.close(); } catch { /* noop */ }
+};
+
+const acquireWakeLock = async (): Promise<any | null> => {
+  try {
+    const wl = (navigator as any).wakeLock;
+    if (wl?.request) return await wl.request("screen");
+  } catch {
+    // noop — feature unsupported or denied
+  }
+  return null;
+};
+
+const releaseWakeLock = async (sentinel: any | null) => {
+  try { await sentinel?.release?.(); } catch { /* noop */ }
+};
+
 const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
   reschedule_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
