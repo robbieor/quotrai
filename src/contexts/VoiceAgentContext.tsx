@@ -748,13 +748,21 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       updateDebug({ micPermission: "granted" });
       addDebugEvent("✅ Microphone granted");
 
-      try {
-        const audioCtx = new AudioContext();
-        if (audioCtx.state === "suspended") await audioCtx.resume();
-        await audioCtx.close();
-      } catch {
-        // noop
-      }
+      // Hold a persistent silent audio keep-alive for the duration of the call.
+      // On iOS Safari this is the only reliable way to keep the audio session
+      // open between mic grant and the WS handshake — without it, the OS often
+      // tears down audio just as ElevenLabs sends the first audio frame and the
+      // session disconnects within ~1s of onConnect.
+      stopCallAudioKeepAlive(callAudioRef.current);
+      callAudioRef.current = await startCallAudioKeepAlive();
+      if (callAudioRef.current) addDebugEvent("🔊 Audio keep-alive started");
+
+      // Acquire a screen wake lock so the OS doesn't suspend the tab on mobile
+      // mid-call (regardless of which route initiated the call).
+      void releaseWakeLock(wakeLockRef.current);
+      wakeLockRef.current = await acquireWakeLock();
+      if (wakeLockRef.current) addDebugEvent("🔒 Wake lock acquired");
+
       // Keep micStream alive — pass it to the SDK so it doesn't call getUserMedia again (critical for mobile)
       micStreamRef.current = micStream;
 
