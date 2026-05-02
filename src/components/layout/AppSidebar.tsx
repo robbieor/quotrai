@@ -51,6 +51,7 @@ const navGroups: NavGroup[] = [
       { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
       { id: "templates", title: "Templates", url: "/templates", icon: FolderOpen },
       { id: "price-book", title: "Price Book", url: "/price-book", icon: Package },
+      { id: "automations", title: "Automations", url: "/automations", icon: Zap, requiredSeat: "connect" },
     ],
   },
 ];
