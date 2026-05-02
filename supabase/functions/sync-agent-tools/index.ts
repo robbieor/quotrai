@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { FOREMAN_TOOL_DEFINITIONS, AGENT_APP_CONTEXT, TOOLS_VERSION } from "../_shared/foreman-tool-definitions.ts";
+import { FOREMAN_TOOL_DEFINITIONS, AGENT_APP_CONTEXT, AGENT_FIRST_MESSAGE, TOOLS_VERSION } from "../_shared/foreman-tool-definitions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,6 +60,7 @@ serve(async (req) => {
     const patchBody = {
       conversation_config: {
         agent: {
+          first_message: AGENT_FIRST_MESSAGE,
           prompt: {
             prompt: AGENT_APP_CONTEXT,
             tools,

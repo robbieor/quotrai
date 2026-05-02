@@ -30,7 +30,14 @@ export interface ToolDefinition {
  * The frontend uses this version to decide whether to re-push to ElevenLabs
  * (so a fresh deploy propagates to every user on next page load — no UI required).
  */
-export const TOOLS_VERSION = "2025-04-19.1";
+export const TOOLS_VERSION = "2025-04-19.2";
+
+/**
+ * Greeting George says the moment a voice call connects.
+ * `{{user_name}}` is an ElevenLabs dynamic variable — populated by VoiceAgentContext.
+ */
+export const AGENT_FIRST_MESSAGE =
+  "Howya {{user_name}}, George here. What can I sort for ya?";
 
 /**
  * App context injected into the ElevenLabs agent system prompt on every sync.

@@ -534,10 +534,19 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
 
       void (async () => {
         try {
+          const greetingName = contextRef.current.userName?.split(" ")[0];
+          const firstMessage = greetingName
+            ? `Howya ${greetingName}, George here. What can I sort for ya?`
+            : "Howya, George here. What can I sort for ya?";
           const conv = await VoiceConversation.startSession({
             ...(sessionOpts as any),
             dynamicVariables,
             clientTools,
+            overrides: {
+              agent: {
+                firstMessage,
+              },
+            },
             ...(micStreamRef.current ? { mediaStream: micStreamRef.current } : {}),
             connectionType: ("signedUrl" in sessionOpts ? "websocket" : "webrtc") as "webrtc" | "websocket",
             onConnect: () => {
