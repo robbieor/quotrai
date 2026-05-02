@@ -62,14 +62,14 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
           {/* Left — Copy */}
           <div className="animate-fade-up text-center lg:text-left">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.08]">
-              Talk to your business.{" "}
+              The AI that{" "}
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                It talks back.
+                runs your business.
               </span>
             </h1>
 
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Run your entire service business by voice — quotes, jobs, expenses, invoices — while you're on the move.
+              Foreman watches every quote, job, and invoice — chases what's slipping, briefs you each morning, and handles the admin while you stay on the tools.
             </p>
 
             {/* CTAs */}

@@ -15,6 +15,7 @@ import { DemoVideoSection } from "@/components/landing/DemoVideoSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { SolutionSection } from "@/components/landing/SolutionSection";
 import { ForemanAISection } from "@/components/landing/ForemanAISection";
+import { DifferentiatorsSection } from "@/components/landing/DifferentiatorsSection";
 import { OutcomesSection } from "@/components/landing/OutcomesSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { SocialProofSection } from "@/components/landing/SocialProofSection";
@@ -65,8 +66,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
-        title="Foreman — AI-Powered Job Management for Field Service Businesses"
-        description="Talk to your business. It talks back. Quotes, invoices, expenses, scheduling — all voice-powered, all in one app. Built for field service pros."
+        title="Foreman — The AI Operating System for Field Service Businesses"
+        description="Foreman runs your business in the background — chases payments, briefs you each morning, and learns your workflow. Hands-free voice, photo-to-quote, automations."
         path="/"
       />
 
@@ -175,6 +176,9 @@ export default function Landing() {
 
       {/* Section 4: Foreman AI */}
       <ForemanAISection formatPrice={formatPrice} />
+
+      {/* Section 4b: Differentiators (Phase 4 marketing) */}
+      <DifferentiatorsSection />
 
       {/* Section 5: Outcomes */}
       <OutcomesSection />
