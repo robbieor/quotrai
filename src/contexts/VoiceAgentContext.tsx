@@ -872,10 +872,18 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setVoiceUnavailable(true);
       handleFailure({ reason: getFailureReason(error), error });
     } finally {
-      // Clean up mic stream if connection didn't succeed
-      if (micStreamRef.current && !conversationRef.current) {
-        stopMicStream(micStreamRef.current);
-        micStreamRef.current = null;
+      // Clean up mic stream + audio keep-alive + wake lock if connection didn't succeed
+      if (!conversationRef.current) {
+        if (micStreamRef.current) {
+          stopMicStream(micStreamRef.current);
+          micStreamRef.current = null;
+        }
+        stopCallAudioKeepAlive(callAudioRef.current);
+        callAudioRef.current = null;
+        void releaseWakeLock(wakeLockRef.current);
+        wakeLockRef.current = null;
+        // Drop any cached token so the next attempt mints a fresh one
+        cachedTokenRef.current = null;
       }
       if (!isStale()) {
         setRetryAttempt(0);
