@@ -1,114 +1,81 @@
-# Foreman AI — Beating Jobber Plan (Receptionist excluded)
+# Phase 2 — Productize Existing AI Wins
 
-## The verdict
+Goal: Take the AI capabilities Foreman already has buried inside the dashboard and turn them into named, marketable, standalone surfaces — matching how Jobber merchandises "Copilot", "Insights", etc., but with deeper trade-grounded substance.
 
-Jobber didn't catch up — they caught up to **voice + chat**. They're still behind on **trust, personality, proactivity, trade depth, and photo-to-quote**. With Receptionist parked, the real near-term gap is **Rewrite** (one-click message polish). Everything else is depth and marketing, not capability.
-
-We don't beat them by copying. We ship Rewrite, then **lean into what George does that Jobber can't**.
+Three deliverables: **Daily Briefing**, **Ask Foreman**, **Trade Benchmarks**.
 
 ---
 
-## Phase 1 — Close the one remaining gap
+## 1. Daily Briefing — `/briefing`
 
-### Rewrite (1-2 days, huge perceived value)
+Today: `MorningBriefingCard` is a dismissible card on the dashboard pulling from `useDashboardMetrics`. It's basic (active jobs, pending quotes, outstanding invoices, MTD revenue) and not AI-generated.
 
-A single "✨ Rewrite" button on every message composer (SMS, email, customer notes, quote/invoice notes, lead replies).
+Upgrade:
+- New route `/briefing` with a full-page briefing report.
+- New edge function `generate-briefing` (Gemini 2.5 Flash) that takes the same metrics + last 7 days of activity (jobs created, quotes sent, invoices paid, overdue counts, weather-sensitive jobs) and produces a structured briefing following the **Insight → Impact → Action** framework.
+- Output sections: *Today's Priorities* (top 3), *Revenue at Risk*, *Workforce Status*, *What Foreman Did Overnight* (auto-generated nudges, drip emails sent, recurring invoices created).
+- Cache result per team per day in a new `daily_briefings` table (team_id, date, content jsonb, generated_at). Regenerate only on demand or when stale > 6 hrs.
+- Dashboard `MorningBriefingCard` shows the AI-generated headline + "View full briefing →" CTA into `/briefing`.
+- Optional email delivery: reuse `process-email-queue` to ship the briefing at 7am team-local time (gated behind a profile preference `briefing_email_enabled`, default off — to be wired in a later step, NOT this phase).
 
-- Edge function `foreman-rewrite` — Gemini 2.5 Flash. Inputs: raw text, tone (Professional / Friendly / Firm / Apologetic), context tag (quote follow-up / overdue chase / new lead reply / generic).
-- Inline diff UI — show original vs rewritten, accept/reject, regenerate with different tone.
-- Surfaces in: `SendEmailDialog`, message composer in customer detail, lead reply box, quote/invoice notes, comms templates.
-- Free for all tiers — it's a hook, not a moat.
+## 2. Ask Foreman — `/ask`
 
----
+Today: Foreman AI chat is embedded behind a floating button. Power users can ask "what's my revenue this month" but it's not discoverable.
 
-## Phase 2 — Make our existing wins visible (1 week)
+Upgrade:
+- New route `/ask` — a clean, search-bar-first page ("Ask Foreman anything about your business") with example query chips: *"Which customers haven't paid in 60+ days?"*, *"What was my best month this year?"*, *"Show me jobs running over budget"*.
+- Reuses existing `george-chat` edge function and `useForemanChat` hook — no new backend.
+- Difference from the floating chat: full-width result rendering, persistent query history sidebar (last 20 questions for the team, stored in existing `ai_conversations`), and one-click "Save as Insight" to pin an answer to the dashboard.
+- New table `pinned_insights` (id, team_id, question, answer_markdown, pinned_by, created_at) with team-scoped RLS.
+- Sidebar nav entry "Ask" added under the AI section.
 
-We already do things Jobber doesn't. We just don't market or surface them.
+## 3. Trade Benchmarks — Anonymous peer comparison
 
-### 2.1 Daily Briefing as a real product
+Today: No comparative data. Users have no idea if their close rate, average ticket, or response time is good.
 
-- 7am push notification + email: "Insight: 3 quotes aging past 14 days (€4,200). Impact: close rate drops from 60% to 22% after day 14. Action: send follow-ups now."
-- One-tap actions inside the briefing.
-- Already partially built (proactive nudges + AI business intelligence engine) — promote to first-class product surface with its own page `/briefing` and consistent morning delivery.
-
-### 2.2 "Ask Foreman" landing surface
-
-George is currently a floating button. Add a dedicated `/ask` page styled like Jobber's chat hero — big input, suggested prompts ("Why are my margins down this month?", "Which customer owes me the most?", "What jobs make me the least money?"), citation-style answers showing which records were used.
-
-### 2.3 Benchmarks (the one thing they explicitly beat us on)
-
-Anonymised cross-team comparisons: "Your average quote-to-cash is 9 days. Median for Irish electricians is 14. You're top quartile."
-
-- Aggregation edge function reading from a new `team_metrics_aggregated` materialised view (no PII, only counts/medians/quartiles by trade + region).
-- Surface inline in dashboard, briefing, and Ask answers.
-
----
-
-## Phase 3 — Suggested Automations (matches their "learns how you run")
-
-A new `/automations` surface where Foreman watches behaviour and proposes rules:
-
-- "You've manually sent 'thanks for paying' messages to 12 customers this month. Automate it?"
-- "You always schedule plumbing jobs as 2-hour slots. Apply this default?"
-- "Quotes from referrals close 3× more often. Auto-flag and prioritise?"
-
-Pattern detection runs nightly via edge function, surfaces as cards, one-click enable. Each rule writes to a `team_automations` table consumed by existing triggers and the george-webhook engine.
+Upgrade:
+- New materialized view `team_metrics_aggregated` keyed by `trade_category` and `country`, surfacing:
+  - quote → won conversion rate (median, p25, p75)
+  - average quote value
+  - average days from quote sent → first response
+  - invoice paid-on-time %
+  - jobs per active member per week
+- Refreshed nightly via a `pg_cron` job calling a new `refresh-benchmarks` edge function.
+- Only includes teams with ≥10 quotes and ≥5 invoices in the trailing 90 days (privacy floor, prevents identification).
+- New section on `/briefing` called *How you compare*: shows the team's own number alongside the trade median for their country, with an "above / below median" pill. Trade-aware (electrician benchmarks vs other electricians, not a global average).
+- New RPC `get_team_benchmarks(team_uuid)` returns `{ team_metrics, peer_metrics }`. RLS-safe — team's own raw data + only aggregated peer data, never another team's row.
 
 ---
 
-## Phase 4 — Differentiation moats (where we go further than Jobber)
+## Technical summary
 
-### 4.1 Voice agent on speakerphone in the van
+**New edge functions**
+- `generate-briefing` — Gemini 2.5 Flash, structured JSON output, caches into `daily_briefings`.
+- `refresh-benchmarks` — recomputes `team_metrics_aggregated`, scheduled nightly via `pg_cron`.
 
-Jobber's voice is mobile-app-bound. We already have `voice-agent-hands-free-driving` (silent audio loop + wakeLock). Market it as **"George rides shotgun"** — full demo of a sparkie driving between jobs, asking "what's on for tomorrow", logging materials, sending a quote, all hands-free.
+**New tables**
+- `daily_briefings(team_id, briefing_date, content jsonb, generated_at)` — RLS: own team only.
+- `pinned_insights(id, team_id, question, answer_markdown, pinned_by, created_at)` — RLS: own team only.
+- `team_metrics_aggregated` (materialized view) — readable by all authenticated users; only contains aggregates, no team_id.
 
-### 4.2 Photo-to-quote in seconds
+**New routes / pages**
+- `src/pages/Briefing.tsx`
+- `src/pages/Ask.tsx`
 
-Jobber doesn't have Gemini Vision photo-to-quote. We do. Surface it on the marketing page, in onboarding, and in a 30-second demo loop.
+**New hooks**
+- `useDailyBriefing()` — fetches/triggers cached briefing.
+- `useTradeBenchmarks()` — calls `get_team_benchmarks` RPC.
 
-### 4.3 Live Action Mode confirmation gates
+**Existing files touched**
+- `src/components/dashboard/MorningBriefingCard.tsx` — replace static lines with AI summary headline + CTA.
+- `src/components/layout/AppSidebar.tsx` — add "Briefing" and "Ask" nav entries.
+- `src/App.tsx` — register new routes.
 
-Jobber's automations "just do things". Foreman shows every step before commit. Position as **trust** — "AI that asks before it acts". Ties directly into the Working Visibility Principle already in our memory.
+**Memory updates**
+- `mem://strategy/jobber-competitive-response.md` — mark Phase 2 in progress, note Briefing/Ask/Benchmarks scope.
 
----
-
-## Phase 5 — Marketing reset
-
-Capability is even. Marketing isn't.
-
-- **Rewrite the AI landing page** mirroring Jobber's structure: hero claim → 3 pillars → 5 practical features → testimonial → integrations.
-- **Three 30-second loop videos**: photo-to-quote, hands-free driving, daily briefing.
-- **Side-by-side comparison page** `/foreman-vs-jobber`: trade-aware (yes/no), region-aware (yes/no), photo-to-quote (yes/no), action gates (yes/no), Irish standards (yes/no), benchmarks (yes/no).
-- **Personality angle**: George the Irish foreman vs Jobber's faceless AI. Lean in. It's a moat they can't copy without rebranding.
-
----
-
-## Suggested sequencing
-
-```text
-Week 1:    Rewrite                           ──► immediate user-visible AI win
-Week 2:    Daily Briefing surface + /ask     ──► promote what we already do
-Week 3:    Benchmarks                        ──► neutralise their data-advantage claim
-Weeks 4-5: Suggested Automations             ──► capability parity
-Week 6:    Marketing relaunch                ──► tell the story we earned
-```
-
-## Files / surfaces this plan would touch
-
-(Implementation-only — not done in this plan)
-
-- New edge functions: `foreman-rewrite`, `automation-pattern-detector`, `team-benchmarks`
-- New pages: `src/components/ai/RewriteButton.tsx`, `src/pages/Ask.tsx`, `src/pages/Automations.tsx`, `src/pages/Briefing.tsx` (promoted from dashboard widget)
-- New tables / views: `team_automations`, `team_metrics_aggregated` (materialised view, no PII)
-- Updated: landing AI page, comparison page, onboarding to include AI tour
-
-## What this plan does NOT do
-
-- Doesn't build AI Receptionist (parked per your call).
-- Doesn't try to out-feature Jobber on count. We win on **judgement, trust, and trade depth**.
-- Doesn't rebuild what works (george-webhook, voice context, memory architecture).
-- Doesn't bloat the agent — every new tool goes through the existing `foreman-tool-definitions.ts` source of truth.
-
----
-
-**Recommendation**: approve Phase 1 (Rewrite) first — small, ships in days, immediately visible to users. Phase 2 is the highest-leverage follow-up because it monetises capability we already have.
+**Out of scope for this phase** (parked for Phase 3+)
+- AI Receptionist (parked indefinitely per user)
+- Suggested Automations (`team_automations` table, pattern detector)
+- Email delivery of briefing (toggle exists in DB only, no UI yet)
+- Marketing landing page for these features
