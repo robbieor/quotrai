@@ -47,6 +47,7 @@ import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayMo
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
 import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
 import { safeFormatDate } from "@/lib/pdf/dateUtils";
+import { RewriteButton } from "@/components/ai/RewriteButton";
 
 const quoteStatuses = Constants.public.Enums.quote_status;
 
