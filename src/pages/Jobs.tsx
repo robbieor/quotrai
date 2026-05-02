@@ -73,6 +73,7 @@ export default function Jobs() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [detailJob, setDetailJob] = useState<Job | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const { data: jobs, isLoading, error } = useJobs();
   const createJobWithSite = useCreateJobWithSite();
@@ -153,8 +154,6 @@ export default function Jobs() {
       deleteJob.mutate(selectedJob.id, { onSuccess: () => { setDeleteDialogOpen(false); setSelectedJob(null); } });
     }
   };
-
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const handleBulkDelete = () => {
     setBulkDeleteOpen(true);
