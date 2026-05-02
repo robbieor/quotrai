@@ -32,6 +32,8 @@ const navGroups: NavGroup[] = [
     label: "CORE",
     items: [
       { id: "dashboard", title: "Operations", url: "/dashboard", icon: LayoutDashboard },
+      { id: "briefing", title: "Briefing", url: "/briefing", icon: Sun },
+      { id: "ask", title: "Ask Foreman", url: "/ask", icon: MessageCircleQuestion, requiredSeat: "connect" },
       { id: "jobs", title: "Jobs", url: "/jobs", icon: Briefcase },
       { id: "quotes", title: "Quotes", url: "/quotes", icon: FileText },
       { id: "invoices", title: "Revenue", url: "/invoices", icon: Receipt },
