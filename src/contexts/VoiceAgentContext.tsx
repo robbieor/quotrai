@@ -99,6 +99,58 @@ const stopMicStream = (stream: MediaStream | null) => {
   }
 };
 
+// iOS/Android keep audio session + screen alive for the duration of a call.
+// On mobile Safari, opening + closing an AudioContext briefly does NOT keep the
+// audio session active long enough for the WS handshake — we need a persistent
+// silent oscillator running through the call to prevent the browser from
+// dropping the WebSocket immediately after onConnect.
+type CallAudioKeepAlive = {
+  ctx: AudioContext;
+  osc: OscillatorNode;
+  gain: GainNode;
+};
+
+const startCallAudioKeepAlive = async (): Promise<CallAudioKeepAlive | null> => {
+  try {
+    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!Ctx) return null;
+    const ctx: AudioContext = new Ctx();
+    if (ctx.state === "suspended") await ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.value = 0; // fully silent
+    osc.frequency.value = 440;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    return { ctx, osc, gain };
+  } catch {
+    return null;
+  }
+};
+
+const stopCallAudioKeepAlive = (ka: CallAudioKeepAlive | null) => {
+  if (!ka) return;
+  try { ka.osc.stop(); } catch { /* noop */ }
+  try { ka.osc.disconnect(); } catch { /* noop */ }
+  try { ka.gain.disconnect(); } catch { /* noop */ }
+  try { void ka.ctx.close(); } catch { /* noop */ }
+};
+
+const acquireWakeLock = async (): Promise<any | null> => {
+  try {
+    const wl = (navigator as any).wakeLock;
+    if (wl?.request) return await wl.request("screen");
+  } catch {
+    // noop — feature unsupported or denied
+  }
+  return null;
+};
+
+const releaseWakeLock = async (sentinel: any | null) => {
+  try { await sentinel?.release?.(); } catch { /* noop */ }
+};
+
 const MUTATION_QUERY_MAP: Record<string, string[][]> = {
   create_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
   reschedule_job: [["jobs"], ["dashboard"], ["calendar-jobs"]],
@@ -152,6 +204,8 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   const onConnectRejectRef = useRef<((err: Error) => void) | null>(null);
   const callStartRef = useRef<number | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
+  const callAudioRef = useRef<CallAudioKeepAlive | null>(null);
+  const wakeLockRef = useRef<any | null>(null);
 
   const addDebugEvent = useCallback((event: string) => {
     const time = new Date().toLocaleTimeString("en-US", {
@@ -500,6 +554,18 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               if (currentAttemptRef.current !== attemptId && phaseRef.current !== "connected") return;
               const detailText = details ? `: ${JSON.stringify(details).substring(0, 160)}` : "";
               addDebugEvent(`🔌 Disconnected${detailText}`);
+
+              // Extract a human-friendly reason from the SDK details payload
+              // e.g. { reason: "error", message: "...payment issue...", closeCode: 1002 }
+              const d = (details as any) || {};
+              const reasonMsg: string =
+                d.message || d.reason || (typeof details === "string" ? details : "") || "Connection closed";
+              const closeCode = d.closeCode ? ` (code ${d.closeCode})` : "";
+
+              // If we dropped before ever fully connecting, that's a connection
+              // failure — surface it to the user instead of silently dying.
+              const wasConnecting = phaseRef.current !== "connected";
+
               updateDebug({
                 sessionConnected: false,
                 onConnectFired: false,
@@ -514,6 +580,31 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               if (keepAliveRef.current) {
                 clearInterval(keepAliveRef.current);
                 keepAliveRef.current = null;
+              }
+
+              // Tear down the silent audio keep-alive + wake lock on every disconnect
+              stopCallAudioKeepAlive(callAudioRef.current);
+              callAudioRef.current = null;
+              void releaseWakeLock(wakeLockRef.current);
+              wakeLockRef.current = null;
+
+              // Always invalidate the cached token so the next attempt mints a
+              // fresh one (prevents a token issued under a previously-blocked
+              // billing state from being reused).
+              cachedTokenRef.current = null;
+
+              if (wasConnecting) {
+                setPhase("failed");
+                toast.error("Voice disconnected", {
+                  description: `${reasonMsg}${closeCode}`.slice(0, 200),
+                  duration: 7000,
+                });
+                // Reject the pending connect promise so the outer flow knows
+                if (onConnectRejectRef.current) {
+                  onConnectRejectRef.current(new Error(`${reasonMsg}${closeCode}`));
+                  onConnectResolveRef.current = null;
+                  onConnectRejectRef.current = null;
+                }
               }
             },
             onError: (message, context) => {
@@ -594,9 +685,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
     setPhase("idle");
     toast.dismiss("voice-retry");
 
-    // Clean up mic stream
+    // Clean up mic stream + audio keep-alive + wake lock
     stopMicStream(micStreamRef.current);
     micStreamRef.current = null;
+    stopCallAudioKeepAlive(callAudioRef.current);
+    callAudioRef.current = null;
+    void releaseWakeLock(wakeLockRef.current);
+    wakeLockRef.current = null;
+    cachedTokenRef.current = null;
 
     if (onConnectRejectRef.current) {
       onConnectRejectRef.current(new Error("Cancelled by user"));
@@ -657,13 +753,21 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       updateDebug({ micPermission: "granted" });
       addDebugEvent("✅ Microphone granted");
 
-      try {
-        const audioCtx = new AudioContext();
-        if (audioCtx.state === "suspended") await audioCtx.resume();
-        await audioCtx.close();
-      } catch {
-        // noop
-      }
+      // Hold a persistent silent audio keep-alive for the duration of the call.
+      // On iOS Safari this is the only reliable way to keep the audio session
+      // open between mic grant and the WS handshake — without it, the OS often
+      // tears down audio just as ElevenLabs sends the first audio frame and the
+      // session disconnects within ~1s of onConnect.
+      stopCallAudioKeepAlive(callAudioRef.current);
+      callAudioRef.current = await startCallAudioKeepAlive();
+      if (callAudioRef.current) addDebugEvent("🔊 Audio keep-alive started");
+
+      // Acquire a screen wake lock so the OS doesn't suspend the tab on mobile
+      // mid-call (regardless of which route initiated the call).
+      void releaseWakeLock(wakeLockRef.current);
+      wakeLockRef.current = await acquireWakeLock();
+      if (wakeLockRef.current) addDebugEvent("🔒 Wake lock acquired");
+
       // Keep micStream alive — pass it to the SDK so it doesn't call getUserMedia again (critical for mobile)
       micStreamRef.current = micStream;
 
@@ -755,9 +859,15 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setStatus("error");
       setPhase("failed");
       setVoiceUnavailable(true);
-      toast.error("Unable to connect to Foreman AI", {
-        description: "Both WebRTC and WebSocket failed. Please try again or use text chat.",
-      });
+      // The onDisconnect handler already toasts the precise reason when the SDK
+      // emits one. We only fall back to this generic toast if no disconnect
+      // detail was captured (e.g. the connect simply timed out).
+      const lastErr = (debugState as any)?.lastError as string | undefined;
+      if (!lastErr || !/Disconnected/i.test(lastErr)) {
+        toast.error("Unable to connect to Foreman AI", {
+          description: lastErr ? lastErr.slice(0, 200) : "Connection timed out. Please try again or use text chat.",
+        });
+      }
     } catch (error) {
       if (isStale()) return;
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -768,10 +878,18 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setVoiceUnavailable(true);
       handleFailure({ reason: getFailureReason(error), error });
     } finally {
-      // Clean up mic stream if connection didn't succeed
-      if (micStreamRef.current && !conversationRef.current) {
-        stopMicStream(micStreamRef.current);
-        micStreamRef.current = null;
+      // Clean up mic stream + audio keep-alive + wake lock if connection didn't succeed
+      if (!conversationRef.current) {
+        if (micStreamRef.current) {
+          stopMicStream(micStreamRef.current);
+          micStreamRef.current = null;
+        }
+        stopCallAudioKeepAlive(callAudioRef.current);
+        callAudioRef.current = null;
+        void releaseWakeLock(wakeLockRef.current);
+        wakeLockRef.current = null;
+        // Drop any cached token so the next attempt mints a fresh one
+        cachedTokenRef.current = null;
       }
       if (!isStale()) {
         setRetryAttempt(0);
@@ -799,9 +917,13 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       setStatus("disconnected");
       setPhase("idle");
 
-      // Clean up mic stream
+      // Clean up mic stream + audio keep-alive + wake lock
       stopMicStream(micStreamRef.current);
       micStreamRef.current = null;
+      stopCallAudioKeepAlive(callAudioRef.current);
+      callAudioRef.current = null;
+      void releaseWakeLock(wakeLockRef.current);
+      wakeLockRef.current = null;
 
       if (keepAliveRef.current) {
         clearInterval(keepAliveRef.current);
@@ -870,6 +992,10 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (keepAliveRef.current) clearInterval(keepAliveRef.current);
       stopMicStream(micStreamRef.current);
       micStreamRef.current = null;
+      stopCallAudioKeepAlive(callAudioRef.current);
+      callAudioRef.current = null;
+      void releaseWakeLock(wakeLockRef.current);
+      wakeLockRef.current = null;
       void conversationRef.current?.endSession();
     };
   }, []);
