@@ -109,9 +109,9 @@ function AskInner() {
             <div className="flex items-start gap-3 mb-6">
               <ForemanAvatar size="lg" />
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Ask Foreman</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Ask Revamo</h1>
                 <p className="text-sm text-muted-foreground">
-                  Ask anything about your business — Foreman knows your data.
+                  Ask anything about your business — Revamo knows your data.
                 </p>
               </div>
             </div>
@@ -128,7 +128,7 @@ function AskInner() {
                       ask(input);
                     }
                   }}
-                  placeholder="Ask Foreman anything…"
+                  placeholder="Ask Revamo anything…"
                   className="min-h-[44px] resize-none border-0 focus-visible:ring-0 shadow-none bg-transparent"
                   rows={1}
                 />
@@ -170,7 +170,7 @@ function AskInner() {
                   <div className="flex items-start gap-2 mb-2">
                     <Sparkles className="h-4 w-4 text-primary mt-0.5" />
                     <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-                      Foreman
+                      Revamo
                     </span>
                   </div>
                   {!answer && isProcessing ? (

@@ -88,7 +88,7 @@ export function GeorgeChatArea({
         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
           <Bot className="h-4 w-4 text-primary" />
         </div>
-        <span className="font-medium">Foreman AI</span>
+        <span className="font-medium">Revamo AI</span>
         <Badge variant="secondary" className="text-xs">
           AI Operating System
         </Badge>

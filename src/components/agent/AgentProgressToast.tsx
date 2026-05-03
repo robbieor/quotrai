@@ -11,9 +11,9 @@ export function AgentProgressToast() {
     const handler = (e: Event) => {
       const { message, status } = (e as CustomEvent).detail ?? {};
       if (typeof message !== "string" || !message) return;
-      if (status === "done") toast.success(`Foreman AI: ${message}`);
-      else if (status === "error") toast.error(`Foreman AI: ${message}`);
-      else toast(`Foreman AI: ${message}`);
+      if (status === "done") toast.success(`Revamo AI: ${message}`);
+      else if (status === "error") toast.error(`Revamo AI: ${message}`);
+      else toast(`Revamo AI: ${message}`);
     };
     window.addEventListener(AGENT_PROGRESS, handler);
     return () => window.removeEventListener(AGENT_PROGRESS, handler);

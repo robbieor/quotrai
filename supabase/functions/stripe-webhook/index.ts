@@ -25,14 +25,14 @@ function brandedEmailHtml(title: string, bodyLines: string[]): string {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
 <tr><td style="background:#0f172a;padding:30px 32px;text-align:center">
-<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+<img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
 </td></tr>
 <tr><td style="padding:32px">
 <h1 style="margin:0 0 16px;font-size:20px;color:#0f172a">${title}</h1>
 ${bodyHtml}
 </td></tr>
 <tr><td style="padding:16px 32px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0">
-© ${new Date().getFullYear()} Foreman · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
+© ${new Date().getFullYear()} Revamo · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
@@ -44,7 +44,7 @@ async function sendBrandedEmail(supabase: any, to: string, subject: string, html
         to,
         subject,
         html,
-        from: "Foreman <support@foreman.ie>",
+        from: "Revamo <support@foreman.ie>",
         idempotency_key: idempotencyKey,
         purpose: "transactional",
       }),
@@ -182,13 +182,13 @@ serve(async (req) => {
           await sendBrandedEmail(
             supabase,
             email,
-            "Your Foreman trial ends soon",
+            "Your Revamo trial ends soon",
             brandedEmailHtml("Your trial is ending soon", [
-              `Heads up — your Foreman free trial ends on <strong>${trialEndDate}</strong>.`,
+              `Heads up — your Revamo free trial ends on <strong>${trialEndDate}</strong>.`,
               "Your subscription will start automatically using the payment method on file. No action needed if you'd like to keep going.",
               "Want to change your plan or update your card? You can do that anytime from Settings → Billing.",
-              '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Manage Billing</a>',
-              "If you've decided Foreman isn't for you, just cancel from the same page before the trial ends and you won't be charged.",
+              '<a href="https://revamo.ai/settings?tab=billing" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Manage Billing</a>',
+              "If you've decided Revamo isn't for you, just cancel from the same page before the trial ends and you won't be charged.",
             ]),
             `trial-ending-${subscription.id}`
           );
@@ -279,11 +279,11 @@ serve(async (req) => {
           await sendBrandedEmail(
             supabase,
             email,
-            "Action required — confirm your Foreman payment",
+            "Action required — confirm your Revamo payment",
             brandedEmailHtml("Confirm your payment", [
-              "Your bank needs you to confirm your latest Foreman payment (3D Secure).",
+              "Your bank needs you to confirm your latest Revamo payment (3D Secure).",
               "Until you confirm, the payment hasn't gone through. Tap below to complete it.",
-              `<a href="${invoice.hosted_invoice_url || 'https://foreman.world/settings?tab=billing'}" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Confirm Payment</a>`,
+              `<a href="${invoice.hosted_invoice_url || 'https://revamo.ai/settings?tab=billing'}" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Confirm Payment</a>`,
               "If you don't recognise this, ignore the email and contact support@foreman.ie.",
             ]),
             `payment-action-required-${invoice.id}`
@@ -327,12 +327,12 @@ serve(async (req) => {
             await sendBrandedEmail(
               supabase,
               email,
-              "Your Foreman subscription has been cancelled",
+              "Your Revamo subscription has been cancelled",
               brandedEmailHtml("Subscription Cancelled", [
-                "Your Foreman subscription has been cancelled.",
+                "Your Revamo subscription has been cancelled.",
                 "Your access will continue until the end of your current billing period.",
                 "If this was a mistake or you'd like to resubscribe, you can do so anytime from your Settings page.",
-                "Thanks for being part of Foreman. We'd love to have you back."
+                "Thanks for being part of Revamo. We'd love to have you back."
               ]),
               `sub-cancelled-${subscription.id}`
             );
@@ -396,11 +396,11 @@ serve(async (req) => {
                 await sendBrandedEmail(
                   supabase,
                   email,
-                  "Action required — your Foreman payment failed",
+                  "Action required — your Revamo payment failed",
                   brandedEmailHtml("Payment Failed", [
-                    "We were unable to process your latest payment for Foreman.",
+                    "We were unable to process your latest payment for Revamo.",
                     "Please update your payment method to avoid any interruption to your service.",
-                    '<a href="https://foreman.world/settings?tab=billing" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Update Payment Method</a>',
+                    '<a href="https://revamo.ai/settings?tab=billing" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Update Payment Method</a>',
                     "If you believe this is an error, please contact us at support@foreman.ie.",
                   ]),
                   `payment-failed-${invoice.id}`
@@ -507,7 +507,7 @@ serve(async (req) => {
                     `<strong>Amount:</strong> ${formattedAmount}`,
                     `<strong>Method:</strong> Card (online)`,
                     `The invoice has been automatically marked as paid.`,
-                    '<a href="https://foreman.world/invoices" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">View Invoices</a>',
+                    '<a href="https://revamo.ai/invoices" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">View Invoices</a>',
                   ]),
                   `inv-paid-owner-${session.id}`
                 );
@@ -561,7 +561,7 @@ serve(async (req) => {
             let totalSeats = 0;
             for (const item of stripeSub.items.data) {
               const priceId = item.price.id;
-              const planName = PRICE_TO_PLAN_LABEL[priceId] || item.price.nickname || "Foreman";
+              const planName = PRICE_TO_PLAN_LABEL[priceId] || item.price.nickname || "Revamo";
               const qty = item.quantity || 1;
               totalSeats += qty;
               const currency = (item.price.currency || "eur").toUpperCase();
@@ -586,9 +586,9 @@ serve(async (req) => {
               await sendBrandedEmail(
                 supabase,
                 customerEmail,
-                "Welcome to Foreman — subscription confirmed",
-                brandedEmailHtml("Welcome to Foreman! 🎉", [
-                  "Your subscription is now active. You have full access to all Foreman features.",
+                "Welcome to Revamo — subscription confirmed",
+                brandedEmailHtml("Welcome to Revamo! 🎉", [
+                  "Your subscription is now active. You have full access to all Revamo features.",
                   ...planLines,
                   `<strong>Total:</strong> ${totalAmount} (${billingInterval})`,
                   `<strong>Next billing date:</strong> ${nextBilling}`,

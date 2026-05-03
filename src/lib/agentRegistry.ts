@@ -1,4 +1,4 @@
-// Single source of truth for every place Foreman AI is allowed to navigate,
+// Single source of truth for every place Revamo AI is allowed to navigate,
 // open, scroll to, or highlight. The voice agent only ever sees these keys —
 // never raw paths or CSS selectors.
 

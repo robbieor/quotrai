@@ -4,15 +4,15 @@
  */
 
 export const BRAND = {
-  name: "Foreman",
-  fullName: "Foreman AI",
+  name: "Revamo",
+  fullName: "Revamo AI",
   tagline: "The AI Operating System for Field Service",
-  legalEntity: "Foreman Ltd",
+  legalEntity: "Revamo Ltd",
   supportEmail: "support@foreman.ie",
   domain: "foreman.ie",
   /** Public-facing URLs */
   urls: {
-    landing: "https://foreman.world",
+    landing: "https://revamo.ai",
     privacy: "/privacy",
     terms: "/terms",
   },

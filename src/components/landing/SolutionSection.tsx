@@ -24,7 +24,7 @@ export function SolutionSection() {
         </h2>
 
         <p className="text-base sm:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-          Foreman brings everything together — all tracked, connected, and updated automatically.
+          Revamo brings everything together — all tracked, connected, and updated automatically.
           No spreadsheets. No manual tracking.
         </p>
 

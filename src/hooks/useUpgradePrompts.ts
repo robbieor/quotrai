@@ -76,7 +76,7 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
         title: `Only ${remainingVoiceMinutes} AI voice minutes left`,
         message: isNative
           ? "Visit foreman.ie to upgrade to Connect for more minutes."
-          : "Upgrade to Connect to keep using Foreman AI, or upgrade to Grow for unlimited minutes.",
+          : "Upgrade to Connect to keep using Revamo AI, or upgrade to Grow for unlimited minutes.",
         cta: isNative ? nativeCta : "Get More Minutes",
         urgency: "medium",
         route,
@@ -91,7 +91,7 @@ export function useUpgradePrompts(): { prompts: UpgradePrompt[]; topPrompt: Upgr
         title: `You've created ${invoiceCount} invoices!`,
         message: isNative
           ? "Visit foreman.ie to upgrade and keep sending invoices."
-          : "You're clearly getting value from Foreman. Upgrade to keep sending invoices and collecting payments.",
+          : "You're clearly getting value from Revamo. Upgrade to keep sending invoices and collecting payments.",
         cta: isNative ? nativeCta : "Unlock Payments",
         urgency: "low",
         route,

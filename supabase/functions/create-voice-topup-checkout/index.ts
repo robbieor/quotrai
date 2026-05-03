@@ -47,7 +47,7 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
-    const origin = req.headers.get("origin") || "https://foreman.world";
+    const origin = req.headers.get("origin") || "https://revamo.ai";
 
     // Create a one-time payment session for 30 minutes top-up at €7.29
     const session = await stripe.checkout.sessions.create({
@@ -59,8 +59,8 @@ serve(async (req) => {
             currency: "eur",
             unit_amount: 729, // €7.29
             product_data: {
-              name: "Foreman AI Voice — 30 Minute Top-Up",
-              description: "30 additional voice minutes for Foreman AI",
+              name: "Revamo AI Voice — 30 Minute Top-Up",
+              description: "30 additional voice minutes for Revamo AI",
             },
           },
           quantity: 1,

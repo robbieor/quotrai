@@ -5,12 +5,12 @@ const highlights = [
   {
     icon: Mic,
     title: "Voice-First",
-    description: "Create quotes, log expenses, and manage jobs — all by talking to Foreman AI while you're on the tools.",
+    description: "Create quotes, log expenses, and manage jobs — all by talking to Revamo AI while you're on the tools.",
   },
   {
     icon: FileText,
     title: "Quotes in Seconds",
-    description: "Describe the job, Foreman AI builds the quote. Templates, materials pricing, and VAT handled automatically.",
+    description: "Describe the job, Revamo AI builds the quote. Templates, materials pricing, and VAT handled automatically.",
   },
   {
     icon: Receipt,
@@ -30,7 +30,7 @@ const highlights = [
   {
     icon: Bot,
     title: "Built for Trades",
-    description: "Foreman AI understands trade terminology. First fix, second fix, day rates, VAT on materials — it just gets it.",
+    description: "Revamo AI understands trade terminology. First fix, second fix, day rates, VAT on materials — it just gets it.",
   },
 ];
 
@@ -45,13 +45,13 @@ export function Testimonials() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary mb-4">
             <Bot className="h-4 w-4 fill-primary" />
-            Why Tradespeople Choose Foreman
+            Why Tradespeople Choose Revamo
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Built Different. Built for You.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            We're not another generic business app. Foreman is purpose-built for trade businesses 
+            We're not another generic business app. Revamo is purpose-built for trade businesses 
             who want to spend less time on admin and more time earning.
           </p>
         </div>

@@ -90,7 +90,7 @@ export const Scene2MeetForeman: React.FC = () => {
             textShadow: "0 0 80px rgba(0,255,178,0.2)",
           }}
         >
-          Foreman
+          Revamo
         </span>
       </div>
 

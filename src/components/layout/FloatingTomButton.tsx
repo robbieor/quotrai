@@ -143,7 +143,7 @@ export function FloatingTomButton() {
             >
               <Phone className="h-5 w-5" />
               <span className="font-medium pr-2">
-                {georgeLoading ? "Loading..." : "Call Foreman AI"}
+                {georgeLoading ? "Loading..." : "Call Revamo AI"}
               </span>
             </button>
           )}
@@ -153,7 +153,7 @@ export function FloatingTomButton() {
             className="flex items-center gap-3 px-4 py-3 rounded-full bg-card text-foreground border border-border shadow-lg hover:bg-muted active:scale-95 transition-all duration-200"
           >
             <MessageSquare className="h-5 w-5 text-primary" />
-            <span className="font-medium pr-2">Chat with Foreman AI</span>
+            <span className="font-medium pr-2">Chat with Revamo AI</span>
           </button>
 
           <div className="h-px bg-border my-1" />
@@ -190,7 +190,7 @@ export function FloatingTomButton() {
                 ? "bg-muted text-foreground border border-border"
                 : "bg-primary text-primary-foreground shadow-primary/25 hover:shadow-primary/30"
             )}
-            aria-label="Talk to Foreman AI"
+            aria-label="Talk to Revamo AI"
           >
             {isExpanded ? (
               <X className="h-6 w-6" />

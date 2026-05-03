@@ -129,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto;">
           <div style="background: #0f172a; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+            <img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
             <h1 style="color: #ffffff; margin: 10px 0 0; font-size: 24px; font-weight: 700;">${documentLabel} ${documentNumber}</h1>
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
@@ -166,7 +166,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>Best regards,<br><strong>${fromName}</strong></p>
           </div>
           <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px; background: #f8fafc; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
-            <p>Powered by <a href="#" style="color: #00E6A0; text-decoration: none;">Foreman</a> — Get paid sooner.</p>
+            <p>Powered by <a href="#" style="color: #00E6A0; text-decoration: none;">Revamo</a> — Get paid sooner.</p>
           </div>
         </div>
       </body>
@@ -189,7 +189,7 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to,
-        from: `${fromName} via Foreman <support@${FROM_DOMAIN}>`,
+        from: `${fromName} via Revamo <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: `${documentLabel} ${documentNumber} from ${fromName}`,
         html,

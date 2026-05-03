@@ -106,7 +106,7 @@ export default function RequestAccess() {
             </div>
             <CardTitle className="text-2xl">You're on the list!</CardTitle>
             <CardDescription className="text-base mt-2">
-              Thank you for your interest in Foreman
+              Thank you for your interest in Revamo
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -117,7 +117,7 @@ export default function RequestAccess() {
             <div className="bg-muted/50 rounded-lg p-4 border border-border">
               <p className="text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 inline-block mr-2 text-primary" />
-                While you wait, we're preparing your personalised onboarding experience with Foreman AI, your AI Assistant.
+                While you wait, we're preparing your personalised onboarding experience with Revamo AI, your AI Assistant.
               </p>
             </div>
             <Link to="/">
@@ -139,8 +139,8 @@ export default function RequestAccess() {
           {/* Left column — Why join */}
           <div className="space-y-6 order-2 lg:order-1">
             <div className="text-center lg:text-left mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Why Choose Foreman?</h2>
-              <p className="text-muted-foreground">We're building Foreman with real tradespeople — your feedback shapes the product.</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Why Choose Revamo?</h2>
+              <p className="text-muted-foreground">We're building Revamo with real tradespeople — your feedback shapes the product.</p>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6">
@@ -164,8 +164,8 @@ export default function RequestAccess() {
             <div className="bg-card border border-border rounded-xl p-6">
               <h3 className="font-semibold text-foreground mb-3">Built for trades, not office workers</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Foreman is the only job management platform with a voice-first AI assistant that understands trade terminology. 
-                Create quotes, chase invoices, and manage your schedule — all by talking to Foreman AI while you're on-site.
+                Revamo is the only job management platform with a voice-first AI assistant that understands trade terminology. 
+                Create quotes, chase invoices, and manage your schedule — all by talking to Revamo AI while you're on-site.
               </p>
             </div>
 
@@ -191,7 +191,7 @@ export default function RequestAccess() {
             <Card className="w-full max-w-lg mx-auto">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
+            <img src={foremanLogo} alt="Revamo" className="h-14 w-14 rounded-xl" />
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mx-auto mb-2">
             <Bot className="h-4 w-4 text-primary" />
@@ -199,7 +199,7 @@ export default function RequestAccess() {
           </div>
           <CardTitle className="text-2xl">Request Early Access</CardTitle>
           <CardDescription>
-            Join the trade professionals transforming their business with Foreman AI, our AI Assistant
+            Join the trade professionals transforming their business with Revamo AI, our AI Assistant
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -316,7 +316,7 @@ export default function RequestAccess() {
             </Button>
             
             <p className="text-xs text-center text-muted-foreground">
-              By submitting, you agree to be contacted about Foreman beta access.
+              By submitting, you agree to be contacted about Revamo beta access.
               We'll never share your information with third parties.
             </p>
 

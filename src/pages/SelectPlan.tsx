@@ -26,8 +26,8 @@ export default function SelectPlan() {
         <Card className="max-w-md w-full text-center">
           <CardHeader>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <img src={foremanLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
-              <span className="text-2xl font-bold">Foreman</span>
+              <img src={foremanLogo} alt="Revamo" className="h-10 w-10 rounded-lg" />
+              <span className="text-2xl font-bold">Revamo</span>
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
@@ -101,8 +101,8 @@ export default function SelectPlan() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <img src={foremanLogo} alt="Foreman" className="h-10 w-10 rounded-lg" />
-            <span className="text-2xl font-bold">Foreman</span>
+            <img src={foremanLogo} alt="Revamo" className="h-10 w-10 rounded-lg" />
+            <span className="text-2xl font-bold">Revamo</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-3">
             Pick the plan that runs your business.
@@ -217,7 +217,7 @@ export default function SelectPlan() {
 
             {selectedTier === 'business' ? (
               <p className="text-xs text-center text-muted-foreground">
-                Includes 3 seats · Unlimited Foreman AI voice · Same-day priority support + WhatsApp · Advanced reports & monthly P&L · Priority AI lane
+                Includes 3 seats · Unlimited Revamo AI voice · Same-day priority support + WhatsApp · Advanced reports & monthly P&L · Priority AI lane
               </p>
             ) : (
               <p className="text-xs text-center text-muted-foreground">

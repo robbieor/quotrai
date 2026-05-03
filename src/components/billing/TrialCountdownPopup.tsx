@@ -71,7 +71,7 @@ export function TrialCountdownPopup() {
             {trialDaysRemaining === 1 ? "1 day" : `${trialDaysRemaining} days`} left on your trial
           </DialogTitle>
           <DialogDescription>
-            Subscribe now to keep full access to Foreman. Cancel anytime — you won't be charged until your trial ends.
+            Subscribe now to keep full access to Revamo. Cancel anytime — you won't be charged until your trial ends.
           </DialogDescription>
         </DialogHeader>
 

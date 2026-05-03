@@ -75,7 +75,7 @@ export default function AIAuditHistory() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Bot className="h-6 w-6 text-primary" />
-              Foreman AI Activity
+              Revamo AI Activity
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Complete audit trail of all AI-initiated actions

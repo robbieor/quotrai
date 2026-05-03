@@ -102,7 +102,7 @@ serve(async (req) => {
     const platformFeePercent = team.platform_fee_percent || 2.9;
     const applicationFee = Math.round(totalInCents * (platformFeePercent / 100));
 
-    const origin = req.headers.get("origin") || "https://foreman.world";
+    const origin = req.headers.get("origin") || "https://revamo.ai";
     const returnUrl = `${origin}/invoice/${portal_token}`;
 
     const session = await stripe.checkout.sessions.create({

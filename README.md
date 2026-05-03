@@ -1,6 +1,6 @@
 # Quotr
 
-Trade business management platform — quotes, invoices, jobs, GPS time tracking, and AI assistant (Foreman AI).
+Trade business management platform — quotes, invoices, jobs, GPS time tracking, and AI assistant (Revamo AI).
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ After opening in Xcode, add these entries to `ios/App/App/Info.plist`:
 
 | Key | Value |
 |-----|-------|
-| `NSMicrophoneUsageDescription` | Quotr uses the microphone for Foreman AI voice commands |
+| `NSMicrophoneUsageDescription` | Quotr uses the microphone for Revamo AI voice commands |
 | `NSLocationWhenInUseUsageDescription` | Quotr uses your location to verify job site attendance |
 | `NSLocationAlwaysAndWhenInUseUsageDescription` | Quotr tracks your location in the background for GPS time tracking |
 | `NSCameraUsageDescription` | Quotr uses the camera for site visit verification photos |

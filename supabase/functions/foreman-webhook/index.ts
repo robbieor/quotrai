@@ -1,5 +1,5 @@
 /**
- * foreman-webhook — Single, hardened dispatcher for Foreman AI tool calls.
+ * foreman-webhook — Single, hardened dispatcher for Revamo AI tool calls.
  *
  * - Validates the user's JWT (RLS-safe — every DB call runs as the user).
  * - Routes by `tool_name` to a per-tool handler, OR proxies to existing george-webhook.

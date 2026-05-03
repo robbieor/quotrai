@@ -9,8 +9,8 @@ export default function Terms() {
       <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
-            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
-            <span className="text-lg sm:text-xl font-bold tracking-tight">Foreman</span>
+            <img src={foremanLogo} alt="Revamo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+            <span className="text-lg sm:text-xl font-bold tracking-tight">Revamo</span>
           </Link>
           <Link to="/">
             <Button variant="ghost" size="sm" className="gap-2">
@@ -29,14 +29,14 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Agreement to Terms</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              By accessing or using Foreman ("the Service"), operated by Foreman Ltd, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
+              By accessing or using Revamo ("the Service"), operated by Revamo Ltd, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">2. Description of Service</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Foreman is a business management platform designed for trade professionals. The Service includes job management, quoting, invoicing, expense tracking, time tracking, team management, and AI-powered assistance ("Foreman AI"). Features may vary by subscription tier.
+              Revamo is a business management platform designed for trade professionals. The Service includes job management, quoting, invoicing, expense tracking, time tracking, team management, and AI-powered assistance ("Revamo AI"). Features may vary by subscription tier.
             </p>
           </section>
 
@@ -76,9 +76,9 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground mb-3">8. AI Features (Foreman AI)</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">8. AI Features (Revamo AI)</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Foreman AI is provided as a productivity tool. AI-generated outputs (quotes, summaries, suggestions) should be reviewed before use. We do not guarantee the accuracy of AI outputs. Usage limits apply based on your subscription tier.
+              Revamo AI is provided as a productivity tool. AI-generated outputs (quotes, summaries, suggestions) should be reviewed before use. We do not guarantee the accuracy of AI outputs. Usage limits apply based on your subscription tier.
             </p>
           </section>
 
@@ -92,7 +92,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">10. Limitation of Liability</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              To the maximum extent permitted by Irish and EU law, Foreman Ltd shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service. Our total liability shall not exceed the amount paid by you in the 12 months preceding the claim.
+              To the maximum extent permitted by Irish and EU law, Revamo Ltd shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service. Our total liability shall not exceed the amount paid by you in the 12 months preceding the claim.
             </p>
           </section>
 
@@ -128,7 +128,7 @@ export default function Terms() {
 
       <footer className="py-8 px-4 sm:px-6 border-t border-border">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Foreman. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Revamo. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
           </div>

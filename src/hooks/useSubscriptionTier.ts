@@ -193,7 +193,7 @@ export const SOLO_TIER: TierDetails = {
 export const CREW_TIER: TierDetails = {
   id: 'crew',
   name: 'Crew',
-  tagline: 'The full Foreman OS, with AI built in.',
+  tagline: 'The full Revamo OS, with AI built in.',
   monthly: PRICING.CREW,
   annual: PRICING.ANNUAL_CREW,
   includedSeats: PRICING.CREW_INCLUDED_SEATS,
@@ -202,7 +202,7 @@ export const CREW_TIER: TierDetails = {
   voiceMinutesPerSeat: PRICING.VOICE_MINUTES_PER_SEAT,
   features: [
     'Everything in Solo',
-    'Foreman AI text & voice assistant',
+    'Revamo AI text & voice assistant',
     `${PRICING.VOICE_MINUTES_PER_SEAT} voice minutes per seat / month`,
     'Expense tracking & receipt scanning',
     'Reports, dashboards & recurring invoices',
@@ -225,7 +225,7 @@ export const BUSINESS_TIER: TierDetails = {
   features: [
     'Everything in Crew',
     '3 seats included',
-    'Unlimited Foreman AI voice minutes',
+    'Unlimited Revamo AI voice minutes',
     'Priority support — same-day + WhatsApp',
     'Advanced reports, exports & monthly P&L',
     'Priority AI processing (faster lane)',
@@ -276,7 +276,7 @@ export const LITE_SEAT_DETAILS: PlanDetails = {
   ],
 };
 
-// Connect Seat — full access with Foreman AI
+// Connect Seat — full access with Revamo AI
 export const CONNECT_SEAT_DETAILS: PlanDetails = {
   name: 'Connect',
   code: 'connect',
@@ -284,7 +284,7 @@ export const CONNECT_SEAT_DETAILS: PlanDetails = {
   annualPrice: PRICING.ANNUAL_CONNECT_SEAT,
   features: [
     'Everything in Lite',
-    'Foreman AI text & voice assistant',
+    'Revamo AI text & voice assistant',
     `${PRICING.VOICE_MINUTES_PER_SEAT} voice minutes/month`,
     'Expense tracking & documents',
     'Business reports & dashboards',

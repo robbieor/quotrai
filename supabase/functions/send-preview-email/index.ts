@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const recipientEmail = user.email;
     const docLabel = documentType === "invoice" ? "invoice" : "quote";
-    const subject = `Your Foreman ${docLabel} preview`;
+    const subject = `Your Revamo ${docLabel} preview`;
     const messageId = crypto.randomUUID();
     const idempotencyKey = `preview-${docLabel}-${messageId}`;
 
@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
     const htmlBody = `
       <div style="font-family: 'Manrope', -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #0f172a; padding: 30px 25px; text-align: center; border-radius: 12px 12px 0 0;">
-          <img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+          <img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
           <h2 style="color: #ffffff; margin: 10px 0 0; font-size: 20px; font-weight: 600;">Document Preview</h2>
         </div>
         <div style="padding: 30px 25px;">
@@ -125,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>` : ''}
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
           <p style="color: #94a3b8; font-size: 12px;">
-            Sent from Foreman · This is an internal preview — not a customer communication.
+            Sent from Revamo · This is an internal preview — not a customer communication.
           </p>
         </div>
       </div>
@@ -148,11 +148,11 @@ const handler = async (req: Request): Promise<Response> => {
         idempotency_key: idempotencyKey,
         unsubscribe_token: unsubscribeToken,
         to: recipientEmail,
-        from: `Foreman <support@${FROM_DOMAIN}>`,
+        from: `Revamo <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html: htmlBody,
-        text: `Your Foreman ${docLabel} preview — this is a test sent to you only.`,
+        text: `Your Revamo ${docLabel} preview — this is a test sent to you only.`,
         purpose: "transactional",
         label: `preview_${docLabel}`,
         queued_at: new Date().toISOString(),

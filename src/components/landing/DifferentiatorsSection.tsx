@@ -5,13 +5,13 @@ const items = [
     icon: Mic,
     tag: "Hands-free voice",
     title: "Run the van by voice.",
-    body: "Drive between jobs, talk to Foreman. Quotes, invoices, expenses — logged before you reach the next door.",
+    body: "Drive between jobs, talk to Revamo. Quotes, invoices, expenses — logged before you reach the next door.",
   },
   {
     icon: Camera,
     tag: "Photo-to-quote",
     title: "Snap it. Quote it.",
-    body: "Five photos in. A priced quote out. Foreman reads the job, picks the materials, and drafts it ready to send.",
+    body: "Five photos in. A priced quote out. Revamo reads the job, picks the materials, and drafts it ready to send.",
   },
   {
     icon: Sunrise,
@@ -23,7 +23,7 @@ const items = [
     icon: Sparkles,
     tag: "Suggested automations",
     title: "It learns how you work.",
-    body: "Foreman spots patterns — follow-ups, reminders, recurring jobs — and offers to take them off your plate. You approve, it runs.",
+    body: "Revamo spots patterns — follow-ups, reminders, recurring jobs — and offers to take them off your plate. You approve, it runs.",
   },
 ];
 
@@ -34,12 +34,12 @@ export function DifferentiatorsSection() {
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-primary">Why Foreman is different</span>
+            <span className="text-xs sm:text-sm font-medium text-primary">Why Revamo is different</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-4 leading-tight max-w-3xl mx-auto">
             Other tools track your work.{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-              Foreman runs it.
+              Revamo runs it.
             </span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">

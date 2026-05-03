@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
           fromAddress = `${branding.company_name} <support@${FROM_DOMAIN}>`;
         }
       }
-      if (!fromAddress) fromAddress = `Foreman <support@${FROM_DOMAIN}>`;
+      if (!fromAddress) fromAddress = `Revamo <support@${FROM_DOMAIN}>`;
     }
 
     const recipients = Array.isArray(to) ? to : [to];

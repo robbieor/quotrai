@@ -504,7 +504,7 @@ Deno.serve(async (req) => {
 
     // ── Subscription Covered metric ────────────────────────────────
     // 3-tier launch pricing: Solo €29 · Crew €49 · Business €99.
-    // Extra seat €19/mo (Crew & Business only). Foreman earns 2.9% on Stripe Connect payments.
+    // Extra seat €19/mo (Crew & Business only). Revamo earns 2.9% on Stripe Connect payments.
     const userId = claimsData.claims.sub as string;
     const { data: callerProfile } = await supabase
       .from("profiles")

@@ -314,7 +314,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
                   </>
                 ) : (
                   <div className="bg-card rounded-2xl border border-border p-4">
-                    <p className="text-[13px] text-muted-foreground">Not enough data yet. Keep using Foreman and George will start spotting trends.</p>
+                    <p className="text-[13px] text-muted-foreground">Not enough data yet. Keep using Revamo and George will start spotting trends.</p>
                   </div>
                 )}
               </div>
@@ -372,7 +372,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
     <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 overflow-y-auto">
       <div className="flex flex-col items-center mb-8">
         <ForemanAvatar size="xl" className="shadow-md w-20 h-20" />
-        <h1 className="text-xl font-semibold mb-1">Foreman AI</h1>
+        <h1 className="text-xl font-semibold mb-1">Revamo AI</h1>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
           Your AI Operating System
         </span>
@@ -481,7 +481,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
               </>
             ) : (
               <div className="bg-card rounded-xl border border-border p-4">
-                <p className="text-xs text-muted-foreground">Not enough data yet. Keep using Foreman and George will start spotting trends.</p>
+                <p className="text-xs text-muted-foreground">Not enough data yet. Keep using Revamo and George will start spotting trends.</p>
               </div>
             )}
           </div>

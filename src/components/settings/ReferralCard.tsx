@@ -31,7 +31,7 @@ export function ReferralCard() {
         setReferralCount(existing.filter((r: any) => r.status !== "pending").length);
       } else {
         // Generate a new referral code
-        const code = `FOREMAN-${user.id.slice(0, 6).toUpperCase()}`;
+        const code = `REVAMO-${user.id.slice(0, 6).toUpperCase()}`;
         const { error } = await supabase.from("referrals").insert([{
           referrer_team_id: profile.team_id,
           referrer_user_id: user.id,
@@ -98,8 +98,8 @@ export function ReferralCard() {
           onClick={() => {
             if (navigator.share) {
               navigator.share({
-                title: "Try Foreman — AI-powered job management",
-                text: "I've been using Foreman to run my trade business. Sign up with my link and get 30 days free!",
+                title: "Try Revamo — AI-powered job management",
+                text: "I've been using Revamo to run my trade business. Sign up with my link and get 30 days free!",
                 url: referralLink,
               });
             } else {

@@ -105,7 +105,7 @@ export const Scene3CreateQuote: React.FC = () => {
         <div style={{ flex: "0 0 560px", display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8, opacity: userBubbleOpacity }}>
             <Img src={staticFile("images/foreman-logo.png")} style={{ width: 36, height: 36, borderRadius: 10 }} />
-            <span style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · Foreman AI</span>
+            <span style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · Revamo AI</span>
           </div>
 
           <div style={{ opacity: userBubbleOpacity, alignSelf: "flex-end", maxWidth: 480 }}>

@@ -1,7 +1,7 @@
-# Foreman — Apple App Store Listing
+# Revamo — Apple App Store Listing
 
 ## App Name (30 characters max)
-**Foreman - Jobs, Quotes & Invoices**
+**Revamo - Jobs, Quotes & Invoices**
 
 ## Subtitle (30 characters max)
 AI-powered field service management
@@ -14,9 +14,9 @@ invoice,quotes,tradesperson,contractor,expenses,time tracking,GPS,receipts,plumb
 
 ## Description (4000 characters max)
 
-Foreman is the all-in-one business app for contractors, tradespeople, and freelancers.
+Revamo is the all-in-one business app for contractors, tradespeople, and freelancers.
 
-Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Foreman gives you everything you need to run your business from your phone.
+Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Revamo gives you everything you need to run your business from your phone.
 
 **INVOICE IN SECONDS**
 Create professional invoices on-site and send them instantly via WhatsApp, SMS, or email. Your clients get a polished PDF with your logo and branding. Support for Irish VAT rates (23%, 13.5%, 9%, 0%) built in.
@@ -46,7 +46,7 @@ Growing your business? Invite team members with role-based access. Owners, admin
 Upload your logo. Choose your brand colours. Pick from three professional invoice templates. Add custom terms and payment details.
 
 **WORKS OFFLINE**
-Network issues on a rural job site? No problem. Foreman works offline and syncs when you're back online.
+Network issues on a rural job site? No problem. Revamo works offline and syncs when you're back online.
 
 **DESIGNED FOR IRELAND**
 Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for tradespeople.
@@ -63,7 +63,7 @@ Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for t
 - Cleaners
 - Any self-employed professional
 
-Download Foreman today and take control of your business finances.
+Download Revamo today and take control of your business finances.
 
 ---
 
@@ -75,12 +75,12 @@ Download Foreman today and take control of your business finances.
 4+ (No objectionable content)
 
 ## Copyright
-© 2026 Foreman
+© 2026 Revamo
 
 ## Contact Information
-- **Support URL:** https://foreman.world/terms
-- **Marketing URL:** https://foreman.world
-- **Privacy Policy URL:** https://foreman.world/privacy
+- **Support URL:** https://revamo.ai/terms
+- **Marketing URL:** https://revamo.ai
+- **Privacy Policy URL:** https://revamo.ai/privacy
 
 ## What's New in This Version
 Initial release — create quotes, invoices, track time with GPS, manage clients, and scan receipts with AI.
@@ -108,10 +108,10 @@ Same set, landscape or portrait.
 ---
 
 ## App Review Notes
-This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://foreman.world/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 7-day free trial for new users.
+This app uses a "reader" subscription model. Users manage their subscriptions through our website at https://revamo.ai/settings. There are no in-app purchases. The app provides full functionality for existing subscribers and a 7-day free trial for new users.
 
 ## Info.plist Permission Strings
-- `NSMicrophoneUsageDescription`: "Foreman uses the microphone for Foreman AI voice commands"
-- `NSLocationWhenInUseUsageDescription`: "Foreman uses your location to verify job site attendance"
-- `NSLocationAlwaysAndWhenInUseUsageDescription`: "Foreman tracks your location in the background for GPS time tracking"
-- `NSCameraUsageDescription`: "Foreman uses the camera for site visit verification photos"
+- `NSMicrophoneUsageDescription`: "Revamo uses the microphone for Revamo AI voice commands"
+- `NSLocationWhenInUseUsageDescription`: "Revamo uses your location to verify job site attendance"
+- `NSLocationAlwaysAndWhenInUseUsageDescription`: "Revamo tracks your location in the background for GPS time tracking"
+- `NSCameraUsageDescription`: "Revamo uses the camera for site visit verification photos"

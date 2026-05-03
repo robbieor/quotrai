@@ -152,7 +152,7 @@ export function TeamManagement() {
               </div>
               {inviteRole === "member" && (
                 <p className="text-xs text-muted-foreground">
-                  💡 Team Members only access Jobs, Calendar & Time Tracking. Foreman AI is available to Owners & Managers.
+                  💡 Team Members only access Jobs, Calendar & Time Tracking. Revamo AI is available to Owners & Managers.
                 </p>
               )}
             </form>

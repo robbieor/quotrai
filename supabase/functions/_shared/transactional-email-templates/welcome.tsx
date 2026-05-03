@@ -19,7 +19,7 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/foreman-logo.png'
-const APP_URL = 'https://foreman.world'
+const APP_URL = 'https://revamo.ai'
 
 interface WelcomeEmailProps {
   variant?: 'self_signup' | 'team_invite'
@@ -41,22 +41,22 @@ const WelcomeEmail = ({
   const heroTitle = isInvite
     ? `Welcome to ${teamName || 'the team'}`
     : greetingName
-      ? `Welcome to Foreman, ${greetingName}`
-      : 'Welcome to Foreman'
+      ? `Welcome to Revamo, ${greetingName}`
+      : 'Welcome to Revamo'
 
   return (
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
         {isInvite
-          ? `You've joined ${teamName || 'the team'} on Foreman`
+          ? `You've joined ${teamName || 'the team'} on Revamo`
           : 'Your AI Operating System for field service is ready'}
       </Preview>
       <Body style={main}>
         <Container style={container}>
           <div style={header}>
-            <Img src={LOGO_URL} width="48" height="48" alt="Foreman" style={logo} />
-            <Text style={brandName}>Foreman</Text>
+            <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
+            <Text style={brandName}>Revamo</Text>
           </div>
 
           <Heading style={h1}>{heroTitle}</Heading>
@@ -116,9 +116,9 @@ const WelcomeEmail = ({
           </Text>
 
           <Text style={closing}>We're glad to have you on the tools.</Text>
-          <Text style={signoff}>— The Foreman team</Text>
+          <Text style={signoff}>— The Revamo team</Text>
 
-          <Text style={footerBrand}>© Foreman · foreman.world</Text>
+          <Text style={footerBrand}>© Revamo · revamo.ai</Text>
         </Container>
       </Body>
     </Html>
@@ -129,8 +129,8 @@ export const template = {
   component: WelcomeEmail,
   subject: (data: Record<string, any>) =>
     data?.variant === 'team_invite'
-      ? `Welcome to ${data?.teamName || 'the team'} on Foreman`
-      : 'Welcome to Foreman',
+      ? `Welcome to ${data?.teamName || 'the team'} on Revamo`
+      : 'Welcome to Revamo',
   displayName: 'Welcome',
   previewData: {
     variant: 'self_signup',

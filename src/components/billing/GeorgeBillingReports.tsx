@@ -39,7 +39,7 @@ export function GeorgeBillingReports() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Foreman AI Voice Billing History
+            Revamo AI Voice Billing History
           </CardTitle>
           <CardDescription>
             Monthly usage and cost breakdown
@@ -107,7 +107,7 @@ export function GeorgeBillingReports() {
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">
-              Foreman AI Voice add-on charges
+              Revamo AI Voice add-on charges
             </p>
           </CardContent>
         </Card>

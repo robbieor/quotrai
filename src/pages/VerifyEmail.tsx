@@ -32,7 +32,7 @@ export default function VerifyEmail() {
       <Card className="w-full max-w-md text-center">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <img src={foremanLogo} alt="Foreman" className="h-14 w-14 rounded-xl" />
+            <img src={foremanLogo} alt="Revamo" className="h-14 w-14 rounded-xl" />
           </div>
           <div className="flex justify-center">
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">

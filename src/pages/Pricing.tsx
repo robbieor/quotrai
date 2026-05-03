@@ -21,15 +21,15 @@ const PLATFORM_FEE = PRICING.PLATFORM_FEE / 100;
 const faqs = [
   {
     q: "What's included in the 14-day free trial?",
-    a: "Full Crew plan access — every feature, including Foreman AI text & voice. No credit card required. You only pay if you decide to continue after 14 days.",
+    a: "Full Crew plan access — every feature, including Revamo AI text & voice. No credit card required. You only pay if you decide to continue after 14 days.",
   },
   {
     q: "How does the platform fee work?",
-    a: "Foreman charges 2.9% on payments collected through Stripe Connect — built right into your invoices. No payment, no fee — we only earn when you earn.",
+    a: "Revamo charges 2.9% on payments collected through Stripe Connect — built right into your invoices. No payment, no fee — we only earn when you earn.",
   },
   {
     q: "What's the difference between the plans?",
-    a: "Solo gets you the core ops tools for one person. Crew adds Foreman AI (text + voice) — most teams pick this. Business gives you 3 included seats, unlimited AI voice, advanced reporting & exports, priority support, and a faster AI processing lane.",
+    a: "Solo gets you the core ops tools for one person. Crew adds Revamo AI (text + voice) — most teams pick this. Business gives you 3 included seats, unlimited AI voice, advanced reporting & exports, priority support, and a faster AI processing lane.",
   },
   {
     q: "Can I add more team members?",
@@ -54,10 +54,10 @@ export default function Pricing() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-sm w-full text-center space-y-6">
-          <img src={foremanLogo} alt="Foreman" className="h-16 w-16 rounded-2xl mx-auto" />
+          <img src={foremanLogo} alt="Revamo" className="h-16 w-16 rounded-2xl mx-auto" />
           <h1 className="text-2xl font-bold">Manage Your Subscription</h1>
           <p className="text-muted-foreground">
-            Subscriptions are managed through the Foreman website. Tap below to view plans and billing.
+            Subscriptions are managed through the Revamo website. Tap below to view plans and billing.
           </p>
           <Button
             size="lg"
@@ -85,8 +85,8 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Pricing — Solo €29 · Crew €49 · Business €89 | Foreman"
-        description="Three simple plans for trade businesses. Crew (€49/mo) includes Foreman AI text & voice. Business (€89/mo) gets unlimited AI voice, 3 seats, advanced reports & priority support. 14-day free trial."
+        title="Pricing — Solo €29 · Crew €49 · Business €89 | Revamo"
+        description="Three simple plans for trade businesses. Crew (€49/mo) includes Revamo AI text & voice. Business (€89/mo) gets unlimited AI voice, 3 seats, advanced reports & priority support. 14-day free trial."
         path="/pricing"
       />
 
@@ -94,8 +94,8 @@ export default function Pricing() {
       <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight">Foreman</span>
+            <img src={foremanLogo} alt="Revamo" className="h-8 w-8 rounded-lg" />
+            <span className="text-lg font-bold tracking-tight">Revamo</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login">
@@ -241,7 +241,7 @@ export default function Pricing() {
               </TableHeader>
               <TableBody>
                 <TableRow className="bg-primary/5 border-l-2 border-l-primary font-medium">
-                  <TableCell className="font-bold">Foreman</TableCell>
+                  <TableCell className="font-bold">Revamo</TableCell>
                   <TableCell>~1.7%</TableCell>
                   <TableCell>1.2%</TableCell>
                   <TableCell className="font-bold text-primary">~2.9%</TableCell>
@@ -272,7 +272,7 @@ export default function Pricing() {
             </Table>
           </div>
           <p className="text-xs text-muted-foreground text-center mt-3">
-            Foreman is the only option where your payment fees include full job management, invoicing, and AI — no separate software subscription needed to break even.
+            Revamo is the only option where your payment fees include full job management, invoicing, and AI — no separate software subscription needed to break even.
           </p>
         </div>
       </section>
@@ -302,7 +302,7 @@ export default function Pricing() {
             Ready to ditch the paperwork?
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            Join trade professionals who run their entire business from Foreman.
+            Join trade professionals who run their entire business from Revamo.
           </p>
           <Link to="/signup">
             <Button size="lg" className="text-lg px-10 py-7 font-semibold gap-2">
@@ -320,8 +320,8 @@ export default function Pricing() {
       <footer className="border-t border-border py-8 px-4 sm:px-6">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <img src={foremanLogo} alt="Foreman" className="h-6 w-6 rounded" />
-            <span>© {new Date().getFullYear()} Foreman Ltd</span>
+            <img src={foremanLogo} alt="Revamo" className="h-6 w-6 rounded" />
+            <span>© {new Date().getFullYear()} Revamo Ltd</span>
           </div>
           <div className="flex gap-4">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>

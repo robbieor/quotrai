@@ -100,19 +100,19 @@ export function GeorgeVoiceToggle({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {pendingState ? "Enable Foreman AI Voice" : "Disable Foreman AI Voice"}
+              {pendingState ? "Enable Revamo AI Voice" : "Disable Revamo AI Voice"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingState ? (
                 <>
-                  Enable Foreman AI voice for <strong>{displayName}</strong>?
+                  Enable Revamo AI voice for <strong>{displayName}</strong>?
                   {isCurrentUser && " You'll have immediate access to voice features."}
                 </>
               ) : (
                 <>
-                  Disable Foreman AI voice for <strong>{displayName}</strong>?
+                  Disable Revamo AI voice for <strong>{displayName}</strong>?
                   <br /><br />
-                  They'll still have access to Foreman AI text chat.
+                  They'll still have access to Revamo AI text chat.
                 </>
               )}
             </AlertDialogDescription>

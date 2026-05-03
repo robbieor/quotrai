@@ -121,7 +121,7 @@ export function BeforeAfter() {
           style={{ transitionDelay: "200ms" }}
         >
           <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-            <span className="text-xs font-medium text-primary">With Foreman</span>
+            <span className="text-xs font-medium text-primary">With Revamo</span>
           </div>
           
           <div className="mt-4 space-y-4">
