@@ -88,6 +88,8 @@ export function AppSidebar() {
       .map(group => ({
         ...group,
         items: group.items.filter(item => {
+          // On mobile, hide items already in the bottom tab bar
+          if (isMobile && MOBILE_TAB_IDS.includes(item.id)) return false;
           // Team-seat members only see allowed nav items
           if (isTeamSeat && !MEMBER_ALLOWED_IDS.includes(item.id)) return false;
           // Check seat-type access
@@ -96,7 +98,7 @@ export function AppSidebar() {
         }),
       }))
       .filter(group => group.items.length > 0);
-  }, [isTeamSeat, canAccess]);
+  }, [isTeamSeat, canAccess, isMobile]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
