@@ -45,7 +45,8 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "calendar", title: "Calendar", url: "/calendar", icon: CalendarDays },
       { id: "time-tracking", title: "Workforce", url: "/time-tracking", icon: Clock },
-      { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
+      // Expenses hidden pre-launch
+      // { id: "expenses", title: "Expenses", url: "/expenses", icon: Wallet, requiredSeat: "connect" },
       { id: "leads", title: "Enquiries", url: "/leads", icon: UserPlus, requiredSeat: "grow" },
       { id: "templates", title: "Templates", url: "/templates", icon: FolderOpen },
       { id: "price-book", title: "Price Book", url: "/price-book", icon: Package },
