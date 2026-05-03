@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
             payload: {
               message_id: messageId,
               to: customerEmail,
-              from: `Revamo <support@${FROM_DOMAIN}>`,
+              from: `revamo <support@${FROM_DOMAIN}>`,
               sender_domain: SENDER_DOMAIN,
               subject: `Appointment Reminder: ${jobTitle}`,
               html,

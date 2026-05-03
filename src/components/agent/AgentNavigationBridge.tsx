@@ -15,7 +15,7 @@ export function AgentNavigationBridge() {
     const navHandler = (e: Event) => {
       const { path, reason } = (e as CustomEvent).detail ?? {};
       if (typeof path !== "string" || !path.startsWith("/")) return;
-      if (reason) toast("Revamo AI", { description: reason });
+      if (reason) toast("revamo AI", { description: reason });
       navigate(path);
     };
 
@@ -26,7 +26,7 @@ export function AgentNavigationBridge() {
         `[data-section="${section}"]`
       ) as HTMLElement | null;
       if (!el) {
-        console.warn(`[Revamo AI] section not on page: ${section}`);
+        console.warn(`[revamo AI] section not on page: ${section}`);
         return;
       }
       el.scrollIntoView({ behavior: "smooth", block: "center" });

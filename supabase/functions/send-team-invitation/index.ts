@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto;">
           <div style="background: #0f172a; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
+            <img src="https://revamo.ai/foreman-logo.png" alt="revamo" width="140" style="display:block;margin:0 auto;" />
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
             <h1 style="margin:0 0 16px;font-size:20px;color:#0f172a;font-weight:700;">🎉 You're Invited!</h1>
@@ -90,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="margin-top: 20px; color: #64748b; font-size: 14px;">If you weren't expecting this invitation, you can safely ignore this email.</p>
           </div>
           <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;">
-            © ${new Date().getFullYear()} Revamo · <a href="mailto:support@foreman.ie" style="color: #94a3b8; text-decoration: none;">support@foreman.ie</a>
+            © ${new Date().getFullYear()} revamo · <a href="mailto:support@foreman.ie" style="color: #94a3b8; text-decoration: none;">support@foreman.ie</a>
           </div>
         </div>
       </body>
@@ -107,11 +107,11 @@ const handler = async (req: Request): Promise<Response> => {
       payload: {
         message_id: messageId,
         to: email,
-        from: `${inviterName || "Revamo"} <support@${FROM_DOMAIN}>`,
+        from: `${inviterName || "revamo"} <support@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
-        subject: `You've been invited to join ${teamName} on Revamo`,
+        subject: `You've been invited to join ${teamName} on revamo`,
         html,
-        text: `${inviterName || "A team member"} has invited you to join ${teamName} on Revamo. Accept here: ${inviteUrl}`,
+        text: `${inviterName || "A team member"} has invited you to join ${teamName} on revamo. Accept here: ${inviteUrl}`,
         purpose: "transactional",
         label: "team-invitation",
         queued_at: new Date().toISOString(),

@@ -431,7 +431,7 @@ export function WebsiteImportWizard({ open, onOpenChange, onComplete, existingPr
               <p className="text-xs text-muted-foreground mt-1.5">
                 {isAddingToExisting
                   ? "Add products from another supplier to this pricebook."
-                  : "Revamo will map the site, find product families, and let you choose what to import."}
+                  : "revamo will map the site, find product families, and let you choose what to import."}
               </p>
             </div>
             {error && (

@@ -112,7 +112,7 @@ export default function CustomerDashboard() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={foremanLogo} alt="Revamo" className="h-9 w-9 rounded-lg" />
+            <img src={foremanLogo} alt="revamo" className="h-9 w-9 rounded-lg" />
             <div>
               <span className="text-xl font-bold tracking-tight">Customer Portal</span>
               {portalData?.customer && (

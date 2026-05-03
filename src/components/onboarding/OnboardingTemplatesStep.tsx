@@ -111,7 +111,7 @@ export function OnboardingTemplatesStep({ teamId }: OnboardingTemplatesStepProps
         </div>
         <CardTitle>Set Your Prices</CardTitle>
         <CardDescription>
-          Review your default templates and set your labour rates. Revamo uses these to create quotes instantly.
+          Review your default templates and set your labour rates. revamo uses these to create quotes instantly.
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4 px-0">

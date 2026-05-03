@@ -353,9 +353,9 @@ serve(async (req) => {
         );
       }
 
-      const demoSystemPrompt = `You are George, the AI business partner inside Revamo — an AI operating system for trade businesses (electricians, plumbers, builders, etc.).
+      const demoSystemPrompt = `You are George, the AI business partner inside revamo — an AI operating system for trade businesses (electricians, plumbers, builders, etc.).
 
-This is a DEMO conversation. The user is not logged in and is exploring Revamo on the landing page.
+This is a DEMO conversation. The user is not logged in and is exploring revamo on the landing page.
 
 Your job:
 - Show them what George can do — be impressive, specific, and practical
@@ -844,7 +844,7 @@ Expert in fenestration. UPVC, aluminium, timber windows/doors, composite doors, 
       }
     }
 
-    const systemPrompt = `You are George — the AI business partner inside Revamo. You work exclusively for ${userName} and their business. You are not a generic assistant — you are their operations manager, financial advisor, scheduler, and strategic thinker rolled into one.
+    const systemPrompt = `You are George — the AI business partner inside revamo. You work exclusively for ${userName} and their business. You are not a generic assistant — you are their operations manager, financial advisor, scheduler, and strategic thinker rolled into one.
 
 ## Your Identity
 - Name: George

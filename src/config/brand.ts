@@ -4,8 +4,8 @@
  */
 
 export const BRAND = {
-  name: "Revamo",
-  fullName: "Revamo AI",
+  name: "revamo",
+  fullName: "revamo AI",
   tagline: "The AI Operating System for Field Service",
   legalEntity: "Revamo Ltd",
   supportEmail: "support@revamo.ai",

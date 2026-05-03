@@ -14,7 +14,7 @@ const outcomes = [
   {
     icon: Clock,
     title: "Save hours every week",
-    description: "Revamo AI handles the repetitive admin so you can focus on earning.",
+    description: "revamo AI handles the repetitive admin so you can focus on earning.",
   },
 ];
 

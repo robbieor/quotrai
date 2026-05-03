@@ -271,7 +271,7 @@ export function GeorgeAgentInput({
             onKeyDown={handleKeyDown}
             placeholder={
               isConnected
-                ? "Type or speak to Revamo AI..."
+                ? "Type or speak to revamo AI..."
                 : "Type a message or / for commands..."
             }
             className="flex-1 min-h-[44px] max-h-[200px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 py-3"
@@ -296,10 +296,10 @@ export function GeorgeAgentInput({
 
         <p className="text-xs text-muted-foreground text-center mt-2">
           {isConnecting
-             ? "Connecting to Revamo AI..."
+             ? "Connecting to revamo AI..."
              : isConnected
                ? isSpeaking
-                 ? "Revamo AI is speaking..."
+                 ? "revamo AI is speaking..."
                 : `Listening... ${Math.round(remainingMinutes)} mins remaining`
               : isProcessing
                 ? "Processing..."
@@ -307,7 +307,7 @@ export function GeorgeAgentInput({
                   ? lastError
                   : hasVoiceAccess
                     ? `Type a message or click the phone button for voice (${Math.round(remainingMinutes)} mins remaining)`
-                    : "Type a message or use / commands (voice requires Revamo AI Voice add-on)"}
+                    : "Type a message or use / commands (voice requires revamo AI Voice add-on)"}
         </p>
       </div>
     </div>

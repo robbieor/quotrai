@@ -21,7 +21,7 @@ export function GeorgeUsageCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mic className={`h-5 w-5 ${canUseVoice ? "text-primary" : "text-muted-foreground"}`} />
-          Revamo AI Voice Usage
+          revamo AI Voice Usage
         </CardTitle>
         <CardDescription>
           Resets on {resetDate}

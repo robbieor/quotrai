@@ -176,7 +176,7 @@ export function ActiveCallBar() {
         {/* Status label — visible on every viewport so user always knows the call is live */}
         <div className="flex flex-col leading-tight pr-1 min-w-0">
           <span className="text-xs sm:text-sm font-semibold text-foreground truncate">
-            Revamo AI · {muted ? "Muted" : isSpeaking ? "Speaking" : "Listening"}
+            revamo AI · {muted ? "Muted" : isSpeaking ? "Speaking" : "Listening"}
           </span>
           <span className="text-[10px] sm:text-[11px] text-muted-foreground tabular-nums truncate">
             {formatDuration(elapsed)}<span className="hidden sm:inline"> · Space to mute</span>
@@ -190,13 +190,13 @@ export function ActiveCallBar() {
         >
           {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
         </button>
-        {/* Expand-to-chat: jump to the full Revamo AI screen for context/history.
+        {/* Expand-to-chat: jump to the full revamo AI screen for context/history.
             Replaces the old "expand floating card" affordance now that the card is gone. */}
         {!isCardExcluded && (
           <button
             onClick={() => navigate("/foreman-ai")}
             className="h-9 w-9 shrink-0 rounded-full bg-background hover:bg-muted border border-border flex items-center justify-center transition-colors"
-            aria-label="Open Revamo AI chat"
+            aria-label="Open revamo AI chat"
           >
             <MessageSquare className="h-4 w-4" />
           </button>

@@ -24,7 +24,7 @@ const views: { id: ViewType; label: string; icon: typeof Briefcase }[] = [
   { id: "dashboard", label: "Dashboard", icon: Briefcase },
   { id: "quotes", label: "Quotes", icon: FileText },
   { id: "invoices", label: "Invoices", icon: Receipt },
-  { id: "tom", label: "Revamo AI", icon: Bot },
+  { id: "tom", label: "revamo AI", icon: Bot },
 ];
 
 const mockMetrics = [
@@ -242,7 +242,7 @@ export function DashboardShowcase() {
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="hidden sm:inline">Revamo AI is ready</span>
+                  <span className="hidden sm:inline">revamo AI is ready</span>
                 </div>
               </div>
 
@@ -428,7 +428,7 @@ export function DashboardShowcase() {
             </div>
           )}
 
-          {/* Revamo AI View */}
+          {/* revamo AI View */}
           {currentView === "tom" && (
             <div className="animate-fade-in">
               <div className="flex items-center gap-3 mb-5">
@@ -436,7 +436,7 @@ export function DashboardShowcase() {
                   <Bot className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Revamo AI</h3>
+                  <h3 className="text-lg font-semibold text-foreground">revamo AI</h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
                     Your AI assistant • 50+ skills
@@ -472,7 +472,7 @@ export function DashboardShowcase() {
               <div className="flex items-center gap-3 pt-3 border-t border-border/50">
                 <div className="flex-1 bg-muted rounded-full px-4 py-2.5 text-sm text-muted-foreground flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
-                  Tell Revamo AI what you need...
+                  Tell revamo AI what you need...
                 </div>
                 <button className="h-10 w-10 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
                   <Mic className="h-5 w-5 text-primary-foreground" />

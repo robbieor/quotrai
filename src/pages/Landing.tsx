@@ -11,7 +11,7 @@ import { ArrowRight, Calculator, Menu, X } from "lucide-react";
 import foremanLogo from "@/assets/foreman-logo.png";
 import { ROICalculator } from "@/components/landing/ROICalculator";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { DemoVideoSection } from "@/components/landing/DemoVideoSection";
+
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { SolutionSection } from "@/components/landing/SolutionSection";
 import { ForemanAISection } from "@/components/landing/ForemanAISection";
@@ -66,8 +66,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       <SEOHead
-        title="Revamo — The AI Operating System for Field Service Businesses"
-        description="Revamo runs your business in the background — chases payments, briefs you each morning, and learns your workflow. Hands-free voice, photo-to-quote, automations."
+        title="revamo — The AI Operating System for Field Service Businesses"
+        description="revamo runs your business in the background — chases payments, briefs you each morning, and learns your workflow. Hands-free voice, photo-to-quote, automations."
         path="/"
       />
 
@@ -88,7 +88,7 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <img src={foremanLogo} alt="Revamo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+            <img src={foremanLogo} alt="revamo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
             <span className="text-lg sm:text-xl font-bold tracking-tight font-manrope lowercase">revamo</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -166,15 +166,13 @@ export default function Landing() {
       {/* Section 1: Hero */}
       <HeroSection formatPrice={formatPrice} onTryDemo={() => setDemoOpen(true)} />
 
-      {/* Demo Video */}
-      <DemoVideoSection />
       {/* Section 2: Problem */}
       <ProblemSection />
 
       {/* Section 3: Solution */}
       <SolutionSection />
 
-      {/* Section 4: Revamo AI */}
+      {/* Section 4: revamo AI */}
       <ForemanAISection formatPrice={formatPrice} />
 
       {/* Section 4b: Differentiators (Phase 4 marketing) */}
@@ -206,12 +204,12 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="flex flex-col items-center gap-4 sm:gap-6 text-center sm:text-left sm:flex-row sm:justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <img src={foremanLogo} alt="Revamo" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
+              <img src={foremanLogo} alt="revamo" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
               <span className="text-base sm:text-lg font-bold tracking-tight font-manrope lowercase">revamo</span>
-              <span className="text-xs sm:text-sm text-muted-foreground">Powered by Revamo AI</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Powered by revamo AI</span>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground order-last sm:order-none">
-              © {new Date().getFullYear()} Revamo. All rights reserved.
+              © {new Date().getFullYear()} revamo. All rights reserved.
             </p>
             <div className="flex items-center gap-4 sm:gap-6">
               <Link to="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link>

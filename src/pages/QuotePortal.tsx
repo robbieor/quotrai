@@ -367,7 +367,7 @@ export default function QuotePortal() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Powered by Revamo
+          Powered by revamo
         </p>
       </div>
     </div>

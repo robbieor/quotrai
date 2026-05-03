@@ -184,7 +184,7 @@ export function useAddressAutocomplete() {
       if (countryCode) params.set('countrycodes', countryCode);
 
       const response = await fetch(`${NOMINATIM_BASE_URL}/search?${params}`, {
-        headers: { Accept: 'application/json', 'User-Agent': 'Revamo-App/1.0' },
+        headers: { Accept: 'application/json', 'User-Agent': 'revamo-App/1.0' },
         signal: abortControllerRef.current.signal,
       });
 
@@ -291,7 +291,7 @@ export function useAddressAutocomplete() {
       });
 
       const response = await fetch(`${NOMINATIM_BASE_URL}/reverse?${params}`, {
-        headers: { Accept: 'application/json', 'User-Agent': 'Revamo-App/1.0' },
+        headers: { Accept: 'application/json', 'User-Agent': 'revamo-App/1.0' },
       });
 
       if (!response.ok) throw new Error('Failed to reverse geocode');

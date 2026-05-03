@@ -20,14 +20,14 @@ serve(async (req) => {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
 <tr><td style="background:#0f172a;padding:30px 32px;text-align:center">
-<img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
+<img src="https://revamo.ai/foreman-logo.png" alt="revamo" width="140" style="display:block;margin:0 auto;" />
 </td></tr>
 <tr><td style="padding:32px">
 <h1 style="margin:0 0 16px;font-size:20px;color:#0f172a">${title}</h1>
 ${bodyHtml}
 </td></tr>
 <tr><td style="padding:16px 32px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0">
-© ${new Date().getFullYear()} Revamo · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
+© ${new Date().getFullYear()} revamo · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
 </td></tr></table></td></tr></table></body></html>`;
   }
 
@@ -114,11 +114,11 @@ ${bodyHtml}
     if (!customer.deleted && (customer as any).email) {
       const email = (customer as any).email;
       const html = brandedEmailHtml("Welcome Aboard — Your Subscription is Active", [
-        "Your free trial has ended and your Revamo subscription is now fully active. 🎉",
+        "Your free trial has ended and your revamo subscription is now fully active. 🎉",
         `Your first billing period runs until <strong>${formattedDate}</strong>.`,
         "You now have full access to all the tools you need to run your business — quotes, invoices, scheduling, and George AI at your side.",
-        '<a href="https://revamo.ai/dashboard" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Open Revamo →</a>',
-        "Thanks for choosing Revamo. We're here if you need anything — just reply to this email or reach out at support@foreman.ie.",
+        '<a href="https://revamo.ai/dashboard" style="display:inline-block;padding:12px 28px;background:#00E6A0;color:#0f172a;text-decoration:none;border-radius:12px;font-weight:600;margin:8px 0">Open revamo →</a>',
+        "Thanks for choosing revamo. We're here if you need anything — just reply to this email or reach out at support@foreman.ie.",
       ]);
 
       try {
@@ -126,9 +126,9 @@ ${bodyHtml}
           p_queue_name: "transactional_emails",
           p_message: JSON.stringify({
             to: email,
-            subject: "Welcome aboard — your Revamo subscription is active",
+            subject: "Welcome aboard — your revamo subscription is active",
             html,
-            from: "Revamo <support@foreman.ie>",
+            from: "revamo <support@foreman.ie>",
             idempotency_key: `trial-ended-${subscription.stripe_subscription_id}`,
             purpose: "transactional",
           }),

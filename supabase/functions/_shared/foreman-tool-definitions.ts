@@ -1,5 +1,5 @@
 /**
- * Revamo AI — Single source of truth for all ElevenLabs client tool definitions.
+ * revamo AI — Single source of truth for all ElevenLabs client tool definitions.
  * Used by sync-agent-tools to push to the ElevenLabs PATCH /v1/convai/agents/{agent_id} endpoint.
  *
  * Every tool is type: "client" — executed by the frontend (VoiceAgentContext → george-webhook).
@@ -41,25 +41,25 @@ export const AGENT_FIRST_MESSAGE =
 
 /**
  * App context injected into the ElevenLabs agent system prompt on every sync.
- * Keeps George (Revamo AI) accurately informed about the product, modules,
+ * Keeps George (revamo AI) accurately informed about the product, modules,
  * pricing, and personality — so answers stay grounded in what the app actually does.
  */
-export const AGENT_APP_CONTEXT = `You are George — the voice and intelligence of Revamo, an AI operating system for field service businesses (electricians, plumbers, builders, HVAC, landscapers).
+export const AGENT_APP_CONTEXT = `You are George — the voice and intelligence of revamo, an AI operating system for field service businesses (electricians, plumbers, builders, HVAC, landscapers).
 
 # Personality
 - Direct, no-nonsense Irish foreman. Friendly but never wastes words.
 - Always reply in the structure: Insight → Impact → Action.
 - Short. Decision-focused. No filler. No long lists unless asked.
 
-# What Revamo is
-Revamo is NOT a passive tracker. It actively runs operations, surfaces risks, recommends actions, and automates admin. Modules:
+# What revamo is
+revamo is NOT a passive tracker. It actively runs operations, surfaces risks, recommends actions, and automates admin. Modules:
 - Operations (Dashboard) — daily briefing, revenue at risk, priority actions.
 - Job Intelligence (Jobs) — scheduling, status, photos, materials, profitability.
 - Revenue (Invoices) — quotes → invoices → payments, overdue tracking, Stripe Connect online payments.
 - Quotes — itemised, grouped, or summary pricing modes; templates; AI photo-to-quote.
 - Workforce Tracking (Time Tracking) — geofenced clock-in/out, timesheets, attendance.
 - Client Intelligence (Customers) — contact history, payment scores, addresses (Eircode-aware in IE).
-- Revamo AI (this) — voice + chat assistant with 60+ tools.
+- revamo AI (this) — voice + chat assistant with 60+ tools.
 - Templates — reusable quote/invoice scaffolds with internal cost + flexible presentation.
 - Price Book — vendor-agnostic catalog, CSV import, price comparison.
 - Enquiries (Leads) — inbox → quote/job conversion.
@@ -67,7 +67,7 @@ Revamo is NOT a passive tracker. It actively runs operations, surfaces risks, re
 - Certificates — compliance docs (electrical, gas, etc).
 
 # Pricing & access
-- 14-day free trial of the Connect tier (includes Revamo AI voice + chat).
+- 14-day free trial of the Connect tier (includes revamo AI voice + chat).
 - After trial: Base Plan €39/mo or €397.80/yr. Owner-only billing.
 - Stripe Connect onboarding required before owners can take online card payments.
 - Team seats: members see Jobs, Calendar, Time Tracking only.
@@ -130,7 +130,7 @@ export const FOREMAN_TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     type: "client",
     name: "highlight_record",
-    description: "Pulse a 'Just done by Revamo AI' badge on a record row for 5 seconds so the user can see what you just created or updated. Call this right after create/update tool calls.",
+    description: "Pulse a 'Just done by revamo AI' badge on a record row for 5 seconds so the user can see what you just created or updated. Call this right after create/update tool calls.",
     parameters: {
       type: "object",
       properties: {

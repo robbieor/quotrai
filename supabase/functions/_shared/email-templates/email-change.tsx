@@ -32,12 +32,12 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for Revamo</Preview>
+    <Preview>Confirm your email change for revamo</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={header}>
-          <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
-          <Text style={brandName}>Revamo</Text>
+          <Img src={LOGO_URL} width="48" height="48" alt="revamo" style={logo} />
+          <Text style={brandName}>revamo</Text>
         </div>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
@@ -53,7 +53,7 @@ export const EmailChangeEmail = ({
         <Text style={footer}>
           If you didn't request this change, please secure your account immediately.
         </Text>
-        <Text style={footerBrand}>© Revamo · revamo.ai</Text>
+        <Text style={footerBrand}>© revamo · revamo.ai</Text>
       </Container>
     </Body>
   </Html>

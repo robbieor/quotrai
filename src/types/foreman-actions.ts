@@ -1,5 +1,5 @@
 /**
- * Revamo AI — Live Action Mode types
+ * revamo AI — Live Action Mode types
  * Structured execution model for the AI operator experience.
  */
 

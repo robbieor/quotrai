@@ -13,7 +13,7 @@ const timelineSteps = [
   {
     time: "7:00 AM",
     title: "Morning Briefing",
-    description: "Revamo AI gives you a rundown of today's jobs, pending quotes, and invoices due.",
+    description: "revamo AI gives you a rundown of today's jobs, pending quotes, and invoices due.",
     icon: Coffee,
     color: "from-orange-400 to-amber-500",
   },

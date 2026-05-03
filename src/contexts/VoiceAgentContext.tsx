@@ -555,7 +555,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               updateDebug({ sessionConnected: true, onConnectFired: true });
               setStatus("connected");
               setPhase("connected");
-              debouncedToast("success", "Connected to Revamo AI", { duration: 2000 });
+              debouncedToast("success", "Connected to revamo AI", { duration: 2000 });
               handleConnectedCleanup();
               finishResolve();
             },
@@ -843,7 +843,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         setStatus("error");
         setPhase("failed");
         setVoiceUnavailable(true);
-        toast.error("Unable to connect to Revamo AI", { description: "Voice session could not be initialised." });
+        toast.error("Unable to connect to revamo AI", { description: "Voice session could not be initialised." });
         return;
       }
 
@@ -873,7 +873,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       // detail was captured (e.g. the connect simply timed out).
       const lastErr = (debugState as any)?.lastError as string | undefined;
       if (!lastErr || !/Disconnected/i.test(lastErr)) {
-        toast.error("Unable to connect to Revamo AI", {
+        toast.error("Unable to connect to revamo AI", {
           description: lastErr ? lastErr.slice(0, 200) : "Connection timed out. Please try again or use text chat.",
         });
       }

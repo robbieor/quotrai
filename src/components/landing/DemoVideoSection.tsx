@@ -17,7 +17,7 @@ export function DemoVideoSection() {
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-8">
           <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-3">
-            See Revamo in{" "}
+            See revamo in{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
               60 seconds.
             </span>

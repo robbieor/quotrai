@@ -47,9 +47,9 @@ export function GeorgeLoginDialog({ open }: GeorgeLoginDialogProps) {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <MessageSquare className="h-6 w-6 text-primary" />
           </div>
-          <DialogTitle className="text-xl">Sign in to use Revamo AI</DialogTitle>
+          <DialogTitle className="text-xl">Sign in to use revamo AI</DialogTitle>
           <DialogDescription>
-            Revamo AI is your AI assistant. Sign in to start chatting.
+            revamo AI is your AI assistant. Sign in to start chatting.
           </DialogDescription>
         </DialogHeader>
 

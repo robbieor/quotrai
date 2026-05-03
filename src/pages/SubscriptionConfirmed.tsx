@@ -145,11 +145,11 @@ export default function SubscriptionConfirmed() {
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold text-foreground">You're all set!</h1>
                 <p className="text-muted-foreground">
-                  Your Revamo plan is now active{interval === "year" ? " (billed annually)" : ""}.
+                  Your revamo plan is now active{interval === "year" ? " (billed annually)" : ""}.
                 </p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground space-y-1">
-                <p>✓ Full access to every Revamo feature</p>
+                <p>✓ Full access to every revamo feature</p>
                 <p>✓ {seats} {Number(seats) === 1 ? "seat" : "seats"} ready for your team</p>
                 <p>✓ Manage billing anytime in Settings</p>
               </div>

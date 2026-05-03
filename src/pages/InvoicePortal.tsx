@@ -340,7 +340,7 @@ export default function InvoicePortal() {
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            Powered by Revamo
+            Powered by revamo
           </p>
         </div>
       </div>

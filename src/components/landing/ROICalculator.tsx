@@ -42,8 +42,8 @@ const TIER_FEATURE_MULTIPLIER: Record<Exclude<TierKey, "auto">, number> = {
 
 const TIER_FEATURE_HIGHLIGHTS: Record<Exclude<TierKey, "auto">, string> = {
   solo: "Replaces manual admin: quotes, invoices, scheduling, GPS time tracking.",
-  crew: "Adds Revamo AI for quoting, receipt scanning, voice (60min/seat) — saves more per person.",
-  business: "Adds unlimited Revamo AI voice, advanced reports & faster AI lane — biggest per-person uplift.",
+  crew: "Adds revamo AI for quoting, receipt scanning, voice (60min/seat) — saves more per person.",
+  business: "Adds unlimited revamo AI voice, advanced reports & faster AI lane — biggest per-person uplift.",
 };
 
 interface ROICalculatorProps {
@@ -263,7 +263,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Number of team members using Revamo
+                Number of team members using revamo
               </p>
             </div>
 
@@ -395,7 +395,7 @@ export function ROICalculator({ variant = "full" }: ROICalculatorProps) {
           <h4 className="font-medium text-sm">Cost Breakdown</h4>
           <div className="grid md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 rounded-lg bg-muted/50">
-              <p className="text-muted-foreground">Revamo Subscription</p>
+              <p className="text-muted-foreground">revamo Subscription</p>
               <p className="font-semibold">
                 €{foremanMonthlyCost}/month
               </p>

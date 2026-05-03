@@ -22,12 +22,12 @@ const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/pub
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code for Revamo</Preview>
+    <Preview>Your verification code for revamo</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={header}>
-          <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
-          <Text style={brandName}>Revamo</Text>
+          <Img src={LOGO_URL} width="48" height="48" alt="revamo" style={logo} />
+          <Text style={brandName}>revamo</Text>
         </div>
         <Heading style={h1}>Confirm your identity</Heading>
         <Text style={text}>Use the code below to confirm your identity:</Text>
@@ -36,7 +36,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
           This code will expire shortly. If you didn't request this, you can
           safely ignore this email.
         </Text>
-        <Text style={footerBrand}>© Revamo · revamo.ai</Text>
+        <Text style={footerBrand}>© revamo · revamo.ai</Text>
       </Container>
     </Body>
   </Html>

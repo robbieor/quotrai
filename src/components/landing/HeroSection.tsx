@@ -69,7 +69,7 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
             </h1>
 
             <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Revamo watches every quote, job, and invoice — chases what's slipping, briefs you each morning, and handles the admin while you stay on the tools.
+              revamo watches every quote, job, and invoice — chases what's slipping, briefs you each morning, and handles the admin while you stay on the tools.
             </p>
 
             {/* CTAs */}
@@ -86,14 +86,14 @@ export function HeroSection({ formatPrice, onTryDemo }: HeroSectionProps) {
             </div>
           </div>
 
-          {/* Right — Revamo AI Chat Carousel */}
+          {/* Right — revamo AI Chat Carousel */}
           <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl shadow-primary/5">
               {/* Chat header */}
               <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
                 <ForemanAvatar size="md" className="border-2 border-[#059669]/30" />
                 <div className="flex-1">
-                  <p className="font-semibold text-sm text-foreground">Revamo AI</p>
+                  <p className="font-semibold text-sm text-foreground">revamo AI</p>
                   <span className="text-xs text-primary">Online</span>
                 </div>
                 <Mic className="h-5 w-5 text-primary" />

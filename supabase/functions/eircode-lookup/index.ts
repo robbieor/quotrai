@@ -207,7 +207,7 @@ async function nominatimSearch(query: string, country?: string): Promise<Nominat
   if (country) params.set("countrycodes", country);
 
   const res = await fetch(`${NOMINATIM_BASE}/search?${params}`, {
-    headers: { "User-Agent": "Revamo-App/1.0", Accept: "application/json" },
+    headers: { "User-Agent": "revamo-App/1.0", Accept: "application/json" },
   });
   if (!res.ok) return [];
   return await res.json();
@@ -221,7 +221,7 @@ async function nominatimReverse(lat: number, lon: number): Promise<NominatimResu
     addressdetails: "1",
   });
   const res = await fetch(`${NOMINATIM_BASE}/reverse?${params}`, {
-    headers: { "User-Agent": "Revamo-App/1.0", Accept: "application/json" },
+    headers: { "User-Agent": "revamo-App/1.0", Accept: "application/json" },
   });
   if (!res.ok) return null;
   return await res.json();
