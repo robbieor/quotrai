@@ -98,12 +98,12 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, 
     <div className="space-y-3 mb-4">
       {/* Row 1: Segmented control + overflow menu */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center bg-muted rounded-full p-1 gap-0.5">
+        <div className="flex items-center bg-muted rounded-full p-1 gap-0.5 flex-1 sm:flex-none overflow-x-auto scrollbar-none">
           {tabs.map((v) => (
             <button
               key={v}
               onClick={() => onViewChange(v)}
-              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all ${
+              className={`px-3.5 py-1.5 text-[13px] font-medium rounded-full transition-all whitespace-nowrap ${
                 view === v
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -116,7 +116,7 @@ export function CalendarHeader({ currentDate, view, onDateChange, onViewChange, 
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full shrink-0" aria-label="Calendar options">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
