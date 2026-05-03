@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Phone, PhoneOff, X, FileText, Receipt, Briefcase, DollarSign, Calendar, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -83,6 +83,19 @@ export function FloatingTomButton({ variant = "floating", open, onOpenChange }: 
     if (isExpanded && hasVoiceAccess && canUseVoice) preWarmToken();
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!isExpanded) return;
+    const handlePointer = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (target && menuRef.current && !menuRef.current.contains(target)) {
+        setIsExpanded(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointer, true);
+    return () => document.removeEventListener("pointerdown", handlePointer, true);
+  }, [isExpanded]);
+
   if ((location.pathname === "/foreman-ai" && !isConnected) || (!roleLoading && isTeamSeat)) return null;
 
   const handleMainButtonClick = () => {
@@ -144,6 +157,7 @@ export function FloatingTomButton({ variant = "floating", open, onOpenChange }: 
 
       {isExpanded && !isConnected && !isConnecting && (
         <div
+          ref={menuRef}
           className={cn(
             "fixed z-50 flex flex-col gap-2 animate-fade-in",
             isHeadless
