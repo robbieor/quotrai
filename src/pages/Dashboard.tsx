@@ -30,7 +30,7 @@ import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import { AnimatedSection } from "@/components/dashboard/AnimatedSection";
 import { PlanGate } from "@/components/dashboard/PlanGate";
 import { RevenueByJobTypeChart } from "@/components/dashboard/RevenueByJobTypeChart";
-import { SubscriptionCoveredCard } from "@/components/dashboard/SubscriptionCoveredCard";
+
 import { ExpenseBreakdownCard } from "@/components/dashboard/ExpenseBreakdownCard";
 import { useSeatAccess } from "@/hooks/useSeatAccess";
 import { ReadOnlyGuard } from "@/components/auth/ReadOnlyGuard";
@@ -254,12 +254,11 @@ function DashboardContent() {
           </div>
         </AnimatedSection>
 
-        {/* 4b. Revenue by Job Type + Money Out + Subscription Covered */}
+        {/* 4b. Revenue by Job Type + Money Out */}
         <AnimatedSection delay={140}>
-          <div className="grid gap-3 lg:grid-cols-3">
+          <div className="grid gap-3 lg:grid-cols-2">
             <RevenueByJobTypeChart data={data?.revenueByJobType} isLoading={isLoading} />
             <ExpenseBreakdownCard data={data?.expensesByCategory} isLoading={isLoading} total={data?.kpi?.moneyOut || 0} />
-            <SubscriptionCoveredCard data={data?.subscriptionCovered} isLoading={isLoading} />
           </div>
         </AnimatedSection>
 

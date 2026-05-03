@@ -1,9 +1,7 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/contexts/DashboardFilterContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
 import { format } from "date-fns";
 
 // Job type keyword list (kept for useAvailableJobTypes)
@@ -117,12 +115,6 @@ export interface CustomerProfitData {
   invoiceCount: number;
 }
 
-export interface SubscriptionCoveredData {
-  feeEarned: number;
-  subscriptionCost: number;
-  percentCovered: number;
-}
-
 export interface ScatterCustomerData {
   id: string;
   name: string;
@@ -138,35 +130,7 @@ export interface ScatterCustomerData {
 
 export function useDashboardAnalytics() {
   const { user } = useAuth();
-  const { profile } = useProfile();
-  const queryClient = useQueryClient();
   const { dateRange, customerId, staffId, jobType, segment, crossFilter, filterQueryKey } = useDashboardFilters();
-
-  // Invalidate dashboard cache when team subscription tier or members change
-  // (so Subscription Covered card reflects new pricing/seat count immediately)
-  useEffect(() => {
-    if (!profile?.team_id) return;
-    const teamId = profile.team_id;
-
-    const channel = supabase
-      .channel(`dashboard-pricing-${teamId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "teams", filter: `id=eq.${teamId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["dashboard-analytics"] }),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "profiles", filter: `team_id=eq.${teamId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["dashboard-analytics"] }),
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile?.team_id, queryClient]);
-
   return useQuery({
     queryKey: ["dashboard-analytics", ...filterQueryKey],
     enabled: !!user,
@@ -197,7 +161,6 @@ export function useDashboardAnalytics() {
         jobsAtRisk: JobAtRisk[];
         invoicesAtRisk: InvoiceAtRisk[];
         revenueByJobType: RevenueByJobTypeData[];
-        subscriptionCovered: SubscriptionCoveredData;
         expensesByCategory: ExpenseCategoryBreakdown[];
         drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[]; cashCollected: any[]; revenueInvoices: any[]; expenses: any[] };
         jobsDueThisWeek: any[];
