@@ -5,7 +5,7 @@ const highlights = [
   {
     icon: Mic,
     title: "Voice-First",
-    description: "Create quotes, log expenses, and manage jobs — all by talking to revamo AI while you're on the tools.",
+    description: "Create quotes, send invoices, and manage jobs — all by talking to revamo AI while you're on the tools.",
   },
   {
     icon: FileText,
