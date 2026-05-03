@@ -17,7 +17,51 @@ import {
   emitAgentScroll,
   emitAgentHighlight,
   emitAgentProgress,
+  emitAgentThinking,
+  emitAgentToolCall,
+  emitAgentTranscript,
 } from "@/lib/agentEvents";
+
+// Human-readable labels for HUD tool-call timeline
+const TOOL_LABELS: Record<string, string> = {
+  navigate_to: "Navigating",
+  open_record: "Opening record",
+  scroll_to: "Scrolling to section",
+  highlight_element: "Highlighting",
+  report_progress: "Reporting progress",
+  get_today_summary: "Reading today's summary",
+  get_week_ahead_summary: "Reading week ahead",
+  get_todays_jobs: "Loading today's jobs",
+  get_upcoming_jobs: "Loading upcoming jobs",
+  get_financial_summary: "Crunching financials",
+  create_job: "Creating job",
+  list_jobs: "Listing jobs",
+  reschedule_job: "Rescheduling job",
+  update_job_status: "Updating job status",
+  delete_job: "Deleting job",
+  list_customers: "Listing customers",
+  search_customer: "Searching customers",
+  get_client_info: "Loading client info",
+  create_customer: "Creating customer",
+  update_customer: "Updating customer",
+  delete_customer: "Deleting customer",
+  create_quote: "Creating quote",
+  list_quotes: "Listing quotes",
+  get_pending_quotes: "Loading pending quotes",
+  update_quote_status: "Updating quote",
+  delete_quote: "Deleting quote",
+  create_invoice: "Creating invoice",
+  list_invoices: "Listing invoices",
+  get_outstanding_invoices: "Loading outstanding invoices",
+  get_overdue_invoices: "Loading overdue invoices",
+  update_invoice_status: "Updating invoice",
+  send_invoice_reminder: "Sending invoice reminder",
+  delete_invoice: "Deleting invoice",
+  log_expense: "Logging expense",
+  list_expenses: "Listing expenses",
+};
+const labelForTool = (t: string) =>
+  TOOL_LABELS[t] ?? t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 interface AgentContext {
   userId?: string;
@@ -261,6 +305,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   ): Promise<string> => {
     addDebugEvent(`🔧 Tool call: ${functionName}`);
     updateDebug({ lastToolCall: functionName, lastWebhookStatus: "sending..." });
+    emitAgentToolCall(functionName, labelForTool(functionName), "running");
 
     try {
       const { data, error } = await supabase.functions.invoke("george-webhook", {
@@ -277,12 +322,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (error) {
         addDebugEvent(`❌ Webhook error: ${error.message}`);
         updateDebug({ lastWebhookStatus: `FAILED: ${error.message}` });
+        emitAgentToolCall(functionName, labelForTool(functionName), "error", error.message);
         return `Sorry, I encountered an error: ${error.message}`;
       }
 
       const resultMsg = data?.message || data?.result || "Action completed successfully";
       addDebugEvent(`✅ Webhook success: ${functionName}`);
       updateDebug({ lastWebhookStatus: `OK: ${resultMsg.substring(0, 80)}` });
+      emitAgentToolCall(functionName, labelForTool(functionName), "done", resultMsg.substring(0, 120));
 
       const queriesToInvalidate = MUTATION_QUERY_MAP[functionName];
       if (queriesToInvalidate && data?.success !== false) {
@@ -296,6 +343,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       const errMsg = err instanceof Error ? err.message : String(err);
       addDebugEvent(`❌ Webhook exception: ${errMsg}`);
       updateDebug({ lastWebhookStatus: `EXCEPTION: ${errMsg}` });
+      emitAgentToolCall(functionName, labelForTool(functionName), "error", errMsg);
       return "Sorry, something went wrong. Please try again.";
     }
   }, [queryClient, addDebugEvent, updateDebug]);
@@ -341,6 +389,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         return `Unknown route: ${params?.route}. Allowed: ${Object.keys(AGENT_ROUTES).join(", ")}`;
       }
       const { path, label } = AGENT_ROUTES[params.route];
+      emitAgentToolCall("navigate_to", `Opening ${label}`, "done", path);
       emitAgentNavigate(path, params.reason ?? `Opening ${label}`);
       return `Navigated to ${label}`;
     },
@@ -350,6 +399,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       }
       if (!params.id) return "Missing record id";
       const path = AGENT_RECORDS[params.type](params.id);
+      emitAgentToolCall("open_record", `Opening ${params.type}`, "done", params.id);
       emitAgentNavigate(path, params.reason ?? `Opening ${params.type} ${params.id}`);
       return `Opened ${params.type} ${params.id}`;
     },
@@ -357,6 +407,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (!params || !isSection(params.section)) {
         return `Unknown section: ${params?.section}. Allowed: ${Object.keys(AGENT_SECTIONS).join(", ")}`;
       }
+      emitAgentToolCall("scroll_to", `Scrolling to ${AGENT_SECTIONS[params.section]}`, "done");
       emitAgentScroll(params.section);
       return `Scrolled to ${AGENT_SECTIONS[params.section]}`;
     },
@@ -364,11 +415,13 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (!params || !isSection(params.section)) {
         return `Unknown section: ${params?.section}. Allowed: ${Object.keys(AGENT_SECTIONS).join(", ")}`;
       }
+      emitAgentToolCall("highlight_element", `Highlighting ${AGENT_SECTIONS[params.section]}`, "done");
       emitAgentHighlight(params.section, params.label ?? AGENT_SECTIONS[params.section]);
       return `Highlighted ${AGENT_SECTIONS[params.section]}`;
     },
     report_progress: (params: { message: string; status?: "running" | "done" | "error" }) => {
       if (!params?.message) return "Missing message";
+      emitAgentToolCall("report_progress", params.message, params.status ?? "running");
       emitAgentProgress(params.message, params.status ?? "running");
       return "Progress reported";
     },
@@ -640,6 +693,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
             onModeChange: ({ mode }) => {
               if (currentAttemptRef.current !== attemptId) return;
               setIsSpeaking(mode === "speaking");
+              if (mode === "speaking") emitAgentThinking(false);
             },
             onStatusChange: ({ status: sdkStatus }) => {
               if (currentAttemptRef.current !== attemptId) return;
@@ -651,11 +705,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
                 const transcript = message.user_transcription_event.user_transcript;
                 addDebugEvent(`🗣️ User transcript: "${transcript.substring(0, 60)}"`);
                 updateDebug({ lastTranscript: transcript });
+                emitAgentTranscript("user", transcript);
                 saveMessage("user", transcript);
               }
               if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
                 const response = message.agent_response_event.agent_response;
                 addDebugEvent(`🤖 Agent response: "${response.substring(0, 60)}"`);
+                emitAgentTranscript("agent", response);
+                emitAgentThinking(false);
                 saveMessage("assistant", response);
               }
               if (message.type === "conversation_initiation_metadata") {

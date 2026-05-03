@@ -7,8 +7,13 @@ export const AGENT_NAVIGATE = "foreman-agent-navigate";
 export const AGENT_HIGHLIGHT = "foreman-agent-highlight";
 export const AGENT_PROGRESS = "foreman-agent-progress";
 export const AGENT_SCROLL = "foreman-agent-scroll";
+export const AGENT_THINKING = "foreman-agent-thinking";
+export const AGENT_TOOL_CALL = "foreman-agent-tool-call";
+export const AGENT_TRANSCRIPT = "foreman-agent-transcript";
 
 export type AgentProgressStatus = "running" | "done" | "error";
+export type AgentToolStatus = "running" | "done" | "error";
+export type AgentTranscriptRole = "user" | "agent";
 
 export const emitAgentNavigate = (path: string, reason?: string) =>
   window.dispatchEvent(
@@ -31,4 +36,28 @@ export const emitAgentProgress = (
 ) =>
   window.dispatchEvent(
     new CustomEvent(AGENT_PROGRESS, { detail: { message, status } })
+  );
+
+export const emitAgentThinking = (thinking: boolean) =>
+  window.dispatchEvent(
+    new CustomEvent(AGENT_THINKING, { detail: { thinking } })
+  );
+
+export const emitAgentToolCall = (
+  tool: string,
+  label: string,
+  status: AgentToolStatus = "running",
+  detail?: string
+) =>
+  window.dispatchEvent(
+    new CustomEvent(AGENT_TOOL_CALL, {
+      detail: { tool, label, status, detail, ts: Date.now() },
+    })
+  );
+
+export const emitAgentTranscript = (role: AgentTranscriptRole, text: string) =>
+  window.dispatchEvent(
+    new CustomEvent(AGENT_TRANSCRIPT, {
+      detail: { role, text, ts: Date.now() },
+    })
   );
