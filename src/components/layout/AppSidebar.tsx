@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { LayoutDashboard, Briefcase, Users, Receipt, Wallet, Settings, CalendarDays, Clock, FolderOpen, LogOut, Bot, FileText, UserPlus, Package, Sparkles, Sun, MessageCircleQuestion, Zap, LucideIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { NavLink } from "@/components/NavLink";
 import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
@@ -56,6 +57,9 @@ const navGroups: NavGroup[] = [
 // Nav items that team-seat members (role=member) can see regardless of seat type
 const MEMBER_ALLOWED_IDS = ["jobs", "calendar", "time-tracking"];
 
+// On mobile, these IDs already appear in the bottom tab bar — hide from sidebar/More
+const MOBILE_TAB_IDS = ["dashboard", "jobs", "calendar", "tom"];
+
 export function AppSidebar() {
   const { profile } = useProfile();
   const { signOut } = useAuth();
@@ -63,6 +67,7 @@ export function AppSidebar() {
   const { canAccess } = useSeatAccess();
   const badges = useSidebarBadges();
   const { data: subscriptionV2 } = useSubscription();
+  const isMobile = useIsMobile();
 
   // Compute trial days remaining from V2 subscription
   const trialDaysRemaining = useMemo(() => {
@@ -83,6 +88,8 @@ export function AppSidebar() {
       .map(group => ({
         ...group,
         items: group.items.filter(item => {
+          // On mobile, hide items already in the bottom tab bar
+          if (isMobile && MOBILE_TAB_IDS.includes(item.id)) return false;
           // Team-seat members only see allowed nav items
           if (isTeamSeat && !MEMBER_ALLOWED_IDS.includes(item.id)) return false;
           // Check seat-type access
@@ -91,7 +98,7 @@ export function AppSidebar() {
         }),
       }))
       .filter(group => group.items.length > 0);
-  }, [isTeamSeat, canAccess]);
+  }, [isTeamSeat, canAccess, isMobile]);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
