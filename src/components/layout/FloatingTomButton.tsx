@@ -198,7 +198,7 @@ export function FloatingTomButton({ variant = "floating", open, onOpenChange }: 
           The bottom-center ActiveCallBar pill becomes the single in-call control
           surface (mute / open chat / end call) so we don't show three call widgets
           at once on mobile. */}
-      {!isConnected && !isConnecting && (
+      {!isHeadless && !isConnected && !isConnecting && (
         <div className="fixed right-4 sm:right-6 z-50" style={{ bottom: isMobile ? 'calc(4.75rem + env(safe-area-inset-bottom, 0px))' : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={handleMainButtonClick}
