@@ -15,7 +15,17 @@ serve(async (req) => {
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not configured. Add it in your project secrets.");
-    const stripeClient = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const trimmedKey = stripeKey.trim();
+    if (trimmedKey.startsWith("pk_")) {
+      throw new Error("STRIPE_SECRET_KEY is a publishable key (pk_). Stripe Connect requires the full Secret key (sk_live_ or sk_test_).");
+    }
+    if (trimmedKey.startsWith("rk_")) {
+      throw new Error("STRIPE_SECRET_KEY is a restricted key (rk_). Stripe Connect requires the full Secret key (sk_live_ or sk_test_) — restricted keys cannot manage Connect accounts.");
+    }
+    if (!trimmedKey.startsWith("sk_test_") && !trimmedKey.startsWith("sk_live_")) {
+      throw new Error(`STRIPE_SECRET_KEY has an invalid format. Expected sk_live_ or sk_test_, got: ${trimmedKey.substring(0, 8)}...`);
+    }
+    const stripeClient = new Stripe(trimmedKey, { apiVersion: "2025-08-27.basil" });
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
