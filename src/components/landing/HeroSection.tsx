@@ -30,8 +30,8 @@ const carouselSlides = [
   },
   {
     messages: [
-      { role: "user" as const, text: '"Log £85 expense for copper pipe — Screwfix"' },
-      { role: "ai" as const, text: 'Expense logged — £85.00, Screwfix, linked to current job.' },
+      { role: "user" as const, text: '"Send invoice for the Murphy job"' },
+      { role: "ai" as const, text: 'Invoice INV-0214 sent — €1,240 to Murphy. Payment link included.' },
     ],
   },
 ];
