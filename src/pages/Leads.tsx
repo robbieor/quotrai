@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Search, MoreHorizontal, Pencil, Trash2, UserPlus, FileText, Phone, Mail, Globe, Users, Share2 } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadFormDialog } from "@/components/leads/LeadFormDialog";
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead, type Lead, type LeadInsert } from "@/hooks/useLeads";
@@ -53,8 +51,6 @@ export default function Leads() {
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
   const { formatCurrency } = useCurrency();
-  const isMobile = useIsMobile();
-
   const filtered = leads?.filter((l) => {
     const matchesSearch =
       l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -111,21 +107,12 @@ export default function Leads() {
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-[28px] font-bold tracking-[-0.02em]">Leads</h1>
-          {isMobile ? (
-            <button
-              onClick={() => { setSelectedLead(null); setFormDialogOpen(true); }}
-              className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          ) : (
-            <Button onClick={() => { setSelectedLead(null); setFormDialogOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Lead
-            </Button>
-          )}
+          <Button size="sm" onClick={() => { setSelectedLead(null); setFormDialogOpen(true); }} className="w-full sm:w-auto justify-center">
+            <Plus className="mr-2 h-4 w-4" />
+            New Lead
+          </Button>
         </div>
 
         {/* Stats row */}
@@ -152,7 +139,7 @@ export default function Leads() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search leads..." className={cn("pl-9", isMobile && "rounded-[22px] bg-[hsl(240,10%,96%)] border-0 h-11")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <Input placeholder="Search leads..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
@@ -187,7 +174,7 @@ export default function Leads() {
             {filtered?.map((lead) => (
               <Card key={lead.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold truncate">{lead.name}</h3>
@@ -209,14 +196,14 @@ export default function Leads() {
                       {lead.description && (
                         <p className="text-sm text-muted-foreground line-clamp-1">{lead.description}</p>
                       )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         {lead.email && <span>{lead.email}</span>}
                         {lead.phone && <span>{lead.phone}</span>}
                         {lead.estimated_value && <span className="font-medium text-foreground tabular-nums">{formatCurrency(lead.estimated_value)}</span>}
                         {lead.follow_up_date && <span>Follow-up: {new Date(lead.follow_up_date).toLocaleDateString()}</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 self-end sm:self-start">
                       {/* Quick status change */}
                       <Select value={lead.status} onValueChange={(s) => handleStatusChange(lead, s)}>
                         <SelectTrigger className="h-8 w-[110px] text-xs"><SelectValue /></SelectTrigger>

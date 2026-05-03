@@ -107,8 +107,8 @@ export default function Templates() {
               className="pl-8 h-8 text-sm"
             />
           </div>
-          <div className="flex gap-2 ml-auto">
-            <Button size="sm" className="h-8 text-xs" onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
+          <div className="flex gap-2 sm:ml-auto w-full sm:w-auto">
+            <Button size="sm" className="h-8 text-xs w-full sm:w-auto justify-center" onClick={() => { setEditingTemplate(null); setFormOpen(true); }}>
               <Plus className="h-3.5 w-3.5 mr-1" />
               New Template
             </Button>
@@ -117,7 +117,7 @@ export default function Templates() {
 
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as TradeCategory | "all")}>
-          <TabsList className="overflow-x-auto flex-nowrap h-auto gap-0.5 bg-muted/50 p-0.5 justify-start w-full">
+          <TabsList className="overflow-x-auto flex-nowrap h-auto gap-0.5 bg-muted/50 p-0.5 justify-start w-full scrollbar-none">
             <TabsTrigger value="all" className="text-xs h-7 px-2.5">All</TabsTrigger>
             {visibleCategories.map((cat) => (
               <TabsTrigger key={cat} value={cat} className="text-xs h-7 px-2.5">

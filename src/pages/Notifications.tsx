@@ -91,7 +91,7 @@ export default function Notifications() {
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Notifications</h1>
             {(unreadCount ?? 0) > 0 ? (
               <Badge variant="destructive" className="text-sm">
@@ -104,7 +104,7 @@ export default function Notifications() {
             size="sm"
             onClick={() => markAllAsRead.mutate()}
             disabled={!unreadCount || unreadCount === 0}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto justify-center"
           >
             <CheckCheck className="h-4 w-4" />
             Mark all read
@@ -122,8 +122,8 @@ export default function Notifications() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
-            <TabsList>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)} className="w-full sm:w-auto">
+            <TabsList className="grid w-full grid-cols-4 sm:w-auto">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="unread">Unread</TabsTrigger>
               <TabsTrigger value="alerts">Alerts</TabsTrigger>
@@ -167,7 +167,7 @@ export default function Notifications() {
                   key={notification.id}
                   onClick={() => handleClick(notification)}
                   className={cn(
-                    "w-full flex items-start gap-4 p-4 rounded-lg border transition-colors text-left",
+                    "w-full flex items-start gap-3 sm:gap-4 p-4 rounded-lg border transition-colors text-left",
                     notification.is_read
                       ? "bg-card border-border hover:bg-muted/50"
                       : "bg-accent/30 border-primary/20 hover:bg-accent/50"
@@ -181,8 +181,8 @@ export default function Notifications() {
                   >
                     <Icon className="h-5 w-5" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className={cn("text-sm font-medium", !notification.is_read && "font-semibold")}>
                         {notification.title}
                       </p>
@@ -198,7 +198,7 @@ export default function Notifications() {
                     </p>
                   </div>
                   {notification.link && (
-                    <span className="text-xs text-primary shrink-0 mt-1">View →</span>
+                    <span className="hidden sm:inline text-xs text-primary shrink-0 mt-1">View →</span>
                   )}
                 </button>
               );

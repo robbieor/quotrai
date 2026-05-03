@@ -7,6 +7,7 @@ import { useAgentTask } from "@/contexts/AgentTaskContext";
 import { useGeorgeAccess } from "@/hooks/useGeorgeAccess";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useProfile } from "@/hooks/useProfile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { QUOTE_CREATION_STEPS, INVOICE_CREATION_STEPS } from "@/components/shared/AgentWorkingPanel";
 
@@ -30,6 +31,7 @@ export function FloatingTomButton() {
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const { profile } = useProfile();
+  const isMobile = useIsMobile();
   const { hasVoiceAccess, canUseVoice, isLoading: georgeLoading } = useGeorgeAccess();
   const { isTeamSeat, isLoading: roleLoading } = useUserRole();
   const { startTask } = useAgentTask();
@@ -128,7 +130,10 @@ export function FloatingTomButton() {
       )}
 
       {isExpanded && !isConnected && !isConnecting && (
-        <div className="fixed right-6 z-50 flex flex-col gap-2 animate-fade-in" style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div
+          className="fixed inset-x-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-2 animate-fade-in"
+          style={{ bottom: isMobile ? 'calc(8.5rem + env(safe-area-inset-bottom, 0px))' : 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           {(georgeLoading || (hasVoiceAccess && canUseVoice)) && (
             <button
               onClick={handleStartCall}
@@ -176,7 +181,7 @@ export function FloatingTomButton() {
           surface (mute / open chat / end call) so we don't show three call widgets
           at once on mobile. */}
       {!isConnected && !isConnecting && (
-        <div className="fixed right-6 z-50" style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="fixed right-4 sm:right-6 z-50" style={{ bottom: isMobile ? 'calc(4.75rem + env(safe-area-inset-bottom, 0px))' : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={handleMainButtonClick}
             className={cn(

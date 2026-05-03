@@ -72,12 +72,12 @@ function BriefingPageInner() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
             <ForemanAvatar size="lg" />
-            <div>
+            <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight">
                 {getGreeting()}, {firstName}
               </h1>
@@ -96,7 +96,7 @@ function BriefingPageInner() {
               })
             }
             disabled={refresh.isPending}
-            className="gap-1.5"
+            className="gap-1.5 w-full sm:w-auto justify-center"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${refresh.isPending ? "animate-spin" : ""}`}
@@ -205,7 +205,7 @@ function BriefingPageInner() {
             {/* Benchmarks */}
             {benchmarks && (
               <section>
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex flex-wrap items-center gap-2 mb-3">
                   <TrendingUp className="h-4 w-4 text-primary" />
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                     How you compare
@@ -255,12 +255,12 @@ function BriefingPageInner() {
             )}
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button onClick={() => navigate("/ask")} className="gap-1.5">
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap">
+              <Button onClick={() => navigate("/ask")} className="gap-1.5 justify-center">
                 Ask revamo a follow-up
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" onClick={() => navigate("/dashboard")}>
+              <Button variant="outline" onClick={() => navigate("/dashboard")} className="justify-center">
                 Back to operations
               </Button>
             </div>

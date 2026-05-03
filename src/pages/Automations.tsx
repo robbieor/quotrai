@@ -86,12 +86,12 @@ function SuggestionsTab() {
                   .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`)
                   .join(" · ") || "recent activity"}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <Button
                   size="sm"
                   onClick={() => enable.mutate(s)}
                   disabled={enable.isPending}
-                  className="gap-1.5"
+                  className="gap-1.5 justify-center"
                 >
                   <Check className="h-3.5 w-3.5" />
                   Enable in preview mode
@@ -101,7 +101,7 @@ function SuggestionsTab() {
                   variant="ghost"
                   onClick={() => dismiss.mutate(s.id)}
                   disabled={dismiss.isPending}
-                  className="gap-1.5 text-muted-foreground"
+                  className="gap-1.5 justify-center text-muted-foreground"
                 >
                   <X className="h-3.5 w-3.5" />
                   Not for me
@@ -189,9 +189,9 @@ function ActiveAutomationCard({ a }: { a: TeamAutomation }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <Power className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs">Active</span>
+                <span className="text-xs truncate">Active</span>
               </div>
               <Switch
                 checked={a.enabled}
@@ -201,9 +201,9 @@ function ActiveAutomationCard({ a }: { a: TeamAutomation }) {
               />
             </div>
             <div className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs">Preview only (don't send)</span>
+                <span className="text-xs truncate">Preview only (don't send)</span>
               </div>
               <Switch
                 checked={a.preview_mode}
@@ -214,12 +214,12 @@ function ActiveAutomationCard({ a }: { a: TeamAutomation }) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button
               size="sm"
               variant="outline"
               onClick={() => setShowRuns((v) => !v)}
-              className="gap-1.5"
+              className="gap-1.5 justify-center"
             >
               <History className="h-3.5 w-3.5" />
               {showRuns ? "Hide" : "View"} run history
@@ -229,7 +229,7 @@ function ActiveAutomationCard({ a }: { a: TeamAutomation }) {
               variant="ghost"
               onClick={() => remove.mutate(a.id)}
               disabled={remove.isPending}
-              className="gap-1.5 text-destructive hover:text-destructive"
+              className="gap-1.5 justify-center text-destructive hover:text-destructive"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove
@@ -283,7 +283,7 @@ function AutomationsInner() {
         </div>
 
         <Tabs defaultValue="suggested">
-          <TabsList>
+          <TabsList className="w-full grid grid-cols-2 sm:w-auto">
             <TabsTrigger value="suggested" className="gap-1.5">
               Suggested
               {suggestions?.length ? (

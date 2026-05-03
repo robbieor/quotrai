@@ -127,7 +127,7 @@ export default function CertificatesTab() {
 
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 md:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search certificates..."
@@ -162,7 +162,7 @@ export default function CertificatesTab() {
             <SelectItem value="expired">Expired</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={() => setFormOpen(true)} className="md:ml-auto">
+        <Button size="sm" onClick={() => setFormOpen(true)} className="md:ml-auto justify-center">
           <Plus className="mr-2 h-4 w-4" />
           New Certificate
         </Button>
@@ -170,14 +170,14 @@ export default function CertificatesTab() {
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Certificate</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Issue Date</TableHead>
+                <TableHead className="hidden lg:table-cell">Property</TableHead>
+                <TableHead className="hidden sm:table-cell">Issue Date</TableHead>
                 <TableHead>Expiry</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -189,8 +189,8 @@ export default function CertificatesTab() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-4" /></TableCell>
@@ -229,10 +229,10 @@ export default function CertificatesTab() {
                         </div>
                       </TableCell>
                       <TableCell>{cert.customer?.name}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
+                      <TableCell className="hidden lg:table-cell max-w-[200px] truncate">
                         {cert.property_address}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {safeFormatDate(cert.issue_date, "dd MMM yyyy")}
                       </TableCell>
                       <TableCell>

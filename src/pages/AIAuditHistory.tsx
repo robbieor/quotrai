@@ -71,11 +71,11 @@ export default function AIAuditHistory() {
   return (
     <DashboardLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold flex items-center gap-2 min-w-0">
               <Bot className="h-6 w-6 text-primary" />
-              revamo AI Activity
+              <span className="truncate">revamo AI Activity</span>
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Complete audit trail of all AI-initiated actions
@@ -97,7 +97,7 @@ export default function AIAuditHistory() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -108,7 +108,7 @@ export default function AIAuditHistory() {
                 </SelectContent>
               </Select>
               <Select value={intentFilter} onValueChange={setIntentFilter}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Action Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,13 +144,13 @@ export default function AIAuditHistory() {
                   <button
                     key={entry.id}
                     onClick={() => setSelectedEntry(entry)}
-                    className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-center gap-3"
+                    className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-start gap-3"
                   >
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Zap className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="text-sm font-medium truncate">{entry.intent_label}</span>
                         <Badge variant="outline" className={`text-[10px] ${statusBadge(entry.status)}`}>
                           {entry.status}
@@ -158,7 +158,7 @@ export default function AIAuditHistory() {
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{entry.command_text}</p>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-left sm:text-right shrink-0">
                       <p className="text-[10px] text-muted-foreground">
                         {format(new Date(entry.created_at), "MMM d, h:mm a")}
                       </p>
