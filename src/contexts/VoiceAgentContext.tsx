@@ -305,6 +305,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
   ): Promise<string> => {
     addDebugEvent(`🔧 Tool call: ${functionName}`);
     updateDebug({ lastToolCall: functionName, lastWebhookStatus: "sending..." });
+    emitAgentToolCall(functionName, labelForTool(functionName), "running");
 
     try {
       const { data, error } = await supabase.functions.invoke("george-webhook", {
@@ -321,12 +322,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (error) {
         addDebugEvent(`❌ Webhook error: ${error.message}`);
         updateDebug({ lastWebhookStatus: `FAILED: ${error.message}` });
+        emitAgentToolCall(functionName, labelForTool(functionName), "error", error.message);
         return `Sorry, I encountered an error: ${error.message}`;
       }
 
       const resultMsg = data?.message || data?.result || "Action completed successfully";
       addDebugEvent(`✅ Webhook success: ${functionName}`);
       updateDebug({ lastWebhookStatus: `OK: ${resultMsg.substring(0, 80)}` });
+      emitAgentToolCall(functionName, labelForTool(functionName), "done", resultMsg.substring(0, 120));
 
       const queriesToInvalidate = MUTATION_QUERY_MAP[functionName];
       if (queriesToInvalidate && data?.success !== false) {
@@ -340,6 +343,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       const errMsg = err instanceof Error ? err.message : String(err);
       addDebugEvent(`❌ Webhook exception: ${errMsg}`);
       updateDebug({ lastWebhookStatus: `EXCEPTION: ${errMsg}` });
+      emitAgentToolCall(functionName, labelForTool(functionName), "error", errMsg);
       return "Sorry, something went wrong. Please try again.";
     }
   }, [queryClient, addDebugEvent, updateDebug]);
