@@ -12,7 +12,8 @@ import { MobileTabBar } from "./MobileTabBar";
 import { CommandBar, useCommandBar } from "@/components/command/CommandBar";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { Search, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -64,6 +65,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 marginTop: "env(safe-area-inset-top, 0px)",
               }}
             >
+              <Link
+                to="/foreman-ai"
+                aria-label="Talk to revamo AI"
+                className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
+              >
+                <Phone className="h-4 w-4" />
+              </Link>
               <NotificationCenter />
               <UserMenu />
             </header>
