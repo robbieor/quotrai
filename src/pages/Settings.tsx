@@ -47,7 +47,7 @@ export default function Settings() {
     const success = searchParams.get("success");
     const cancelled = searchParams.get("cancelled");
     if (success === "true") {
-      toast.success("Subscription confirmed! You now have full access to Foreman.");
+      toast.success("Subscription confirmed! You now have full access to Revamo.");
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("success");
       setSearchParams(newParams, { replace: true });
@@ -230,7 +230,7 @@ export default function Settings() {
                 {canAccessGeorge && (
                   <TabsTrigger value="ai" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
                     <Brain className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    <span className="hidden sm:inline">Foreman AI</span>
+                    <span className="hidden sm:inline">Revamo AI</span>
                     <span className="sm:hidden">AI</span>
                   </TabsTrigger>
                 )}

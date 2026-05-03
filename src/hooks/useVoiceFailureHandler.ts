@@ -35,7 +35,7 @@ const FAILURE_MESSAGES: Record<VoiceFailureReason, { title: string; description:
   },
   agent_unavailable: {
     title: "Voice Assistant Unavailable",
-    description: "Foreman AI is temporarily unavailable. Please use text chat for now.",
+    description: "Revamo AI is temporarily unavailable. Please use text chat for now.",
   },
   unknown: {
     title: "Voice Call Failed",

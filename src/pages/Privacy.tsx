@@ -9,8 +9,8 @@ export default function Privacy() {
       <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
-            <img src={foremanLogo} alt="Foreman" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
-            <span className="text-lg sm:text-xl font-bold tracking-tight">Foreman</span>
+            <img src={foremanLogo} alt="Revamo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
+            <span className="text-lg sm:text-xl font-bold tracking-tight">Revamo</span>
           </Link>
           <Link to="/">
             <Button variant="ghost" size="sm" className="gap-2">
@@ -29,7 +29,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Who We Are</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Foreman is operated by Foreman Ltd, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:support@foreman.ie" className="text-primary hover:underline">support@foreman.ie</a>.
+              Revamo is operated by Revamo Ltd, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:support@foreman.ie" className="text-primary hover:underline">support@foreman.ie</a>.
             </p>
           </section>
 
@@ -62,16 +62,16 @@ export default function Privacy() {
               <li>To provide, maintain, and improve the Service.</li>
               <li>To process payments and manage subscriptions.</li>
               <li>To send transactional emails (invoices, quotes, team invitations).</li>
-              <li>To provide AI-powered features (Foreman AI).</li>
+              <li>To provide AI-powered features (Revamo AI).</li>
               <li>To provide customer support.</li>
               <li>To detect and prevent fraud or abuse.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground mb-3">5. AI & Foreman AI</h2>
+            <h2 className="text-xl font-bold text-foreground mb-3">5. AI & Revamo AI</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Foreman AI processes your business data (jobs, quotes, customers) to provide voice and chat assistance. Conversations are logged for functionality and may be used to improve the Service. AI processing is performed by third-party providers (including Google and OpenAI) under data processing agreements. Your data is not used to train third-party AI models.
+              Revamo AI processes your business data (jobs, quotes, customers) to provide voice and chat assistance. Conversations are logged for functionality and may be used to improve the Service. AI processing is performed by third-party providers (including Google and OpenAI) under data processing agreements. Your data is not used to train third-party AI models.
             </p>
           </section>
 
@@ -163,7 +163,7 @@ export default function Privacy() {
 
       <footer className="py-8 px-4 sm:px-6 border-t border-border">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Foreman. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Revamo. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
           </div>

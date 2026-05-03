@@ -87,7 +87,7 @@ serve(async (req) => {
     }
 
     // Redirect back to settings with success
-    const appUrl = 'https://foreman.world';
+    const appUrl = 'https://revamo.ai';
     return new Response(null, {
       status: 302,
       headers: {

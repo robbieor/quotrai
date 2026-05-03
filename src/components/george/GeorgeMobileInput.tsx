@@ -188,7 +188,7 @@ export function GeorgeMobileInput({
         <div className="flex items-center justify-center gap-2 mb-3 py-2.5 px-4 bg-primary/10 rounded-full border border-primary/20">
           <div className={cn("w-2 h-2 rounded-full", isSpeaking ? "bg-primary animate-pulse" : "bg-muted-foreground/50")} />
           <span className="text-sm font-medium text-primary">
-            {isSpeaking ? "Foreman AI is speaking..." : "Listening..."}
+            {isSpeaking ? "Revamo AI is speaking..." : "Listening..."}
           </span>
           <span className="text-xs text-muted-foreground ml-auto">{Math.round(remainingMinutes)} mins</span>
         </div>
@@ -225,7 +225,7 @@ export function GeorgeMobileInput({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
           }}
-          placeholder="Message Foreman AI..."
+          placeholder="Message Revamo AI..."
           className="flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground/50 min-w-0 py-2.5"
           disabled={isProcessing}
         />

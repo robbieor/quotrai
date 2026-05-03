@@ -11,12 +11,12 @@ const STEPS = [
   {
     icon: Globe,
     title: "Import from any supplier website",
-    body: "Use 'Import from Any Website' to paste a supplier domain. Foreman's AI scans the site, groups products into families, and lets you pick exactly what to import. Works with any supplier — no special setup needed.",
+    body: "Use 'Import from Any Website' to paste a supplier domain. Revamo's AI scans the site, groups products into families, and lets you pick exactly what to import. Works with any supplier — no special setup needed.",
   },
   {
     icon: Upload,
     title: "Upload a CSV price list",
-    body: "Got a spreadsheet from your supplier? Upload it as a CSV. Map your columns to Foreman's fields and import hundreds of products in seconds.",
+    body: "Got a spreadsheet from your supplier? Upload it as a CSV. Map your columns to Revamo's fields and import hundreds of products in seconds.",
   },
   {
     icon: Package,
@@ -26,7 +26,7 @@ const STEPS = [
   {
     icon: Sparkles,
     title: "Smart pricing & margins",
-    body: "Set discount and markup percentages per supplier in Supplier Settings. Foreman automatically calculates your sell price from the supplier's list price — keeping your margins consistent across every quote.",
+    body: "Set discount and markup percentages per supplier in Supplier Settings. Revamo automatically calculates your sell price from the supplier's list price — keeping your margins consistent across every quote.",
   },
   {
     icon: Receipt,
@@ -36,12 +36,12 @@ const STEPS = [
   {
     icon: FileText,
     title: "Link to templates",
-    body: "Build job templates with Price Book items pre-attached. When Foreman AI creates a job from a template, it automatically includes the right materials at the right prices.",
+    body: "Build job templates with Price Book items pre-attached. When Revamo AI creates a job from a template, it automatically includes the right materials at the right prices.",
   },
   {
     icon: BarChart3,
     title: "Compare prices across suppliers",
-    body: "Add products from multiple suppliers to see side-by-side pricing. Foreman matches identical products using manufacturer part numbers and suggests the cheapest option — saving you money on every job.",
+    body: "Add products from multiple suppliers to see side-by-side pricing. Revamo matches identical products using manufacturer part numbers and suggests the cheapest option — saving you money on every job.",
   },
 ];
 

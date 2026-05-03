@@ -28,7 +28,7 @@ export function GeorgeMobileHeader({ onMenuClick }: GeorgeMobileHeaderProps) {
 
         <ForemanAvatar size="sm" />
         <div className="flex items-center gap-1.5">
-          <span className="font-semibold text-[15px] leading-tight">Foreman AI</span>
+          <span className="font-semibold text-[15px] leading-tight">Revamo AI</span>
           <div className="w-2 h-2 rounded-full bg-emerald-500" />
         </div>
       </div>

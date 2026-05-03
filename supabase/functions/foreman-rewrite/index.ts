@@ -82,7 +82,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `You are Foreman's Rewrite assistant — a no-nonsense Irish foreman polishing trade business communications.
+    const systemPrompt = `You are Revamo's Rewrite assistant — a no-nonsense Irish foreman polishing trade business communications.
 
 RULES:
 - Preserve every fact, number, date, name, and amount from the original. Never invent details.

@@ -226,7 +226,7 @@ export function ProductSearchDialog({ open, onOpenChange, onImport }: ProductSea
           {/* Empty state */}
           {!searching && results.length === 0 && !scrapedProduct && (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              Search for any product across the web — Foreman will extract the details for you.
+              Search for any product across the web — Revamo will extract the details for you.
             </div>
           )}
         </div>

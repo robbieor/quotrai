@@ -14,7 +14,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Bot className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs sm:text-sm font-medium text-primary">Foreman AI</span>
+              <span className="text-xs sm:text-sm font-medium text-primary">Revamo AI</span>
             </div>
 
             <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-4 leading-tight">
@@ -25,7 +25,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
             </h2>
 
             <p className="text-base sm:text-lg text-muted-foreground mb-6 leading-relaxed">
-              Foreman AI doesn't wait for instructions. It monitors your operations,
+              Revamo AI doesn't wait for instructions. It monitors your operations,
               identifies risks, and takes action — while you stay on the tools.
             </p>
 
@@ -51,7 +51,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
               <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-3">
                 <ForemanAvatar size="md" className="border-2 border-[#059669]/30" />
                 <div className="flex-1">
-                  <p className="font-semibold text-sm text-foreground">Foreman AI</p>
+                  <p className="font-semibold text-sm text-foreground">Revamo AI</p>
                   <div className="flex items-center gap-1.5">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                     <span className="text-xs text-muted-foreground">Online</span>
@@ -93,7 +93,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
               <div className="px-5 py-3 border-t border-border bg-muted/20">
                 <div className="flex items-center gap-2 bg-background rounded-xl border border-border px-4 py-2.5">
                   <Mic className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground flex-1">Talk or type to Foreman AI...</span>
+                  <span className="text-sm text-muted-foreground flex-1">Talk or type to Revamo AI...</span>
                   <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
                 </div>
               </div>

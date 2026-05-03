@@ -78,14 +78,14 @@ export function SocialProofSection() {
                 <p className="text-lg font-bold text-foreground">
                   €{Math.round(stats.invoicedThisWeek).toLocaleString()}
                 </p>
-                <p className="text-xs text-muted-foreground">invoiced through Foreman</p>
+                <p className="text-xs text-muted-foreground">invoiced through Revamo</p>
               </div>
             </div>
           </div>
         ) : (
           <div className="p-8 rounded-2xl border-2 border-dashed border-border bg-muted/20">
             <p className="text-sm text-muted-foreground italic">
-              "Join the growing community of tradespeople running their business with Foreman."
+              "Join the growing community of tradespeople running their business with Revamo."
             </p>
           </div>
         )}

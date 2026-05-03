@@ -203,7 +203,7 @@ serve(async (req) => {
       // any confusing legacy product description like "up to 3 accounts"
       custom_text: {
         submit: {
-          message: `Foreman ${tierLabel} — ${seatLabel} included. Billed ${intervalLabel === "year" ? "annually" : "monthly"}. Cancel anytime.`,
+          message: `Revamo ${tierLabel} — ${seatLabel} included. Billed ${intervalLabel === "year" ? "annually" : "monthly"}. Cancel anytime.`,
         },
       },
       ...(discounts.length > 0 ? { discounts } : {}),

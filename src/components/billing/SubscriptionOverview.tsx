@@ -240,7 +240,7 @@ export function SubscriptionOverview() {
             <div className="p-6 rounded-lg border border-dashed space-y-3">
               <p className="text-lg font-semibold">Subscribe to restore full access</p>
               <p className="text-sm text-muted-foreground">
-                Choose a plan to continue using Foreman and unlock all features.
+                Choose a plan to continue using Revamo and unlock all features.
               </p>
               <Button onClick={() => navigate("/select-plan")} size="lg">
                 Choose Plan

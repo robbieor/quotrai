@@ -1,5 +1,5 @@
 /**
- * Foreman AI — Live Action Mode types
+ * Revamo AI — Live Action Mode types
  * Structured execution model for the AI operator experience.
  */
 

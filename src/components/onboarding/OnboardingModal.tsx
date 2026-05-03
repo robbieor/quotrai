@@ -346,7 +346,7 @@ export function OnboardingModal({ open, onComplete, initialStep = 1 }: Onboardin
       }
 
       track("onboarding_completed", { trade: data.tradeType, size: data.businessSize });
-      toast.success("Welcome to Foreman! You're all set.");
+      toast.success("Welcome to Revamo! You're all set.");
       onComplete();
     } catch (error: any) {
       console.error("Onboarding error:", error);
@@ -370,10 +370,10 @@ export function OnboardingModal({ open, onComplete, initialStep = 1 }: Onboardin
           <div className="flex items-start justify-between mb-4 sm:mb-6">
             <div className="flex-1 text-center">
               <div className="flex justify-center mb-3">
-                <img src={foremanLogo} alt="Foreman" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl" />
+                <img src={foremanLogo} alt="Revamo" className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl" />
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-foreground mb-1">
-                {step === 1 && "Welcome to Foreman!"}
+                {step === 1 && "Welcome to Revamo!"}
                 {step === 2 && "Tell us about your trade"}
                 {step === 3 && "How do you work?"}
                 {step === 4 && "Almost there!"}
@@ -383,9 +383,9 @@ export function OnboardingModal({ open, onComplete, initialStep = 1 }: Onboardin
               <p className="text-xs sm:text-sm text-muted-foreground">
                 {step === 1 && "Let's get your account set up in under 2 minutes"}
                 {step === 2 && "We'll tailor your experience to your business"}
-                {step === 3 && "We'll set up Foreman to match your workflow"}
+                {step === 3 && "We'll set up Revamo to match your workflow"}
                 {step === 4 && "Just a couple more preferences, then you're ready"}
-                {step === 5 && "Review your templates and labour rates — Foreman uses these to quote instantly"}
+                {step === 5 && "Review your templates and labour rates — Revamo uses these to quote instantly"}
                 {step === 6 && "Choose which emails you'd like to send to clients"}
               </p>
             </div>

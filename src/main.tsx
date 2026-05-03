@@ -4,7 +4,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { initNativeChrome } from "./lib/native";
 
-console.log("[Foreman] Starting app...");
+console.log("[Revamo] Starting app...");
 
 // Native iOS/Android polish (no-op on web).
 initNativeChrome();
@@ -43,5 +43,5 @@ if (rootEl) {
     </HelmetProvider>
   );
 } else {
-  console.error("[Foreman] Root element not found");
+  console.error("[Revamo] Root element not found");
 }

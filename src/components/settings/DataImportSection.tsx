@@ -507,7 +507,7 @@ export function DataImportSection() {
                       <Info className="h-4 w-4" />
                       <AlertDescription className="text-sm">
                         {importMode === "header_only"
-                          ? "Historical imports preserve your records as-is. New records created in Foreman will use structured line items."
+                          ? "Historical imports preserve your records as-is. New records created in Revamo will use structured line items."
                           : `Each line item row should repeat the ${type === "invoices" ? "invoice" : "quote"} number. Items will be grouped and linked automatically.`
                         }
                       </AlertDescription>

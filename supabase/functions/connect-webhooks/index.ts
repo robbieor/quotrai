@@ -10,14 +10,14 @@ function buildEmailHtml(title: string, bodyLines: string[]): string {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden">
 <tr><td style="background:#0f172a;padding:30px 32px;text-align:center">
-<img src="https://foreman.world/foreman-logo.png" alt="Foreman" width="140" style="display:block;margin:0 auto;" />
+<img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
 </td></tr>
 <tr><td style="padding:32px">
 <h1 style="margin:0 0 16px;font-size:20px;color:#0f172a">${title}</h1>
 ${bodyHtml}
 </td></tr>
 <tr><td style="padding:16px 32px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0">
-© ${new Date().getFullYear()} Foreman · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
+© ${new Date().getFullYear()} Revamo · <a href="mailto:support@foreman.ie" style="color:#94a3b8">support@foreman.ie</a>
 </td></tr></table></td></tr></table></body></html>`;
 }
 
@@ -213,7 +213,7 @@ serve(async (req) => {
                       to: ownerProfile.email,
                       subject: `Payment received — Invoice ${invoiceNum} (${formattedAmount})`,
                       html: ownerHtml,
-                      from: "Foreman <support@foreman.ie>",
+                      from: "Revamo <support@foreman.ie>",
                       idempotency_key: `connect-inv-paid-owner-${session.id}`,
                       purpose: "transactional",
                     }),
@@ -238,7 +238,7 @@ serve(async (req) => {
                       to: customerEmail,
                       subject: `Payment confirmed — Invoice ${invoiceNum}`,
                       html: receiptHtml,
-                      from: "Foreman <support@foreman.ie>",
+                      from: "Revamo <support@foreman.ie>",
                       idempotency_key: `connect-inv-paid-receipt-${session.id}`,
                       purpose: "transactional",
                     }),
@@ -326,7 +326,7 @@ serve(async (req) => {
                   to: ownerProfile.email,
                   subject: `Payment failed — Invoice ${invoiceNum}`,
                   html,
-                  from: "Foreman <support@foreman.ie>",
+                  from: "Revamo <support@foreman.ie>",
                   idempotency_key: `payment-failed-${pi.id}`,
                   purpose: "transactional",
                 }),
@@ -396,7 +396,7 @@ serve(async (req) => {
                     to: ownerProfile.email,
                     subject: `Refund processed — Invoice ${invoiceNum} (${formattedAmount})`,
                     html,
-                    from: "Foreman <support@foreman.ie>",
+                    from: "Revamo <support@foreman.ie>",
                     idempotency_key: `refund-owner-${charge.id}`,
                     purpose: "transactional",
                   }),

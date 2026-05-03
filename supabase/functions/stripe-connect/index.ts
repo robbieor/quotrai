@@ -126,7 +126,7 @@ serve(async (req) => {
           .eq("id", teamId);
       }
 
-      const origin = req.headers.get("origin") || "https://foreman.world";
+      const origin = req.headers.get("origin") || "https://revamo.ai";
       const accountLink = await stripeClient.accountLinks.create({
         account: accountId,
         refresh_url: `${origin}/settings?tab=billing&connect=refresh`,

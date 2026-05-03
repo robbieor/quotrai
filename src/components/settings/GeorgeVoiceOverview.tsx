@@ -32,15 +32,15 @@ export function GeorgeVoiceOverview() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mic className="h-5 w-5" />
-            Foreman AI Voice
+            Revamo AI Voice
           </CardTitle>
           <CardDescription>
-            No team members have Foreman AI voice enabled yet
+            No team members have Revamo AI voice enabled yet
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Enable Foreman AI voice for team members in the Team section below. 
+            Enable Revamo AI voice for team members in the Team section below. 
             Each voice seat costs €29/month and includes 60 minutes of voice interaction.
           </p>
         </CardContent>
@@ -53,7 +53,7 @@ export function GeorgeVoiceOverview() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mic className="h-5 w-5" />
-          Foreman AI Voice Access
+          Revamo AI Voice Access
         </CardTitle>
         <CardDescription>
           {georgeVoiceSeats} voice seat{georgeVoiceSeats !== 1 ? "s" : ""} active (€{monthlyVoiceCost}/month)

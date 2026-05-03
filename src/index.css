@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Foreman Design System — Premium iOS-quality
+/* Revamo Design System — Premium iOS-quality
    System font stack, restrained green accent, subtle shadows
    All colors MUST be HSL.
 */
@@ -23,7 +23,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 235 40% 14%;
 
-    /* Foreman green #0D9B6A — used sparingly */
+    /* Revamo green #0D9B6A — used sparingly */
     --primary: 155 85% 33%;
     --primary-foreground: 0 0% 100%;
 

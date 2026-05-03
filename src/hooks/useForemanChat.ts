@@ -99,7 +99,7 @@ export function useForemanChat({
       if (!resp.ok) {
         if (resp.status === 429) {
           setLastError("Rate limit exceeded. Please wait a moment.");
-          onAssistantMessage?.("⏳ Foreman AI is temporarily busy — please try again in a moment.", conversationId || undefined);
+          onAssistantMessage?.("⏳ Revamo AI is temporarily busy — please try again in a moment.", conversationId || undefined);
           setIsProcessing(false);
           return;
         }
@@ -232,7 +232,7 @@ export function useForemanChat({
         }
       }
     } catch (err) {
-      console.error("Foreman chat error:", err);
+      console.error("Revamo chat error:", err);
       setLastError("Failed to send message. Tap retry.");
 
       // Auto-retry once for network errors

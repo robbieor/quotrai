@@ -12,7 +12,7 @@ export const demoSteps: DemoStep[] = [
     id: "dashboard",
     route: "/dashboard",
     narration:
-      "Welcome to Foreman — the all-in-one platform built for tradespeople. This is your dashboard. At a glance you can see revenue, outstanding invoices, jobs due today, and your team's recent activity. Everything updates in real time.",
+      "Welcome to Revamo — the all-in-one platform built for tradespeople. This is your dashboard. At a glance you can see revenue, outstanding invoices, jobs due today, and your team's recent activity. Everything updates in real time.",
     pauseAfter: 1500,
   },
   {
@@ -61,7 +61,7 @@ export const demoSteps: DemoStep[] = [
     id: "george",
     route: "/foreman-ai",
     narration:
-      "And this is Foreman AI — George. Your AI-powered assistant that can create jobs, generate quotes, look up customers, and manage your diary — all by voice or text. It's like having a foreman who never sleeps.",
+      "And this is Revamo AI — George. Your AI-powered assistant that can create jobs, generate quotes, look up customers, and manage your diary — all by voice or text. It's like having a foreman who never sleeps.",
     pauseAfter: 2000,
   },
   {

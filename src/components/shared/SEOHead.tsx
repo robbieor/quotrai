@@ -7,12 +7,12 @@ interface SEOHeadProps {
   ogImage?: string;
 }
 
-const BASE_URL = "https://foreman.world";
+const BASE_URL = "https://revamo.ai";
 const DEFAULT_OG = "/og-image.png";
 
 export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }: SEOHeadProps) {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title.includes("Foreman") ? title : `${title} | Foreman — AI Operating System for Field Service`;
+  const fullTitle = title.includes("Revamo") ? title : `${title} | Revamo — AI Operating System for Field Service`;
 
   return (
     <Helmet>
@@ -28,7 +28,7 @@ export function SEOHead({ title, description, path = "/", ogImage = DEFAULT_OG }
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Foreman" />
+      <meta property="og:site_name" content="Revamo" />
     </Helmet>
   );
 }

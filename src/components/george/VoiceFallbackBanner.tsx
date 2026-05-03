@@ -25,7 +25,7 @@ export function VoiceFallbackBanner({ onFocusTextInput }: VoiceFallbackBannerPro
           <Loader2 className="h-5 w-5 text-primary animate-spin shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">
-              Reconnecting to Foreman AI...
+              Reconnecting to Revamo AI...
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Attempt {retryAttempt} of {maxRetries}
@@ -48,7 +48,7 @@ export function VoiceFallbackBanner({ onFocusTextInput }: VoiceFallbackBannerPro
             Voice temporarily unavailable
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Don't worry — Foreman AI can still help you via text chat. We're working on restoring voice.
+            Don't worry — Revamo AI can still help you via text chat. We're working on restoring voice.
           </p>
           <div className="flex items-center gap-2 mt-2">
             <Button

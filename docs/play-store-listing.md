@@ -1,16 +1,16 @@
-# Foreman - Google Play Store Listing
+# Revamo - Google Play Store Listing
 
 ## App Name
-**Foreman - Jobs, Quotes & Invoices**
+**Revamo - Jobs, Quotes & Invoices**
 
 ## Short Description (80 characters max)
 Create invoices, scan receipts, track expenses & time. Perfect for tradespeople.
 
 ## Full Description (4000 characters max)
 
-**Foreman is the all-in-one business app for contractors, tradespeople, and freelancers.**
+**Revamo is the all-in-one business app for contractors, tradespeople, and freelancers.**
 
-Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Foreman gives you everything you need to run your business from your phone.
+Stop losing receipts in your van. Stop chasing payments. Stop guessing your profit margins. Revamo gives you everything you need to run your business from your phone.
 
 **INVOICE IN SECONDS**
 Create professional invoices on-site and send them instantly via WhatsApp, SMS, or email. Your clients get a polished PDF with your logo and branding. Support for Irish VAT rates (23%, 13.5%, 9%, 0%) built in.
@@ -40,7 +40,7 @@ Growing your business? Invite team members with role-based access. Owners, admin
 Upload your logo. Choose your brand colours. Pick from three professional invoice templates. Add custom terms and payment details.
 
 **WORKS OFFLINE**
-Network issues on a rural job site? No problem. Foreman works offline and syncs when you're back online.
+Network issues on a rural job site? No problem. Revamo works offline and syncs when you're back online.
 
 **DESIGNED FOR IRELAND**
 Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for tradespeople.
@@ -57,7 +57,7 @@ Euro currency, Irish VAT rates, DD/MM/YYYY dates. Built by a tradesperson, for t
 - Cleaners
 - Any self-employed professional
 
-Download Foreman today and take control of your business finances.
+Download Revamo today and take control of your business finances.
 
 ---
 
@@ -79,7 +79,7 @@ Everyone
 [Your email here]
 
 ## Privacy Policy URL
-https://foreman.world/privacy
+https://revamo.ai/privacy
 
 ---
 
@@ -94,4 +94,4 @@ https://foreman.world/privacy
 8. Branding customisation
 
 ## App Icon
-Use the existing Foreman app icon
+Use the existing Revamo app icon

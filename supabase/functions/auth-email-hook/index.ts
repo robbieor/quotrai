@@ -36,9 +36,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Foreman"
+const SITE_NAME = "Revamo"
 const SENDER_DOMAIN = "notify.foreman.ie"
-const ROOT_DOMAIN = "foreman.world"
+const ROOT_DOMAIN = "revamo.ai"
 const FROM_DOMAIN = "notify.foreman.ie" // Domain shown in From address (may be root or sender subdomain)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
@@ -46,7 +46,7 @@ const FROM_DOMAIN = "notify.foreman.ie" // Domain shown in From address (may be 
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://foreman.world"
+const SAMPLE_PROJECT_URL = "https://revamo.ai"
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {

@@ -24,7 +24,7 @@ export function AgentHighlightOverlay() {
         `[data-section="${section}"]`
       ) as HTMLElement | null;
       if (!el) {
-        console.warn(`[Foreman AI] section not on page: ${section}`);
+        console.warn(`[Revamo AI] section not on page: ${section}`);
         return;
       }
       el.scrollIntoView({ behavior: "smooth", block: "center" });

@@ -1,5 +1,5 @@
 /**
- * Slash Command Parser — deterministic routing for common Foreman AI commands.
+ * Slash Command Parser — deterministic routing for common Revamo AI commands.
  * Bypasses LLM for well-formed commands, dramatically reducing latency.
  */
 

@@ -17,7 +17,7 @@ serve(async (req) => {
     const stripeClient = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const { action, accountId, priceId } = await req.json();
-    const origin = req.headers.get("origin") || "https://foreman.world";
+    const origin = req.headers.get("origin") || "https://revamo.ai";
 
     // ========================================================
     // ACTION: checkout — Create a subscription checkout for a connected account

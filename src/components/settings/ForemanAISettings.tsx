@@ -63,7 +63,7 @@ export function ForemanAISettings() {
         }, { onConflict: "team_id,user_id" });
 
       if (error) throw error;
-      toast.success("Foreman AI preferences saved");
+      toast.success("Revamo AI preferences saved");
     } catch {
       toast.error("Failed to save preferences");
     } finally {
@@ -86,10 +86,10 @@ export function ForemanAISettings() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Brain className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Foreman AI Preferences</CardTitle>
+          <CardTitle className="text-lg">Revamo AI Preferences</CardTitle>
         </div>
         <CardDescription>
-          Control how Foreman AI creates and handles your quotes, invoices, and communications.
+          Control how Revamo AI creates and handles your quotes, invoices, and communications.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">

@@ -10,15 +10,15 @@ const Industries = () => {
   return (
     <>
       <SEOHead
-        title="Industries We Serve — Foreman AI Office Manager"
-        description="Foreman serves 20+ field service industries including plumbing, electrical, HVAC, cleaning, pest control, landscaping, roofing, and more. AI-powered quoting, invoicing & job management."
+        title="Industries We Serve — Revamo AI Office Manager"
+        description="Revamo serves 20+ field service industries including plumbing, electrical, HVAC, cleaning, pest control, landscaping, roofing, and more. AI-powered quoting, invoicing & job management."
       />
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between h-14 px-4">
             <Link to="/" className="flex items-center gap-2">
-              <img src={foremanLogo} alt="Foreman" className="h-7 w-auto" />
+              <img src={foremanLogo} alt="Revamo" className="h-7 w-auto" />
             </Link>
             <Link
               to="/signup"
@@ -36,7 +36,7 @@ const Industries = () => {
               One platform for every field service business
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Whether you're a plumber, cleaner, solar installer, or pest control operator — if you quote jobs and invoice clients, Foreman runs your office.
+              Whether you're a plumber, cleaner, solar installer, or pest control operator — if you quote jobs and invoice clients, Revamo runs your office.
             </p>
           </div>
         </section>
@@ -76,7 +76,7 @@ const Industries = () => {
               Don't see your industry?
             </h2>
             <p className="text-muted-foreground mb-6">
-              If you quote jobs and invoice clients, Foreman works for you. Get in touch — we'll set up templates for your specific trade.
+              If you quote jobs and invoice clients, Revamo works for you. Get in touch — we'll set up templates for your specific trade.
             </p>
             <Link
               to="/signup"

@@ -3,7 +3,7 @@
 ## Status: Ready to implement in remixed project
 
 ## Quick Start
-1. Remix Foreman project
+1. Remix Revamo project
 2. Open remixed project
 3. Start Phase 1: Strip trade-specific files
 4. Phase 2: Create new tables (deals, approvals, milestones, revenue_schedule)
@@ -12,7 +12,7 @@
 7. Phase 5: Revenue recognition dashboard
 
 ## Terminology Map
-| Foreman | CEL Platform |
+| Revamo | CEL Platform |
 |---------|-------------|
 | Client / Customer | Account |
 | Quote | Proposal |
@@ -20,7 +20,7 @@
 | Invoice | Sales Order |
 | Lead | Opportunity |
 | George | CEL AI |
-| Foreman | CEL Sales Ops |
+| Revamo | CEL Sales Ops |
 
 ## Files to Strip
 - Jobs, Job Calendar, job components

@@ -33,12 +33,12 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "dashboard", title: "Operations", url: "/dashboard", icon: LayoutDashboard },
       { id: "briefing", title: "Briefing", url: "/briefing", icon: Sun },
-      { id: "ask", title: "Ask Foreman", url: "/ask", icon: MessageCircleQuestion, requiredSeat: "connect" },
+      { id: "ask", title: "Ask Revamo", url: "/ask", icon: MessageCircleQuestion, requiredSeat: "connect" },
       { id: "jobs", title: "Jobs", url: "/jobs", icon: Briefcase },
       { id: "quotes", title: "Quotes", url: "/quotes", icon: FileText },
       { id: "invoices", title: "Revenue", url: "/invoices", icon: Receipt },
       { id: "customers", title: "Clients", url: "/customers", icon: Users },
-      { id: "tom", title: "Foreman AI", url: "/foreman-ai", icon: Bot, requiredSeat: "connect" },
+      { id: "tom", title: "Revamo AI", url: "/foreman-ai", icon: Bot, requiredSeat: "connect" },
       { id: "george-skills", title: "George Skills", url: "/foreman-ai/capabilities", icon: Sparkles, requiredSeat: "connect" },
     ],
   },
@@ -105,8 +105,8 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <img src={foremanLogo} alt="Foreman" className="h-9 w-9 rounded-lg" />
-          <span className="text-xl font-bold tracking-tight text-white">Foreman</span>
+          <img src={foremanLogo} alt="Revamo" className="h-9 w-9 rounded-lg" />
+          <span className="text-xl font-bold tracking-tight text-white">Revamo</span>
         </div>
       </SidebarHeader>
 

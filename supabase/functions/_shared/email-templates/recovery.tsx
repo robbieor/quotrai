@@ -27,16 +27,16 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Reset your password for Foreman</Preview>
+    <Preview>Reset your password for Revamo</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={header}>
-          <Img src={LOGO_URL} width="48" height="48" alt="Foreman" style={logo} />
-          <Text style={brandName}>Foreman</Text>
+          <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
+          <Text style={brandName}>Revamo</Text>
         </div>
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
-          We received a request to reset your password for Foreman. Click
+          We received a request to reset your password for Revamo. Click
           the button below to choose a new password.
         </Text>
         <Button style={button} href={confirmationUrl}>
@@ -46,7 +46,7 @@ export const RecoveryEmail = ({
           If you didn't request a password reset, you can safely ignore this
           email. Your password will not be changed.
         </Text>
-        <Text style={footerBrand}>© Foreman · foreman.world</Text>
+        <Text style={footerBrand}>© Revamo · revamo.ai</Text>
       </Container>
     </Body>
   </Html>

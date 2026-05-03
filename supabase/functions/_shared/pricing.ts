@@ -1,5 +1,5 @@
 // =============================================================================
-// FOREMAN — SINGLE SOURCE OF TRUTH FOR STRIPE PRICE IDs
+// REVAMO — SINGLE SOURCE OF TRUTH FOR STRIPE PRICE IDs
 // =============================================================================
 // Imported by every edge function that touches subscriptions:
 //   - create-checkout-session
@@ -130,14 +130,14 @@ export const PRICE_TO_PLAN_LABEL: Record<string, string> = (() => {
   for (const tier of ["solo", "crew", "business"] as TierId[]) {
     const label = TIER_LABELS[tier];
     const cfg = TIER_PRICES[tier];
-    m[cfg.month.base] = `Foreman — ${label}`;
-    m[cfg.year.base] = `Foreman — ${label} (Annual)`;
+    m[cfg.month.base] = `Revamo — ${label}`;
+    m[cfg.year.base] = `Revamo — ${label} (Annual)`;
     if (cfg.month.seat) m[cfg.month.seat] = "Extra Seat";
     if (cfg.year.seat) m[cfg.year.seat] = "Extra Seat (Annual)";
   }
   // Legacy
-  m["price_1TIJDeDQETj2awNEWxP4bB43"] = "Foreman — Crew (legacy)";
-  m["price_1TIQvfDQETj2awNEx7bAyHjy"] = "Foreman — Crew (legacy, Annual)";
+  m["price_1TIJDeDQETj2awNEWxP4bB43"] = "Revamo — Crew (legacy)";
+  m["price_1TIQvfDQETj2awNEx7bAyHjy"] = "Revamo — Crew (legacy, Annual)";
   m["price_1TKjaNDQETj2awNEXHD4jFRq"] = "Extra Seat (legacy)";
   m["price_1TIQw1DQETj2awNEth2a6E8y"] = "Extra Seat (Annual)";
   return m;

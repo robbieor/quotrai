@@ -60,12 +60,12 @@ export const Scene7Closing: React.FC = () => {
 
           <div style={{ marginTop: 48, transform: `scale(${logoScale})`, display: "inline-flex", alignItems: "center", gap: 16 }}>
             <Img src={staticFile("images/foreman-logo.png")} style={{ width: 68, height: 68, borderRadius: 16, filter: "drop-shadow(0 0 30px rgba(0,255,178,0.4))" }} />
-            <span style={{ fontSize: 44, fontWeight: 800, color: "white", letterSpacing: "-0.04em", textShadow: "0 2px 20px rgba(0,0,0,0.3)" }}>Foreman</span>
+            <span style={{ fontSize: 44, fontWeight: 800, color: "white", letterSpacing: "-0.04em", textShadow: "0 2px 20px rgba(0,0,0,0.3)" }}>Revamo</span>
           </div>
 
           <div style={{ opacity: ctaOpacity, marginTop: 28 }}>
             <span style={{ fontSize: 24, color: "rgba(255,255,255,0.7)", fontWeight: 700, letterSpacing: "0.03em" }}>
-              Try Foreman free for 30 days
+              Try Revamo free for 30 days
             </span>
           </div>
         </div>

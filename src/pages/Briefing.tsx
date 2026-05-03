@@ -195,7 +195,7 @@ function BriefingPageInner() {
                 <div className="flex items-center gap-2 mb-2 text-foreground/70">
                   <Moon className="h-4 w-4" />
                   <span className="text-xs font-semibold uppercase tracking-wide">
-                    What Foreman did overnight
+                    What Revamo did overnight
                   </span>
                 </div>
                 <p className="text-sm">{briefing.overnight}</p>
@@ -257,7 +257,7 @@ function BriefingPageInner() {
             {/* Actions */}
             <div className="flex flex-wrap gap-2 pt-2">
               <Button onClick={() => navigate("/ask")} className="gap-1.5">
-                Ask Foreman a follow-up
+                Ask Revamo a follow-up
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <Button variant="outline" onClick={() => navigate("/dashboard")}>

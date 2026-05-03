@@ -90,7 +90,7 @@ export function LiveActionOverlay() {
         <div className="flex items-center gap-2 min-w-0">
           <Activity className="h-4 w-4 text-primary shrink-0" />
           <span className="text-xs font-semibold uppercase tracking-wider text-foreground truncate">
-            {currentIntent || "Foreman AI working"}
+            {currentIntent || "Revamo AI working"}
           </span>
         </div>
         <X className={cn("h-4 w-4 text-muted-foreground transition-transform", collapsed && "rotate-45")} />
