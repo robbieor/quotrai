@@ -13,7 +13,7 @@ import { CommandBar, useCommandBar } from "@/components/command/CommandBar";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { cn } from "@/lib/utils";
 import { Search, Phone } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
