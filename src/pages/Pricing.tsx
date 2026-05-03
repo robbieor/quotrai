@@ -95,7 +95,7 @@ export default function Pricing() {
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src={foremanLogo} alt="Revamo" className="h-8 w-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight">Revamo</span>
+            <span className="text-lg font-bold tracking-tight font-manrope lowercase">revamo</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login">
@@ -241,7 +241,7 @@ export default function Pricing() {
               </TableHeader>
               <TableBody>
                 <TableRow className="bg-primary/5 border-l-2 border-l-primary font-medium">
-                  <TableCell className="font-bold">Revamo</TableCell>
+                  <TableCell className="font-bold font-manrope lowercase">revamo</TableCell>
                   <TableCell>~1.7%</TableCell>
                   <TableCell>1.2%</TableCell>
                   <TableCell className="font-bold text-primary">~2.9%</TableCell>
