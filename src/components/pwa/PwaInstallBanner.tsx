@@ -11,7 +11,7 @@ export function PwaInstallBanner() {
   if (!canShowBanner || !isMobile) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-14 left-0 right-0 z-50 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-4 duration-300">
       <div className="mx-auto max-w-lg rounded-xl border border-border bg-card shadow-lg p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
