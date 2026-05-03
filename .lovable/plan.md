@@ -1,28 +1,25 @@
-## Fix mobile chrome before launch
+## Remove the mobile header (Jobber-style)
 
-Three issues on mobile:
-1. Sidebar trigger (hamburger) still shows in the header — gives access to the left sidebar we're trying to retire.
-2. The search/command pill clutters a tiny mobile header.
-3. The dark `bg-sidebar` header looks heavy and clashes with the light dashboard body.
+On mobile, kill the top header bar entirely. Pages render straight from the safe-area top. Notifications and the user avatar move to a small floating pill in the top-right corner (matching the Jobber pattern in your reference).
 
 ### Changes
 
-**1. `src/components/layout/DashboardLayout.tsx` — header**
-- Hide `<SidebarTrigger />` on mobile (`hidden md:inline-flex`).
-- Hide the command-bar search button on mobile (`hidden md:flex`); keep ⌘K on desktop. Mobile users get search via the "More" sheet / command bar shortcut from elsewhere if needed later.
-- Switch header background on mobile to a lighter surface: `bg-background border-border` on mobile, keep `bg-sidebar border-sidebar-border` on desktop. Update icon/text colors accordingly (`text-foreground/70` on mobile, `text-white/70` on desktop).
-- Remove the `pt-[max(10px,env(safe-area-inset-top))]` dark band feel by letting the lighter bg fill the safe-area inset.
+**1. `src/components/layout/DashboardLayout.tsx`**
+- Wrap the existing `<header>` in `hidden md:flex` so it never renders on mobile.
+- Add a new mobile-only floating pill, fixed top-right, that contains `<NotificationCenter />` and `<UserMenu />` on a white rounded-full background with subtle border + shadow. Positioned with `top-[max(0.5rem,env(safe-area-inset-top))] right-3`.
+- Remove the top padding compensation on `<main>` for mobile (header was sticky, so main already starts at top — just ensure safe-area-top padding is applied to the page container instead, so content isn't under the status bar / floating pill).
+- Container gets `pt-[max(1rem,env(safe-area-inset-top))] md:pt-0` (desktop keeps normal padding via existing `py-*`).
 
-**2. `src/components/layout/MobileTabBar.tsx` — More behavior**
-- Since the sidebar is no longer reachable from the header, "More" must still open it. Keep `setOpenMobile(true)` — the Sheet-based mobile sidebar (from `ui/sidebar.tsx`) is only triggered from the tab bar now, which is the intended single entry point. No change needed here beyond confirming it works.
+**2. Sidebar access**
+- Already only reachable via the bottom-tab "More" button. No header trigger to remove since header is gone on mobile.
 
-**3. Result on mobile**
-- No hamburger, no search pill in header — just notifications + avatar on a light bar.
-- Sidebar is only accessible via bottom-tab "More" (already deduplicated).
-- Desktop is unchanged.
+### Result on mobile
+- No top bar background — page content (e.g. "Dashboard" heading) sits at the top.
+- A small white pill in the top-right has the bell + avatar, floating over content like Jobber.
+- Bottom tab bar unchanged.
+- Desktop layout completely unchanged.
 
 ### Technical details
-- Use `useIsMobile()` (already imported elsewhere) or pure Tailwind `md:` classes — prefer Tailwind to avoid a hydration flash.
-- Header className becomes:
-  `border-b items-center flex px-3 md:px-6 py-[10px] sticky top-0 z-20 bg-background border-border md:bg-sidebar md:border-sidebar-border` plus safe-area padding.
-- Icon wrappers swap `text-white/70` → `text-foreground/70 md:text-white/70`.
+- Use Tailwind `md:` breakpoint, no JS branching, to avoid hydration flicker.
+- Floating pill: `fixed z-30 top-[max(0.5rem,env(safe-area-inset-top))] right-3 md:hidden flex items-center gap-1 bg-background/90 backdrop-blur border border-border rounded-full shadow-sm px-1 py-1`.
+- ReadOnlyBanner still renders above main content on mobile (it was outside the header).
