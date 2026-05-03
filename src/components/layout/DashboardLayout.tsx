@@ -34,13 +34,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex-1 flex flex-col min-w-0">
             <ReadOnlyBanner />
             
-            <header className="border-b items-center justify-start flex flex-row px-3 md:px-6 py-[10px] sticky top-0 z-20 pt-[max(10px,env(safe-area-inset-top))] bg-background border-border md:bg-sidebar md:border-sidebar-border" style={{minHeight: 'calc(3rem + env(safe-area-inset-top, 0px))' }}>
-              <SidebarTrigger className="mr-2 md:mr-4 text-white/70 hover:text-white hidden md:inline-flex" />
+            <header className="hidden md:flex border-b border-sidebar-border items-center justify-start flex-row px-6 py-[10px] sticky top-0 z-20 bg-sidebar" style={{minHeight: '3rem'}}>
+              <SidebarTrigger className="mr-4 text-white/70 hover:text-white" />
 
-              {/* Command Bar Trigger - desktop only */}
               <button
                 onClick={() => commandBar.setOpen(true)}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-white/50 text-xs hover:bg-white/10 hover:text-white/70 transition-colors flex-1 max-w-xs"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 text-white/50 text-xs hover:bg-white/10 hover:text-white/70 transition-colors flex-1 max-w-xs"
               >
                 <Search className="h-3.5 w-3.5" />
                 <span>Search or command...</span>
@@ -50,15 +49,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
 
               <div className="flex-1" />
-              <div className="text-foreground/70 [&_button]:text-foreground/70 [&_button:hover]:text-foreground md:text-white/70 md:[&_button]:text-white/70 md:[&_button:hover]:text-white">
+              <div className="text-white/70 [&_button]:text-white/70 [&_button:hover]:text-white">
                 <NotificationCenter />
               </div>
-              <div className="text-foreground/70 [&_button]:text-foreground/70 [&_button:hover]:text-foreground md:text-white/70 md:[&_button]:text-white/70 md:[&_button:hover]:text-white">
+              <div className="text-white/70 [&_button]:text-white/70 [&_button:hover]:text-white">
                 <UserMenu />
               </div>
             </header>
+
+            {/* Mobile floating action pill (Jobber-style) */}
+            <div
+              className="md:hidden fixed right-3 z-30 flex items-center gap-0.5 bg-background/90 backdrop-blur border border-border rounded-full shadow-sm px-1 py-1"
+              style={{ top: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
+            >
+              <NotificationCenter />
+              <UserMenu />
+            </div>
+
             <main className="flex-1 overflow-auto safe-area-px">
-              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 py-3 sm:py-4 md:py-6 space-y-4 sm:space-y-6 pb-[calc(80px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+              <div
+                className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 py-3 sm:py-4 md:py-6 space-y-4 sm:space-y-6 pb-[calc(80px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+                style={{ paddingTop: "max(1rem, calc(env(safe-area-inset-top, 0px) + 3.5rem))" }}
+              >
                 {children}
               </div>
             </main>
