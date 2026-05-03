@@ -8,6 +8,7 @@ import { TrialCountdownPopup } from "@/components/billing/TrialCountdownPopup";
 import { FloatingTomButton } from "./FloatingTomButton";
 import { ActiveCallBar } from "./ActiveCallBar";
 import { AgentTaskPanel } from "@/components/shared/AgentTaskPanel";
+import { MobileNavWheel } from "./MobileNavWheel";
 import { CommandBar, useCommandBar } from "@/components/command/CommandBar";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { cn } from "@/lib/utils";
@@ -58,7 +59,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </header>
             <main className="flex-1 overflow-auto safe-area-px">
-              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 py-3 sm:py-4 md:py-6 space-y-4 sm:space-y-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 py-3 sm:py-4 md:py-6 space-y-4 sm:space-y-6 pb-[calc(200px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
                 {children}
               </div>
             </main>
@@ -68,6 +69,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <AgentTaskPanel />
           <TrialCountdownPopup />
           <CommandBar open={commandBar.open} onOpenChange={commandBar.setOpen} />
+          <MobileNavWheel />
         </div>
       </SidebarProvider>
     </ProtectedRoute>
