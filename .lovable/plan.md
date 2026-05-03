@@ -1,27 +1,28 @@
-## What's wrong
+## Issue
 
-The retheme updated CSS tokens, but two hardcoded near-black surfaces still slip through and produce the harsh black band visible in your screenshot:
+The revamo logos are saved as RGB PNGs with a solid white background (no alpha channel), so they render as white squares against the dark sidebar/header instead of letting the teal "r" sit on the slate surface.
 
-1. **Mobile/desktop top header** in `src/components/layout/DashboardLayout.tsx` is `bg-[hsl(220_26%_12%)]` — darker and bluer than the new sidebar (`hsl(215 28% 17%)`). That's the big black bar above the dashboard.
-2. **`ForemanAvatar`** (`src/components/shared/ForemanAvatar.tsx`) is hardcoded `bg-[#0F172A]` — the old harsh navy.
+Affected files (all currently RGB, no alpha):
+- `src/assets/foreman-logo.png` (used in sidebar, login, signup, forgot-password)
+- `src/assets/revamo-logo.png`
+- `public/favicon.png`, `public/icon-192.png`, `public/icon-512.png`, `public/icon-1024.png`, `public/apple-touch-icon.png`, `public/og-image.png`
 
-Plus a few minor leftovers worth aligning while we're here.
+## Plan
 
-## Changes
+1. Run a Python/Pillow script to:
+   - Open each logo PNG
+   - Convert to RGBA
+   - Replace near-white pixels (R,G,B all ≥ ~240) with transparent alpha
+   - Preserve the teal "r" mark and any anti-aliasing edges (use a soft threshold + alpha falloff so edges don't get jagged)
+   - Save back in place as proper RGBA PNG
 
-1. **`src/components/layout/DashboardLayout.tsx`**
-   - Replace `bg-[hsl(220_26%_12%)]` on the `<header>` with `bg-sidebar` so the header matches the sidebar's softer slate (`215 28% 17%`) — eliminates the two-tone "black band over slate sidebar" effect.
-   - Replace `border-white/10` with `border-sidebar-border` for token consistency.
+2. Apply to both app assets (`src/assets/*-logo.png`) and all PWA / favicon variants in `public/`. The `og-image.png` will keep its dark themed background but the foreground logo composited onto it stays — only the standalone logos lose the white.
 
-2. **`src/components/shared/ForemanAvatar.tsx`**
-   - Replace `bg-[#0F172A]` with `bg-sidebar` (or `bg-primary` if it represents the AI brand mark — will match the teal "r" logo in the sidebar). Going with `bg-sidebar` to keep parity with header.
+3. Verify by re-reading each file and confirming `mode == 'RGBA'` and corner pixels have `alpha == 0`.
 
-3. **Audit pass** — `rg` for any remaining hardcoded `#0f172a`, `#0F172A`, `hsl(220 26%`, `hsl(222 ` in `src/` (excluding `tailwind.config.lov.json` which is generated reference data) and replace with `bg-sidebar` / `text-sidebar-foreground` tokens.
+4. No code changes — the existing `<img>` usages (sidebar, login card, etc.) automatically benefit once the PNG itself is transparent.
 
-4. **Mobile status bar** — verify `src/lib/native.ts` `StatusBar.setBackgroundColor` uses the new sidebar HSL converted to hex (`#1e293b`-ish) so the native Android status bar matches the new header instead of pure black.
+## Notes
 
-## Result
-
-The top header on mobile will blend into the soft-slate sidebar instead of looking like a separate black bar, completing the teal/slate identity sweep.
-
-Reply "go" to apply.
+- The favicon.ico will be regenerated from the transparent favicon.png so browser tabs also show transparency where the OS supports it.
+- Apple touch icons traditionally render on a colored tile, but iOS handles transparency fine; no rounded mask added.
