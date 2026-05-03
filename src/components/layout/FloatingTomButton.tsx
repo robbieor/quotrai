@@ -83,6 +83,19 @@ export function FloatingTomButton({ variant = "floating", open, onOpenChange }: 
     if (isExpanded && hasVoiceAccess && canUseVoice) preWarmToken();
   }, [isExpanded, hasVoiceAccess, canUseVoice, preWarmToken]);
 
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!isExpanded) return;
+    const handlePointer = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (target && menuRef.current && !menuRef.current.contains(target)) {
+        setIsExpanded(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointer, true);
+    return () => document.removeEventListener("pointerdown", handlePointer, true);
+  }, [isExpanded]);
+
   if ((location.pathname === "/foreman-ai" && !isConnected) || (!roleLoading && isTeamSeat)) return null;
 
   const handleMainButtonClick = () => {
