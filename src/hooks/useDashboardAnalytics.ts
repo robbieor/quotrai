@@ -118,8 +118,6 @@ export interface CustomerProfitData {
 }
 
 export interface ScatterCustomerData {
-
-export interface ScatterCustomerData {
   id: string;
   name: string;
   revenue: number;
