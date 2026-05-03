@@ -59,10 +59,10 @@ After opening in Xcode, add these entries to `ios/App/App/Info.plist`:
 
 | Key | Value |
 |-----|-------|
-| `NSMicrophoneUsageDescription` | Quotr uses the microphone for Revamo AI voice commands |
-| `NSLocationWhenInUseUsageDescription` | Quotr uses your location to verify job site attendance |
+| `NSMicrophoneUsageDescription` | Revamo uses the microphone for Revamo AI voice commands |
+| `NSLocationWhenInUseUsageDescription` | Revamo uses your location to verify job site attendance |
 | `NSLocationAlwaysAndWhenInUseUsageDescription` | Quotr tracks your location in the background for GPS time tracking |
-| `NSCameraUsageDescription` | Quotr uses the camera for site visit verification photos |
+| `NSCameraUsageDescription` | Revamo uses the camera for site visit verification photos |
 
 ### Ongoing Development
 
@@ -101,7 +101,7 @@ npx cap open android   # opens in Android Studio
 ```bash
 git init
 git add .
-git commit -m "Initial Quotr export from Lovable"
+git commit -m "Initial Revamo export from Lovable"
 git branch -M main
 git remote add origin <your-repo-url>
 git push -u origin main
