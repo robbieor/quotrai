@@ -17,7 +17,51 @@ import {
   emitAgentScroll,
   emitAgentHighlight,
   emitAgentProgress,
+  emitAgentThinking,
+  emitAgentToolCall,
+  emitAgentTranscript,
 } from "@/lib/agentEvents";
+
+// Human-readable labels for HUD tool-call timeline
+const TOOL_LABELS: Record<string, string> = {
+  navigate_to: "Navigating",
+  open_record: "Opening record",
+  scroll_to: "Scrolling to section",
+  highlight_element: "Highlighting",
+  report_progress: "Reporting progress",
+  get_today_summary: "Reading today's summary",
+  get_week_ahead_summary: "Reading week ahead",
+  get_todays_jobs: "Loading today's jobs",
+  get_upcoming_jobs: "Loading upcoming jobs",
+  get_financial_summary: "Crunching financials",
+  create_job: "Creating job",
+  list_jobs: "Listing jobs",
+  reschedule_job: "Rescheduling job",
+  update_job_status: "Updating job status",
+  delete_job: "Deleting job",
+  list_customers: "Listing customers",
+  search_customer: "Searching customers",
+  get_client_info: "Loading client info",
+  create_customer: "Creating customer",
+  update_customer: "Updating customer",
+  delete_customer: "Deleting customer",
+  create_quote: "Creating quote",
+  list_quotes: "Listing quotes",
+  get_pending_quotes: "Loading pending quotes",
+  update_quote_status: "Updating quote",
+  delete_quote: "Deleting quote",
+  create_invoice: "Creating invoice",
+  list_invoices: "Listing invoices",
+  get_outstanding_invoices: "Loading outstanding invoices",
+  get_overdue_invoices: "Loading overdue invoices",
+  update_invoice_status: "Updating invoice",
+  send_invoice_reminder: "Sending invoice reminder",
+  delete_invoice: "Deleting invoice",
+  log_expense: "Logging expense",
+  list_expenses: "Listing expenses",
+};
+const labelForTool = (t: string) =>
+  TOOL_LABELS[t] ?? t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 interface AgentContext {
   userId?: string;
