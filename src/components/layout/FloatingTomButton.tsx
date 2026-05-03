@@ -157,6 +157,7 @@ export function FloatingTomButton({ variant = "floating", open, onOpenChange }: 
 
       {isExpanded && !isConnected && !isConnecting && (
         <div
+          ref={menuRef}
           className={cn(
             "fixed z-50 flex flex-col gap-2 animate-fade-in",
             isHeadless
