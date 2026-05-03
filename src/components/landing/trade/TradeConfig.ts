@@ -575,7 +575,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Murray house — shelf installation, tap repair, and door hanging",
     seoTitle: "revamo for Handymen — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Handymen use revamo to create multi-task quotes, schedule jobs, track expenses, and invoice clients automatically. Free 30-day trial.",
+      "Handymen use revamo to create multi-task quotes, schedule jobs, and invoice clients automatically. Free 30-day trial.",
     objections: [
       { objection: "My jobs are all different", response: "That's revamo's strength — voice-quote any type of work. No templates needed." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote shelves, tap, and door for Murray.' revamo AI builds a multi-line quote." },
