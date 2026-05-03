@@ -1,17 +1,37 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { EMAIL_FROM_DOMAIN as FROM_DOMAIN, EMAIL_SENDER_DOMAIN as SENDER_DOMAIN } from "../_shared/email-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-import { EMAIL_FROM_DOMAIN as FROM_DOMAIN, EMAIL_SENDER_DOMAIN as SENDER_DOMAIN } from "../_shared/email-config.ts";
 
 const VALID_CATEGORIES = [
   "materials", "equipment", "vehicle", "fuel", "tools",
   "subcontractor", "insurance", "office", "utilities",
   "marketing", "travel", "meals", "other",
 ];
+
+// Verify Mailgun webhook signature: HMAC-SHA256(timestamp + token) with signing key
+async function verifyMailgunSignature(timestamp: string, token: string, signature: string, signingKey: string): Promise<boolean> {
+  if (!timestamp || !token || !signature) return false;
+  // Reject stale (>5 min) to prevent replay
+  const ageSec = Math.abs(Math.floor(Date.now() / 1000) - parseInt(timestamp, 10));
+  if (!Number.isFinite(ageSec) || ageSec > 300) return false;
+
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(signingKey),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, enc.encode(timestamp + token));
+  const expected = Array.from(new Uint8Array(mac)).map(b => b.toString(16).padStart(2, "0")).join("");
+  // constant-time-ish compare
+  if (expected.length !== signature.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  return diff === 0;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -24,23 +44,64 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const body = await req.json();
-    const { from: senderEmail, to: recipientEmail, subject, text: textBody, html: htmlBody } = body;
+    // Parse payload — support both Mailgun multipart/form-encoded and JSON (legacy/manual test)
+    const contentType = req.headers.get("content-type") || "";
+    let senderEmail = "", recipientEmail = "", subject = "", textBody = "", htmlBody = "";
+    let isMailgun = false;
 
-    console.log(`Processing expense email from: ${senderEmail}, subject: ${subject}`);
+    if (contentType.includes("multipart/form-data") || contentType.includes("application/x-www-form-urlencoded")) {
+      isMailgun = true;
+      const form = await req.formData();
+      const timestamp = String(form.get("timestamp") || "");
+      const token = String(form.get("token") || "");
+      const signature = String(form.get("signature") || "");
 
-    const toAddress = Array.isArray(recipientEmail) ? recipientEmail[0] : recipientEmail;
-    const toAddr = typeof toAddress === "string" ? toAddress : (toAddress?.address || "");
+      const signingKey = Deno.env.get("MAILGUN_WEBHOOK_SIGNING_KEY");
+      if (!signingKey) {
+        console.error("MAILGUN_WEBHOOK_SIGNING_KEY not configured");
+        return new Response("Server not configured", { status: 500, headers: corsHeaders });
+      }
+      const ok = await verifyMailgunSignature(timestamp, token, signature, signingKey);
+      if (!ok) {
+        console.warn("Mailgun signature verification failed");
+        return new Response("Invalid signature", { status: 401, headers: corsHeaders });
+      }
+
+      senderEmail = String(form.get("sender") || form.get("from") || "");
+      recipientEmail = String(form.get("recipient") || form.get("To") || "");
+      subject = String(form.get("subject") || form.get("Subject") || "");
+      textBody = String(form.get("body-plain") || form.get("stripped-text") || "");
+      htmlBody = String(form.get("body-html") || form.get("stripped-html") || "");
+    } else {
+      const body = await req.json();
+      senderEmail = body.from || body.sender || "";
+      recipientEmail = body.to || body.recipient || "";
+      subject = body.subject || "";
+      textBody = body.text || "";
+      htmlBody = body.html || "";
+    }
+
+    console.log(`Processing expense email (mailgun=${isMailgun}) from: ${senderEmail}, to: ${recipientEmail}, subject: ${subject}`);
+
+    const toAddr = typeof recipientEmail === "string" ? recipientEmail : "";
     const codeMatch = toAddr.match(/expenses\+([a-z0-9]+)@/i);
-    if (!codeMatch?.[1]) return new Response(JSON.stringify({ success: false, error: "Invalid forwarding address." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!codeMatch?.[1]) {
+      return new Response(JSON.stringify({ success: false, error: "Invalid forwarding address." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const forwardCode = codeMatch[1].toLowerCase();
-    const { data: profile } = await adminSupabase.from("profiles").select("id, team_id").eq("expense_forward_code", forwardCode).maybeSingle();
-    if (!profile?.team_id) return new Response(JSON.stringify({ success: false, error: "Forwarding code not recognised." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: profile } = await adminSupabase
+      .from("profiles").select("id, team_id")
+      .eq("expense_forward_code", forwardCode).maybeSingle();
+    if (!profile?.team_id) {
+      return new Response(JSON.stringify({ success: false, error: "Forwarding code not recognised." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-    const senderAddr = typeof senderEmail === "string" ? senderEmail : (senderEmail?.address || senderEmail?.[0]?.address || senderEmail?.[0] || "unknown");
+    const senderAddr = (senderEmail.match(/<([^>]+)>/)?.[1] || senderEmail || "unknown").trim();
     const emailContent = textBody || htmlBody?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || "";
-    if (!emailContent && !subject) return new Response(JSON.stringify({ success: false, error: "Empty email content" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!emailContent && !subject) {
+      return new Response(JSON.stringify({ success: false, error: "Empty email content" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const aiPrompt = `You are an expense parser for tradespeople. Extract expense details from this forwarded supplier invoice/receipt email.\n\nEmail subject: ${subject || "No subject"}\n\nEmail content:\n${emailContent.substring(0, 3000)}`;
 
@@ -62,14 +123,15 @@ Deno.serve(async (req) => {
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let parsed: any;
     if (toolCall?.function?.arguments) {
-      try { parsed = typeof toolCall.function.arguments === "string" ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments; } catch { throw new Error("Could not extract expense details"); }
+      parsed = typeof toolCall.function.arguments === "string" ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
     } else {
-      const aiText = aiData.choices?.[0]?.message?.content || "";
-      try { const jsonMatch = aiText.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, aiText]; parsed = JSON.parse(jsonMatch[1].trim()); } catch { throw new Error("Could not extract expense details"); }
+      throw new Error("Could not extract expense details");
     }
 
     const amount = typeof parsed.amount === "number" ? parsed.amount : parseFloat(String(parsed.amount || "0"));
-    if (!amount || amount <= 0) return new Response(JSON.stringify({ success: false, error: "No valid amount found" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!amount || amount <= 0) {
+      return new Response(JSON.stringify({ success: false, error: "No valid amount found" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const category = VALID_CATEGORIES.includes(parsed.category || "") ? parsed.category : "other";
     const description = (parsed.description || subject || "Email expense").substring(0, 200);
@@ -91,7 +153,7 @@ Deno.serve(async (req) => {
         const messageId = crypto.randomUUID();
         const confirmHtml = [
           '<div style="font-family:Manrope,sans-serif;max-width:500px;margin:0 auto;padding:20px;">',
-          '<h2 style="color:#00E6A0;margin-bottom:16px;">Expense Logged \u2705</h2>',
+          '<h2 style="color:#0D9488;margin-bottom:16px;">Expense Logged \u2705</h2>',
           "<p>Your forwarded invoice has been automatically added to your expenses:</p>",
           '<table style="width:100%;border-collapse:collapse;margin:16px 0;">',
           '<tr><td style="padding:8px 0;color:#64748b;">Description</td><td style="padding:8px 0;font-weight:bold;">' + description + "</td></tr>",
@@ -110,7 +172,6 @@ Deno.serve(async (req) => {
           payload: { message_id: messageId, to: senderAddr, from: `revamo Expenses <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `\u2705 Expense logged: ${description}`, html: confirmHtml, text: `Expense logged: ${description} - ${amount.toFixed(2)}`, purpose: "transactional", label: "expense-confirmation", queued_at: new Date().toISOString() },
         });
 
-        // Audit log entry
         await adminSupabase.from("comms_audit_log").insert({
           channel: "email", record_type: "expense_confirmation", record_id: expense.id,
           recipient: senderAddr, template: "expense-confirmation",
@@ -125,6 +186,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ success: true, expense_id: expense.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("Process expense email error:", err);
+    // Return 200 to Mailgun so it doesn't retry on parse errors; log captures it
     return new Response(JSON.stringify({ success: false, error: err instanceof Error ? err.message : "Internal error" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
