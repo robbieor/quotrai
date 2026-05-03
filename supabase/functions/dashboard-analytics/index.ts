@@ -502,48 +502,10 @@ Deno.serve(async (req) => {
 
     const insights = actionAlerts.map((a: any) => ({ id: a.id, type: a.severity === "critical" ? "warning" : a.severity === "warning" ? "info" : "success", message: a.message, cta: "View", href: a.href }));
 
-    // ── Subscription Covered metric ────────────────────────────────
-    // 3-tier launch pricing: Solo €29 · Crew €49 · Business €99.
-    // Extra seat €19/mo (Crew & Business only). revamo earns 2.9% on Stripe Connect payments.
-    const userId = claimsData.claims.sub as string;
-    const { data: callerProfile } = await supabase
-      .from("profiles")
-      .select("team_id")
-      .eq("id", userId)
-      .maybeSingle();
-    const callerTeamId = callerProfile?.team_id as string | undefined;
-
-    let memberCount = 1;
-    let tier = "crew";
-    if (callerTeamId) {
-      const [{ count }, { data: teamRow }] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("team_id", callerTeamId),
-        supabase.from("teams").select("subscription_tier, subscription_plan").eq("id", callerTeamId).maybeSingle(),
-      ]);
-      memberCount = Math.max(1, count || 1);
-      const rawTier = (teamRow?.subscription_tier || teamRow?.subscription_plan || "crew").toLowerCase();
-      if (["solo", "crew", "business", "pro"].includes(rawTier)) {
-        tier = rawTier === "pro" ? "crew" : rawTier; // legacy "pro" → Crew
-      }
-    }
-
-    const TIER_PRICES: Record<string, { base: number; included: number; extraSeat: number }> = {
-      solo:     { base: 29, included: 1, extraSeat: 0  }, // single-user only
-      crew:     { base: 49, included: 1, extraSeat: 19 },
-      business: { base: 99, included: 3, extraSeat: 19 },
-    };
-    const t = TIER_PRICES[tier] || TIER_PRICES.crew;
-    const extraSeats = Math.max(0, memberCount - t.included);
-    const subscriptionCost = t.base + extraSeats * t.extraSeat;
-
-    const platformFeeEarned = cashCollected * 0.029;
-    const percentCovered = subscriptionCost > 0 ? Math.round((platformFeeEarned / subscriptionCost) * 100) : 0;
-    const subscriptionCovered = { feeEarned: platformFeeEarned, subscriptionCost, percentCovered, memberCount, tier };
-
     const result = {
       metrics, controlHeader, kpi, actionAlerts, revenueChartData, jobStatusData, quoteFunnel,
       agingBuckets, agingInvoices, topCustomers, customerProfitability,
-      jobsAtRisk, invoicesAtRisk, revenueByJobType, subscriptionCovered,
+      jobsAtRisk, invoicesAtRisk, revenueByJobType,
       expensesByCategory,
       drillData: { activeJobs: activeJobsList, outstanding: outstandingList, pendingQuotes: pendingQuotesList, cashCollected: cashCollectedList, revenueInvoices: revenueInvoicesList, expenses: expensesDrillList },
       jobsDueThisWeek, overdueInvoices: overdueList, insights, healthInsights: [],

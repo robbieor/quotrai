@@ -197,7 +197,6 @@ export function useDashboardAnalytics() {
         jobsAtRisk: JobAtRisk[];
         invoicesAtRisk: InvoiceAtRisk[];
         revenueByJobType: RevenueByJobTypeData[];
-        subscriptionCovered: SubscriptionCoveredData;
         expensesByCategory: ExpenseCategoryBreakdown[];
         drillData: { activeJobs: any[]; outstanding: any[]; pendingQuotes: any[]; cashCollected: any[]; revenueInvoices: any[]; expenses: any[] };
         jobsDueThisWeek: any[];
