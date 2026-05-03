@@ -316,7 +316,7 @@ export default function Quotes() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
               "pl-9",
-              isMobile && "h-11 rounded-[22px] bg-[hsl(240,10%,96%)] border-0 focus-visible:ring-1"
+              isMobile && "h-11 rounded-[22px] bg-muted/50 border-0 focus-visible:ring-1"
             )}
           />
         </div>
