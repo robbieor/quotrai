@@ -197,15 +197,17 @@ export default function Jobs() {
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-[28px] font-bold tracking-[-0.02em]">Jobs</h1>
+          <h1 className="text-2xl md:text-[28px] font-bold tracking-[-0.02em]">Jobs</h1>
           <ReadOnlyGuard>
             {isMobile ? (
-              <button
+              <Button
+                size="sm"
                 onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }}
-                className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md"
+                className="h-9 gap-1.5"
               >
-                <Plus className="h-5 w-5" />
-              </button>
+                <Plus className="h-4 w-4" />
+                New
+              </Button>
             ) : (
               <Button onClick={() => { setSelectedJob(null); setFormDialogOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" />
