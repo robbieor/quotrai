@@ -57,6 +57,9 @@ const navGroups: NavGroup[] = [
 // Nav items that team-seat members (role=member) can see regardless of seat type
 const MEMBER_ALLOWED_IDS = ["jobs", "calendar", "time-tracking"];
 
+// On mobile, these IDs already appear in the bottom tab bar — hide from sidebar/More
+const MOBILE_TAB_IDS = ["dashboard", "jobs", "calendar", "tom"];
+
 export function AppSidebar() {
   const { profile } = useProfile();
   const { signOut } = useAuth();
@@ -64,6 +67,7 @@ export function AppSidebar() {
   const { canAccess } = useSeatAccess();
   const badges = useSidebarBadges();
   const { data: subscriptionV2 } = useSubscription();
+  const isMobile = useIsMobile();
 
   // Compute trial days remaining from V2 subscription
   const trialDaysRemaining = useMemo(() => {
