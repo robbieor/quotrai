@@ -278,17 +278,17 @@ export default function Quotes() {
         {/* === METRICS ROW === */}
         {isMobile ? (
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
-            <div className="min-w-[120px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-green-500">
+            <div className="min-w-[140px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-green-500">
               <p className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground font-medium">Pipeline</p>
-              <p className="text-[20px] font-bold tabular-nums text-primary mt-0.5">{formatCurrency(stats.pipelineValue)}</p>
+              <p className="text-[18px] leading-tight font-bold tabular-nums text-primary mt-0.5 truncate">{formatCurrency(stats.pipelineValue)}</p>
             </div>
             <div className="min-w-[120px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-blue-500">
               <p className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground font-medium">Acceptance</p>
-              <p className="text-[20px] font-bold tabular-nums text-blue-600 mt-0.5">{stats.acceptanceRate}%</p>
+              <p className="text-[18px] leading-tight font-bold tabular-nums text-blue-600 mt-0.5 truncate">{stats.acceptanceRate}%</p>
             </div>
-            <div className="min-w-[120px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-gray-400">
+            <div className="min-w-[140px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-gray-400">
               <p className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground font-medium">Avg Quote</p>
-              <p className="text-[20px] font-bold tabular-nums mt-0.5">{formatCurrency(stats.avgValue)}</p>
+              <p className="text-[18px] leading-tight font-bold tabular-nums mt-0.5 truncate">{formatCurrency(stats.avgValue)}</p>
             </div>
           </div>
         ) : (
