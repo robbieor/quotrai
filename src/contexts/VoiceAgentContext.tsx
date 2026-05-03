@@ -693,6 +693,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
             onModeChange: ({ mode }) => {
               if (currentAttemptRef.current !== attemptId) return;
               setIsSpeaking(mode === "speaking");
+              emitAgentThinking(mode === "thinking");
             },
             onStatusChange: ({ status: sdkStatus }) => {
               if (currentAttemptRef.current !== attemptId) return;
@@ -704,11 +705,14 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
                 const transcript = message.user_transcription_event.user_transcript;
                 addDebugEvent(`🗣️ User transcript: "${transcript.substring(0, 60)}"`);
                 updateDebug({ lastTranscript: transcript });
+                emitAgentTranscript("user", transcript);
                 saveMessage("user", transcript);
               }
               if (message.type === "agent_response" && message.agent_response_event?.agent_response) {
                 const response = message.agent_response_event.agent_response;
                 addDebugEvent(`🤖 Agent response: "${response.substring(0, 60)}"`);
+                emitAgentTranscript("agent", response);
+                emitAgentThinking(false);
                 saveMessage("assistant", response);
               }
               if (message.type === "conversation_initiation_metadata") {
