@@ -91,7 +91,7 @@ export function QuoteFunnelChart({ data, isLoading }: QuoteFunnelChartProps) {
             <p className="text-xs text-muted-foreground">Send Rate</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-green-600">
+            <p className="text-lg font-bold text-primary">
               {data.length >= 3 ? Math.round((data[2].count / (data[1].count || 1)) * 100) : 0}%
             </p>
             <p className="text-xs text-muted-foreground">Win Rate</p>

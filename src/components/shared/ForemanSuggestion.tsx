@@ -12,13 +12,13 @@ interface Suggestion {
 
 const variantStyles = {
   warning: "border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20",
-  success: "border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20",
+  success: "border-primary/30 bg-primary/10/50 dark:bg-primary/20",
   info: "border-primary/20 bg-primary/5",
 };
 
 const iconColors = {
   warning: "text-amber-600",
-  success: "text-emerald-600",
+  success: "text-primary",
   info: "text-primary",
 };
 

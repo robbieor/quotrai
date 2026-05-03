@@ -31,9 +31,9 @@ const notificationIcons: Record<string, React.ElementType> = {
 };
 
 const notificationColors: Record<string, string> = {
-  quote_accepted: "text-emerald-600 bg-emerald-50",
+  quote_accepted: "text-primary bg-primary/10",
   quote_declined: "text-red-600 bg-red-50",
-  payment_received: "text-emerald-600 bg-emerald-50",
+  payment_received: "text-primary bg-primary/10",
   invoice_sent: "text-violet-600 bg-violet-50",
   job_created: "text-blue-600 bg-blue-50",
   invoice_overdue: "text-red-600 bg-red-50",

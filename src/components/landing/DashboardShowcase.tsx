@@ -164,7 +164,7 @@ export function DashboardShowcase() {
     switch (status) {
       case "accepted":
       case "paid":
-        return "bg-green-500/10 text-green-600";
+        return "bg-primary/10 text-primary";
       case "sent":
       case "pending":
         return "bg-amber-500/10 text-amber-600";
@@ -188,11 +188,11 @@ export function DashboardShowcase() {
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-destructive/60" />
             <div className="w-3 h-3 rounded-full bg-amber-400" />
-            <div className="w-3 h-3 rounded-full bg-green-400" />
+            <div className="w-3 h-3 rounded-full bg-primary" />
           </div>
           <div className="flex-1 mx-4">
             <div className="bg-background rounded-md px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full bg-primary" />
               app.foreman.ie/{currentView === "tom" ? "foreman-ai" : currentView}
             </div>
           </div>
@@ -264,7 +264,7 @@ export function DashboardShowcase() {
                     </div>
                     <div className="text-lg font-bold text-foreground">{metric.value}</div>
                     <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <TrendingUp className="w-3 h-3 text-green-500" />
+                      <TrendingUp className="w-3 h-3 text-primary" />
                       {metric.trend}
                     </div>
                   </div>
@@ -302,9 +302,9 @@ export function DashboardShowcase() {
                           index < visibleActivities ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
                         }`}
                       >
-                        <div className={`mt-0.5 p-1 rounded-full ${activity.type === "success" ? "bg-green-500/10" : "bg-blue-500/10"}`}>
+                        <div className={`mt-0.5 p-1 rounded-full ${activity.type === "success" ? "bg-primary/10" : "bg-blue-500/10"}`}>
                           {activity.type === "success" ? (
-                            <CheckCircle2 className="w-3 h-3 text-green-600" />
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
                           ) : (
                             <Clock className="w-3 h-3 text-blue-600" />
                           )}
@@ -412,7 +412,7 @@ export function DashboardShowcase() {
                       <div className="text-right">
                         <p className="text-lg font-bold text-foreground">{invoice.amount}</p>
                         {invoice.status === "paid" && (
-                          <p className="text-xs text-green-600 mt-1">Paid {invoice.paidDate}</p>
+                          <p className="text-xs text-primary mt-1">Paid {invoice.paidDate}</p>
                         )}
                         {invoice.status === "overdue" && (
                           <button className="flex items-center gap-1 text-xs text-primary mt-1 ml-auto">

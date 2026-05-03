@@ -15,7 +15,7 @@ export function CommandResult({ title, items, link, linkLabel, onClear, onNaviga
     <div className="p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <HardHat className="h-4 w-4 text-emerald-600" />
+          <HardHat className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         </div>
         <button onClick={onClear} className="p-1 rounded-md hover:bg-muted text-muted-foreground">

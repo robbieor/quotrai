@@ -22,7 +22,7 @@ export function VoiceDebugPanel() {
   }
 
   const statusColor = (val: string) => {
-    if (val.includes("success") || val.includes("granted") || val === "connected" || val === "true") return "text-green-500";
+    if (val.includes("success") || val.includes("granted") || val === "connected" || val === "true") return "text-primary";
     if (val.includes("failed") || val.includes("denied") || val.includes("error") || val.includes("FAILED")) return "text-red-500";
     if (val.includes("pending") || val.includes("requesting") || val === "connecting" || val.includes("dialing")) return "text-yellow-500";
     return "text-muted-foreground";

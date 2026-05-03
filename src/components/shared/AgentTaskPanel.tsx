@@ -33,7 +33,7 @@ export function AgentTaskPanel() {
           <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />
         )}
         {activeTask.status === "success" && (
-          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
         )}
         {activeTask.status === "error" && (
           <div className="h-2.5 w-2.5 rounded-full bg-destructive" />

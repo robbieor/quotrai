@@ -79,7 +79,7 @@ export function WeekPlanningStrip() {
                   ? "border-2 border-dashed border-destructive/40 text-destructive/60"
                   : count >= 4
                     ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary"
               )}>
                 {count}
               </div>
@@ -88,7 +88,7 @@ export function WeekPlanningStrip() {
         })}
       </div>
       <div className="flex items-center gap-2 px-3 py-2 border-t border-border bg-muted/30">
-        <HardHat className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+        <HardHat className="h-3.5 w-3.5 text-primary shrink-0" />
         <p className="text-xs text-muted-foreground truncate">{aiLine}</p>
       </div>
     </div>

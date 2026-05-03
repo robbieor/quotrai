@@ -76,7 +76,7 @@ const categoryColors: Record<ExpenseCategory, string> = {
   insurance: "bg-indigo-500/10 text-indigo-500",
   office: "bg-gray-500/10 text-gray-500",
   utilities: "bg-cyan-500/10 text-cyan-500",
-  marketing: "bg-green-500/10 text-green-500",
+  marketing: "bg-primary/10 text-primary",
   travel: "bg-teal-500/10 text-teal-500",
   meals: "bg-amber-500/10 text-amber-500",
   other: "bg-muted text-muted-foreground",
@@ -298,7 +298,7 @@ export default function Expenses() {
                     
                     {momChange !== 0 && (
                       <span
-                        className={`text-[10px] flex items-center ${momChange > 0 ? "text-destructive" : "text-green-600"}`}
+                        className={`text-[10px] flex items-center ${momChange > 0 ? "text-destructive" : "text-primary"}`}
                       >
                         {momChange > 0 ? (
                           <TrendingUp className="h-3 w-3" />

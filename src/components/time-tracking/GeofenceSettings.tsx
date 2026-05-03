@@ -63,7 +63,7 @@ export function GeofenceSettings() {
           <div className="flex items-center justify-between p-4 rounded-lg border">
             <div className="flex items-center gap-3">
               {notificationPermission === 'granted' ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <CheckCircle2 className="h-5 w-5 text-primary" />
               ) : notificationPermission === 'denied' ? (
                 <XCircle className="h-5 w-5 text-destructive" />
               ) : (
@@ -86,7 +86,7 @@ export function GeofenceSettings() {
               </Button>
             )}
             {notificationPermission === 'granted' && (
-              <Badge variant="outline" className="bg-green-500/10 text-green-600">
+              <Badge variant="outline" className="bg-primary/10 text-primary">
                 Enabled
               </Badge>
             )}
@@ -116,7 +116,7 @@ export function GeofenceSettings() {
           {isMonitoring && (
             <div className="p-4 rounded-lg bg-muted">
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                 <span className="text-sm font-medium">Monitoring Active</span>
               </div>
               <p className="text-sm text-muted-foreground">

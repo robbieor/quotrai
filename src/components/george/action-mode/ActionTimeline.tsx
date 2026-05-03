@@ -9,7 +9,7 @@ interface ActionTimelineProps {
 const stepIcons: Record<ActionStepStatus, React.ReactNode> = {
   pending: <Clock className="h-3.5 w-3.5 text-muted-foreground" />,
   running: <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />,
-  complete: <Check className="h-3.5 w-3.5 text-emerald-600" />,
+  complete: <Check className="h-3.5 w-3.5 text-primary" />,
   failed: <AlertCircle className="h-3.5 w-3.5 text-destructive" />,
   awaiting_approval: <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />,
 };
@@ -17,7 +17,7 @@ const stepIcons: Record<ActionStepStatus, React.ReactNode> = {
 const stepLineColors: Record<ActionStepStatus, string> = {
   pending: "bg-muted-foreground/20",
   running: "bg-primary/40",
-  complete: "bg-emerald-500",
+  complete: "bg-primary",
   failed: "bg-destructive",
   awaiting_approval: "bg-amber-400",
 };
@@ -49,7 +49,7 @@ export function ActionTimeline({ steps }: ActionTimelineProps) {
             <div
               className={cn(
                 "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border z-10",
-                step.status === "complete" && "bg-emerald-50 border-emerald-200",
+                step.status === "complete" && "bg-primary/10 border-primary/30",
                 step.status === "running" && "bg-primary/5 border-primary/30",
                 step.status === "failed" && "bg-destructive/5 border-destructive/30",
                 step.status === "awaiting_approval" && "bg-amber-50 border-amber-200",
@@ -63,7 +63,7 @@ export function ActionTimeline({ steps }: ActionTimelineProps) {
               <p
                 className={cn(
                   "text-sm leading-tight",
-                  step.status === "complete" && "text-emerald-700 font-medium",
+                  step.status === "complete" && "text-primary font-medium",
                   step.status === "running" && "text-foreground font-medium",
                   step.status === "failed" && "text-destructive font-medium",
                   step.status === "pending" && "text-muted-foreground"

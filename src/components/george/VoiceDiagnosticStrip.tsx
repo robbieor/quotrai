@@ -30,7 +30,7 @@ export function VoiceDiagnosticStrip() {
 
   const phaseColor =
     status === "connected"
-      ? "bg-green-500"
+      ? "bg-primary"
       : isConnecting || status === "connecting"
       ? "bg-yellow-500 animate-pulse"
       : lastError

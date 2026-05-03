@@ -57,7 +57,7 @@ export function PaymentTrackerSheet({ open, onOpenChange, invoice }: PaymentTrac
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-bold">{formatCurrency(invoiceTotal)}</span>
                 {isPaidInFull ? (
-                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                  <Badge className="bg-primary/10 text-primary border-primary/20">
                     Paid in Full
                   </Badge>
                 ) : totalPaid > 0 ? (

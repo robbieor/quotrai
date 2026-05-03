@@ -50,12 +50,12 @@ export function RevenueExpenseChart({ data, isLoading }: RevenueExpenseChartProp
         <div className="flex items-center gap-3">
           <div className="text-right flex items-center gap-2">
             {totalProfit >= 0 ? (
-              <TrendingUp className="h-5 w-5 text-green-500" />
+              <TrendingUp className="h-5 w-5 text-primary" />
             ) : (
               <TrendingDown className="h-5 w-5 text-red-500" />
             )}
             <div>
-              <p className={`text-xl font-bold ${totalProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <p className={`text-xl font-bold ${totalProfit >= 0 ? "text-primary" : "text-red-600"}`}>
                 {profitMargin}%
               </p>
               <p className="text-xs text-muted-foreground">Margin</p>

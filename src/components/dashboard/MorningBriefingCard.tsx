@@ -90,9 +90,9 @@ export function MorningBriefingCard() {
             <h2 className="text-base sm:text-lg font-bold text-foreground">
               {greeting}, {firstName} 👋
             </h2>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10">
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-medium text-green-600">revamo AI Online</span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-medium text-primary">revamo AI Online</span>
             </div>
           </div>
 

@@ -15,7 +15,7 @@ const activityIcons = {
 const activityColors = {
   job_created: "text-blue-600 bg-blue-50",
   invoice_sent: "text-violet-600 bg-violet-50",
-  payment_received: "text-emerald-600 bg-emerald-50",
+  payment_received: "text-primary bg-primary/10",
   quote_sent: "text-amber-600 bg-amber-50",
 };
 

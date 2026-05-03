@@ -29,7 +29,7 @@ import { safeFormatDate } from "@/lib/pdf/dateUtils";
 const quoteStatusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-500/10 text-blue-500",
-  accepted: "bg-green-500/10 text-green-500",
+  accepted: "bg-primary/10 text-primary",
   declined: "bg-red-500/10 text-red-500",
   expired: "bg-muted text-muted-foreground",
 };
@@ -37,7 +37,7 @@ const quoteStatusColors: Record<string, string> = {
 const invoiceStatusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   pending: "bg-yellow-500/10 text-yellow-500",
-  paid: "bg-green-500/10 text-green-500",
+  paid: "bg-primary/10 text-primary",
   overdue: "bg-red-500/10 text-red-500",
 };
 
@@ -159,8 +159,8 @@ export default function CustomerDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-500" />
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Paid</p>
@@ -317,8 +317,8 @@ export default function CustomerDashboard() {
                         className="flex items-center justify-between p-4 rounded-lg border"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                            <DollarSign className="h-5 w-5 text-green-500" />
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <DollarSign className="h-5 w-5 text-primary" />
                           </div>
                           <div>
                             <p className="font-medium">{formatCurrency(payment.amount)}</p>

@@ -13,7 +13,7 @@ import { safeFormatDate } from "@/lib/pdf/dateUtils";
 const statusColors = {
   draft: "bg-muted text-muted-foreground",
   pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800",
+  paid: "bg-primary/10 text-primary",
   overdue: "bg-red-100 text-red-800",
 };
 

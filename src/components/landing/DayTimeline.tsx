@@ -36,7 +36,7 @@ const timelineSteps = [
     title: "Quote Approved",
     description: "Customer approves via portal. Job automatically added to your schedule.",
     icon: CheckCircle,
-    color: "from-green-400 to-emerald-500",
+    color: "from-primary to-primary",
   },
   {
     time: "5:00 PM",

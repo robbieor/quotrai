@@ -124,7 +124,7 @@ export function GeorgeWelcome({ onQuickAction, isProcessing }: GeorgeWelcomeProp
     critical: AlertTriangle,
   };
   const statusColor: Record<string, string> = {
-    good: "text-green-500",
+    good: "text-primary",
     warning: "text-[hsl(36,91%,55%)]",
     critical: "text-destructive",
   };

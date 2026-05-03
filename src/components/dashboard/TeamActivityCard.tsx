@@ -23,7 +23,7 @@ const typeConfig = {
   job: { icon: Briefcase, className: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950" },
   invoice: { icon: Receipt, className: "text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-950" },
   quote: { icon: FileText, className: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950" },
-  payment: { icon: CreditCard, className: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950" },
+  payment: { icon: CreditCard, className: "text-primary bg-primary/10 dark:text-primary dark:bg-primary" },
 };
 
 export function TeamActivityCard() {
