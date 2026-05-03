@@ -158,7 +158,7 @@ export const TRADES: Record<string, TradeConfig> = {
     icon: Hammer,
     heroHeadline: "Your AI Office Manager. Built for Builders.",
     heroSub:
-      "From first-fix to final invoice — manage jobs, subcontractors, quotes, expenses, and client communication in one place. No office staff required.",
+      "From first-fix to final invoice — manage jobs, subcontractors, quotes, and client communication in one place. No office staff required.",
     painPoints: [
       { emoji: "📑", pain: "Tracking costs across multiple active sites", cost: "Margin leaks you can't see" },
       { emoji: "👷", pain: "Coordinating subcontractors without a shared schedule", cost: "Delays and finger-pointing" },
