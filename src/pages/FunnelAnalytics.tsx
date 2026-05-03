@@ -68,7 +68,7 @@ export default function FunnelAnalytics() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 overflow-x-hidden">
                 {steps.map((step, i) => {
                   const prevCount = i === 0 ? step.count : steps[i - 1].count;
                   const conversionRate = prevCount > 0 ? ((step.count / prevCount) * 100).toFixed(1) : "0";
@@ -83,8 +83,8 @@ export default function FunnelAnalytics() {
                         </div>
                       )}
                       <div
-                        className="flex items-center gap-3 rounded-xl border border-border p-4 transition-all"
-                        style={{ width: `${widthPercent}%`, minWidth: "200px" }}
+                        className="flex items-center gap-3 rounded-xl border border-border p-4 transition-all max-w-full"
+                        style={{ width: `${widthPercent}%`, minWidth: "min(200px, 100%)" }}
                       >
                         <step.icon className={`h-5 w-5 ${step.color} shrink-0`} />
                         <div className="flex-1 min-w-0">
