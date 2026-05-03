@@ -144,8 +144,13 @@ export function FloatingTomButton({ variant = "floating", open, onOpenChange }: 
 
       {isExpanded && !isConnected && !isConnecting && (
         <div
-          className="fixed inset-x-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-2 animate-fade-in"
-          style={{ bottom: isMobile ? 'calc(8.5rem + env(safe-area-inset-bottom, 0px))' : 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
+          className={cn(
+            "fixed z-50 flex flex-col gap-2 animate-fade-in",
+            isHeadless
+              ? "right-2 left-2 sm:left-auto sm:right-4 top-12"
+              : "inset-x-4 sm:left-auto sm:right-6"
+          )}
+          style={isHeadless ? { top: 'calc(2.5rem + env(safe-area-inset-top, 0px) + 0.25rem)' } : { bottom: isMobile ? 'calc(8.5rem + env(safe-area-inset-bottom, 0px))' : 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
         >
           {(georgeLoading || (hasVoiceAccess && canUseVoice)) && (
             <button
