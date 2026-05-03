@@ -67,7 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <main className="flex-1 overflow-auto safe-area-px">
-              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+3.5rem))] md:pt-6 pb-[calc(64px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-4 sm:space-y-6">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 pt-[max(0.75rem,calc(env(safe-area-inset-top,0px)+0.5rem))] md:pt-6 pb-[calc(64px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-4 sm:space-y-6">
                 {children}
               </div>
             </main>
