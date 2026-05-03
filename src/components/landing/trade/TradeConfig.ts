@@ -158,7 +158,7 @@ export const TRADES: Record<string, TradeConfig> = {
     icon: Hammer,
     heroHeadline: "Your AI Office Manager. Built for Builders.",
     heroSub:
-      "From first-fix to final invoice — manage jobs, subcontractors, quotes, expenses, and client communication in one place. No office staff required.",
+      "From first-fix to final invoice — manage jobs, subcontractors, quotes, and client communication in one place. No office staff required.",
     painPoints: [
       { emoji: "📑", pain: "Tracking costs across multiple active sites", cost: "Margin leaks you can't see" },
       { emoji: "👷", pain: "Coordinating subcontractors without a shared schedule", cost: "Delays and finger-pointing" },
@@ -417,7 +417,7 @@ export const TRADES: Record<string, TradeConfig> = {
     icon: Paintbrush,
     heroHeadline: "Your AI Office Manager. Built for Painters.",
     heroSub:
-      "Quote painting jobs room by room, schedule your diary, track expenses, and invoice clients — without spending your evenings on paperwork.",
+      "Quote painting jobs room by room, schedule your diary, and invoice clients — without spending your evenings on paperwork.",
     painPoints: [
       { emoji: "📐", pain: "Measuring rooms and calculating paint quantities", cost: "Over-ordering or running short" },
       { emoji: "🎨", pain: "Clients changing colour choices mid-job", cost: "Scope creep eats your margin" },
@@ -437,7 +437,7 @@ export const TRADES: Record<string, TradeConfig> = {
     segments: [
       { label: "Solo painter", hook: "Professional quotes that win you the job." },
       { label: "2–5 person crew", hook: "Schedule multiple sites and track your team." },
-      { label: "Growing business", hook: "Job costing, expenses, and accounting sync." },
+      { label: "Growing business", hook: "Job costing and accounting sync." },
     ],
     switchReasons: [
       { from: "Handwritten quotes", reason: "They don't look professional enough for high-end clients." },
@@ -575,7 +575,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Murray house — shelf installation, tap repair, and door hanging",
     seoTitle: "revamo for Handymen — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Handymen use revamo to create multi-task quotes, schedule jobs, track expenses, and invoice clients automatically. Free 30-day trial.",
+      "Handymen use revamo to create multi-task quotes, schedule jobs, and invoice clients automatically. Free 30-day trial.",
     objections: [
       { objection: "My jobs are all different", response: "That's revamo's strength — voice-quote any type of work. No templates needed." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote shelves, tap, and door for Murray.' revamo AI builds a multi-line quote." },
