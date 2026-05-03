@@ -1,65 +1,50 @@
-## Goal
+## Why this keeps happening
 
-1. Make the wordmark **lowercase "revamo"** everywhere it appears as visible/textual brand — UI, landing page, meta tags, page titles, alt text, AI/system copy, PDFs, app store strings.
-2. Remove the **"See Revamo in 60 seconds"** demo video section from the landing page (since the clip is outdated under the new branding).
+You say "it connects then drops immediately." That pattern almost always comes from one of three sources, and right now we can't see which because:
 
-Legal entity stays capitalized as **"Revamo Ltd"** (legal name in footer copyright, Terms/Privacy, structured data `creator.name`). Everything else becomes lowercase `revamo`.
+- The edge function logs for `elevenlabs-agent-token` and `george-webhook` show no recent traffic (so either the call isn't reaching the backend, or logs aren't being flushed).
+- The disconnect toast text on the published site isn't being captured anywhere we can read after the fact.
+- Every time you hit "Call" we mint a fresh ElevenLabs token (which counts as usage) before we even know if the agent is reachable.
 
-## Scope of replacements
+So step 1 is **stop bleeding credits while diagnosing**, step 2 is **find the actual reason**, step 3 is **fix it**.
 
-A grep for `Revamo` returns ~110 files. They fall into these buckets:
+## The 3 likely root causes (in order of probability)
 
-**Brand/UI surfaces — replace `Revamo` → `revamo`** (apply `font-manrope lowercase` where it's the visual wordmark, plain lowercase text elsewhere):
-- `index.html` — `<title>`, meta description, og:title/description, twitter, apple-mobile-web-app-title, JSON-LD `name`/`description` (keep `Revamo Ltd` in `creator.name`)
-- `public/manifest.json` — `name`, `short_name`
-- `src/config/brand.ts` — `name: "revamo"`, `fullName: "revamo AI"`, keep `legalEntity: "Revamo Ltd"`
-- `src/components/shared/SEOHead.tsx` — title suffix and `og:site_name`
-- All landing components (`HeroSection`, `SolutionSection`, `ForemanAISection`, `OutcomesSection`, `DifferentiatorsSection`, `SocialProofSection`, `BeforeAfter*`, `DashboardShowcase`, `DayTimeline`, `Testimonials`, `ROICalculator`, `trade/*`)
-- `src/pages/Landing.tsx` footer `© {year} revamo`, alt text
-- All `src/pages/*` pages (Pricing, Login, Signup, ResetPassword, Settings, etc.)
-- All sidebar/layout components (`AppSidebar`, `ActiveCallBar`, `FloatingTomButton`, `PwaInstallBanner`)
-- All settings/billing components, onboarding modals, pricebook flows
-- AI chat surfaces (`Revamo AI` → `revamo AI`): `George*` components, `ForemanAISettings`, `AgentWorkingPanel`, `LiveActionFeed`, `LiveActionOverlay`, `MorningBriefingCard`, `Ask`, `Briefing`, `GeorgeCapabilities`, `AIAuditHistory`, `Automations`, `Industries`, `RequestAccess`, `VoiceUsage`, `SubscriptionConfirmed`, `VerifyEmail`
-- AI hooks/system prompts that emit visible strings (`useForemanChat`, `useElevenLabsAgent`, `useUpgradePrompts`, `useVoiceFailureHandler`, `useToggleGeorgeVoice`, `useSubscriptionTier`, `useAddressAutocomplete`, `agentRegistry`, `slashCommandParser`, `demoWalkthrough`, `foreman-actions` types) — lowercase user-facing strings; system prompt text describing identity says "you are revamo"
-- `src/lib/pdf/pdfBranding.ts` — PDF footer/branding text
-- `src/main.tsx` — any console banner / document.title
-- `src/pages/AppStoreAssets.tsx` — preview strings
-- Remotion scenes (`Scene2`–`Scene7`) — wordmark text in the demo video source (not re-rendered now, but kept consistent)
+1. **ElevenLabs API key missing the `convai_write` / "ElevenAgents: Write" scope** — your own memory note flags this exact constraint. A key without it gets a token, connects briefly, then ElevenLabs closes the WebSocket with a permissions error.
+2. **Agent ID `agent_2701kffwpjhvf4gvt2cxpsx6j3rb` no longer exists** in your ElevenLabs workspace, or was rotated. Same symptom: token issues OK, WS connects, then closes with `agent_not_found` / 1008.
+3. **Insufficient ElevenLabs credits / billing block** on the ElevenLabs side. Token endpoint succeeds, WS closes immediately with a "payment issue" message — your `onDisconnect` already extracts `d.message` for this.
 
-**Wordmark styling rule** — wherever it's the literal logo/wordmark (sidebar, nav, footer, hero, login/signup headings, PDF header), wrap as `<span className="font-manrope lowercase">revamo</span>`. Body-copy mentions of the brand stay in `font-inter` lowercase plain text.
+## Plan
 
-**Do NOT change**:
-- `Revamo Ltd` legal entity in copyright lines, Terms, Privacy, JSON-LD `creator.name`, app store legal strings
-- `revamo.ai` domain (already lowercase)
-- Capacitor bundle IDs, file paths, asset filenames, variable/component names
-- `.lovable/**`, `mem://**`, `README.md`, `docs/**` (internal/dev docs)
-- Edge function code (server-side strings users don't see). Email subjects/sender names will be reviewed in a follow-up once DNS for `revamo.ai` email is verified.
+### Phase 1 — Pre-flight check (no credits spent)
 
-## Demo video removal
+Add a one-shot **diagnostics endpoint** `voice-preflight` that runs server-side only and returns:
+- Is `ELEVENLABS_API_KEY` set
+- `GET /v1/user` → confirms key is valid + returns subscription tier + remaining character quota
+- `GET /v1/convai/agents/{agentId}` → confirms the hardcoded agent still exists and key has access
+- `GET /v1/user/subscription` → flags if conversational AI minutes are exhausted
 
-In `src/pages/Landing.tsx`:
-- Remove the `<DemoVideoSection />` render between `HeroSection` and `ProblemSection`.
-- Remove its import.
+Surface this in **Settings → Voice → Diagnostics** with a "Run check" button. Until all three pass, the main "Call" button shows the specific failure ("ElevenLabs key missing convai_write scope" / "Agent not found" / "ElevenLabs credits exhausted") instead of letting you tap and burn a token.
 
-Leave `src/components/landing/DemoVideoSection.tsx` on disk (unreferenced) so it can be re-enabled later with new footage. Note this in the commit message.
+### Phase 2 — Capture the real disconnect reason
 
-## Execution approach
+Persist the last 10 voice attempts (timestamp, phase reached, disconnect `reason` / `closeCode` / `message`) into a `voice_session_logs` table written from `onDisconnect`. Then in Settings → Voice we can see exactly what the SDK reported on each failed call. This is the only way to stop guessing.
 
-1. Run a sed pass per file bucket to replace standalone `Revamo` → `revamo` (case-sensitive, word-boundaried), excluding the protected strings (`Revamo Ltd`).
-2. Manually fix:
-   - `brand.ts` constants
-   - `index.html` title/meta/JSON-LD
-   - `manifest.json`
-   - `SEOHead.tsx` title formatting
-   - `Landing.tsx` (also remove DemoVideoSection)
-   - Wordmark spans that need `font-manrope lowercase` styling added in places where they currently render `Revamo` as plain text but should look like the logo (sidebar already done; check Pricing/Login/Signup/Settings headers)
-3. Spot-check with `grep -n "Revamo" --exclude-dir=node_modules` — only `Revamo Ltd` and ignored paths should remain.
-4. Update `mem://index.md` Core rule note: "Wordmark is lowercase `revamo` in Manrope; legal entity remains `Revamo Ltd`."
+### Phase 3 — Fix based on what diagnostics reports
 
-## Out of scope (call out, don't change)
+Most likely fixes (we'll do whichever applies, not all):
+- **Scope problem** → I'll prompt you to rotate the key with `convai_write` enabled and re-add it.
+- **Agent ID drift** → move agent ID from hardcoded constant to a project secret `ELEVENLABS_AGENT_ID`, default to current value, and document where to update it.
+- **Billing/credits** → show a clear "ElevenLabs account out of minutes" banner instead of a generic "Disconnected" toast.
 
-- Email sender domain still `foreman.ie` until DNS verified for `revamo.ai`
-- Capacitor bundle ID `ie.foreman.app` (would break store listings)
-- The actual demo video file `/public/foreman-demo.mp4` — left in place; can be deleted or replaced when new video is recorded
+### Phase 4 — Stop the credit bleed regardless
 
-Reply **go** to apply.
+- Disable the "Call" button until preflight has passed at least once per session (cached for 5 min).
+- Skip minting a token if preflight failed in the last 60 s.
+- The voice top-up / usage counter only increments after `onConnect` fires (not on token mint).
+
+## What I need from you
+
+Reply **"go"** and I'll switch to build mode and ship Phase 1 + Phase 2 first (pure diagnostics, zero behavioural risk). Once we see what the preflight + session log says, Phase 3 is a 5-minute targeted fix.
+
+If you'd rather skip diagnostics and just want me to **rotate the ElevenLabs key with full scopes right now**, say "rotate key" and I'll request the new secret immediately — that fixes ~70% of cases like this.

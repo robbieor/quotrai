@@ -1,6 +1,7 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { VoiceUsageDashboard } from "@/components/george/VoiceUsageDashboard";
+import { VoiceDiagnostics } from "@/components/settings/VoiceDiagnostics";
 
 export default function VoiceUsage() {
   return (
@@ -11,7 +12,8 @@ export default function VoiceUsage() {
           <p className="text-muted-foreground text-sm">
             Track your revamo AI voice minutes, purchase history, and top up when needed.
           </p>
-          <div className="pt-4">
+          <div className="pt-4 space-y-6">
+            <VoiceDiagnostics />
             <VoiceUsageDashboard />
           </div>
         </div>
