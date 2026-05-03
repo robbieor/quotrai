@@ -417,7 +417,7 @@ export const TRADES: Record<string, TradeConfig> = {
     icon: Paintbrush,
     heroHeadline: "Your AI Office Manager. Built for Painters.",
     heroSub:
-      "Quote painting jobs room by room, schedule your diary, track expenses, and invoice clients — without spending your evenings on paperwork.",
+      "Quote painting jobs room by room, schedule your diary, and invoice clients — without spending your evenings on paperwork.",
     painPoints: [
       { emoji: "📐", pain: "Measuring rooms and calculating paint quantities", cost: "Over-ordering or running short" },
       { emoji: "🎨", pain: "Clients changing colour choices mid-job", cost: "Scope creep eats your margin" },
