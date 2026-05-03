@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Phone, PhoneOff, X, FileText, Receipt, Briefcase, DollarSign, Calendar, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
