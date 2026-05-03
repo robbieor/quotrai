@@ -8,7 +8,7 @@ import { TrialCountdownPopup } from "@/components/billing/TrialCountdownPopup";
 import { FloatingTomButton } from "./FloatingTomButton";
 import { ActiveCallBar } from "./ActiveCallBar";
 import { AgentTaskPanel } from "@/components/shared/AgentTaskPanel";
-import { MobileNavWheel } from "./MobileNavWheel";
+import { MobileTabBar } from "./MobileTabBar";
 import { CommandBar, useCommandBar } from "@/components/command/CommandBar";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { cn } from "@/lib/utils";
