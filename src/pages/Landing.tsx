@@ -166,8 +166,6 @@ export default function Landing() {
       {/* Section 1: Hero */}
       <HeroSection formatPrice={formatPrice} onTryDemo={() => setDemoOpen(true)} />
 
-      {/* Demo Video */}
-      <DemoVideoSection />
       {/* Section 2: Problem */}
       <ProblemSection />
 
