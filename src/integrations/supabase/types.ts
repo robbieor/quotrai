@@ -5708,6 +5708,54 @@ export type Database = {
           },
         ]
       }
+      voice_session_logs: {
+        Row: {
+          attempt_id: string | null
+          close_code: number | null
+          connected: boolean
+          created_at: string
+          duration_ms: number | null
+          id: string
+          message: string | null
+          phase_reached: string | null
+          raw_details: Json | null
+          reason: string | null
+          team_id: string | null
+          transport: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          close_code?: number | null
+          connected?: boolean
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          message?: string | null
+          phase_reached?: string | null
+          raw_details?: Json | null
+          reason?: string | null
+          team_id?: string | null
+          transport?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string | null
+          close_code?: number | null
+          connected?: boolean
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          message?: string | null
+          phase_reached?: string | null
+          raw_details?: Json | null
+          reason?: string | null
+          team_id?: string | null
+          transport?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       winback_queue: {
         Row: {
           cancelled: boolean
