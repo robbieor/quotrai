@@ -120,7 +120,7 @@ export default function Customers() {
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search customers..."
-            className={isMobile ? "pl-10 h-11 rounded-[22px] bg-[hsl(240,10%,96%)]" : "pl-9"}
+            className={isMobile ? "pl-10 h-11 rounded-[22px] bg-muted/50" : "pl-9"}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
