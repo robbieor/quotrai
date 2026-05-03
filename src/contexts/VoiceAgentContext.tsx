@@ -602,6 +602,28 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
               // billing state from being reused).
               cachedTokenRef.current = null;
 
+              // Persist a record of this disconnect so we can diagnose
+              // "connect-then-drop" patterns from Settings → Voice diagnostics.
+              void (async () => {
+                try {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) return;
+                  await supabase.from("voice_session_logs").insert({
+                    user_id: user.id,
+                    attempt_id: String(attemptId),
+                    phase_reached: phaseRef.current,
+                    transport: ("signedUrl" in sessionOpts ? "websocket" : "webrtc"),
+                    connected: !wasConnecting,
+                    close_code: typeof d.closeCode === "number" ? d.closeCode : null,
+                    reason: typeof d.reason === "string" ? d.reason.slice(0, 200) : null,
+                    message: reasonMsg.slice(0, 500),
+                    raw_details: details ? (details as any) : null,
+                  });
+                } catch {
+                  // logging is best-effort
+                }
+              })();
+
               if (wasConnecting) {
                 setPhase("failed");
                 toast.error("Voice disconnected", {
