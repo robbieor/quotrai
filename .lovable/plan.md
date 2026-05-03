@@ -1,91 +1,60 @@
-# Rename: Revamo → Revamo
+# Align codebase with revamo.ai custom domain
 
-## Scope
+You're connecting `revamo.ai` as a custom domain in **Project Settings → Domains** (manual step — I can't do that from code). This plan flips every remaining code-side reference so the app is consistent the moment DNS verifies.
 
-Total: 198 files contain "Revamo". This rename does **all user-visible and AI-visible** strings, but explicitly defers a few items that have non-code consequences (bundle IDs, App Store records, DNS).
+## What changes
 
-### What changes (in this pass)
+### 1. Brand config — `src/config/brand.ts`
+Two stale fields still point at the old domain:
+- `supportEmail`: `support@foreman.ie` → `support@revamo.ai`
+- `domain`: `foreman.ie` → `revamo.ai`
 
-**Brand core (1 file, drives most UI):**
-- `src/config/brand.ts` — name, fullName, supportEmail, domain, urls.landing
-  - `name`: "Revamo"
-  - `fullName`: "Revamo AI"
-  - `tagline`: kept neutral — "The AI Operating System for Field Service" stays for now (you can change later without code work)
-  - `supportEmail`: `support@revamo.ai`
-  - `domain`: `revamo.ai`
-  - `urls.landing`: `https://revamo.ai`
+`urls.landing` is already `https://revamo.ai`. Good.
 
-**PWA + HTML shell:**
-- `public/manifest.json` — name, short_name → "Revamo"
-- `index.html` — `<title>`, meta tags, OG tags
+### 2. README — `README.md`
+Top-line still says "Quotr" and references "Revamo AI" with mixed branding. Rewrite the title, intro, and the `git clone … cd quotr` example to use Revamo. Keep the iOS/Android setup steps unchanged.
 
-**SEO defaults:**
-- `src/components/shared/SEOHead.tsx` — `BASE_URL` → `https://revamo.ai`, default title suffix
-- All page-level `<SEOHead>` calls that hardcode "Revamo" (~20 pages)
+### 3. Email sender domain (edge functions)
+~15 edge functions hardcode `foreman.ie` / `notify.foreman.ie` as the sender. These should NOT flip until your DNS for `revamo.ai` is verified for email (SPF/DKIM/DMARC), otherwise sends will silently fail or go to spam.
 
-**AI personality & prompts (this is where renames usually break):**
-- `mem://user/foreman-ai-personality` — rewrite the personality memory; keep the Insight→Impact→Action structure but drop "Irish foreman" framing in favour of a neutral assistant voice (or "Revamo assistant"). I'll surface the new copy in the plan-approval step before writing.
-- All edge functions in `supabase/functions/**` that reference "Revamo" in system prompts (~44 files) — replace product name only, leave behaviour identical.
-- `src/lib/foremanToolList.ts`, `src/hooks/useForemanChat.ts`, `useForemanMemory.ts` etc. — **filenames stay** (renaming file paths breaks too many imports for marginal value); only **string contents** change. Internal var names like `foremanChat` also stay — users never see them.
-
-**UI components & pages (~108 files):**
-- All visible strings: headings, button labels, tooltips, empty states, toasts, dialog titles
-- Replace "Revamo AI" → "Revamo AI", "Revamo" → "Revamo", "revamo.ai" → "revamo.ai"
-
-**Assets:**
-- `src/assets/foreman-logo.png` and `foreman-unicorn.png` — **kept as-is**, not renamed. You'll want to upload a new logo separately; that's a 2-minute job once you have artwork. Until then the existing logo file is referenced by import path; renaming it would force 30+ import updates with zero user benefit.
-- `<img alt="Revamo">` strings → `alt="Revamo"`
-
-**Email templates:**
-- `supabase/functions/_shared/email-templates/*` — sender name, subject lines, body copy
-- Sender domain stays `foreman.ie` in code-level config until you've set up `revamo.ai` DNS — see "Deferred" below
-
-**Docs:**
-- `docs/app-store-listing.md`, `docs/play-store-listing.md`, `docs/privacy-policy.md`, `docs/terms-of-service.md`, `README.md`, `.github/PULL_REQUEST_TEMPLATE.md`
-
-**Memory files:**
-- `mem://index.md` Core line referencing "Revamo Identity" → "Revamo Identity"
-- Personality memory rewritten as above
-
-### What is deferred (you decide when)
-
-These are intentionally **not** changed in this pass because they have external dependencies:
-
-1. **Capacitor bundle ID** (`ie.foreman.app` in `capacitor.config.ts`) — Once you upload to TestFlight or Play Console, this becomes immutable. If you've not uploaded yet, change it now; if you have, you'll lose your app record. Same for `appName: 'Revamo'`. Tell me your status and I'll either flip it or leave it.
-2. **GitHub Actions** (`.github/workflows/android-build.yml`) — references `ie.foreman.app` package name and `quotr-release.keystore` artifact. Coupled to bundle ID decision above.
-3. **Email sender domain** (`@foreman.ie`) — Stays until you've added `revamo.ai` DNS records (SPF, DKIM, DMARC) via the Lovable email setup flow. After DNS is verified, one edge-function string swap activates the new sender.
-4. **App Store / Play Store records** — These docs get rewritten in code, but the actual store submission is a manual upload step you do.
-5. **Custom domain** — `revamo.ai` → `revamo.ai` is a Project Settings → Domains action you take. The code is ready for it.
-
-## Verification (the part you don't trust me on)
-
-After the changes, I will run:
-
+**Decision point:** I'll add a single shared constant in `supabase/functions/_shared/email-config.ts`:
+```ts
+export const EMAIL_FROM_DOMAIN = "foreman.ie";       // flip after DNS verified
+export const EMAIL_SENDER_DOMAIN = "notify.foreman.ie";
 ```
-grep -ric "foreman" src/ public/ index.html supabase/functions/_shared docs/
+And refactor the ~15 functions to import from it. **One-line flip later** when you confirm `revamo.ai` email DNS is live, instead of grepping 15 files.
+
+### 4. Capacitor — `capacitor.config.ts`
+Currently `appId: 'ie.foreman.app'`, `appName: 'Foreman'`. **Not changing in this pass** — bundle ID is App Store / Play Store immutable once submitted. You confirm whether you've submitted; if not, separate task.
+
+### 5. SPA routing & redirects
+Nothing to do. Lovable hosting handles SPA fallback automatically. App uses `BrowserRouter` (verified). `revamo.ai` → primary, `www.revamo.ai` → redirect is configured in the Lovable Domains UI, not in code. No `_redirects` / `vercel.json` / `netlify.toml` needed (and they wouldn't work on Lovable anyway).
+
+### 6. SEO
+`index.html` and `src/components/shared/SEOHead.tsx` already use `https://revamo.ai`. Verified — no changes needed.
+
+### 7. PWA — `public/manifest.json`
+Already says "Revamo". Verified — no changes needed.
+
+## Verification
+
+After the edits, I'll run:
 ```
+rg -ic "foreman\.ie|foreman\.world|@foreman" src/ supabase/functions/ docs/ index.html public/ README.md
+```
+Expected: zero hits **outside** the new shared `email-config.ts` constants (which intentionally still hold `foreman.ie` until you green-light the email DNS flip).
 
-The expected result, **excluding** these allowlisted occurrences, is **zero**:
-- File paths/imports containing `foreman` (e.g. `useForemanChat.ts`) — internal only
-- Internal variable names — not user-facing
-- Asset filenames `foreman-logo.png`, `foreman-unicorn.png`
-- The deferred items above (`capacitor.config.ts`, GitHub workflow, email sender)
+## What you do (parallel to me)
 
-I will paste the grep output into the response so you can audit it yourself. If anything user-visible slips through, I fix it before declaring done.
+1. Project Settings → Domains → Connect `revamo.ai` and `www.revamo.ai`
+2. Add the A + TXT records at your registrar (Lovable shows exact values)
+3. Publish the project (Publish button → Update)
+4. When DNS for email is also verified on `revamo.ai`, tell me and I do the one-line `EMAIL_FROM_DOMAIN` flip
 
-## Memory updates
+## Out of scope (separate tasks if you want them)
 
-- Update Core line in `mem://index.md`: "Revamo Identity" → "Revamo Identity" (visual tokens unchanged: dark navy, primary green, Inter)
-- Rewrite `mem://user/foreman-ai-personality` (or rename to `revamo-ai-personality`) with neutral product voice
-- Add new memory: `mem://brand/rename-history` noting the Revamo→Revamo rename date and what was deferred, so future agents don't get confused by lingering `foreman.ie` references in deferred areas
+- Capacitor bundle ID `ie.foreman.app` → `ai.revamo.app` (depends on App Store status)
+- GitHub Actions workflows referencing `ie.foreman.app`
+- Renaming asset filenames (`foreman-logo.png`) — purely cosmetic, breaks no UX
 
-## Out of scope (will not touch unless you ask)
-
-- Database column names, table names, RPC function names containing "foreman" (none found, but flagging)
-- The `quotr` legacy references already in the codebase (separate cleanup)
-- Logo artwork — needs your design input
-- Trademark filing for "Revamo"
-
-## Approve to proceed
-
-Reply "go" and I switch to build mode and execute. I'll commit only when the grep verification passes.
+Reply "go" to execute.
