@@ -12,21 +12,19 @@ const VALID_CATEGORIES = [
   "marketing", "travel", "meals", "other",
 ];
 
-// Verify Mailgun webhook signature: HMAC-SHA256(timestamp + token) with signing key
-async function verifyMailgunSignature(timestamp: string, token: string, signature: string, signingKey: string): Promise<boolean> {
-  if (!timestamp || !token || !signature) return false;
-  // Reject stale (>5 min) to prevent replay
+// Verify Cloudflare Worker HMAC signature: HMAC-SHA256(timestamp + "." + rawBody) with shared secret
+async function verifyWorkerSignature(rawBody: string, timestamp: string, signature: string, secret: string): Promise<boolean> {
+  if (!timestamp || !signature || !secret) return false;
   const ageSec = Math.abs(Math.floor(Date.now() / 1000) - parseInt(timestamp, 10));
   if (!Number.isFinite(ageSec) || ageSec > 300) return false;
 
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    "raw", enc.encode(signingKey),
+    "raw", enc.encode(secret),
     { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
   );
-  const mac = await crypto.subtle.sign("HMAC", key, enc.encode(timestamp + token));
+  const mac = await crypto.subtle.sign("HMAC", key, enc.encode(`${timestamp}.${rawBody}`));
   const expected = Array.from(new Uint8Array(mac)).map(b => b.toString(16).padStart(2, "0")).join("");
-  // constant-time-ish compare
   if (expected.length !== signature.length) return false;
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
@@ -44,44 +42,35 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Parse payload — support both Mailgun multipart/form-encoded and JSON (legacy/manual test)
-    const contentType = req.headers.get("content-type") || "";
+    // Cloudflare Worker posts JSON with HMAC headers. Verify signature on raw body.
+    const rawBody = await req.text();
+    const ts = req.headers.get("x-revamo-timestamp") || "";
+    const sig = req.headers.get("x-revamo-signature") || "";
+    const secret = Deno.env.get("INBOUND_EMAIL_SHARED_SECRET");
+    if (!secret) {
+      console.error("INBOUND_EMAIL_SHARED_SECRET not configured");
+      return new Response("Server not configured", { status: 500, headers: corsHeaders });
+    }
+    const ok = await verifyWorkerSignature(rawBody, ts, sig, secret);
+    if (!ok) {
+      console.warn("Inbound email signature verification failed");
+      return new Response("Invalid signature", { status: 401, headers: corsHeaders });
+    }
+
     let senderEmail = "", recipientEmail = "", subject = "", textBody = "", htmlBody = "";
-    let isMailgun = false;
-
-    if (contentType.includes("multipart/form-data") || contentType.includes("application/x-www-form-urlencoded")) {
-      isMailgun = true;
-      const form = await req.formData();
-      const timestamp = String(form.get("timestamp") || "");
-      const token = String(form.get("token") || "");
-      const signature = String(form.get("signature") || "");
-
-      const signingKey = Deno.env.get("MAILGUN_WEBHOOK_SIGNING_KEY");
-      if (!signingKey) {
-        console.error("MAILGUN_WEBHOOK_SIGNING_KEY not configured");
-        return new Response("Server not configured", { status: 500, headers: corsHeaders });
-      }
-      const ok = await verifyMailgunSignature(timestamp, token, signature, signingKey);
-      if (!ok) {
-        console.warn("Mailgun signature verification failed");
-        return new Response("Invalid signature", { status: 401, headers: corsHeaders });
-      }
-
-      senderEmail = String(form.get("sender") || form.get("from") || "");
-      recipientEmail = String(form.get("recipient") || form.get("To") || "");
-      subject = String(form.get("subject") || form.get("Subject") || "");
-      textBody = String(form.get("body-plain") || form.get("stripped-text") || "");
-      htmlBody = String(form.get("body-html") || form.get("stripped-html") || "");
-    } else {
-      const body = await req.json();
+    try {
+      const body = JSON.parse(rawBody);
       senderEmail = body.from || body.sender || "";
       recipientEmail = body.to || body.recipient || "";
       subject = body.subject || "";
       textBody = body.text || "";
       htmlBody = body.html || "";
+    } catch {
+      return new Response(JSON.stringify({ success: false, error: "Invalid JSON body" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    console.log(`Processing expense email (mailgun=${isMailgun}) from: ${senderEmail}, to: ${recipientEmail}, subject: ${subject}`);
+    console.log(`Processing expense email from: ${senderEmail}, to: ${recipientEmail}, subject: ${subject}`);
+
 
     const toAddr = typeof recipientEmail === "string" ? recipientEmail : "";
     const codeMatch = toAddr.match(/expenses\+([a-z0-9]+)@/i);
