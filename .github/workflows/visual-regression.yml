@@ -1,9 +1,10 @@
 name: Visual regression
 
+# Runs on demand only. Snapshot baselines aren't committed yet, so running this
+# on every push/PR fails noisily. Trigger manually from the Actions tab once
+# baselines exist (see e2e/README.md → `bun run test:visual:update`).
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   playwright:
