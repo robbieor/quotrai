@@ -23,11 +23,11 @@ export function ForemanAvatar({ size = "md", className }: ForemanAvatarProps) {
     <div
       className={cn(
         container,
-        "rounded-full bg-[#0F172A] flex items-center justify-center shrink-0",
+        "rounded-full bg-sidebar flex items-center justify-center shrink-0",
         className
       )}
     >
-      <HardHat size={icon} className="text-[#059669]" />
+      <HardHat size={icon} className="text-primary" />
     </div>
   );
 }
