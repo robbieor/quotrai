@@ -223,21 +223,21 @@ export default function Quotes() {
 
         {/* === HEADER === */}
         {isMobile ? (
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-[28px] font-bold tracking-[-0.02em]">Quotes</h1>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold tracking-[-0.02em]">Quotes</h1>
               <p className="text-[13px] text-muted-foreground mt-0.5">
                 {quotes?.length?.toLocaleString() ?? "—"} quotes
               </p>
             </div>
             <ReadOnlyGuard>
-              <button
-                onClick={handleNewQuote}
-                className="h-11 w-11 rounded-full bg-primary flex items-center justify-center shadow-md"
-              >
-                <Plus className="h-5 w-5 text-white" />
-              </button>
+              <Button size="sm" onClick={handleNewQuote} className="h-9 gap-1.5">
+                <Plus className="h-4 w-4" />
+                New
+              </Button>
             </ReadOnlyGuard>
+          </div>
+        ) : null}
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
