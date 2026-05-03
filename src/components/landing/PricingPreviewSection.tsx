@@ -1,36 +1,21 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2,
   ArrowRight,
-  Calculator,
   TrendingUp,
 } from "lucide-react";
-import { ALL_TIERS, PRICING, type TierDetails } from "@/hooks/useSubscriptionTier";
+import { ALL_TIERS, type TierDetails } from "@/hooks/useSubscriptionTier";
 
 interface PricingPreviewSectionProps {
   formatPrice: (eur: number, decimals?: number) => string;
 }
 
-const PLATFORM_FEE = PRICING.PLATFORM_FEE / 100;
-
 export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProps) {
   const [billing, setBilling] = useState<"month" | "year">("year");
-  const [monthlyInvoice, setMonthlyInvoice] = useState(5000);
 
   const isAnnual = billing === "year";
-
-  // Earn-back calculator pegged to Crew tier (the recommended plan)
-  const crew = ALL_TIERS.find((t) => t.id === "crew")!;
-  const crewMonthlyEquiv = isAnnual ? crew.annual / 12 : crew.monthly;
-  const platformEarnings = monthlyInvoice * PLATFORM_FEE;
-  const coveragePercent = Math.min((platformEarnings / crewMonthlyEquiv) * 100, 100);
-  const isFullyCovered = platformEarnings >= crewMonthlyEquiv;
-  const surplus = platformEarnings - crewMonthlyEquiv;
-  const breakeven = Math.ceil(crewMonthlyEquiv / PLATFORM_FEE);
 
   return (
     <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/30 border-y border-border">
@@ -39,7 +24,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
             <TrendingUp className="h-3.5 w-3.5" />
-            Software that pays for itself
+            Simple pricing
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-3">
             Pick the plan that runs your business.{" "}
@@ -48,7 +33,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
             </span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-base">
-            Three plans. No seat caps. The 2.9% platform fee on integrated payments earns most teams their subscription back inside a month.
+            Three plans. No seat caps. Pick the level of automation you want.
           </p>
         </div>
 
