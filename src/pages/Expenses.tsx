@@ -466,7 +466,7 @@ export default function Expenses() {
               ))}
             </div>
           ) : sortedData.length === 0 ? (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <EmptyState
                 icon={Receipt}
                 title={

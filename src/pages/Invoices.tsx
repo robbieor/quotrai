@@ -334,7 +334,7 @@ export default function Invoices() {
             <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         ) : sortedData.length === 0 ? (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <EmptyState
               icon={Receipt}
               title={searchQuery || statusFilter !== "all" ? "No invoices match your filters" : "Get paid faster with professional invoices"}

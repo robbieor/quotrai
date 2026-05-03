@@ -274,7 +274,7 @@ export default function Jobs() {
             ) : error ? (
               <div className="text-center py-12 text-destructive">Failed to load jobs. Please try again.</div>
             ) : sortedData.length === 0 ? (
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <EmptyState
                   icon={Briefcase}
                   title={searchQuery || statusFilter !== "all" ? "No jobs match your filters" : "Schedule and track every job"}

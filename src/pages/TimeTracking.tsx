@@ -29,7 +29,7 @@ class TimeTrackingErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="p-6 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive">
+        <div className="card-pad rounded-lg border border-destructive/50 bg-destructive/10 text-destructive">
           <p className="font-medium">Something went wrong loading this section.</p>
           <p className="text-sm mt-1">{this.state.error?.message}</p>
         </div>
@@ -95,7 +95,7 @@ function ClockTabContent() {
   })();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-2">
       <TimeTrackingErrorBoundary>
         <ClockInOutCard selectedJobId={selectedJobId} onSelectedJobChange={setSelectedJobId} />
       </TimeTrackingErrorBoundary>

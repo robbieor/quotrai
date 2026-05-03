@@ -54,7 +54,7 @@ function SuggestionsTab() {
 
   if (!suggestions || suggestions.length === 0) {
     return (
-      <Card className="p-8 text-center">
+      <Card className="p-6 sm:p-8 text-center">
         <Sparkles className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">
           No suggestions yet. Foreman is watching how you work and will propose
@@ -67,7 +67,7 @@ function SuggestionsTab() {
   return (
     <div className="space-y-3">
       {suggestions.map((s) => (
-        <Card key={s.id} className="p-5">
+        <Card key={s.id} className="p-4 sm:p-5">
           <div className="flex items-start gap-3">
             <PatternIcon patternKey={s.pattern_key} />
             <div className="flex-1 min-w-0">
@@ -162,7 +162,7 @@ function ActiveAutomationCard({ a }: { a: TeamAutomation }) {
   const remove = useDeleteAutomation();
 
   return (
-    <Card className="p-5">
+    <Card className="p-4 sm:p-5">
       <div className="flex items-start gap-3">
         <PatternIcon patternKey={a.pattern_key} />
         <div className="flex-1 min-w-0">
@@ -248,7 +248,7 @@ function ActiveTab() {
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (!automations?.length) {
     return (
-      <Card className="p-8 text-center">
+      <Card className="p-6 sm:p-8 text-center">
         <p className="text-sm text-muted-foreground">
           No active automations. Enable one from the Suggested tab.
         </p>
@@ -270,7 +270,7 @@ function AutomationsInner() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 space-y-6">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Zap className="h-5 w-5 text-primary" />
