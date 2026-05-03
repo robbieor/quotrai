@@ -1,10 +1,10 @@
-## Lighten the mobile tab bar and shrink it
+## Tighten mobile top spacing
 
-In `src/components/layout/MobileTabBar.tsx`:
-- Background: `bg-sidebar` → `bg-background` (light), border `border-sidebar-border` → `border-border`.
-- Inactive label/icon color: `text-white/60 hover:text-white/90` → `text-muted-foreground hover:text-foreground`. Active stays `text-primary`.
-- Reduce height: `h-16` → `h-12`. Icon size `h-[22px] w-[22px]` → `h-5 w-5`. Label `text-[10px]` → `text-[10px]` kept; reduce gap to `gap-0`.
-- Update main content bottom padding in `DashboardLayout.tsx` from `pb-[calc(80px+...)]` to `pb-[calc(64px+env(safe-area-inset-bottom,0px))]` to match the smaller bar.
-- The floating phone button (`FloatingTomButton`) — leave as-is (separate component).
+Currently `pt-[max(1rem,calc(env(safe-area-inset-top,0px)+3.5rem))]` reserves 3.5rem (56px) below the safe-area inset to clear the floating notification pill — leaving a big empty band above the page heading.
 
-Result: a clean light tab bar like Jobber, ~48px tall instead of 64px.
+Change in `src/components/layout/DashboardLayout.tsx`:
+- Drop the reserved space for the pill. Page heading rises to sit beside the pill (the pill floats top-right, headings are top-left, no collision).
+- New padding: `pt-[max(0.75rem,calc(env(safe-area-inset-top,0px)+0.5rem))] md:pt-6`.
+- Page headings get a bit of right padding only on mobile to avoid running under the pill: add `pr-20 md:pr-0` to the inner container? Better: leave container alone — page H1s are short ("Dashboard") and the pill is fixed in the corner, so a min-height-safe right inset on the *content row* is enough. Simpler: keep container as-is and rely on text not overflowing past ~70% width.
+
+Result: "Dashboard" heading sits at the top of the screen, even with the bell/avatar pill — no more empty band.
