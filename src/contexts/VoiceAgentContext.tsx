@@ -389,6 +389,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
         return `Unknown route: ${params?.route}. Allowed: ${Object.keys(AGENT_ROUTES).join(", ")}`;
       }
       const { path, label } = AGENT_ROUTES[params.route];
+      emitAgentToolCall("navigate_to", `Opening ${label}`, "done", path);
       emitAgentNavigate(path, params.reason ?? `Opening ${label}`);
       return `Navigated to ${label}`;
     },
@@ -398,6 +399,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       }
       if (!params.id) return "Missing record id";
       const path = AGENT_RECORDS[params.type](params.id);
+      emitAgentToolCall("open_record", `Opening ${params.type}`, "done", params.id);
       emitAgentNavigate(path, params.reason ?? `Opening ${params.type} ${params.id}`);
       return `Opened ${params.type} ${params.id}`;
     },
@@ -405,6 +407,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (!params || !isSection(params.section)) {
         return `Unknown section: ${params?.section}. Allowed: ${Object.keys(AGENT_SECTIONS).join(", ")}`;
       }
+      emitAgentToolCall("scroll_to", `Scrolling to ${AGENT_SECTIONS[params.section]}`, "done");
       emitAgentScroll(params.section);
       return `Scrolled to ${AGENT_SECTIONS[params.section]}`;
     },
@@ -412,11 +415,13 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
       if (!params || !isSection(params.section)) {
         return `Unknown section: ${params?.section}. Allowed: ${Object.keys(AGENT_SECTIONS).join(", ")}`;
       }
+      emitAgentToolCall("highlight_element", `Highlighting ${AGENT_SECTIONS[params.section]}`, "done");
       emitAgentHighlight(params.section, params.label ?? AGENT_SECTIONS[params.section]);
       return `Highlighted ${AGENT_SECTIONS[params.section]}`;
     },
     report_progress: (params: { message: string; status?: "running" | "done" | "error" }) => {
       if (!params?.message) return "Missing message";
+      emitAgentToolCall("report_progress", params.message, params.status ?? "running");
       emitAgentProgress(params.message, params.status ?? "running");
       return "Progress reported";
     },
