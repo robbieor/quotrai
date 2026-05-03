@@ -693,7 +693,7 @@ function VoiceAgentProviderInner({ children }: { children: ReactNode }) {
             onModeChange: ({ mode }) => {
               if (currentAttemptRef.current !== attemptId) return;
               setIsSpeaking(mode === "speaking");
-              emitAgentThinking(mode === "thinking");
+              if (mode === "speaking") emitAgentThinking(false);
             },
             onStatusChange: ({ status: sdkStatus }) => {
               if (currentAttemptRef.current !== attemptId) return;
