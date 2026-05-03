@@ -246,8 +246,8 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar Section */}
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                  <div className="relative group shrink-0">
                     <Avatar className="h-20 w-20 border-2 border-border">
                       <AvatarImage src={avatarUrl || undefined} alt={fullName || "User"} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xl font-medium">
@@ -260,9 +260,9 @@ export default function Settings() {
                       </div>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="font-medium">{fullName || profile?.full_name || "Your Name"}</h3>
-                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                  <div className="space-y-2 min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{fullName || profile?.full_name || "Your Name"}</h3>
+                    <p className="text-sm text-muted-foreground truncate">{profile?.email}</p>
                     <div>
                       <input
                         ref={fileInputRef}
