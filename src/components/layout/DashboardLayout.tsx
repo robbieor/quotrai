@@ -83,7 +83,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </main>
           </div>
           <ActiveCallBar />
-          <FloatingTomButton />
+          <div className="hidden md:block">
+            <FloatingTomButton />
+          </div>
           <AgentTaskPanel />
           <TrialCountdownPopup />
           <CommandBar open={commandBar.open} onOpenChange={commandBar.setOpen} />
