@@ -301,7 +301,7 @@ export default function Invoices() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search invoices..."
-            className={cn("pl-9", isMobile && "rounded-[22px] bg-[hsl(240,10%,96%)] border-transparent h-11")}
+            className={cn("pl-9", isMobile && "rounded-[22px] bg-muted/50 border-transparent h-11")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
