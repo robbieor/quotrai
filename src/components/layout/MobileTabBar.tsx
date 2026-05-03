@@ -51,10 +51,10 @@ export function MobileTabBar() {
 
   return (
     <nav
-      className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-sidebar border-t border-sidebar-border"
+      className="md:hidden fixed inset-x-0 bottom-0 z-30 bg-background border-t border-border"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <ul className="flex items-stretch justify-around h-16">
+      <ul className="flex items-stretch justify-around h-12">
         {tabs.map((tab) => {
           const active = isActive(tab.url);
           const Icon = tab.icon;
@@ -68,21 +68,21 @@ export function MobileTabBar() {
                   else if (tab.url) navigate(tab.url);
                 }}
                 className={cn(
-                  "relative w-full h-full flex flex-col items-center justify-center gap-0.5 transition-colors",
-                  active ? "text-primary" : "text-white/60 hover:text-white/90",
+                  "relative w-full h-full flex flex-col items-center justify-center gap-0 transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
                 aria-label={tab.label}
                 aria-current={active ? "page" : undefined}
               >
                 <div className="relative">
-                  <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.25 : 1.75} />
+                  <Icon className="h-5 w-5" strokeWidth={active ? 2.25 : 1.75} />
                   {badgeCount && badgeCount > 0 && (
                     <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold px-1">
                       {badgeCount > 99 ? "99+" : badgeCount}
                     </span>
                   )}
                 </div>
-                <span className={cn("text-[10px] leading-tight font-medium", active && "font-semibold")}>
+                <span className={cn("text-[9px] leading-none mt-0.5 font-medium", active && "font-semibold")}>
                   {tab.label}
                 </span>
                 {active && (
