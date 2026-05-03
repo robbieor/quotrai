@@ -13,7 +13,7 @@ import { CommandBar, useCommandBar } from "@/components/command/CommandBar";
 import { useGlobalVoiceAgent } from "@/contexts/VoiceAgentContext";
 import { cn } from "@/lib/utils";
 import { Search, Phone } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,6 +23,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { status } = useGlobalVoiceAgent();
   const isCallActive = status === "connected";
   const commandBar = useCommandBar();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <ProtectedRoute>
@@ -65,16 +66,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 marginTop: "env(safe-area-inset-top, 0px)",
               }}
             >
-              <Link
-                to="/foreman-ai"
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((v) => !v)}
                 aria-label="Talk to revamo AI"
+                aria-expanded={mobileMenuOpen}
                 className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
               >
                 <Phone className="h-4 w-4" />
-              </Link>
+              </button>
               <NotificationCenter />
               <UserMenu />
             </header>
+            <div className="md:hidden">
+              <FloatingTomButton variant="headless" open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />
+            </div>
 
             <main className="flex-1 overflow-auto safe-area-px">
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 pt-4 md:pt-6 pb-[calc(64px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-4 sm:space-y-6">

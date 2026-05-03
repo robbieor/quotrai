@@ -26,10 +26,23 @@ const PHASE_LABELS: Record<string, string> = {
   dialing_websocket: "Trying fallback…",
 };
 
-export function FloatingTomButton() {
+interface FloatingTomButtonProps {
+  variant?: "floating" | "headless";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function FloatingTomButton({ variant = "floating", open, onOpenChange }: FloatingTomButtonProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isControlled = open !== undefined;
+  const isExpanded = isControlled ? !!open : internalExpanded;
+  const setIsExpanded = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalExpanded(v);
+  };
+  const isHeadless = variant === "headless";
   const { profile } = useProfile();
   const isMobile = useIsMobile();
   const { hasVoiceAccess, canUseVoice, isLoading: georgeLoading } = useGeorgeAccess();
@@ -131,8 +144,13 @@ export function FloatingTomButton() {
 
       {isExpanded && !isConnected && !isConnecting && (
         <div
-          className="fixed inset-x-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-2 animate-fade-in"
-          style={{ bottom: isMobile ? 'calc(8.5rem + env(safe-area-inset-bottom, 0px))' : 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
+          className={cn(
+            "fixed z-50 flex flex-col gap-2 animate-fade-in",
+            isHeadless
+              ? "right-2 left-2 sm:left-auto sm:right-4 top-12"
+              : "inset-x-4 sm:left-auto sm:right-6"
+          )}
+          style={isHeadless ? { top: 'calc(2.5rem + env(safe-area-inset-top, 0px) + 0.25rem)' } : { bottom: isMobile ? 'calc(8.5rem + env(safe-area-inset-bottom, 0px))' : 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
         >
           {(georgeLoading || (hasVoiceAccess && canUseVoice)) && (
             <button
@@ -180,7 +198,7 @@ export function FloatingTomButton() {
           The bottom-center ActiveCallBar pill becomes the single in-call control
           surface (mute / open chat / end call) so we don't show three call widgets
           at once on mobile. */}
-      {!isConnected && !isConnecting && (
+      {!isHeadless && !isConnected && !isConnecting && (
         <div className="fixed right-4 sm:right-6 z-50" style={{ bottom: isMobile ? 'calc(4.75rem + env(safe-area-inset-bottom, 0px))' : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={handleMainButtonClick}

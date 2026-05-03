@@ -1,152 +1,38 @@
-## Goal
+## Problem
 
-Repair the mobile app layout globally, not just the four screenshots. The current protected app shell is causing page headers, filters, tabs, action buttons, and the settings content to collide on iPhone-sized screens.
+Two regressions on mobile:
 
-## Root cause
+1. The floating circular phone button at the bottom-right is gone on mobile (it's now wrapped in `hidden md:block` in `DashboardLayout`, so it only renders on desktop).
+2. The new phone button in the mobile top bar is a plain `<Link to="/foreman-ai">` — tapping it just navigates, it does NOT open the quick actions menu (Call revamo AI / Chat / New Quote / New Invoice / New Job / Log Expense / Today's Jobs).
 
-The shared layout has a mobile-only floating pill:
+The user expects the top-bar phone button to be the mobile replacement for the floating button — same menu, same options.
 
-```text
-fixed top-right: [bell] [avatar]
-```
+## Fix
 
-Because it is fixed on top of page content, every protected page has to fight for the same top-right space. That is why Settings, Dashboard, Jobs, Calendar, and likely other pages look broken.
+Refactor `FloatingTomButton` so its trigger and menu are decoupled, then drive it from the mobile top bar.
 
-## Fix plan
+### 1. `src/components/layout/FloatingTomButton.tsx`
 
-### 1. Repair the shared mobile app shell
+- Add an optional prop `variant?: "floating" | "headless"` (default `"floating"`).
+- Lift `isExpanded` control via optional `open` / `onOpenChange` props so a parent can control it.
+- When `variant === "headless"`, do NOT render the bottom-right circular button or the dark backdrop's positioning assumptions — only render the expanded menu panel (anchored top-right under the header instead of bottom-right) plus the backdrop.
+- Adjust the menu positioning when headless: `fixed right-2 top-12 inset-x-4 sm:inset-x-auto` so it drops down from the top bar on mobile.
+- Keep all existing behavior: pre-warm token on expand, role/loading guards, quick action dispatching, navigation to `/foreman-ai`, start/stop call.
 
-File: `src/components/layout/DashboardLayout.tsx`
+### 2. `src/components/layout/DashboardLayout.tsx`
 
-- Remove the fixed floating bell/avatar pill.
-- Replace it with a proper mobile sticky top bar that lives in normal layout flow.
-- Keep bell/avatar available, but stop them overlaying page titles.
-- Remove the mobile right-padding hack that was compensating for the floating pill.
-- Keep bottom tab bar padding safe for iOS browser chrome.
+- Replace the mobile top-bar `<Link to="/foreman-ai">` phone button with a local trigger button that toggles a `mobileMenuOpen` state.
+- Render a second `<FloatingTomButton variant="headless" open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />` inside the mobile-only branch (`md:hidden`).
+- Keep the existing desktop `<FloatingTomButton />` (default floating variant) wrapped in `hidden md:block` as today.
+- Ensure only one instance is interactive at a time (mobile uses headless, desktop uses floating).
 
-Target structure:
+### 3. Behavior verification (manual after build)
 
-```text
-[mobile sticky top bar:                       bell  avatar]
-[page content starts below it]
-[bottom tab bar]
-```
+- Mobile: tapping the top-bar phone icon opens the dropdown panel with: Call revamo AI (if voice access), Chat with revamo AI, New Quote, New Invoice, New Job, Log Expense, Today's Jobs. Tapping outside (backdrop) closes it. Tapping any item navigates / starts call as before.
+- Desktop: floating bottom-right button continues to work unchanged.
+- During an active call, the headless menu hides itself the same way the floating one does (returns null when `isConnected || isConnecting`), and the ActiveCallBar remains the single in-call control.
 
-### 2. Normalize mobile page spacing across all protected pages
+## Files touched
 
-Audit every page using `DashboardLayout`, including:
-
-- Dashboard
-- Jobs
-- Job Calendar
-- Settings
-- Quotes
-- Invoices
-- Customers
-- Leads
-- Expenses
-- Templates
-- Price Book / Pricebook Detail
-- Certificates
-- Time Tracking
-- Reports
-- Documents
-- Notifications
-- Briefing
-- Ask
-- Automations
-- AI / audit / voice usage pages
-
-Main rules:
-
-- Page title gets full width on mobile.
-- Actions do not overlap the title.
-- Filters wrap or scroll below the title, never beside it if cramped.
-- Search/filter controls use full-width mobile rows.
-- Cards and tables must not create horizontal page overflow.
-
-### 3. Fix Settings specifically
-
-File: `src/pages/Settings.tsx`
-
-- Make the Settings heading breathe now that the floating pill is gone.
-- Make the tabs a proper horizontal scroll row with fixed-height triggers.
-- Prevent hidden tabs from squeezing visible tabs.
-- Ensure profile card content stacks cleanly on mobile:
-  - avatar
-  - name/email
-  - upload button
-  - form fields
-- Prevent the email/name fields from becoming too wide or clipped.
-
-### 4. Fix Dashboard mobile header
-
-File: `src/pages/Dashboard.tsx`
-
-- Separate Dashboard title from filter chips.
-- On mobile:
-  - title on its own row
-  - date/focus filter chips below
-  - quick-action buttons below or in a clean horizontal strip
-- Stop the current “Dashboard / 30 days / Focus / sliders” squeeze.
-
-### 5. Fix Jobs, Quotes, Invoices, Customers-style headers
-
-Files include:
-
-- `src/pages/Jobs.tsx`
-- `src/pages/Quotes.tsx`
-- `src/pages/Invoices.tsx`
-- `src/pages/Customers.tsx`
-- similar CRUD pages with a mobile plus button
-
-Changes:
-
-- Keep title + count readable.
-- Use a consistent small icon button for create actions.
-- Avoid giant circular buttons competing with page title and top bar.
-- Ensure search/filter blocks sit below the header with full width.
-
-### 6. Fix alert/insight cards
-
-File: `src/components/dashboard/InsightAlerts.tsx`
-
-- On mobile, stack the alert text and CTA cleanly.
-- Prevent text from being squeezed into a narrow column.
-- CTA should sit below/right, not crammed into the same line.
-
-### 7. Fix Calendar header
-
-Files:
-
-- `src/pages/JobCalendar.tsx`
-- `src/components/calendar/CalendarHeader.tsx`
-
-Changes:
-
-- Keep “Job Calendar” title separate from controls.
-- Make Day / Week / Pending fit mobile width cleanly.
-- Replace the unexplained standalone `...` with a labeled compact control or move extra options into a cleaner secondary row.
-- Keep month navigation centered and not clipped.
-
-### 8. Verify at mobile sizes
-
-Test and visually review at phone width similar to your screenshots:
-
-- 390 × 844 / 402 × 716
-- Dashboard
-- Jobs
-- Calendar
-- Settings
-- Quotes
-- Invoices
-- Customers
-- at least a few secondary pages from the DashboardLayout list
-
-## Technical scope
-
-- Frontend layout only.
-- No backend/database changes.
-- No route/auth changes.
-- No brand/logo/color changes.
-- The main fix is in the shared layout so the app stops breaking page-by-page.
+- `src/components/layout/FloatingTomButton.tsx` — add `variant` + controlled `open` props; reposition menu when headless.
+- `src/components/layout/DashboardLayout.tsx` — swap the top-bar `<Link>` for a controlled trigger + headless `FloatingTomButton`.
