@@ -40,19 +40,21 @@ export function InsightAlerts({ insights }: InsightAlertsProps) {
           <div
             key={insight.id}
             className={cn(
-              "flex items-center gap-3 border rounded-lg p-3 w-full sm:min-w-[280px] sm:shrink-0",
+              "flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border rounded-lg p-3 w-full sm:min-w-[280px] sm:shrink-0",
               styles[insight.type]
             )}
           >
-            <Icon className={cn(
-              "h-4 w-4 shrink-0",
-              insight.type === "warning" ? "text-destructive" : insight.type === "success" ? "text-primary" : "text-muted-foreground"
-            )} />
-            <p className="text-sm text-foreground flex-1">{insight.message}</p>
+            <div className="flex items-start gap-2 flex-1 min-w-0">
+              <Icon className={cn(
+                "h-4 w-4 shrink-0 mt-0.5",
+                insight.type === "warning" ? "text-destructive" : insight.type === "success" ? "text-primary" : "text-muted-foreground"
+              )} />
+              <p className="text-sm text-foreground flex-1">{insight.message}</p>
+            </div>
             <Button
               variant="ghost"
               size="sm"
-              className="shrink-0 text-xs"
+              className="shrink-0 text-xs self-end sm:self-auto -mr-1 h-8"
               onClick={() => navigate(insight.href)}
             >
               {insight.cta}
