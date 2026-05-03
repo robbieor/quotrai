@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 
 export function ExpenseEmailBanner() {
+  // Email-to-Expense feature hidden pre-launch — pending inbound mail pipeline.
+  return null;
+  // eslint-disable-next-line no-unreachable
   const [copied, setCopied] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
     return localStorage.getItem("expense-email-banner-dismissed") === "true";
