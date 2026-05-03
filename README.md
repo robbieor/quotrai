@@ -61,7 +61,7 @@ After opening in Xcode, add these entries to `ios/App/App/Info.plist`:
 |-----|-------|
 | `NSMicrophoneUsageDescription` | Revamo uses the microphone for Revamo AI voice commands |
 | `NSLocationWhenInUseUsageDescription` | Revamo uses your location to verify job site attendance |
-| `NSLocationAlwaysAndWhenInUseUsageDescription` | Quotr tracks your location in the background for GPS time tracking |
+| `NSLocationAlwaysAndWhenInUseUsageDescription` | Revamo tracks your location in the background for GPS time tracking |
 | `NSCameraUsageDescription` | Revamo uses the camera for site visit verification photos |
 
 ### Ongoing Development
