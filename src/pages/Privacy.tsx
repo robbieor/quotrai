@@ -10,7 +10,7 @@ export default function Privacy() {
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
             <img src={foremanLogo} alt="Revamo" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg" />
-            <span className="text-lg sm:text-xl font-bold tracking-tight">Revamo</span>
+            <span className="text-lg sm:text-xl font-bold tracking-tight font-manrope lowercase">revamo</span>
           </Link>
           <Link to="/">
             <Button variant="ghost" size="sm" className="gap-2">

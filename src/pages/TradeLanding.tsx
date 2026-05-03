@@ -60,7 +60,7 @@ export default function TradeLanding() {
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src={foremanLogo} alt="Revamo" className="h-8 w-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight">Revamo</span>
+            <span className="text-lg font-bold tracking-tight font-manrope lowercase">revamo</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/login">
@@ -199,7 +199,7 @@ export default function TradeLanding() {
       <footer className="border-t border-border py-8 px-4 text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
           <img src={foremanLogo} alt="Revamo" className="h-6 w-6 rounded" />
-          <span className="font-semibold">Revamo</span>
+          <span className="font-semibold font-manrope lowercase">revamo</span>
         </div>
         <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
           <Link to="/terms" className="hover:text-foreground">Terms</Link>

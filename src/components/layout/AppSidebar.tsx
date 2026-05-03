@@ -106,7 +106,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <img src={foremanLogo} alt="Revamo" className="h-9 w-9 rounded-lg" />
-          <span className="text-xl font-bold tracking-tight text-white">Revamo</span>
+          <span className="text-xl font-bold tracking-tight text-white font-manrope lowercase">revamo</span>
         </div>
       </SidebarHeader>
 

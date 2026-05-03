@@ -27,7 +27,7 @@ export default function SelectPlan() {
           <CardHeader>
             <div className="flex items-center justify-center gap-3 mb-4">
               <img src={foremanLogo} alt="Revamo" className="h-10 w-10 rounded-lg" />
-              <span className="text-2xl font-bold">Revamo</span>
+              <span className="text-2xl font-bold font-manrope lowercase">revamo</span>
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
@@ -102,7 +102,7 @@ export default function SelectPlan() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-6">
             <img src={foremanLogo} alt="Revamo" className="h-10 w-10 rounded-lg" />
-            <span className="text-2xl font-bold">Revamo</span>
+            <span className="text-2xl font-bold font-manrope lowercase">revamo</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-3">
             Pick the plan that runs your business.
