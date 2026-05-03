@@ -59,10 +59,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Mobile sticky top bar (in-flow, not overlapping) */}
             <header
-              className="md:hidden sticky top-0 z-30 flex items-center justify-end gap-1 bg-background/95 backdrop-blur border-b border-border px-2"
+              className="md:hidden sticky top-0 z-30 flex items-center justify-end gap-1 bg-background/95 backdrop-blur border-b border-border px-2 h-10"
               style={{
-                paddingTop: "env(safe-area-inset-top, 0px)",
-                height: "calc(24px + env(safe-area-inset-top, 0px))",
+                marginTop: "env(safe-area-inset-top, 0px)",
               }}
             >
               <NotificationCenter />
