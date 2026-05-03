@@ -1,52 +1,27 @@
-## Problem
+## What's wrong
 
-Two visual issues across the app:
-1. **Harsh dark navy** (`#0f172a`, `220 26% 9%`) used as solid backgrounds (sidebar, dashboards, hero sections) reads as heavy/flat next to the new teal "r" logo.
-2. **Non-teal greens** (`#0D9B6A` ≈ HSL 155 85% 33%, `#22c55e`, `#0a4a2c`, `emerald-*`) clash with the teal `#0D9488` brand color the logo establishes.
+The retheme updated CSS tokens, but two hardcoded near-black surfaces still slip through and produce the harsh black band visible in your screenshot:
 
-Goal: shift the entire palette to a **teal-led, softer-slate** system that matches the logo, without changing layout.
+1. **Mobile/desktop top header** in `src/components/layout/DashboardLayout.tsx` is `bg-[hsl(220_26%_12%)]` — darker and bluer than the new sidebar (`hsl(215 28% 17%)`). That's the big black bar above the dashboard.
+2. **`ForemanAvatar`** (`src/components/shared/ForemanAvatar.tsx`) is hardcoded `bg-[#0F172A]` — the old harsh navy.
 
-## Fix
+Plus a few minor leftovers worth aligning while we're here.
 
-### 1. Rewrite design tokens in `src/index.css`
-Replace both `:root` and `.dark` color blocks:
+## Changes
 
-- **Primary** `155 85% 33%` (green) → `173 80% 33%` (teal `#0D9488`)
-- **Ring / accent / sidebar-primary** → same teal
-- **Sidebar bg** `220 26% 12%` (near-black navy) → `215 28% 17%` (soft slate)
-- **Sidebar accent/border** lifted to 22%/26% so hovered items have visible separation
-- **Background** `220 14% 96%` (cool grey) → `210 20% 97%` (warmer off-white)
-- **Card** light → pure white for clean contrast vs background
-- **Chart palette** reordered teal → cyan → blue → indigo → violet (drops the green)
-- Add `--primary-glow` (`173 70% 45%`) for gradients
-- Soften shadows (use slate-tinted alpha, not pure black)
-- Dark mode: lift `--background` from `9%` to `12%` lightness so it's not crushing-black; keep teal accent
+1. **`src/components/layout/DashboardLayout.tsx`**
+   - Replace `bg-[hsl(220_26%_12%)]` on the `<header>` with `bg-sidebar` so the header matches the sidebar's softer slate (`215 28% 17%`) — eliminates the two-tone "black band over slate sidebar" effect.
+   - Replace `border-white/10` with `border-sidebar-border` for token consistency.
 
-### 2. Sweep hardcoded greens → teal/semantic tokens
-Files using `bg-green-*`, `text-green-*`, `bg-emerald-*`, `#22c55e`, `#0a4a2c`, `#0D9B6A`:
+2. **`src/components/shared/ForemanAvatar.tsx`**
+   - Replace `bg-[#0F172A]` with `bg-sidebar` (or `bg-primary` if it represents the AI brand mark — will match the teal "r" logo in the sidebar). Going with `bg-sidebar` to keep parity with header.
 
-- `src/components/dashboard/*` (StatCard, MorningBriefingCard, WeekPlanningStrip, RecentActivityFeed, SubscriptionCoveredCard, RecentJobsCard, UpcomingScheduleCard, TeamActivityCard) — swap success greens for `text-primary` / `bg-primary/10`; keep semantic green only for explicit "paid/positive delta" badges where it must read as money-positive (use `bg-emerald-500/15 text-emerald-700 dark:text-emerald-400`, restrained)
-- `src/components/billing/*`, `src/pages/Pricing.tsx`, `src/pages/SelectPlan.tsx`, `src/pages/SubscriptionConfirmed.tsx` — primary CTAs and check-marks become `text-primary` / `bg-primary`
-- `src/components/calendar/JobCard.tsx`, `src/pages/Jobs.tsx`, `src/pages/Quotes.tsx`, `src/pages/Expenses.tsx`, `src/pages/Notifications.tsx`, `src/pages/FunnelAnalytics.tsx`, `src/pages/AIAuditHistory.tsx`, `src/pages/CustomerDashboard.tsx` — status pills/icons → primary tokens
-- `src/components/command/CommandResult.tsx`, `src/components/reports/RevenueExpenseChart.tsx`, `src/components/time-tracking/*` — chart strokes/fills use `hsl(var(--chart-1..5))`
-- `src/lib/native.ts`, `src/hooks/useJobs.ts` — replace `#22c55e`/`#0f172a` literals with the teal/slate equivalents
-- `src/hooks/useJobs.ts`, calendar event colors → teal family
+3. **Audit pass** — `rg` for any remaining hardcoded `#0f172a`, `#0F172A`, `hsl(220 26%`, `hsl(222 ` in `src/` (excluding `tailwind.config.lov.json` which is generated reference data) and replace with `bg-sidebar` / `text-sidebar-foreground` tokens.
 
-### 3. Replace hardcoded navy `#0f172a` solid blocks
-Hero/landing dark sections currently use `bg-[#0f172a]` or `bg-foreground` over solid black-navy:
-- Switch to `bg-sidebar` (now soft slate `215 28% 17%`) or layered gradient `bg-gradient-to-b from-slate-900 to-slate-800` on landing for depth instead of flat near-black.
-- Keep readable contrast: white text stays.
+4. **Mobile status bar** — verify `src/lib/native.ts` `StatusBar.setBackgroundColor` uses the new sidebar HSL converted to hex (`#1e293b`-ish) so the native Android status bar matches the new header instead of pure black.
 
-### 4. Update memory
-Rewrite `mem://brand/foreman-unified-identity` and the Core line:
-> Revamo Identity: Soft slate (#1f2937) surfaces, **Primary Teal (#0D9488)** matching the logo, Inter for UI. Teal replaces all non-semantic greens.
+## Result
 
-## What this will NOT change
+The top header on mobile will blend into the soft-slate sidebar instead of looking like a separate black bar, completing the teal/slate identity sweep.
 
-- No layout changes
-- No copy / component structure changes
-- Semantic destructive (red), warning (amber), and explicit money-positive deltas stay distinguishable (restrained emerald)
-- Logo, sidebar structure, and Manrope wordmark untouched
-
-## Approve to ship
-Reply "go" and I'll switch to build mode and apply tokens + sweep in one pass.
+Reply "go" to apply.
