@@ -57,17 +57,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </header>
 
-            {/* Mobile floating action pill (Jobber-style) */}
-            <div
-              className="md:hidden fixed right-3 z-30 flex items-center gap-0.5 bg-background/90 backdrop-blur border border-border rounded-full shadow-sm px-1 py-1"
-              style={{ top: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
+            {/* Mobile sticky top bar (in-flow, not overlapping) */}
+            <header
+              className="md:hidden sticky top-0 z-30 flex items-center justify-end gap-1 bg-background/95 backdrop-blur border-b border-border px-2"
+              style={{
+                paddingTop: "env(safe-area-inset-top, 0px)",
+                height: "calc(48px + env(safe-area-inset-top, 0px))",
+              }}
             >
               <NotificationCenter />
               <UserMenu />
-            </div>
+            </header>
 
             <main className="flex-1 overflow-auto safe-area-px">
-              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 pt-[max(0.875rem,calc(env(safe-area-inset-top,0px)+0.875rem))] md:pt-6 pr-[calc(1rem+5.5rem)] sm:pr-[calc(1.25rem+5.5rem)] md:pr-6 pb-[calc(64px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-4 sm:space-y-6">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 pt-4 md:pt-6 pb-[calc(64px+env(safe-area-inset-bottom,0px))] md:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-4 sm:space-y-6">
                 {children}
               </div>
             </main>
