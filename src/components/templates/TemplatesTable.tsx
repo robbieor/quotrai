@@ -205,7 +205,7 @@ export function TemplatesTable({
                     {getTradeCategoryLabel(template.category)}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-muted-foreground">
                   {template.labour_rate_default && (
                     <span>{formatRate(template.labour_rate_default, "hr")}</span>
                   )}
@@ -218,7 +218,8 @@ export function TemplatesTable({
                 </div>
               </div>
 
-              <div className="flex items-center gap-0.5 shrink-0">
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex items-center gap-0.5">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -241,10 +242,11 @@ export function TemplatesTable({
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
+                </div>
                 <Button
                   variant="default"
                   size="sm"
-                  className="h-6 text-[10px] px-1.5"
+                  className="h-6 text-[10px] px-2"
                   onClick={(e) => {
                     e.stopPropagation();
                     onUse(template);
