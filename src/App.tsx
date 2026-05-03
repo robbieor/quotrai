@@ -140,8 +140,7 @@ const App = () => {
                   <NavigationBridge />
                   <AgentNavigationBridge />
                   <AgentHighlightOverlay />
-                  <AgentProgressToast />
-                  <LiveActionOverlay />
+                  <LiveAgentHUD />
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                     {/* Public pages */}
