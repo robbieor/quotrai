@@ -37,7 +37,7 @@ export function InvoiceRiskTable({ data }: InvoiceRiskTableProps) {
       </CardHeader>
       <CardContent className="px-0 pb-2 overflow-x-auto">
         {!data || data.length === 0 ? (
-          <div className="h-[180px] flex flex-col items-center justify-center px-4 gap-1.5">
+          <div className="py-6 flex flex-col items-center justify-center px-4 gap-1.5">
             <CheckCircle2 className="h-5 w-5 text-primary/50" />
             <p className="text-xs text-muted-foreground text-center">
               {segment !== "all"
