@@ -5,7 +5,7 @@ const items = [
     icon: Mic,
     tag: "Hands-free voice",
     title: "Run the van by voice.",
-    body: "Drive between jobs, talk to revamo. Quotes, invoices, expenses — logged before you reach the next door.",
+    body: "Drive between jobs, talk to revamo. Quotes and invoices — logged before you reach the next door.",
   },
   {
     icon: Camera,
