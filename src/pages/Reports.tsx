@@ -69,7 +69,9 @@ export default function Reports() {
           <div>
             <h1 className="text-[28px] font-bold tracking-[-0.02em]">Reports</h1>
           </div>
-          <DateRangePicker dateRange={dateRange} onDateRangeChange={setDateRange} />
+          <div className="w-full sm:w-auto">
+            <DateRangePicker dateRange={dateRange} onDateRangeChange={setDateRange} />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -114,7 +116,7 @@ export default function Reports() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full max-w-xl grid-cols-4 text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-4 overflow-x-auto text-xs sm:max-w-xl sm:text-sm">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="financial">Charts</TabsTrigger>
