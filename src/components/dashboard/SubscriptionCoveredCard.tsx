@@ -38,7 +38,7 @@ export function SubscriptionCoveredCard({ data, isLoading }: Props) {
             Subscription Covered
           </span>
           {isFullyCovered ? (
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <CheckCircle className="h-4 w-4 text-primary" />
           ) : isLow ? (
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           ) : (
@@ -57,7 +57,7 @@ export function SubscriptionCoveredCard({ data, isLoading }: Props) {
           {formatCurrency(feeEarned)} earned of {formatCurrency(subscriptionCost)}/mo
         </p>
 
-        <p className={`text-xs font-medium ${isFullyCovered ? "text-green-600" : isLow ? "text-amber-600" : "text-muted-foreground"}`}>
+        <p className={`text-xs font-medium ${isFullyCovered ? "text-primary" : isLow ? "text-amber-600" : "text-muted-foreground"}`}>
           {isFullyCovered
             ? "Subscription paid for itself! 🎉"
             : isLow

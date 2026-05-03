@@ -54,7 +54,7 @@ export function DocumentPreview({ data }: { data: PreviewData }) {
   const tax = subtotal * 0.23;
   const total = subtotal + tax;
   const accent = data.accentColor || "#00FFB2";
-  const textOnAccent = isLightColor(accent) ? "#0f172a" : "#ffffff";
+  const textOnAccent = isLightColor(accent) ? "#1e293b" : "#ffffff";
   const isInvoice = data.documentType === "invoice";
   const isCompact = data.templateStyle === "compact";
   const isClassic = data.templateStyle === "classic";

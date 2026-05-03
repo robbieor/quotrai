@@ -89,7 +89,7 @@ export function AgentWorkingPanel({
                 <div
                   className={cn(
                     "absolute left-[13px] top-7 w-0.5 h-[calc(100%-8px)]",
-                    isDone ? "bg-emerald-500" : isFailed ? "bg-destructive" : isActive ? "bg-primary/40" : "bg-muted-foreground/20"
+                    isDone ? "bg-primary" : isFailed ? "bg-destructive" : isActive ? "bg-primary/40" : "bg-muted-foreground/20"
                   )}
                 />
               )}
@@ -98,13 +98,13 @@ export function AgentWorkingPanel({
               <div
                 className={cn(
                   "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border z-10 transition-all duration-300",
-                  isDone && "bg-emerald-50 border-emerald-200",
+                  isDone && "bg-primary/10 border-primary/30",
                   isActive && "bg-primary/5 border-primary/30",
                   isFailed && "bg-destructive/5 border-destructive/30",
                   isPending && "bg-muted border-border"
                 )}
               >
-                {isDone && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                {isDone && <Check className="h-3.5 w-3.5 text-primary" />}
                 {isActive && <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />}
                 {isFailed && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
                 {isPending && <Circle className="h-3 w-3 text-muted-foreground/40" />}
@@ -115,7 +115,7 @@ export function AgentWorkingPanel({
                 <p
                   className={cn(
                     "text-sm leading-tight transition-colors duration-200",
-                    isDone && "text-emerald-700 font-medium",
+                    isDone && "text-primary font-medium",
                     isActive && "text-foreground font-medium",
                     isFailed && "text-destructive font-medium",
                     isPending && "text-muted-foreground"
@@ -135,10 +135,10 @@ export function AgentWorkingPanel({
 
       {/* Success state */}
       {isComplete && (
-        <div className="animate-fade-in rounded-lg bg-emerald-50 border border-emerald-200 p-3 space-y-3">
+        <div className="animate-fade-in rounded-lg bg-primary/10 border border-primary/30 p-3 space-y-3">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            <p className="text-sm font-medium text-emerald-800">
+            <CheckCircle2 className="h-5 w-5 text-primary" />
+            <p className="text-sm font-medium text-primary">
               {successMessage || "All done!"}
             </p>
           </div>

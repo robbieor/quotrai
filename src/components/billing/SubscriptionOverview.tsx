@@ -220,7 +220,7 @@ export function SubscriptionOverview() {
     if (isPastDue) return <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Past Due</Badge>;
     if (isCancelled) return <Badge variant="secondary" className="gap-1"><XCircle className="h-3 w-3" />Cancelling</Badge>;
     if (isTrialing) return <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-500/10 gap-1"><Clock className="h-3 w-3" />Trial</Badge>;
-    if (isActive) return <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10 gap-1"><CheckCircle2 className="h-3 w-3" />Active</Badge>;
+    if (isActive) return <Badge className="bg-primary/10 text-primary dark:text-primary hover:bg-primary/10 gap-1"><CheckCircle2 className="h-3 w-3" />Active</Badge>;
     if (isExpired) return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Expired</Badge>;
     return null;
   };

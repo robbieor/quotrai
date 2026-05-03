@@ -61,7 +61,7 @@ export default function AIAuditHistory() {
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
-      completed: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+      completed: "bg-primary/10 text-primary border-primary/30",
       failed: "bg-destructive/10 text-destructive border-destructive/20",
       needs_confirmation: "bg-amber-500/10 text-amber-700 border-amber-200",
     };
@@ -234,7 +234,7 @@ export default function AIAuditHistory() {
                       <div className="space-y-1">
                         {steps.map((s: any, i: number) => (
                           <div key={i} className="flex items-center gap-2 text-sm px-3 py-1.5 bg-muted/50 rounded-lg">
-                            <span className={s.status === "complete" ? "text-emerald-600" : s.status === "failed" ? "text-destructive" : "text-muted-foreground"}>
+                            <span className={s.status === "complete" ? "text-primary" : s.status === "failed" ? "text-destructive" : "text-muted-foreground"}>
                               {s.status === "complete" ? "✓" : s.status === "failed" ? "✗" : "○"}
                             </span>
                             <span>{s.label}</span>

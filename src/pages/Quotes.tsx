@@ -44,14 +44,14 @@ import {
 const statusConfig = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
   sent: { label: "Sent", className: "bg-blue-100 text-blue-800" },
-  accepted: { label: "Accepted", className: "bg-green-100 text-green-800" },
+  accepted: { label: "Accepted", className: "bg-primary/10 text-primary" },
   declined: { label: "Declined", className: "bg-red-100 text-red-800" },
 };
 
 const mobileStatusBadge: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   sent: "bg-blue-500/12 text-blue-700",
-  accepted: "bg-green-500/12 text-green-700",
+  accepted: "bg-primary/12 text-primary",
   declined: "bg-red-500/12 text-red-700",
 };
 
@@ -282,7 +282,7 @@ export default function Quotes() {
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
             <div className="min-w-[120px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-green-500">
               <p className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground font-medium">Pipeline</p>
-              <p className="text-[20px] font-bold tabular-nums text-green-600 mt-0.5">{formatCurrency(stats.pipelineValue)}</p>
+              <p className="text-[20px] font-bold tabular-nums text-primary mt-0.5">{formatCurrency(stats.pipelineValue)}</p>
             </div>
             <div className="min-w-[120px] flex-1 bg-white rounded-xl border border-border/60 p-3 shadow-sm border-l-[3px] border-l-blue-500">
               <p className="text-[11px] uppercase tracking-[0.05em] text-muted-foreground font-medium">Acceptance</p>

@@ -171,7 +171,7 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
   };
 
   const marginColor = (m: number) =>
-    m >= 30 ? "text-emerald-600 dark:text-emerald-400" :
+    m >= 30 ? "text-primary dark:text-primary" :
     m >= 15 ? "text-amber-600 dark:text-amber-400" :
     "text-destructive";
 
@@ -297,7 +297,7 @@ export function SmartProductSearch({ onImport }: SmartProductSearchProps) {
                   </div>
                 </div>
                 {added ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
                 ) : loading ? (
                   <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
                 ) : (

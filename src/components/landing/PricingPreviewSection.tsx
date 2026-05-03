@@ -73,7 +73,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
             }`}
           >
             Annual
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/15 text-green-600 dark:text-green-400">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary dark:text-primary">
               Save 15%
             </span>
           </button>
@@ -127,7 +127,7 @@ export function PricingPreviewSection({ formatPrice }: PricingPreviewSectionProp
           </div>
 
           {isFullyCovered ? (
-            <p className="text-xs font-semibold text-green-600 dark:text-green-400">
+            <p className="text-xs font-semibold text-primary dark:text-primary">
               ✓ Subscription covered. You earn {formatPrice(surplus)} extra/mo.
             </p>
           ) : (

@@ -17,7 +17,7 @@ const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 border-yellow-300 text-yellow-800",
   scheduled: "bg-blue-100 border-blue-300 text-blue-800",
   in_progress: "bg-purple-100 border-purple-300 text-purple-800",
-  completed: "bg-green-100 border-green-300 text-green-800",
+  completed: "bg-primary/10 border-primary/30 text-primary",
   cancelled: "bg-gray-100 border-gray-300 text-gray-800",
 };
 

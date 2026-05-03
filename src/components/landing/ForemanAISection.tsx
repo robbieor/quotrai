@@ -53,7 +53,7 @@ export function ForemanAISection({ formatPrice }: ForemanAISectionProps) {
                 <div className="flex-1">
                   <p className="font-semibold text-sm text-foreground">revamo AI</p>
                   <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                     <span className="text-xs text-muted-foreground">Online</span>
                   </div>
                 </div>

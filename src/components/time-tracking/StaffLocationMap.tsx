@@ -214,7 +214,7 @@ export function StaffLocationMap() {
                 variant="outline"
                 className={
                   selectedStaff.status === "clocked_in"
-                    ? "bg-green-500/10 text-green-600"
+                    ? "bg-primary/10 text-primary"
                     : "bg-muted text-muted-foreground"
                 }
               >
@@ -260,7 +260,7 @@ export function StaffLocationMap() {
                   <div
                     className={`h-2 w-2 rounded-full ${
                       staff.status === "clocked_in"
-                        ? "bg-green-500"
+                        ? "bg-primary"
                         : "bg-muted-foreground"
                     }`}
                   />

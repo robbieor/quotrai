@@ -81,14 +81,14 @@ export function CommsAuditLog() {
                   key={row.id}
                   className={`p-3 rounded-lg border text-sm ${
                     row.allowed
-                      ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+                      ? "border-primary/30 bg-primary/10/50 dark:border-primary/30 dark:bg-primary/20"
                       : "border-destructive/20 bg-destructive/5"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
                       {row.allowed ? (
-                        <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
                       ) : (
                         <ShieldX className="h-4 w-4 text-destructive shrink-0" />
                       )}

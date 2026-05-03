@@ -28,9 +28,9 @@ const variantStyles = {
     accentLine: "from-primary via-primary/80 to-primary/50",
   },
   success: {
-    iconBg: "from-emerald-500/20 to-emerald-500/10",
-    iconColor: "text-emerald-600",
-    accentLine: "from-emerald-500 via-emerald-500/70 to-emerald-500/40",
+    iconBg: "from-primary/20 to-primary/10",
+    iconColor: "text-primary",
+    accentLine: "from-primary via-primary/70 to-primary/40",
   },
   warning: {
     iconBg: "from-amber-500/20 to-amber-500/10",
@@ -87,7 +87,7 @@ export function StatCard({
             {trend && (
               <div className={`inline-flex items-center gap-1.5 text-sm font-medium px-2 py-0.5 rounded-full transition-transform duration-300 group-hover:scale-105 ${
                 trend.isPositive 
-                  ? 'bg-emerald-500/10 text-emerald-600' 
+                  ? 'bg-primary/10 text-primary' 
                   : 'bg-red-500/10 text-red-500'
               }`}>
                 <span className={`text-xs transition-transform duration-300 ${trend.isPositive ? 'rotate-0 group-hover:-translate-y-0.5' : 'rotate-180 group-hover:translate-y-0.5'}`}>

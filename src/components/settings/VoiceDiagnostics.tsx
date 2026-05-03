@@ -99,7 +99,7 @@ export function VoiceDiagnostics() {
   };
 
   const Icon = result?.ok ? CheckCircle2 : result ? XCircle : AlertTriangle;
-  const iconColor = result?.ok ? "text-green-500" : result ? "text-destructive" : "text-muted-foreground";
+  const iconColor = result?.ok ? "text-primary" : result ? "text-destructive" : "text-muted-foreground";
 
   return (
     <Card>
@@ -169,7 +169,7 @@ export function VoiceDiagnostics() {
 function Status({ label, ok }: { label: string; ok: boolean }) {
   return (
     <div className="flex items-center gap-1.5 rounded-md border px-2 py-1.5">
-      {ok ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <XCircle className="h-3.5 w-3.5 text-destructive" />}
+      {ok ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <XCircle className="h-3.5 w-3.5 text-destructive" />}
       <span className="text-muted-foreground">{label}</span>
     </div>
   );

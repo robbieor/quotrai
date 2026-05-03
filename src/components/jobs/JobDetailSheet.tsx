@@ -22,7 +22,7 @@ const statusColors: Record<JobStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800",
   scheduled: "bg-blue-100 text-blue-800",
   in_progress: "bg-purple-100 text-purple-800",
-  completed: "bg-green-100 text-green-800",
+  completed: "bg-primary/10 text-primary",
   cancelled: "bg-gray-100 text-gray-800",
 };
 
@@ -85,7 +85,7 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
       { label: "Materials", value: pnl.materialsCost, color: "bg-blue-500" },
       { label: "Labor", value: pnl.laborCost, color: "bg-amber-500" },
       { label: "Expenses", value: pnl.expensesCost, color: "bg-red-400" },
-      { label: "Profit", value: Math.max(profit, 0), color: "bg-emerald-500" },
+      { label: "Profit", value: Math.max(profit, 0), color: "bg-primary" },
     ].filter(s => s.value > 0).map(s => ({ ...s, pct: Math.round((s.value / total) * 100) }));
   }, [pnl, revenue, profit]);
 
@@ -252,11 +252,11 @@ export function JobDetailSheet({ open, onOpenChange, job }: JobDetailSheetProps)
                     <span className="font-semibold">Net Profit</span>
                     <div className="flex items-center gap-2">
                       {profit >= 0 ? (
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                        <TrendingUp className="h-4 w-4 text-primary" />
                       ) : (
                         <TrendingDown className="h-4 w-4 text-destructive" />
                       )}
-                      <span className={cn("font-bold text-lg", profit >= 0 ? "text-emerald-600" : "text-destructive")}>
+                      <span className={cn("font-bold text-lg", profit >= 0 ? "text-primary" : "text-destructive")}>
                         {fmt(profit)}
                       </span>
                       <Badge variant="outline" className="text-xs">

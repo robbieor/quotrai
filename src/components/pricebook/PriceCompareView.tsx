@@ -96,7 +96,7 @@ export function PriceCompareView() {
         <div className="space-y-3">
           {/* Summary */}
           <div className="flex items-center gap-2 text-sm">
-            <TrendingDown className="h-4 w-4 text-green-500" />
+            <TrendingDown className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">{response.savings_summary}</span>
             <Badge variant="outline" className="ml-auto text-[10px]">
               {response.total_matches} match{response.total_matches !== 1 ? "es" : ""}
@@ -110,7 +110,7 @@ export function PriceCompareView() {
               r.supplier_sku === response.cheapest.supplier_sku;
 
             return (
-              <Card key={`${r.supplier_name}-${r.supplier_sku}-${i}`} className={isCheapest ? "border-green-500/30 bg-green-500/5" : ""}>
+              <Card key={`${r.supplier_name}-${r.supplier_sku}-${i}`} className={isCheapest ? "border-primary/30 bg-primary/5" : ""}>
                 <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start gap-3">
                     {/* Image */}
@@ -139,13 +139,13 @@ export function PriceCompareView() {
                         </div>
                         <div className="text-right flex-shrink-0">
                           {r.website_price ? (
-                            <p className={`text-sm font-bold ${isCheapest ? "text-green-600" : ""}`}>
+                            <p className={`text-sm font-bold ${isCheapest ? "text-primary" : ""}`}>
                               €{r.website_price.toFixed(2)}
                             </p>
                           ) : (
                             <p className="text-xs text-muted-foreground">No price</p>
                           )}
-                          {isCheapest && <Badge className="text-[9px] bg-green-600 mt-0.5">Cheapest</Badge>}
+                          {isCheapest && <Badge className="text-[9px] bg-primary mt-0.5">Cheapest</Badge>}
                         </div>
                       </div>
 

@@ -12,7 +12,7 @@ export async function initNativeChrome() {
     // Match the dark navy header so iOS doesn't show a white strip above content.
     await StatusBar.setStyle({ style: Style.Dark });
     if (Capacitor.getPlatform() === "android") {
-      await StatusBar.setBackgroundColor({ color: "#0f172a" });
+      await StatusBar.setBackgroundColor({ color: "#1e293b" });
     }
     await StatusBar.setOverlaysWebView({ overlay: true });
   } catch (e) {

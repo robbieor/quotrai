@@ -133,7 +133,7 @@ export default function SelectPlan() {
             }`}
           >
             Annual
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-500/15 text-green-600 dark:text-green-400">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary dark:text-primary">
               Save 15%
             </span>
           </button>
@@ -168,7 +168,7 @@ export default function SelectPlan() {
                 <span className="text-muted-foreground">/{isAnnual ? "year" : "month"}</span>
               </div>
               {isAnnual && monthlySavings > 0 && (
-                <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
+                <p className="text-sm text-primary dark:text-primary font-medium mt-1">
                   You save {formatCurrency(monthlySavings)} per year
                 </p>
               )}

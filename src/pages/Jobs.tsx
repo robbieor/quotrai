@@ -229,7 +229,7 @@ export default function Jobs() {
                 <div className="flex items-baseline gap-2">
                   <span className="text-lg font-bold">{kpi.value}</span>
                   {kpi.change !== undefined && kpi.change !== 0 && (
-                    <span className={cn("text-[10px] font-medium flex items-center gap-0.5", kpi.change > 0 ? "text-green-600" : "text-red-500")}>
+                    <span className={cn("text-[10px] font-medium flex items-center gap-0.5", kpi.change > 0 ? "text-primary" : "text-red-500")}>
                       {kpi.change > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                       {Math.abs(kpi.change)}%
                     </span>

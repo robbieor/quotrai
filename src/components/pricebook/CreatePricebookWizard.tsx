@@ -533,7 +533,7 @@ export function CreatePricebookWizard({ open, onOpenChange, onComplete }: Create
               {scrapedProduct && (
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">Product detected</span>
                   </div>
                   <p className="text-sm">{scrapedProduct.product_name}</p>
@@ -725,7 +725,7 @@ export function CreatePricebookWizard({ open, onOpenChange, onComplete }: Create
           {/* Done */}
           {step === "done" && (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <CheckCircle2 className="h-10 w-10 text-green-500" />
+              <CheckCircle2 className="h-10 w-10 text-primary" />
               <p className="font-medium">"{name}" created</p>
               <p className="text-sm text-muted-foreground">
                 {importCount > 0

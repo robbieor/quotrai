@@ -139,8 +139,8 @@ export default function SubscriptionConfirmed() {
 
           {status === "active" && (
             <>
-              <div className="mx-auto w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
               </div>
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold text-foreground">You're all set!</h1>

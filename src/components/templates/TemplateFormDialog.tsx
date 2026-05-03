@@ -378,7 +378,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                           className="text-xs h-9" placeholder="0.00" />
                       </div>
                       <div className="col-span-1 flex items-center justify-between">
-                        <span className={`text-xs font-medium ${item.margin_percent > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <span className={`text-xs font-medium ${item.margin_percent > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                           {item.margin_percent > 0 ? `${item.margin_percent}%` : '—'}
                         </span>
                       </div>
@@ -462,7 +462,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
                         </div>
                       </div>
                       <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                        <span className={`text-xs ${item.margin_percent > 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        <span className={`text-xs ${item.margin_percent > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                           Margin: {item.margin_percent > 0 ? `${item.margin_percent}%` : '—'}
                         </span>
                         <span className="text-sm font-semibold">

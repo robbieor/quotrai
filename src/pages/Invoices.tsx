@@ -48,7 +48,7 @@ import { safeFormatDate } from "@/lib/pdf/dateUtils";
 const statusConfig: Record<string, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
   pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800" },
-  paid: { label: "Paid", className: "bg-green-100 text-green-800" },
+  paid: { label: "Paid", className: "bg-primary/10 text-primary" },
   overdue: { label: "Overdue", className: "bg-red-100 text-red-800" },
 };
 

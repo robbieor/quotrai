@@ -297,7 +297,7 @@ export function TimeEntriesList() {
                       {entry.clock_in_verified ? (
                         <Badge
                           variant="outline"
-                          className="bg-green-500/10 text-green-600 border-green-200 text-xs"
+                          className="bg-primary/10 text-primary border-primary/30 text-xs"
                         >
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           In
@@ -321,7 +321,7 @@ export function TimeEntriesList() {
                         entry.clock_out_verified ? (
                           <Badge
                             variant="outline"
-                            className="bg-green-500/10 text-green-600 border-green-200 text-xs"
+                            className="bg-primary/10 text-primary border-primary/30 text-xs"
                           >
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Out
@@ -361,7 +361,7 @@ export function TimeEntriesList() {
                         entry.status === "active"
                           ? "bg-primary/10 text-primary"
                           : entry.status === "completed"
-                          ? "bg-green-500/10 text-green-600"
+                          ? "bg-primary/10 text-primary"
                           : "bg-muted text-muted-foreground"
                       }
                     >

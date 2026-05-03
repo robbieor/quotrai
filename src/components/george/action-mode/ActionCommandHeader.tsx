@@ -16,7 +16,7 @@ const statusConfig: Record<ActionStatus, { label: string; color: string }> = {
   interpreting: { label: "Interpreting", color: "bg-amber-500/10 text-amber-600 border-amber-200" },
   working: { label: "Working", color: "bg-primary/10 text-primary border-primary/20" },
   needs_confirmation: { label: "Needs Confirmation", color: "bg-orange-500/10 text-orange-600 border-orange-200" },
-  completed: { label: "Completed", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200" },
+  completed: { label: "Completed", color: "bg-primary/10 text-primary border-primary/30" },
   failed: { label: "Failed", color: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 

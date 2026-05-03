@@ -41,7 +41,7 @@ export default function FunnelAnalytics() {
         { label: "Onboarded", count: data.onboarded, icon: BarChart3, color: "text-teal-500" },
         { label: "First Quote", count: data.firstQuote, icon: FileText, color: "text-primary" },
         { label: "First Invoice", count: data.firstInvoice, icon: Receipt, color: "text-amber-500" },
-        { label: "Paying", count: data.paying, icon: CreditCard, color: "text-green-500" },
+        { label: "Paying", count: data.paying, icon: CreditCard, color: "text-primary" },
       ]
     : [];
 
