@@ -62,7 +62,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               className="md:hidden sticky top-0 z-30 flex items-center justify-end gap-1 bg-background/95 backdrop-blur border-b border-border px-2"
               style={{
                 paddingTop: "env(safe-area-inset-top, 0px)",
-                height: "calc(48px + env(safe-area-inset-top, 0px))",
+                height: "calc(24px + env(safe-area-inset-top, 0px))",
               }}
             >
               <NotificationCenter />
