@@ -33,7 +33,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex-1 flex flex-col min-w-0">
             <ReadOnlyBanner />
             
-            <header className="border-b border-white/10 items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-[hsl(220_26%_12%)] sticky top-0 z-20 pt-[max(10px,env(safe-area-inset-top))]" style={{minHeight: 'calc(3rem + env(safe-area-inset-top, 0px))' }}>
+            <header className="border-b border-sidebar-border items-center justify-start flex flex-row px-3 md:px-6 py-[10px] bg-sidebar sticky top-0 z-20 pt-[max(10px,env(safe-area-inset-top))]" style={{minHeight: 'calc(3rem + env(safe-area-inset-top, 0px))' }}>
               <SidebarTrigger className="mr-2 md:mr-4 text-white/70 hover:text-white" />
 
               {/* Command Bar Trigger */}
