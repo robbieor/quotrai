@@ -193,42 +193,42 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-4 md:space-y-6">
-          <TabsList className="w-full overflow-x-auto flex-nowrap h-auto gap-1 p-1 justify-start">
-            <TabsTrigger value="profile" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+          <TabsList className="w-full overflow-x-auto flex-nowrap h-auto gap-1 p-1 justify-start scrollbar-none">
+            <TabsTrigger value="profile" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
               <User className="h-3.5 w-3.5 md:h-4 md:w-4" />
               <span className="hidden sm:inline">Profile</span>
               <span className="sm:hidden">Me</span>
             </TabsTrigger>
             {showManagementTabs && (
               <>
-                <TabsTrigger value="branding" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <TabsTrigger value="branding" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
                   <Palette className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span className="hidden sm:inline">Branding</span>
                   <span className="sm:hidden">Brand</span>
                 </TabsTrigger>
-                <TabsTrigger value="comms" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <TabsTrigger value="comms" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
                   <Mail className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span className="hidden sm:inline">Comms</span>
                   <span className="sm:hidden">Mail</span>
                 </TabsTrigger>
-                <TabsTrigger value="import" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <TabsTrigger value="import" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
                   <FileSpreadsheet className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span>Import</span>
                 </TabsTrigger>
-                <TabsTrigger value="team-billing" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                <TabsTrigger value="team-billing" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
                   <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
                   <span className="hidden sm:inline">{isNative ? "Team" : "Team & Billing"}</span>
                   <span className="sm:hidden">Team</span>
                 </TabsTrigger>
                 {canAccessIntegrations && (
-                  <TabsTrigger value="integrations" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                  <TabsTrigger value="integrations" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
                     <Plug className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     <span className="hidden sm:inline">Integrations</span>
                     <span className="sm:hidden">Integ</span>
                   </TabsTrigger>
                 )}
                 {canAccessGeorge && (
-                  <TabsTrigger value="ai" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3">
+                  <TabsTrigger value="ai" className="gap-1.5 md:gap-2 text-xs md:text-sm px-2 md:px-3 shrink-0">
                     <Brain className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     <span className="hidden sm:inline">revamo AI</span>
                     <span className="sm:hidden">AI</span>
@@ -246,8 +246,8 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar Section */}
-                <div className="flex items-center gap-6">
-                  <div className="relative group">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                  <div className="relative group shrink-0">
                     <Avatar className="h-20 w-20 border-2 border-border">
                       <AvatarImage src={avatarUrl || undefined} alt={fullName || "User"} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xl font-medium">
@@ -260,9 +260,9 @@ export default function Settings() {
                       </div>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="font-medium">{fullName || profile?.full_name || "Your Name"}</h3>
-                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                  <div className="space-y-2 min-w-0 flex-1">
+                    <h3 className="font-medium truncate">{fullName || profile?.full_name || "Your Name"}</h3>
+                    <p className="text-sm text-muted-foreground truncate">{profile?.email}</p>
                     <div>
                       <input
                         ref={fileInputRef}

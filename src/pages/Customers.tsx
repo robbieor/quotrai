@@ -87,9 +87,9 @@ export default function Customers() {
     <DashboardLayout>
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-[28px] font-bold tracking-[-0.02em] text-foreground">Customers</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-[28px] font-bold tracking-[-0.02em] text-foreground">Customers</h1>
             {!isLoading && (
               <p className="text-[13px] text-muted-foreground mt-0.5">
                 {customerCount} customer{customerCount !== 1 ? "s" : ""}
@@ -98,12 +98,14 @@ export default function Customers() {
           </div>
           <ReadOnlyGuard>
             {isMobile ? (
-              <button
+              <Button
+                size="sm"
                 onClick={() => { setEditCustomer(null); setFormDialogOpen(true); }}
-                className="w-11 h-11 rounded-full border-2 border-primary flex items-center justify-center text-primary active:scale-95 transition-transform shrink-0"
+                className="h-9 gap-1.5"
               >
-                <Plus className="h-5 w-5" />
-              </button>
+                <Plus className="h-4 w-4" />
+                New
+              </Button>
             ) : (
               <Button onClick={() => { setEditCustomer(null); setFormDialogOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" />

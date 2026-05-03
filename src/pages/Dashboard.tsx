@@ -193,23 +193,22 @@ function DashboardContent() {
         <OnboardingChecklist />
 
         {/* Header bar with filters + quick actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-3 min-w-0 overflow-x-auto scrollbar-none">
-            <h1 className="text-lg font-semibold text-foreground shrink-0">Dashboard</h1>
+        <div className="space-y-2">
+          <h1 className="text-2xl md:text-lg font-bold md:font-semibold tracking-tight text-foreground">Dashboard</h1>
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none -mx-1 px-1">
             <DashboardFilterBar />
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {quickActions.map((action) => (
               <ReadOnlyGuard key={action.label}>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => navigate(action.route)}
-                  className="gap-1 text-xs h-7"
+                  className="gap-1.5 text-xs h-8"
                 >
-                  <action.icon className="h-3 w-3" />
-                  <span className="hidden sm:inline">{action.label.replace("New ", "")}</span>
-                  <Plus className="h-2.5 w-2.5" />
+                  <action.icon className="h-3.5 w-3.5" />
+                  <span>{action.label}</span>
                 </Button>
               </ReadOnlyGuard>
             ))}
