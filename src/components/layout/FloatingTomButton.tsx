@@ -15,7 +15,7 @@ const quickActions = [
   { icon: FileText, label: "New Quote", action: "create_quote", message: "Help me create a new quote" },
   { icon: Receipt, label: "New Invoice", action: "create_invoice", message: "Help me create a new invoice" },
   { icon: Briefcase, label: "New Job", action: "create_job", message: "Help me schedule a new job" },
-  { icon: DollarSign, label: "Log Expense", action: "log_expense", message: "I need to log an expense" },
+  // { icon: DollarSign, label: "Log Expense", action: "log_expense", message: "I need to log an expense" },
   { icon: Calendar, label: "Today's Jobs", action: "get_todays_jobs", message: "What jobs do I have today?" },
 ];
 
