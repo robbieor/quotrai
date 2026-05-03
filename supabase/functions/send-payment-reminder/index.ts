@@ -5,8 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const SENDER_DOMAIN = "notify.foreman.ie";
-const FROM_DOMAIN = "foreman.ie";
+import { EMAIL_FROM_DOMAIN as FROM_DOMAIN, EMAIL_SENDER_DOMAIN as SENDER_DOMAIN } from "../_shared/email-config.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
