@@ -210,16 +210,16 @@ export default function Invoices() {
         <UpgradePromptBanner />
 
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-[28px] font-bold tracking-[-0.02em]">Invoices</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-[28px] font-bold tracking-[-0.02em]">Invoices</h1>
             {invoices && (
               <p className="text-[13px] text-muted-foreground mt-0.5">
                 {invoices.length.toLocaleString()} invoices
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             {!isMobile && (
               <Button variant="outline" onClick={() => setFromQuoteOpen(true)} className="text-sm">
                 <FileText className="mr-2 h-4 w-4" />
@@ -228,12 +228,10 @@ export default function Invoices() {
             )}
             <ReadOnlyGuard>
               {isMobile ? (
-                <button
-                  onClick={handleNewInvoice}
-                  className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md active:scale-95 transition-transform"
-                >
-                  <Plus className="h-5 w-5" />
-                </button>
+                <Button size="sm" onClick={handleNewInvoice} className="h-9 gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  New
+                </Button>
               ) : (
                 <Button onClick={handleNewInvoice}>
                   <Plus className="mr-2 h-4 w-4" />
