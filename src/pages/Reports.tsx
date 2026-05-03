@@ -34,7 +34,7 @@ import { PlanGate } from "@/components/dashboard/PlanGate";
 
 function StatCardSkeleton() {
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className="rounded-lg border bg-card card-pad">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-8 w-8 rounded" />
@@ -122,7 +122,7 @@ export default function Reports() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-2">
               <RevenueChart data={monthlyRevenue || []} isLoading={revenueLoading} />
               <QuoteConversionChart data={quoteMetrics || []} isLoading={quotesLoading} />
               <JobStatusChart data={jobMetrics || []} isLoading={jobsLoading} />
@@ -133,7 +133,7 @@ export default function Reports() {
 
           <TabsContent value="financials" className="space-y-6">
             <PlanGate requiredSeat="grow" featureLabel="Profit & Loss (Business+)">
-              <div className="grid gap-6 lg:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-2">
                 <ProfitLossCard />
               </div>
             </PlanGate>
@@ -141,7 +141,7 @@ export default function Reports() {
 
           <TabsContent value="financial" className="space-y-6">
             <PlanGate requiredSeat="grow" featureLabel="Advanced Charts (Business+)">
-              <div className="grid gap-6 lg:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-2">
                 <RevenueExpenseChart data={revenueExpenses || []} isLoading={revenueExpensesLoading} />
                 <QuoteFunnelChart data={quoteFunnel || []} isLoading={funnelLoading} />
                 <RevenueChart data={monthlyRevenue || []} isLoading={revenueLoading} />
@@ -151,7 +151,7 @@ export default function Reports() {
           </TabsContent>
 
           <TabsContent value="operations" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-3 sm:gap-4 lg:gap-6 lg:grid-cols-2">
               <JobTrendsChart data={jobTrends || []} isLoading={trendsLoading} />
               <JobPerformanceRadar data={jobPerformance || []} isLoading={performanceLoading} />
               <JobStatusChart data={jobMetrics || []} isLoading={jobsLoading} />

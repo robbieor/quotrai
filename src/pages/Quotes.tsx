@@ -351,7 +351,7 @@ export default function Quotes() {
                 <Skeleton className="h-8 w-8 rounded-full" />
               </div>
             ) : sortedData.length === 0 ? (
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <EmptyState
                   icon={FileText}
                   title={searchQuery || statusFilter !== "all" ? "No quotes match your filters" : "Win more work with professional quotes"}
@@ -417,7 +417,7 @@ export default function Quotes() {
                 <Skeleton className="h-8 w-8 rounded-full" />
               </div>
             ) : sortedData.length === 0 ? (
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <EmptyState
                   icon={FileText}
                   title={searchQuery || statusFilter !== "all" ? "No quotes match your filters" : "Win more work with professional quotes"}

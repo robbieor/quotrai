@@ -106,7 +106,7 @@ function BriefingPageInner() {
         </div>
 
         {error && (
-          <Card className="p-6 border-destructive/30 bg-destructive/5">
+          <Card className="card-pad border-destructive/30 bg-destructive/5">
             <p className="text-sm text-destructive">
               Couldn't load briefing: {(error as Error).message}
             </p>
@@ -122,7 +122,7 @@ function BriefingPageInner() {
         ) : (
           <>
             {/* Headline */}
-            <Card className="p-6 border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-card">
+            <Card className="card-pad border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-card">
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                 <p className="text-base sm:text-lg leading-relaxed">
@@ -172,7 +172,7 @@ function BriefingPageInner() {
             </section>
 
             {/* Revenue / Workforce / Overnight */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-2 text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="h-4 w-4" />

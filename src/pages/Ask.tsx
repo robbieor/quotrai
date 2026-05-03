@@ -102,8 +102,8 @@ function AskInner() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto py-6 px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4 lg:gap-6">
           <div>
             {/* Header */}
             <div className="flex items-start gap-3 mb-6">
