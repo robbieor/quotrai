@@ -237,8 +237,6 @@ export default function Quotes() {
               </Button>
             </ReadOnlyGuard>
           </div>
-        ) : null}
-          </div>
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Quotes</h1>
