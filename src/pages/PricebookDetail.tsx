@@ -119,7 +119,7 @@ export default function PricebookDetail() {
     <DashboardLayout>
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => navigate("/price-book")}>
               <ArrowLeft className="h-4 w-4" />
@@ -135,13 +135,13 @@ export default function PricebookDetail() {
             </div>
           </div>
 
-          <Button size="sm" onClick={() => { setEditItem(null); setShowForm(true); }}>
+          <Button size="sm" onClick={() => { setEditItem(null); setShowForm(true); }} className="w-full sm:w-auto justify-center">
             <Plus className="h-4 w-4 mr-1.5" /> Add Item
           </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <TabsList className="h-8">
               <TabsTrigger value="catalog" className="text-xs">Products</TabsTrigger>
               <TabsTrigger value="compare" className="text-xs hidden sm:flex">
