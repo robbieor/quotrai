@@ -206,7 +206,9 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="flex flex-col items-center gap-4 sm:gap-6 text-center sm:text-left sm:flex-row sm:justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <img src={foremanLogo} alt="revamo" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden shrink-0">
+                <img src={foremanLogo} alt="revamo" className="h-full w-full object-contain p-1" />
+              </div>
               <span className="text-base sm:text-lg font-bold tracking-tight font-manrope lowercase">revamo</span>
               <span className="text-xs sm:text-sm text-muted-foreground">Powered by revamo AI</span>
             </div>
