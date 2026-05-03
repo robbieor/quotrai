@@ -8,8 +8,8 @@ export const BRAND = {
   fullName: "Revamo AI",
   tagline: "The AI Operating System for Field Service",
   legalEntity: "Revamo Ltd",
-  supportEmail: "support@foreman.ie",
-  domain: "foreman.ie",
+  supportEmail: "support@revamo.ai",
+  domain: "revamo.ai",
   /** Public-facing URLs */
   urls: {
     landing: "https://revamo.ai",
