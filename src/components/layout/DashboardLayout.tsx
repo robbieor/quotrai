@@ -23,6 +23,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { status } = useGlobalVoiceAgent();
   const isCallActive = status === "connected";
   const commandBar = useCommandBar();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <ProtectedRoute>
