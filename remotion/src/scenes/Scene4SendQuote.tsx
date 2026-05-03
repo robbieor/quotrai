@@ -69,7 +69,7 @@ export const Scene4SendQuote: React.FC = () => {
       <div style={{ flex: "0 0 500px", display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4, opacity: userOpacity }}>
           <Img src={staticFile("images/foreman-logo.png")} style={{ width: 32, height: 32, borderRadius: 8 }} />
-          <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · Revamo AI</span>
+          <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>George · revamo AI</span>
         </div>
 
         <div style={{ opacity: userOpacity, alignSelf: "flex-end", maxWidth: 400 }}>

@@ -98,8 +98,8 @@ export function ReferralCard() {
           onClick={() => {
             if (navigator.share) {
               navigator.share({
-                title: "Try Revamo — AI-powered job management",
-                text: "I've been using Revamo to run my trade business. Sign up with my link and get 30 days free!",
+                title: "Try revamo — AI-powered job management",
+                text: "I've been using revamo to run my trade business. Sign up with my link and get 30 days free!",
                 url: referralLink,
               });
             } else {

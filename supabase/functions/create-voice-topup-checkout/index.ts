@@ -59,8 +59,8 @@ serve(async (req) => {
             currency: "eur",
             unit_amount: 729, // €7.29
             product_data: {
-              name: "Revamo AI Voice — 30 Minute Top-Up",
-              description: "30 additional voice minutes for Revamo AI",
+              name: "revamo AI Voice — 30 Minute Top-Up",
+              description: "30 additional voice minutes for revamo AI",
             },
           },
           quantity: 1,

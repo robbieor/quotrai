@@ -43,7 +43,7 @@ export default function TradeLanding() {
     { icon: Receipt, title: "One-Click Invoicing", desc: "Convert approved quotes to invoices instantly. Track payments and send automated reminders." },
     { icon: MapPin, title: "GPS Time Tracking", desc: "Geofenced clock-in/out so you know exactly who's on-site and for how long." },
     { icon: Calendar, title: "Smart Scheduling", desc: "Drag-and-drop calendar with job assignments. Never double-book again." },
-    { icon: Bot, title: "Revamo AI Assistant", desc: `Tell Revamo AI "${config.quoteExample}" — voice or text, it handles the rest.` },
+    { icon: Bot, title: "revamo AI Assistant", desc: `Tell revamo AI "${config.quoteExample}" — voice or text, it handles the rest.` },
     { icon: BarChart3, title: "Business Reports", desc: "Revenue, job performance, quote conversion — real-time dashboards that help you grow." },
   ];
 
@@ -59,7 +59,7 @@ export default function TradeLanding() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={foremanLogo} alt="Revamo" className="h-8 w-8 rounded-lg" />
+            <img src={foremanLogo} alt="revamo" className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-bold tracking-tight font-manrope lowercase">revamo</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -148,10 +148,10 @@ export default function TradeLanding() {
                 Voice-First AI
               </Badge>
               <h2 className="text-2xl sm:text-3xl font-extrabold mb-4 text-foreground">
-                On-site? Just talk to Revamo AI.
+                On-site? Just talk to revamo AI.
               </h2>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                Covered in muck and can't type? Say "{config.quoteExample}" and Revamo AI creates it using your templates and pricing.
+                Covered in muck and can't type? Say "{config.quoteExample}" and revamo AI creates it using your templates and pricing.
               </p>
               <ul className="space-y-3">
                 {["Works in noisy environments", "Understands trade terminology", "50+ skills and growing", "Voice or text — your choice"].map((item) => (
@@ -198,7 +198,7 @@ export default function TradeLanding() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
-          <img src={foremanLogo} alt="Revamo" className="h-6 w-6 rounded" />
+          <img src={foremanLogo} alt="revamo" className="h-6 w-6 rounded" />
           <span className="font-semibold font-manrope lowercase">revamo</span>
         </div>
         <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">

@@ -41,22 +41,22 @@ const WelcomeEmail = ({
   const heroTitle = isInvite
     ? `Welcome to ${teamName || 'the team'}`
     : greetingName
-      ? `Welcome to Revamo, ${greetingName}`
-      : 'Welcome to Revamo'
+      ? `Welcome to revamo, ${greetingName}`
+      : 'Welcome to revamo'
 
   return (
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
         {isInvite
-          ? `You've joined ${teamName || 'the team'} on Revamo`
+          ? `You've joined ${teamName || 'the team'} on revamo`
           : 'Your AI Operating System for field service is ready'}
       </Preview>
       <Body style={main}>
         <Container style={container}>
           <div style={header}>
-            <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
-            <Text style={brandName}>Revamo</Text>
+            <Img src={LOGO_URL} width="48" height="48" alt="revamo" style={logo} />
+            <Text style={brandName}>revamo</Text>
           </div>
 
           <Heading style={h1}>{heroTitle}</Heading>
@@ -116,9 +116,9 @@ const WelcomeEmail = ({
           </Text>
 
           <Text style={closing}>We're glad to have you on the tools.</Text>
-          <Text style={signoff}>— The Revamo team</Text>
+          <Text style={signoff}>— The revamo team</Text>
 
-          <Text style={footerBrand}>© Revamo · revamo.ai</Text>
+          <Text style={footerBrand}>© revamo · revamo.ai</Text>
         </Container>
       </Body>
     </Html>
@@ -129,8 +129,8 @@ export const template = {
   component: WelcomeEmail,
   subject: (data: Record<string, any>) =>
     data?.variant === 'team_invite'
-      ? `Welcome to ${data?.teamName || 'the team'} on Revamo`
-      : 'Welcome to Revamo',
+      ? `Welcome to ${data?.teamName || 'the team'} on revamo`
+      : 'Welcome to revamo',
   displayName: 'Welcome',
   previewData: {
     variant: 'self_signup',

@@ -1,60 +1,65 @@
-# Align codebase with revamo.ai custom domain
+## Goal
 
-You're connecting `revamo.ai` as a custom domain in **Project Settings → Domains** (manual step — I can't do that from code). This plan flips every remaining code-side reference so the app is consistent the moment DNS verifies.
+1. Make the wordmark **lowercase "revamo"** everywhere it appears as visible/textual brand — UI, landing page, meta tags, page titles, alt text, AI/system copy, PDFs, app store strings.
+2. Remove the **"See Revamo in 60 seconds"** demo video section from the landing page (since the clip is outdated under the new branding).
 
-## What changes
+Legal entity stays capitalized as **"Revamo Ltd"** (legal name in footer copyright, Terms/Privacy, structured data `creator.name`). Everything else becomes lowercase `revamo`.
 
-### 1. Brand config — `src/config/brand.ts`
-Two stale fields still point at the old domain:
-- `supportEmail`: `support@foreman.ie` → `support@revamo.ai`
-- `domain`: `foreman.ie` → `revamo.ai`
+## Scope of replacements
 
-`urls.landing` is already `https://revamo.ai`. Good.
+A grep for `Revamo` returns ~110 files. They fall into these buckets:
 
-### 2. README — `README.md`
-Top-line still says "Quotr" and references "Revamo AI" with mixed branding. Rewrite the title, intro, and the `git clone … cd quotr` example to use Revamo. Keep the iOS/Android setup steps unchanged.
+**Brand/UI surfaces — replace `Revamo` → `revamo`** (apply `font-manrope lowercase` where it's the visual wordmark, plain lowercase text elsewhere):
+- `index.html` — `<title>`, meta description, og:title/description, twitter, apple-mobile-web-app-title, JSON-LD `name`/`description` (keep `Revamo Ltd` in `creator.name`)
+- `public/manifest.json` — `name`, `short_name`
+- `src/config/brand.ts` — `name: "revamo"`, `fullName: "revamo AI"`, keep `legalEntity: "Revamo Ltd"`
+- `src/components/shared/SEOHead.tsx` — title suffix and `og:site_name`
+- All landing components (`HeroSection`, `SolutionSection`, `ForemanAISection`, `OutcomesSection`, `DifferentiatorsSection`, `SocialProofSection`, `BeforeAfter*`, `DashboardShowcase`, `DayTimeline`, `Testimonials`, `ROICalculator`, `trade/*`)
+- `src/pages/Landing.tsx` footer `© {year} revamo`, alt text
+- All `src/pages/*` pages (Pricing, Login, Signup, ResetPassword, Settings, etc.)
+- All sidebar/layout components (`AppSidebar`, `ActiveCallBar`, `FloatingTomButton`, `PwaInstallBanner`)
+- All settings/billing components, onboarding modals, pricebook flows
+- AI chat surfaces (`Revamo AI` → `revamo AI`): `George*` components, `ForemanAISettings`, `AgentWorkingPanel`, `LiveActionFeed`, `LiveActionOverlay`, `MorningBriefingCard`, `Ask`, `Briefing`, `GeorgeCapabilities`, `AIAuditHistory`, `Automations`, `Industries`, `RequestAccess`, `VoiceUsage`, `SubscriptionConfirmed`, `VerifyEmail`
+- AI hooks/system prompts that emit visible strings (`useForemanChat`, `useElevenLabsAgent`, `useUpgradePrompts`, `useVoiceFailureHandler`, `useToggleGeorgeVoice`, `useSubscriptionTier`, `useAddressAutocomplete`, `agentRegistry`, `slashCommandParser`, `demoWalkthrough`, `foreman-actions` types) — lowercase user-facing strings; system prompt text describing identity says "you are revamo"
+- `src/lib/pdf/pdfBranding.ts` — PDF footer/branding text
+- `src/main.tsx` — any console banner / document.title
+- `src/pages/AppStoreAssets.tsx` — preview strings
+- Remotion scenes (`Scene2`–`Scene7`) — wordmark text in the demo video source (not re-rendered now, but kept consistent)
 
-### 3. Email sender domain (edge functions)
-~15 edge functions hardcode `foreman.ie` / `notify.foreman.ie` as the sender. These should NOT flip until your DNS for `revamo.ai` is verified for email (SPF/DKIM/DMARC), otherwise sends will silently fail or go to spam.
+**Wordmark styling rule** — wherever it's the literal logo/wordmark (sidebar, nav, footer, hero, login/signup headings, PDF header), wrap as `<span className="font-manrope lowercase">revamo</span>`. Body-copy mentions of the brand stay in `font-inter` lowercase plain text.
 
-**Decision point:** I'll add a single shared constant in `supabase/functions/_shared/email-config.ts`:
-```ts
-export const EMAIL_FROM_DOMAIN = "foreman.ie";       // flip after DNS verified
-export const EMAIL_SENDER_DOMAIN = "notify.foreman.ie";
-```
-And refactor the ~15 functions to import from it. **One-line flip later** when you confirm `revamo.ai` email DNS is live, instead of grepping 15 files.
+**Do NOT change**:
+- `Revamo Ltd` legal entity in copyright lines, Terms, Privacy, JSON-LD `creator.name`, app store legal strings
+- `revamo.ai` domain (already lowercase)
+- Capacitor bundle IDs, file paths, asset filenames, variable/component names
+- `.lovable/**`, `mem://**`, `README.md`, `docs/**` (internal/dev docs)
+- Edge function code (server-side strings users don't see). Email subjects/sender names will be reviewed in a follow-up once DNS for `revamo.ai` email is verified.
 
-### 4. Capacitor — `capacitor.config.ts`
-Currently `appId: 'ie.foreman.app'`, `appName: 'Foreman'`. **Not changing in this pass** — bundle ID is App Store / Play Store immutable once submitted. You confirm whether you've submitted; if not, separate task.
+## Demo video removal
 
-### 5. SPA routing & redirects
-Nothing to do. Lovable hosting handles SPA fallback automatically. App uses `BrowserRouter` (verified). `revamo.ai` → primary, `www.revamo.ai` → redirect is configured in the Lovable Domains UI, not in code. No `_redirects` / `vercel.json` / `netlify.toml` needed (and they wouldn't work on Lovable anyway).
+In `src/pages/Landing.tsx`:
+- Remove the `<DemoVideoSection />` render between `HeroSection` and `ProblemSection`.
+- Remove its import.
 
-### 6. SEO
-`index.html` and `src/components/shared/SEOHead.tsx` already use `https://revamo.ai`. Verified — no changes needed.
+Leave `src/components/landing/DemoVideoSection.tsx` on disk (unreferenced) so it can be re-enabled later with new footage. Note this in the commit message.
 
-### 7. PWA — `public/manifest.json`
-Already says "Revamo". Verified — no changes needed.
+## Execution approach
 
-## Verification
+1. Run a sed pass per file bucket to replace standalone `Revamo` → `revamo` (case-sensitive, word-boundaried), excluding the protected strings (`Revamo Ltd`).
+2. Manually fix:
+   - `brand.ts` constants
+   - `index.html` title/meta/JSON-LD
+   - `manifest.json`
+   - `SEOHead.tsx` title formatting
+   - `Landing.tsx` (also remove DemoVideoSection)
+   - Wordmark spans that need `font-manrope lowercase` styling added in places where they currently render `Revamo` as plain text but should look like the logo (sidebar already done; check Pricing/Login/Signup/Settings headers)
+3. Spot-check with `grep -n "Revamo" --exclude-dir=node_modules` — only `Revamo Ltd` and ignored paths should remain.
+4. Update `mem://index.md` Core rule note: "Wordmark is lowercase `revamo` in Manrope; legal entity remains `Revamo Ltd`."
 
-After the edits, I'll run:
-```
-rg -ic "foreman\.ie|foreman\.world|@foreman" src/ supabase/functions/ docs/ index.html public/ README.md
-```
-Expected: zero hits **outside** the new shared `email-config.ts` constants (which intentionally still hold `foreman.ie` until you green-light the email DNS flip).
+## Out of scope (call out, don't change)
 
-## What you do (parallel to me)
+- Email sender domain still `foreman.ie` until DNS verified for `revamo.ai`
+- Capacitor bundle ID `ie.foreman.app` (would break store listings)
+- The actual demo video file `/public/foreman-demo.mp4` — left in place; can be deleted or replaced when new video is recorded
 
-1. Project Settings → Domains → Connect `revamo.ai` and `www.revamo.ai`
-2. Add the A + TXT records at your registrar (Lovable shows exact values)
-3. Publish the project (Publish button → Update)
-4. When DNS for email is also verified on `revamo.ai`, tell me and I do the one-line `EMAIL_FROM_DOMAIN` flip
-
-## Out of scope (separate tasks if you want them)
-
-- Capacitor bundle ID `ie.foreman.app` → `ai.revamo.app` (depends on App Store status)
-- GitHub Actions workflows referencing `ie.foreman.app`
-- Renaming asset filenames (`foreman-logo.png`) — purely cosmetic, breaks no UX
-
-Reply "go" to execute.
+Reply **go** to apply.

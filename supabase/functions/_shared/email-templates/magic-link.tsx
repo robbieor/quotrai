@@ -27,16 +27,16 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your login link for Revamo</Preview>
+    <Preview>Your login link for revamo</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={header}>
-          <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
-          <Text style={brandName}>Revamo</Text>
+          <Img src={LOGO_URL} width="48" height="48" alt="revamo" style={logo} />
+          <Text style={brandName}>revamo</Text>
         </div>
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
-          Click the button below to log in to Revamo. This link will expire shortly.
+          Click the button below to log in to revamo. This link will expire shortly.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Log In
@@ -44,7 +44,7 @@ export const MagicLinkEmail = ({
         <Text style={footer}>
           If you didn't request this link, you can safely ignore this email.
         </Text>
-        <Text style={footerBrand}>© Revamo · revamo.ai</Text>
+        <Text style={footerBrand}>© revamo · revamo.ai</Text>
       </Container>
     </Body>
   </Html>

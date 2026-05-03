@@ -40,7 +40,7 @@ import { PREVIEW_EMAIL_STEPS } from "@/components/shared/AgentWorkingPanel";
 import { useAgentTask } from "@/contexts/AgentTaskContext";
 
 const ACCENT_COLORS = [
-  { name: "Revamo Green", value: "#00FFB2" },
+  { name: "revamo Green", value: "#00FFB2" },
   { name: "Blue", value: "#3B82F6" },
   { name: "Purple", value: "#8B5CF6" },
   { name: "Orange", value: "#F97316" },

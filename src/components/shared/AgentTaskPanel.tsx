@@ -52,7 +52,7 @@ export function AgentTaskPanel() {
       <Sheet open={!!activeTask && !isMinimised} onOpenChange={(open) => { if (!open) toggleMinimise(); }}>
         <SheetContent side="bottom" className="max-h-[70vh] rounded-t-2xl px-4 pb-8">
           <SheetHeader className="flex flex-row items-center justify-between pb-2">
-            <SheetTitle className="text-base">Revamo AI</SheetTitle>
+            <SheetTitle className="text-base">revamo AI</SheetTitle>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleMinimise}>
                 <ChevronDown className="h-4 w-4" />
@@ -91,7 +91,7 @@ export function AgentTaskPanel() {
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span className="text-sm font-semibold text-foreground">Revamo AI</span>
+        <span className="text-sm font-semibold text-foreground">revamo AI</span>
         <div className="flex gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleMinimise}>
             <ChevronRight className="h-4 w-4" />

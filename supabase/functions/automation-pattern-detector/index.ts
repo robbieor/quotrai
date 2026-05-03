@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
         pattern_key: "quote_followup",
         title: "Auto-follow-up on quotes after 3 days",
         description:
-          `You've manually followed up on ${count} quotes in the last 30 days. Revamo can send these for you 3 days after the quote goes out, with a friendly tone, unless the customer's already replied.`,
+          `You've manually followed up on ${count} quotes in the last 30 days. revamo can send these for you 3 days after the quote goes out, with a friendly tone, unless the customer's already replied.`,
         evidence: { manual_followups_30d: count },
         confidence: Math.min(0.5 + count * 0.05, 0.95),
       });
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         pattern_key: "overdue_chase",
         title: "Auto-chase overdue invoices the day after due date",
         description:
-          `You've manually chased ${count} overdue invoices recently. Revamo can send a polite reminder the day after an invoice goes overdue, then escalate at 7 and 14 days.`,
+          `You've manually chased ${count} overdue invoices recently. revamo can send a polite reminder the day after an invoice goes overdue, then escalate at 7 and 14 days.`,
         evidence: { manual_chases_30d: count },
         confidence: Math.min(0.55 + count * 0.05, 0.95),
       });
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
         pattern_key: "recurring_customer",
         title: `Flag recurring customers (${count} found)`,
         description:
-          `${count} of your customers have booked 3+ jobs in 90 days. Revamo can flag them as recurring, suggest service plans, and remind you to schedule the next visit before they call.`,
+          `${count} of your customers have booked 3+ jobs in 90 days. revamo can flag them as recurring, suggest service plans, and remind you to schedule the next visit before they call.`,
         evidence: { recurring_customer_count: count },
         confidence: Math.min(0.6 + count * 0.04, 0.9),
       });
@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
           team_id,
           pattern_key: "auto_convert_to_job",
           title: "Auto-convert accepted quotes to jobs",
-          description: `${Math.round(rate * 100)}% of your accepted quotes get turned into jobs. Revamo can do that step for you the moment a quote is accepted, and you'll just see the new job ready to schedule.`,
+          description: `${Math.round(rate * 100)}% of your accepted quotes get turned into jobs. revamo can do that step for you the moment a quote is accepted, and you'll just see the new job ready to schedule.`,
           evidence: { accepted: total, converted, conversion_rate: rate },
           confidence: 0.85,
         });

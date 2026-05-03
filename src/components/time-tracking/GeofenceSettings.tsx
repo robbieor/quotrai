@@ -139,7 +139,7 @@ export function GeofenceSettings() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Choose how Revamo handles clock-in when you arrive at a job site.
+            Choose how revamo handles clock-in when you arrive at a job site.
           </p>
           <div className="grid gap-3">
             {AUTO_CLOCK_OPTIONS.map((option) => (

@@ -57,7 +57,7 @@ function SuggestionsTab() {
       <Card className="p-6 sm:p-8 text-center">
         <Sparkles className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">
-          No suggestions yet. Revamo is watching how you work and will propose
+          No suggestions yet. revamo is watching how you work and will propose
           automations as patterns emerge.
         </p>
       </Card>
@@ -120,7 +120,7 @@ function AutomationRunsList({ automationId }: { automationId: string }) {
   if (!runs?.length) {
     return (
       <p className="text-xs text-muted-foreground py-3">
-        No runs yet. Will appear here once Revamo finds matching activity.
+        No runs yet. Will appear here once revamo finds matching activity.
       </p>
     );
   }
@@ -277,7 +277,7 @@ function AutomationsInner() {
             <h1 className="text-2xl font-bold tracking-tight">Automations</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Revamo watches how you work and proposes ways to take repetitive
+            revamo watches how you work and proposes ways to take repetitive
             jobs off your hands. Nothing runs without your approval.
           </p>
         </div>

@@ -95,7 +95,7 @@ serve(async (req) => {
     };
     const tradeContext = userTradeType ? (tradeContextMap[userTradeType] || `TRADE: ${userTradeType}.`) : "";
 
-    const systemPrompt = `You are Revamo AI, the intelligent operations assistant for Revamo — an AI operating system for trade businesses.
+    const systemPrompt = `You are revamo AI, the intelligent operations assistant for revamo — an AI operating system for trade businesses.
 
 Region: ${region}
 Current date: ${now.toISOString().split("T")[0]} (${dayNames[now.getDay()]})

@@ -22,7 +22,7 @@ serve(async (req) => {
     if (!productName) throw new Error("productName is required");
     if (!unitAmount || unitAmount < 1) throw new Error("unitAmount must be at least 1 cent");
 
-    // Calculate a 2.9% application fee — this is Revamo's platform fee
+    // Calculate a 2.9% application fee — this is revamo's platform fee
     // The fee is deducted from the payment before funds reach the connected account
     const applicationFeeAmount = Math.round(unitAmount * (quantity || 1) * 0.029);
 
@@ -30,7 +30,7 @@ serve(async (req) => {
 
     // Create a Checkout Session using Direct Charges
     // The stripeAccount option routes the charge directly to the connected account
-    // application_fee_amount is how the platform (Revamo) earns revenue
+    // application_fee_amount is how the platform (revamo) earns revenue
     const session = await stripeClient.checkout.sessions.create(
       {
         line_items: [
@@ -46,7 +46,7 @@ serve(async (req) => {
           },
         ],
         payment_intent_data: {
-          // Application fee goes to the platform (Revamo)
+          // Application fee goes to the platform (revamo)
           application_fee_amount: applicationFeeAmount,
         },
         mode: "payment",

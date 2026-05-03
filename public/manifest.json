@@ -1,6 +1,6 @@
 {
-  "name": "Revamo",
-  "short_name": "Revamo",
+  "name": "revamo",
+  "short_name": "revamo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -106,7 +106,7 @@ export function RewriteButton({
               "text-primary hover:text-primary hover:bg-primary/10",
               className
             )}
-            title="Rewrite with Revamo AI"
+            title="Rewrite with revamo AI"
           >
             <Sparkles className={cn("h-4 w-4", variant === "full" && "mr-2")} />
             {variant === "full" && <span>Rewrite</span>}

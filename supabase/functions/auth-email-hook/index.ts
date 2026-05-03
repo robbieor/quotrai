@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Revamo"
+const SITE_NAME = "revamo"
 const SENDER_DOMAIN = "notify.foreman.ie"
 const ROOT_DOMAIN = "revamo.ai"
 const FROM_DOMAIN = "notify.foreman.ie" // Domain shown in From address (may be root or sender subdomain)

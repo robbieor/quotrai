@@ -94,12 +94,12 @@ export function useElevenLabsAgent() {
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log("[ElevenLabs] ✅ Connected to Revamo AI agent");
-      toast.success("Connected to Revamo AI");
+      console.log("[ElevenLabs] ✅ Connected to revamo AI agent");
+      toast.success("Connected to revamo AI");
     },
     onDisconnect: () => {
-      console.log("[ElevenLabs] 🔌 Disconnected from Revamo AI agent");
-      toast.info("Disconnected from Revamo AI");
+      console.log("[ElevenLabs] 🔌 Disconnected from revamo AI agent");
+      toast.info("Disconnected from revamo AI");
     },
     onMessage: (message) => {
       console.log("[ElevenLabs] 📨 Message received:", message);

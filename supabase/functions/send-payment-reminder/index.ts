@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
           <body style="font-family: 'Manrope', -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 20px;">
             <div style="max-width: 600px; margin: 0 auto;">
               <div style="background: #0f172a; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-                <img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
+                <img src="https://revamo.ai/foreman-logo.png" alt="revamo" width="140" style="display:block;margin:0 auto;" />
                 <h1 style="color: #ffffff; margin: 10px 0 0; font-size: 20px;">Payment Reminder</h1>
               </div>
               <div style="background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
                 <p>Thank you,<br><strong>${fromName}</strong></p>
               </div>
               <div style="text-align: center; padding: 15px; color: #64748b; font-size: 12px;">
-                Powered by <a href="#" style="color: #00E6A0;">Revamo</a>
+                Powered by <a href="#" style="color: #00E6A0;">revamo</a>
               </div>
             </div>
           </body>
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
           payload: {
             message_id: messageId,
             to: customer.email,
-            from: `${fromName} via Revamo <support@${FROM_DOMAIN}>`,
+            from: `${fromName} via revamo <support@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject, html,
             text: `Payment reminder for invoice ${inv.display_number} - €${Number(inv.total).toFixed(2)} overdue by ${daysOverdue} days`,

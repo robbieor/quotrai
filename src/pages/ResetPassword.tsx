@@ -131,7 +131,7 @@ export default function ResetPassword() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={foremanLogo} alt="Revamo" className="h-14 w-14 rounded-xl" />
+            <img src={foremanLogo} alt="revamo" className="h-14 w-14 rounded-xl" />
           </div>
           <CardTitle className="text-2xl">Set new password</CardTitle>
           <CardDescription>

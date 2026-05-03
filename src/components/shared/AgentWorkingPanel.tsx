@@ -55,7 +55,7 @@ export function AgentWorkingPanel({
   successMessage,
   successActions,
   onRetry,
-  title = "Revamo AI is working…",
+  title = "revamo AI is working…",
 }: AgentWorkingPanelProps) {
   return (
     <div className="p-4 space-y-4">

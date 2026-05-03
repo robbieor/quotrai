@@ -23,14 +23,14 @@ export function BeforeAfterSection() {
             Why this matters.
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            You didn't start a trade business to do admin. Revamo takes it off your plate.
+            You didn't start a trade business to do admin. revamo takes it off your plate.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8 animate-fade-up" style={{ animationDelay: "100ms" }}>
           {/* Before */}
           <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 sm:p-8">
-            <h3 className="text-lg sm:text-xl font-bold text-destructive mb-5">Without Revamo</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-destructive mb-5">Without revamo</h3>
             <ul className="space-y-4">
               {beforeItems.map((item) => (
                 <li key={item} className="flex items-start gap-3">
@@ -43,7 +43,7 @@ export function BeforeAfterSection() {
 
           {/* After */}
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 sm:p-8">
-            <h3 className="text-lg sm:text-xl font-bold text-primary mb-5">With Revamo</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-primary mb-5">With revamo</h3>
             <ul className="space-y-4">
               {afterItems.map((item) => (
                 <li key={item} className="flex items-start gap-3">

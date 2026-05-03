@@ -126,7 +126,7 @@ export function PhotoQuoteCard({ suggestion, onCreateQuote, onDismiss }: PhotoQu
               <div className="bg-muted/50 rounded-lg p-2.5 space-y-1">
                 <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
                   <HelpCircle className="h-3 w-3" />
-                  Revamo AI needs to confirm:
+                  revamo AI needs to confirm:
                 </div>
                 {suggestion.follow_up_questions.map((q, idx) => (
                   <p key={idx} className="text-[10px] text-muted-foreground">• {q}</p>

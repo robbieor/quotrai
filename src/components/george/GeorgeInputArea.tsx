@@ -284,8 +284,8 @@ export function GeorgeInputArea({
           {isListening 
             ? "Listening... Tap stop when done"
             : isSpeaking 
-               ? "Revamo AI is speaking..." 
-               : "Revamo AI can help with jobs, quotes, invoices, and expenses"
+               ? "revamo AI is speaking..." 
+               : "revamo AI can help with jobs, quotes, invoices, and expenses"
           }
         </p>
       </div>

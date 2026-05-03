@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { label: "Cost Control", url: "/expenses", icon: DollarSign, keywords: ["expenses", "costs", "spending"] },
   { label: "Client Intelligence", url: "/customers", icon: Users, keywords: ["customers", "clients", "contacts"] },
   { label: "Workforce", url: "/time-tracking", icon: Clock, keywords: ["time", "tracking", "workforce", "clock"] },
-  { label: "Revamo AI", url: "/foreman-ai", icon: Bot, keywords: ["ai", "foreman", "george", "assistant"] },
+  { label: "revamo AI", url: "/foreman-ai", icon: Bot, keywords: ["ai", "foreman", "george", "assistant"] },
   { label: "Templates", url: "/templates", icon: FolderOpen, keywords: ["templates"] },
   { label: "Price Book", url: "/price-book", icon: Package, keywords: ["price", "book", "rates"] },
   { label: "Enquiries", url: "/leads", icon: UserPlus, keywords: ["leads", "enquiries"] },
@@ -99,7 +99,7 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <Command shouldFilter={true} className="rounded-lg border-none">
         <CommandInput
-          placeholder="Type a command, search, or ask Revamo AI..."
+          placeholder="Type a command, search, or ask revamo AI..."
           value={query}
           onValueChange={setQuery}
           className="text-base"
@@ -132,13 +132,13 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
             >
               <Bot className="h-4 w-4" />
-              Ask Revamo AI: "{query}"
+              Ask revamo AI: "{query}"
             </button>
           </CommandEmpty>
 
           {/* AI-powered quick action when query looks like a command */}
           {query.trim().length > 3 && !isSlashCommand(query) && (
-            <CommandGroup heading="Ask Revamo AI">
+            <CommandGroup heading="Ask revamo AI">
               <CommandItem onSelect={handleFreeformAI} className="gap-3">
                 <Zap className="h-4 w-4 text-primary" />
                 <span>Ask: "{query}"</span>
@@ -207,7 +207,7 @@ export function CommandBar({ open, onOpenChange }: CommandBarProps) {
 
         <div className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground flex items-center justify-between">
           <span>↑↓ Navigate · ↵ Select · Esc Close</span>
-          <span className="hidden sm:inline">Type naturally to ask Revamo AI</span>
+          <span className="hidden sm:inline">Type naturally to ask revamo AI</span>
         </div>
       </Command>
     </CommandDialog>

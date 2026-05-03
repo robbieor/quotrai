@@ -1,4 +1,4 @@
-// Revamo Daily Briefing - generates an Insight → Impact → Action briefing
+// revamo Daily Briefing - generates an Insight → Impact → Action briefing
 // using Lovable AI Gateway (Gemini 2.5 Flash) and caches per team per day.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
     const currency = profile.currency || "EUR";
 
     const systemPrompt =
-      `You are Revamo, an Irish foreman AI running a tradesperson's business. ` +
+      `You are revamo, an Irish foreman AI running a tradesperson's business. ` +
       `Generate a daily briefing for ${firstName} (${profile.trade_type ?? "tradesperson"} in ${profile.country ?? "IE"}). ` +
       `Be direct, plain-spoken, no corporate fluff. No emojis. Currency: ${currency}. ` +
       `Use Insight → Impact → Action structure for each priority. Keep each field tight. ` +

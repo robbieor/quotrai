@@ -26,10 +26,10 @@ export function useToggleGeorgeVoice() {
       queryClient.invalidateQueries({ queryKey: ["seat-usage"] });
       
       const action = variables.enable ? "enabled" : "disabled";
-      toast.success(`Revamo AI Voice ${action}`);
+      toast.success(`revamo AI Voice ${action}`);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update Revamo AI Voice access");
+      toast.error(error.message || "Failed to update revamo AI Voice access");
     },
   });
 }

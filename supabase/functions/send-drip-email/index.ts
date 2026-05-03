@@ -14,13 +14,13 @@ const btnStyle = `display:inline-block;background:#00E6A0;color:#0f172a;font-fam
 
 const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => string; cta: { label: string; url: string } }> = {
   1: {
-    subject: "Welcome to Revamo — meet George, your AI partner 🤝",
-    body: (name) => `Hey ${name},\n\nWelcome to Revamo! I'm George — your AI business partner.\n\nI can create quotes, chase invoices, schedule jobs, and give you a morning briefing — all by voice or text.\n\nSay "What can you do?" to get started.`,
+    subject: "Welcome to revamo — meet George, your AI partner 🤝",
+    body: (name) => `Hey ${name},\n\nWelcome to revamo! I'm George — your AI business partner.\n\nI can create quotes, chase invoices, schedule jobs, and give you a morning briefing — all by voice or text.\n\nSay "What can you do?" to get started.`,
     cta: { label: "Talk to George →", url: `${APP_URL}/george` },
   },
   2: {
     subject: "Create your first quote in 30 seconds ⚡",
-    body: (name) => `Hi ${name},\n\nThe fastest way to see Revamo in action? Create your first quote.\n\nPick a template for your trade, fill in the details — or just tell George:\n\n"Quote for [customer], [job], [amount]"\n\nI'll do the rest.`,
+    body: (name) => `Hi ${name},\n\nThe fastest way to see revamo in action? Create your first quote.\n\nPick a template for your trade, fill in the details — or just tell George:\n\n"Quote for [customer], [job], [amount]"\n\nI'll do the rest.`,
     cta: { label: "Create a Quote →", url: `${APP_URL}/quotes` },
   },
   3: {
@@ -29,13 +29,13 @@ const DRIP_TEMPLATES: Record<number, { subject: string; body: (name: string) => 
     cta: { label: "View Your Dashboard →", url: `${APP_URL}/dashboard` },
   },
   4: {
-    subject: "Your crew should be on Revamo too 👷",
+    subject: "Your crew should be on revamo too 👷",
     body: (name) => `Hey ${name},\n\nForeman works even better with your team. Your trial includes unlimited seats — invite your crew now.\n\nThey'll get their own login, see assigned jobs, and clock in/out from their phone.`,
     cta: { label: "Invite Your Team →", url: `${APP_URL}/settings` },
   },
   5: {
     subject: "Your free trial ends soon ⏰",
-    body: (name) => `Hi ${name},\n\nJust a heads-up — your Revamo trial wraps up soon.\n\nTo keep everything running (and keep me on the job), pick the plan that fits. All your data stays safe.`,
+    body: (name) => `Hi ${name},\n\nJust a heads-up — your revamo trial wraps up soon.\n\nTo keep everything running (and keep me on the job), pick the plan that fits. All your data stays safe.`,
     cta: { label: "Choose a Plan →", url: `${APP_URL}/settings` },
   },
 };
@@ -47,7 +47,7 @@ function buildHtml(bodyText: string, cta: { label: string; url: string }, name: 
 
   return `<div style="font-family:'Manrope',sans-serif;max-width:600px;margin:0 auto;background:#ffffff;">
   <div style="background:#0f172a;padding:30px 25px;text-align:center;border-radius:12px 12px 0 0;">
-    <img src="https://revamo.ai/foreman-logo.png" alt="Revamo" width="140" style="display:block;margin:0 auto;" />
+    <img src="https://revamo.ai/foreman-logo.png" alt="revamo" width="140" style="display:block;margin:0 auto;" />
   </div>
   <div style="padding:30px 25px;">
     ${paragraphs}
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       await supabase.from("email_send_log").insert({ message_id: messageId, template_name: `drip:${row.drip_step}`, recipient_email: row.email, status: "pending" });
       const { error: enqueueError } = await supabase.rpc("enqueue_email", {
         queue_name: "transactional_emails",
-        payload: { message_id: messageId, to: row.email, from: `Revamo <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: template.subject, html, text: bodyText, purpose: "transactional", label: `drip:${row.drip_step}`, queued_at: new Date().toISOString() },
+        payload: { message_id: messageId, to: row.email, from: `revamo <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: template.subject, html, text: bodyText, purpose: "transactional", label: `drip:${row.drip_step}`, queued_at: new Date().toISOString() },
       });
 
       if (enqueueError) { console.error(`Failed drip ${row.drip_step} to ${row.email}:`, enqueueError); continue; }

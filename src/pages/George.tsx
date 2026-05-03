@@ -59,7 +59,7 @@ export default function George() {
   // Verify voice top-up payment on redirect from Stripe
   useVoiceTopupVerification();
 
-  // Revamo AI memory system
+  // revamo AI memory system
   const {
     taskContext,
     sessionEntities,

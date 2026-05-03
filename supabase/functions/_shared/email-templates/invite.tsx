@@ -29,16 +29,16 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to join Revamo</Preview>
+    <Preview>You've been invited to join revamo</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={header}>
-          <Img src={LOGO_URL} width="48" height="48" alt="Revamo" style={logo} />
-          <Text style={brandName}>Revamo</Text>
+          <Img src={LOGO_URL} width="48" height="48" alt="revamo" style={logo} />
+          <Text style={brandName}>revamo</Text>
         </div>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
-          You've been invited to join a team on Revamo. Click the button below to accept the invitation and get started.
+          You've been invited to join a team on revamo. Click the button below to accept the invitation and get started.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Accept Invitation
@@ -46,7 +46,7 @@ export const InviteEmail = ({
         <Text style={footer}>
           If you weren't expecting this invitation, you can safely ignore this email.
         </Text>
-        <Text style={footerBrand}>© Revamo · revamo.ai</Text>
+        <Text style={footerBrand}>© revamo · revamo.ai</Text>
       </Container>
     </Body>
   </Html>

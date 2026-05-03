@@ -64,10 +64,10 @@ const screenshotSpecs = [
 ];
 
 const permissions = [
-  { key: "NSMicrophoneUsageDescription", value: "Revamo uses the microphone for Revamo AI voice commands" },
-  { key: "NSLocationWhenInUseUsageDescription", value: "Revamo uses your location to verify job site attendance" },
-  { key: "NSLocationAlwaysAndWhenInUseUsageDescription", value: "Revamo tracks your location in the background for GPS time tracking" },
-  { key: "NSCameraUsageDescription", value: "Revamo uses the camera for site visit verification photos" },
+  { key: "NSMicrophoneUsageDescription", value: "revamo uses the microphone for revamo AI voice commands" },
+  { key: "NSLocationWhenInUseUsageDescription", value: "revamo uses your location to verify job site attendance" },
+  { key: "NSLocationAlwaysAndWhenInUseUsageDescription", value: "revamo tracks your location in the background for GPS time tracking" },
+  { key: "NSCameraUsageDescription", value: "revamo uses the camera for site visit verification photos" },
 ];
 
 export default function AppStoreAssets() {
@@ -75,7 +75,7 @@ export default function AppStoreAssets() {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="App Store Assets & Submission Guide"
-        description="Everything needed to submit Revamo to the Apple App Store and Google Play Store."
+        description="Everything needed to submit revamo to the Apple App Store and Google Play Store."
         path="/app-store-assets"
       />
 
@@ -89,7 +89,7 @@ export default function AppStoreAssets() {
             </Button>
           </Link>
           <div className="flex items-center gap-2">
-            <img src={foremanLogo} alt="Revamo" className="h-8 w-8 rounded-lg" />
+            <img src={foremanLogo} alt="revamo" className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-bold tracking-tight">App Store Assets</span>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function AppStoreAssets() {
               <div key={size} className="text-center">
                 <img
                   src={foremanLogo}
-                  alt={`Revamo icon ${size}px`}
+                  alt={`revamo icon ${size}px`}
                   className="rounded-2xl shadow-md"
                   style={{ width: size, height: size }}
                 />
@@ -293,7 +293,7 @@ export default function AppStoreAssets() {
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">App Name</p>
-              <p className="font-semibold">Revamo - Invoice & Job Tracker</p>
+              <p className="font-semibold">revamo - Invoice & Job Tracker</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Subtitle (iOS)</p>

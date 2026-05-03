@@ -100,14 +100,14 @@ Deno.serve(async (req) => {
           '<tr><td style="padding:8px 0;color:#64748b;">Date</td><td style="padding:8px 0;">' + expenseDate + "</td></tr>",
           '<tr><td style="padding:8px 0;color:#64748b;">Category</td><td style="padding:8px 0;">' + category + "</td></tr>",
           "</table>",
-          '<p style="color:#64748b;font-size:14px;">If this doesn\'t look right, just edit it in your Revamo dashboard.</p>',
+          '<p style="color:#64748b;font-size:14px;">If this doesn\'t look right, just edit it in your revamo dashboard.</p>',
           "</div>",
         ].join("");
 
         await adminSupabase.from("email_send_log").insert({ message_id: messageId, template_name: "expense-confirmation", recipient_email: senderAddr, status: "pending" });
         await adminSupabase.rpc("enqueue_email", {
           queue_name: "transactional_emails",
-          payload: { message_id: messageId, to: senderAddr, from: `Revamo Expenses <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `\u2705 Expense logged: ${description}`, html: confirmHtml, text: `Expense logged: ${description} - ${amount.toFixed(2)}`, purpose: "transactional", label: "expense-confirmation", queued_at: new Date().toISOString() },
+          payload: { message_id: messageId, to: senderAddr, from: `revamo Expenses <support@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN, subject: `\u2705 Expense logged: ${description}`, html: confirmHtml, text: `Expense logged: ${description} - ${amount.toFixed(2)}`, purpose: "transactional", label: "expense-confirmation", queued_at: new Date().toISOString() },
         });
 
         // Audit log entry
