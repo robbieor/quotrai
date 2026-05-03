@@ -88,9 +88,7 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-primary flex items-center justify-center overflow-hidden shrink-0">
-              <img src={foremanLogo} alt="revamo" className="h-full w-full object-contain p-1" />
-            </div>
+            <img src={foremanLogo} alt="revamo" className="h-8 w-8 sm:h-9 sm:w-9" />
             <span className="text-lg sm:text-xl font-bold tracking-tight font-manrope lowercase">revamo</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -206,9 +204,7 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="flex flex-col items-center gap-4 sm:gap-6 text-center sm:text-left sm:flex-row sm:justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden shrink-0">
-                <img src={foremanLogo} alt="revamo" className="h-full w-full object-contain p-1" />
-              </div>
+              <img src={foremanLogo} alt="revamo" className="h-7 w-7 sm:h-8 sm:w-8" />
               <span className="text-base sm:text-lg font-bold tracking-tight font-manrope lowercase">revamo</span>
               <span className="text-xs sm:text-sm text-muted-foreground">Powered by revamo AI</span>
             </div>
