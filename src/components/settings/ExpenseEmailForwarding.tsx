@@ -7,6 +7,9 @@ import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 
 export function ExpenseEmailForwarding() {
+  // Email-to-Expense feature hidden pre-launch — pending inbound mail pipeline.
+  return null;
+  // eslint-disable-next-line no-unreachable
   const [copied, setCopied] = useState(false);
   const { profile, isLoading } = useProfile();
 
