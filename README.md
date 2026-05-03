@@ -1,6 +1,6 @@
-# Quotr
+# Revamo
 
-Trade business management platform — quotes, invoices, jobs, GPS time tracking, and AI assistant (Revamo AI).
+The AI operating system for field service businesses — quotes, invoices, jobs, GPS time tracking, and Revamo AI.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Trade business management platform — quotes, invoices, jobs, GPS time tracking
 ```bash
 # 1. Clone the repository
 git clone <your-repo-url>
-cd quotr
+cd revamo
 
 # 2. Install dependencies
 npm install
