@@ -26,10 +26,23 @@ const PHASE_LABELS: Record<string, string> = {
   dialing_websocket: "Trying fallback…",
 };
 
-export function FloatingTomButton() {
+interface FloatingTomButtonProps {
+  variant?: "floating" | "headless";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function FloatingTomButton({ variant = "floating", open, onOpenChange }: FloatingTomButtonProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isControlled = open !== undefined;
+  const isExpanded = isControlled ? !!open : internalExpanded;
+  const setIsExpanded = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalExpanded(v);
+  };
+  const isHeadless = variant === "headless";
   const { profile } = useProfile();
   const isMobile = useIsMobile();
   const { hasVoiceAccess, canUseVoice, isLoading: georgeLoading } = useGeorgeAccess();
