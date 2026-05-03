@@ -437,7 +437,7 @@ export const TRADES: Record<string, TradeConfig> = {
     segments: [
       { label: "Solo painter", hook: "Professional quotes that win you the job." },
       { label: "2–5 person crew", hook: "Schedule multiple sites and track your team." },
-      { label: "Growing business", hook: "Job costing, expenses, and accounting sync." },
+      { label: "Growing business", hook: "Job costing and accounting sync." },
     ],
     switchReasons: [
       { from: "Handwritten quotes", reason: "They don't look professional enough for high-end clients." },
