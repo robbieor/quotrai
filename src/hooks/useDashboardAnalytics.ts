@@ -117,11 +117,7 @@ export interface CustomerProfitData {
   invoiceCount: number;
 }
 
-export interface SubscriptionCoveredData {
-  feeEarned: number;
-  subscriptionCost: number;
-  percentCovered: number;
-}
+export interface ScatterCustomerData {
 
 export interface ScatterCustomerData {
   id: string;
