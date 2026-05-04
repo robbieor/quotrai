@@ -72,7 +72,7 @@ export function ReferralCard() {
           Refer a Mate
         </CardTitle>
         <CardDescription>
-          Give a mate 30 days free. Get a month free yourself when they subscribe.
+          Give a mate 14 days free. Get a month free yourself when they subscribe.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -99,7 +99,7 @@ export function ReferralCard() {
             if (navigator.share) {
               navigator.share({
                 title: "Try revamo — AI-powered job management",
-                text: "I've been using revamo to run my trade business. Sign up with my link and get 30 days free!",
+                text: "I've been using revamo to run my business. Sign up with my link and get 14 days free!",
                 url: referralLink,
               });
             } else {

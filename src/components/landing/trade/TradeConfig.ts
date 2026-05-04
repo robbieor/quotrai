@@ -57,7 +57,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote Mrs. O'Brien — boiler service & flush",
     seoTitle: "revamo for Plumbers — AI-Powered Quoting, Invoicing & Job Management",
     seoDescription:
-      "revamo is the AI office manager for plumbing businesses. Voice-powered quoting, automated invoicing, GPS time tracking, and payment chasing. Free 30-day trial.",
+      "revamo is the AI office manager for plumbing businesses. Voice-powered quoting, automated invoicing, GPS time tracking, and payment chasing. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Just talk to revamo AI — say 'Quote the Murphy boiler service' and it's done. No training needed." },
       { objection: "My lads won't use it", response: "GPS clock-in is one tap. Voice quoting works on-site, even in gloves. Zero typing required." },
@@ -94,7 +94,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the McCarthy house for a full rewire — 3 bed semi",
     seoTitle: "revamo for Electricians — AI Quoting, Certs & Job Management",
     seoDescription:
-      "revamo is the AI office manager for electrical businesses. Voice-powered quoting, automated invoicing, GPS tracking, and trade templates. Free 30-day trial.",
+      "revamo is the AI office manager for electrical businesses. Voice-powered quoting, automated invoicing, GPS tracking, and trade templates. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote the McCarthy rewire, 3-bed semi' — revamo AI builds it using your templates. Zero learning curve." },
       { objection: "My apprentices won't use it", response: "One-tap GPS clock-in. They're already on their phones — this is simpler than WhatsApp." },
@@ -131,7 +131,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Brennan office — AC unit replacement",
     seoTitle: "revamo for HVAC — AI Scheduling, Quoting & Job Management",
     seoDescription:
-      "HVAC businesses use revamo to schedule service calls, create AI-powered quotes, invoice customers, and track crew time. Free 30-day trial.",
+      "HVAC businesses use revamo to schedule service calls, create AI-powered quotes, invoice customers, and track crew time. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Tell revamo AI what you need — it creates the quote. Voice or text, your choice." },
       { objection: "My techs won't use it", response: "GPS clock-in is automatic when they arrive on-site. Nothing to remember." },
@@ -168,7 +168,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Dalton extension — groundworks and blockwork phase",
     seoTitle: "revamo for Builders — AI Job Management, Quotes & Team Tracking",
     seoDescription:
-      "revamo is the AI office manager for builders and general contractors. Voice quoting, GPS crew tracking, job costing, and automated invoicing. Free 30-day trial.",
+      "revamo is the AI office manager for builders and general contractors. Voice quoting, GPS crew tracking, job costing, and automated invoicing. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice-first: say 'Quote the Dalton extension, groundworks phase' and revamo AI handles it." },
       { objection: "My subbies won't use it", response: "One-tap clock-in with GPS. Simpler than signing a site sheet." },
@@ -205,7 +205,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote Mrs. Sullivan — weekly 3-bed house clean",
     seoTitle: "revamo for Cleaning Businesses — AI Scheduling, Quoting & Invoicing",
     seoDescription:
-      "Cleaning businesses use revamo to schedule jobs, create instant quotes, invoice clients, and track team locations. Free 30-day trial.",
+      "Cleaning businesses use revamo to schedule jobs, create instant quotes, invoice clients, and track team locations. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote a weekly clean for the Sullivan house' — done. Voice-first, zero training." },
       { objection: "My cleaners won't use it", response: "One-tap GPS clock-in when they arrive. Simpler than a timesheet." },
@@ -242,7 +242,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Henderson garden — patio laying and new turf",
     seoTitle: "revamo for Landscapers — AI Quoting, Scheduling & Job Management",
     seoDescription:
-      "Landscaping businesses use revamo to create instant quotes, schedule crews, track materials, and invoice clients. Free 30-day trial.",
+      "Landscaping businesses use revamo to create instant quotes, schedule crews, track materials, and invoice clients. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quoting from the garden — say what you need, revamo AI builds the quote." },
       { objection: "My lads won't use it", response: "GPS clock-in on arrival. One tap, done. Works in work gloves." },
@@ -279,7 +279,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the O'Reilly restaurant — rodent treatment programme",
     seoTitle: "revamo for Pest Control — AI Scheduling, Quoting & Route Management",
     seoDescription:
-      "Pest control businesses use revamo to schedule treatments, create instant quotes, manage recurring contracts, and track technician routes. Free 30-day trial.",
+      "Pest control businesses use revamo to schedule treatments, create instant quotes, manage recurring contracts, and track technician routes. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote a rodent treatment for O'Reilly's' — revamo AI handles the rest." },
       { objection: "My techs won't use it", response: "GPS clock-in on arrival. Automatic proof of service for every visit." },
@@ -316,7 +316,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Walsh pool — pump replacement and acid wash",
     seoTitle: "revamo for Pool & Spa — AI Route Management, Quoting & Invoicing",
     seoDescription:
-      "Pool and spa businesses use revamo to manage maintenance routes, create instant quotes, track chemical logs, and invoice clients. Free 30-day trial.",
+      "Pool and spa businesses use revamo to manage maintenance routes, create instant quotes, track chemical logs, and invoice clients. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice-first: say 'Quote the Walsh pool pump replacement' and it's built in seconds." },
       { objection: "My techs won't use it", response: "GPS clock-in at each pool. One tap per visit — faster than a clipboard." },
@@ -353,7 +353,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Brennan driveway — block paving clean and seal",
     seoTitle: "revamo for Pressure Washing — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Pressure washing businesses use revamo to create instant on-site quotes, schedule jobs, track crew locations, and invoice clients. Free 30-day trial.",
+      "Pressure washing businesses use revamo to create instant on-site quotes, schedule jobs, track crew locations, and invoice clients. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quoting on-site — say the job, get the quote. Done in 30 seconds." },
       { objection: "It's another monthly cost", response: "1.5% on payments. No work, no cost. Simple." },
@@ -390,7 +390,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Kelly bungalow — full re-felt and new ridge tiles",
     seoTitle: "revamo for Roofers — AI Quoting, Job Costing & Crew Management",
     seoDescription:
-      "Roofing contractors use revamo to create instant quotes, manage crew schedules, track job costs, and automate invoicing. Free 30-day trial.",
+      "Roofing contractors use revamo to create instant quotes, manage crew schedules, track job costs, and automate invoicing. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quote from the roof — 'Quote Kelly bungalow, re-felt and ridge tiles.' Done." },
       { objection: "My lads won't use it", response: "GPS clock-in, one tap. Works with gloves on." },
@@ -427,7 +427,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Davis house — 3 bedrooms, hallway and landing",
     seoTitle: "revamo for Painters — AI Quoting, Scheduling & Job Management",
     seoDescription:
-      "Painters and decorators use revamo to create professional quotes, schedule jobs, track materials, and automate invoicing. Free 30-day trial.",
+      "Painters and decorators use revamo to create professional quotes, schedule jobs, track materials, and automate invoicing. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote the Davis house, 3 beds and hallway' — revamo AI does the rest." },
       { objection: "I work alone", response: "Even better — revamo is your office manager without the overhead." },
@@ -464,7 +464,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Murphy garden — 30m close-board fence with gate",
     seoTitle: "revamo for Fencing Contractors — AI Quoting & Job Management",
     seoDescription:
-      "Fencing contractors use revamo to quote by the metre, manage schedules, track materials costs, and automate invoicing. Free 30-day trial.",
+      "Fencing contractors use revamo to quote by the metre, manage schedules, track materials costs, and automate invoicing. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Voice quote on-site: 'Quote 30 metres close-board with gate.' Sorted." },
       { objection: "It's another monthly cost", response: "1.5% on what you collect. No jobs, zero cost." },
@@ -501,7 +501,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Ryan house — washing machine drum bearing replacement",
     seoTitle: "revamo for Appliance Repair — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Appliance repair businesses use revamo to create instant diagnostic quotes, schedule call-outs, track parts, and invoice on-site. Free 30-day trial.",
+      "Appliance repair businesses use revamo to create instant diagnostic quotes, schedule call-outs, track parts, and invoice on-site. Free 14-day trial.",
     objections: [
       { objection: "I don't have time to learn new software", response: "Say 'Quote bearing replacement for Ryan washing machine.' revamo AI handles it." },
       { objection: "It's another monthly cost", response: "1.5% on payments. No call-outs, no cost." },
@@ -538,7 +538,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Byrne house — emergency lock change, front and back doors",
     seoTitle: "revamo for Locksmiths — AI Quoting, Emergency Scheduling & Invoicing",
     seoDescription:
-      "Locksmiths use revamo to quote on arrival, schedule emergency call-outs, track jobs, and invoice on-site. Free 30-day trial.",
+      "Locksmiths use revamo to quote on arrival, schedule emergency call-outs, track jobs, and invoice on-site. Free 14-day trial.",
     objections: [
       { objection: "Most of my work is cash", response: "That's fine — log every job for tax records and business visibility. Know your real numbers." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote lock change, front and back doors.' Done before the kettle boils." },
@@ -575,7 +575,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Murray house — shelf installation, tap repair, and door hanging",
     seoTitle: "revamo for Handymen — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Handymen use revamo to create multi-task quotes, schedule jobs, and invoice clients automatically. Free 30-day trial.",
+      "Handymen use revamo to create multi-task quotes, schedule jobs, and invoice clients automatically. Free 14-day trial.",
     objections: [
       { objection: "My jobs are all different", response: "That's revamo's strength — voice-quote any type of work. No templates needed." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote shelves, tap, and door for Murray.' revamo AI builds a multi-line quote." },
@@ -612,7 +612,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Collins property — water damage restoration, ground floor",
     seoTitle: "revamo for Restoration — AI Documentation, Quoting & Project Management",
     seoDescription:
-      "Restoration and remediation businesses use revamo to document damage, create detailed quotes, manage crews, and invoice insurers. Free 30-day trial.",
+      "Restoration and remediation businesses use revamo to document damage, create detailed quotes, manage crews, and invoice insurers. Free 14-day trial.",
     objections: [
       { objection: "I need detailed scope documents", response: "revamo AI builds itemised quotes with labour/materials split — ready for the loss adjuster." },
       { objection: "My crews are on multiple sites", response: "GPS tracking shows who's where, in real time." },
@@ -649,7 +649,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the O'Brien house — 16 panel system with battery storage",
     seoTitle: "revamo for Solar Installers — AI Quoting, Project Tracking & Invoicing",
     seoDescription:
-      "Solar installation companies use revamo to create detailed proposals, manage project stages, track crews, and handle staged invoicing. Free 30-day trial.",
+      "Solar installation companies use revamo to create detailed proposals, manage project stages, track crews, and handle staged invoicing. Free 14-day trial.",
     objections: [
       { objection: "Our quotes are very detailed", response: "revamo AI builds multi-line itemised quotes — panels, inverter, battery, labour, scaffolding — all broken out." },
       { objection: "We need project stage tracking", response: "Create milestones: survey, install, commission, sign-off. Track and invoice each stage." },
@@ -686,7 +686,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Collins BMW — full exterior detail and ceramic coating",
     seoTitle: "revamo for Auto Detailing — AI Booking, Quoting & Client Management",
     seoDescription:
-      "Auto detailing businesses use revamo to manage bookings, create instant quotes, track product usage, and invoice clients on-site. Free 30-day trial.",
+      "Auto detailing businesses use revamo to manage bookings, create instant quotes, track product usage, and invoice clients on-site. Free 14-day trial.",
     objections: [
       { objection: "I use Instagram for bookings", response: "Keep your socials for marketing — use revamo for the business side: quotes, invoices, scheduling." },
       { objection: "I don't have time to learn new software", response: "Say 'Quote full detail and ceramic for Collins BMW.' Done in seconds." },
@@ -723,7 +723,7 @@ export const TRADES: Record<string, TradeConfig> = {
     quoteExample: "Quote the Walsh house — double electric roller door with remote",
     seoTitle: "revamo for Garage Door Services — AI Quoting, Scheduling & Invoicing",
     seoDescription:
-      "Garage door service companies use revamo to create instant quotes, schedule installations, track parts, and automate invoicing. Free 30-day trial.",
+      "Garage door service companies use revamo to create instant quotes, schedule installations, track parts, and automate invoicing. Free 14-day trial.",
     objections: [
       { objection: "Every door is different", response: "revamo AI builds bespoke quotes — just describe the door and the job." },
       { objection: "I don't have time to learn new software", response: "Voice quoting from the driveway. Say it, send it." },
