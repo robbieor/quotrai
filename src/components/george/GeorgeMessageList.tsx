@@ -253,7 +253,7 @@ function MobileMessageBubble({ message }: { message: Message }) {
   return (
     <div className="flex justify-end">
       <div className="bg-[hsl(155,85%,28%)] rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%] shadow-sm">
-        <p className="text-[15px] whitespace-pre-wrap leading-relaxed text-white font-medium">{message.content}</p>
+        <p className="text-[15px] whitespace-pre-wrap leading-relaxed font-semibold" style={{ color: "#000000" }}>{message.content}</p>
       </div>
     </div>
   );
