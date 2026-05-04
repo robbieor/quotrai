@@ -274,13 +274,13 @@ function DesktopMessageBubble({ message }: { message: Message }) {
           "max-w-[85%] rounded-2xl px-4 py-2.5",
           isAssistant
             ? "bg-muted/50 border border-border text-foreground rounded-tl-md"
-            : "bg-[hsl(155,85%,28%)] text-white rounded-tr-md shadow-sm"
+            : "bg-[hsl(155,85%,28%)] text-black rounded-tr-md shadow-sm"
         )}
       >
         {isAssistant ? (
           <MarkdownContent content={message.content} className="text-foreground" />
         ) : (
-          <p className="text-[15px] whitespace-pre-wrap leading-relaxed text-white font-medium">{message.content}</p>
+          <p className="text-[15px] whitespace-pre-wrap leading-relaxed text-black font-semibold">{message.content}</p>
         )}
         <p
           className={cn(
