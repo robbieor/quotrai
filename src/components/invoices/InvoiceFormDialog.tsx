@@ -117,19 +117,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
     return customers?.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // Get VAT info for display
-  const vatInfo = useMemo(() => {
-    return getCountryVatInfo(selectedCustomer?.country_code);
-  }, [selectedCustomer]);
-
-  // Auto-populate tax rate when customer changes (only for new invoices)
-  useEffect(() => {
-    if (!isEditing && selectedCustomer?.country_code) {
-      const vatRate = getVatRateFromCountry(selectedCustomer.country_code);
-      form.setValue("tax_rate", vatRate);
-    }
-  }, [selectedCustomer?.country_code, isEditing, form]);
-
   useEffect(() => {
     if (invoice) {
       form.reset({
@@ -137,7 +124,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
         status: invoice.status,
         issue_date: new Date(invoice.issue_date),
         due_date: new Date(invoice.due_date),
-        tax_rate: Number(invoice.tax_rate) || 0,
         notes: invoice.notes || "",
       });
       setLineItems(
@@ -148,6 +134,10 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
           unit_price: Number(item.unit_price),
           line_group: (item as any).line_group || "Materials",
           visible: (item as any).visible !== false,
+          tax_rate:
+            (item as any).tax_rate !== null && (item as any).tax_rate !== undefined
+              ? Number((item as any).tax_rate)
+              : Number(invoice.tax_rate) || getDefaultLineRate(country, (item as any).line_group),
         }))
       );
       setDisplayMode((invoice as any).pricing_display_mode || "detailed");
@@ -157,23 +147,25 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
         status: "draft",
         issue_date: new Date(),
         due_date: addDays(new Date(), 14),
-        tax_rate: 0,
         notes: "",
       });
       setLineItems([
-        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+        {
+          id: crypto.randomUUID(),
+          description: "",
+          quantity: 1,
+          unit_price: 0,
+          line_group: "Materials",
+          visible: true,
+          tax_rate: getDefaultLineRate(country, "Materials"),
+        },
       ]);
       setDisplayMode("detailed");
     }
-  }, [invoice, form]);
+  }, [invoice, form, country]);
 
-  const subtotal = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
-  const taxRate = form.watch("tax_rate") || 0;
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
+  const totals = useMemo(() => calculateTotals(lineItems), [lineItems]);
+  const { subtotal, taxAmount, total, breakdown, uniformRate } = totals;
 
   const formatCurrency = (value: number) => {
     return formatCurrencyValue(value, selectedCurrency);
@@ -181,18 +173,20 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
 
   const onSubmit = async (values: InvoiceFormValues) => {
     const validItems = lineItems.filter((item) => item.description.trim() !== "");
-    
+
     if (validItems.length === 0) {
       form.setError("root", { message: "Please add at least one line item" });
       return;
     }
+
+    const docTaxRate = uniformRate ?? 0;
 
     const invoiceData = {
       customer_id: values.customer_id,
       status: values.status,
       issue_date: format(values.issue_date, "yyyy-MM-dd"),
       due_date: format(values.due_date, "yyyy-MM-dd"),
-      tax_rate: values.tax_rate,
+      tax_rate: docTaxRate,
       notes: values.notes || null,
       pricing_display_mode: displayMode,
     };
@@ -203,6 +197,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
       unit_price: item.unit_price,
       line_group: item.line_group || "Materials",
       visible: item.visible !== false,
+      tax_rate: item.tax_rate ?? getDefaultLineRate(country, item.line_group),
     }));
 
     if (isEditing) {
