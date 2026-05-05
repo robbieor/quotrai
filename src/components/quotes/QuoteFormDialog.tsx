@@ -465,6 +465,8 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
             const newItems = items.map((item) => ({
               id: crypto.randomUUID(),
               ...item,
+              visible: true,
+              tax_rate: getDefaultLineRate(country, item.line_group),
             }));
             setLineItems(newItems);
           }}
