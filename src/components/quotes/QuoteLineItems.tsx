@@ -111,13 +111,24 @@ function PriceBookAutocomplete({
   );
 }
 
-export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENCY }: QuoteLineItemsProps) {
+export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENCY, country }: QuoteLineItemsProps) {
   const [priceBookMatches, setPriceBookMatches] = useState<Record<string, PriceBookItem>>({});
+  const taxName = getTaxName(country);
+  const showTaxColumn = hasVatConfig(country);
 
   const addItem = () => {
+    const newGroup = "Materials";
     onChange([
       ...items,
-      { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+      {
+        id: crypto.randomUUID(),
+        description: "",
+        quantity: 1,
+        unit_price: 0,
+        line_group: newGroup,
+        visible: true,
+        tax_rate: getDefaultLineRate(country, newGroup),
+      },
     ]);
   };
 
@@ -132,9 +143,19 @@ export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENC
 
   const updateItem = (id: string, field: keyof LineItem, value: string | number | boolean) => {
     onChange(
-      items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
+      items.map((item) => {
+        if (item.id !== id) return item;
+        const next = { ...item, [field]: value } as LineItem;
+        // When line_group changes, refresh the default tax rate for that group
+        // unless the user has set a custom rate that isn't in the allowed list.
+        if (field === "line_group" && typeof value === "string") {
+          const allowed = getAllowedRates(country, value);
+          if (item.tax_rate === undefined || allowed.includes(item.tax_rate)) {
+            next.tax_rate = getDefaultLineRate(country, value);
+          }
+        }
+        return next;
+      })
     );
   };
 
@@ -153,14 +174,19 @@ export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENC
     return formatCurrencyValue(value, currencyCode);
   };
 
+  const gridCols = showTaxColumn
+    ? "grid-cols-[1fr_70px_80px_80px_80px_70px_32px_32px]"
+    : "grid-cols-[1fr_80px_80px_80px_80px_32px_32px]";
+
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[1fr_80px_80px_80px_80px_32px_32px] gap-2 text-sm font-medium text-muted-foreground px-1">
+      <div className={cn("hidden md:grid gap-2 text-sm font-medium text-muted-foreground px-1", gridCols)}>
         <div>Description</div>
         <div className="text-center">Qty</div>
         <div className="text-right">Price</div>
         <div className="text-right">Total</div>
         <div className="text-center">Group</div>
+        {showTaxColumn && <div className="text-center">{taxName}</div>}
         <div></div>
         <div></div>
       </div>
@@ -170,10 +196,13 @@ export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENC
         const margin = pbMatch && pbMatch.cost_price > 0 && item.unit_price > 0
           ? (((item.unit_price - pbMatch.cost_price) / item.unit_price) * 100).toFixed(0)
           : null;
+        const allowedRates = getAllowedRates(country, item.line_group);
+        const currentRate = item.tax_rate ?? getDefaultLineRate(country, item.line_group);
+        const isCustom = !allowedRates.includes(currentRate);
 
         return (
-          <div key={item.id} className="space-y-0.5">
-            <div className="grid grid-cols-[1fr_80px_80px_80px_80px_32px_32px] gap-2 items-center">
+          <div key={item.id} className="space-y-1.5 md:space-y-0.5 border md:border-0 rounded-lg p-3 md:p-0">
+            <div className={cn("grid gap-2 items-center", gridCols)}>
               <PriceBookAutocomplete
                 value={item.description}
                 onChange={(v) => updateItem(item.id, "description", v)}
@@ -185,6 +214,7 @@ export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENC
                 value={item.quantity}
                 onChange={(e) => updateItem(item.id, "quantity", parseFloat(e.target.value) || 0)}
                 className="text-center"
+                aria-label="Quantity"
               />
               <Input
                 type="number"
@@ -193,6 +223,7 @@ export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENC
                 value={item.unit_price}
                 onChange={(e) => updateItem(item.id, "unit_price", parseFloat(e.target.value) || 0)}
                 className="text-right"
+                aria-label="Unit price"
               />
               <div className="text-right font-medium pr-2 text-sm">
                 {formatCurrency(item.quantity * item.unit_price)}
@@ -210,6 +241,27 @@ export function QuoteLineItems({ items, onChange, currencyCode = DEFAULT_CURRENC
                   ))}
                 </SelectContent>
               </Select>
+              {showTaxColumn && (
+                <Select
+                  value={isCustom ? "__custom__" : String(currentRate)}
+                  onValueChange={(v) => {
+                    if (v === "__custom__") return;
+                    updateItem(item.id, "tax_rate", parseFloat(v));
+                  }}
+                >
+                  <SelectTrigger className="h-9 text-xs" aria-label={`${taxName} rate`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allowedRates.map((r) => (
+                      <SelectItem key={r} value={String(r)}>{r}%</SelectItem>
+                    ))}
+                    {isCustom && (
+                      <SelectItem value="__custom__">{currentRate}% (custom)</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
               <Button
                 type="button"
                 variant="ghost"
