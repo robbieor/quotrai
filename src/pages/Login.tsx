@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,11 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import foremanLogo from "@/assets/foreman-logo.png";
+import { Info } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const initialEmail = searchParams.get("email") || "";
+  const showExistingBanner = searchParams.get("existing") === "1";
+
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [bannerVisible, setBannerVisible] = useState(showExistingBanner);
   const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -57,6 +63,18 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {bannerVisible && (
+              <div className="flex gap-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm">
+                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div className="text-foreground">
+                  An account with this email already exists. Sign in below, or{" "}
+                  <Link to="/forgot-password" className="text-primary hover:underline">
+                    reset your password
+                  </Link>{" "}
+                  if you've forgotten it.
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -64,7 +82,10 @@ export default function Login() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (bannerVisible) setBannerVisible(false);
+                }}
                 required
               />
             </div>

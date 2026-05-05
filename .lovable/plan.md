@@ -1,62 +1,111 @@
-## Two issues, two fixes
 
-### Issue 1 — Why she didn't get an email
+## Goal
 
-`nitabarimbing@gmail.com` already has a verified revamo account from **2026-03-29** (over a month old). When an existing user submits the signup form again, Supabase Auth silently does nothing and does NOT resend a verification email — that's the platform's anti-enumeration behaviour. There is nothing wrong with the email infrastructure for this case.
+Three things in one pass:
 
-The "Check your inbox" page makes this confusing because it implies an email was definitely sent. We'll add a clear note on that screen that points existing users to **Sign in** instead.
+1. **Fix Nita now** — send her a password reset so she can get in.
+2. **Existing-email detection on signup** — already-registered users get redirected to login with a clear message instead of being told a verification email was sent.
+3. **Account-sharing & sketchy-signup detection** — flag/notify on concurrent sessions, the same email being attached to multiple companies, and suspicious signup patterns. Force re-login on other devices when sharing is detected. Email you (rorourke@revamo.ai) when something sketchy happens.
 
-### Issue 2 — Strip every remaining `foreman` reference
+---
 
-Found 8 user-visible references to `foreman.ie` / `support@foreman.ie` / `noreply@notify.foreman.ie` across the app. All get replaced with revamo equivalents (`support@revamo.ai`, `revamo.ai`).
+## What's already in place
 
-## Changes
+- `profiles.team_id` ties each user to one company. A user can currently appear in `team_members` for multiple teams.
+- `email_send_log` + `send-transactional-email` infrastructure is live — we can send branded emails to you.
+- Signup flow: `src/pages/Signup.tsx` → `useAuth.signUp` → `supabase.auth.signUp`. No pre-flight email check.
+- No session tracking, no admin alerting, no concurrent-session detection today.
 
-### 1. `src/pages/VerifyEmail.tsx`
+---
 
-- **Remove** the line `(sender: noreply@notify.foreman.ie)` from the spam-folder hint.
-- **Add** a second info box: *"Already have a revamo account with this email? Sign in instead — no new email is sent for existing accounts."* with a link to `/login`. This directly addresses what just happened with nitabarimbing.
+## Plan
 
-### 2. `src/pages/Terms.tsx` (line 123)
-`support@foreman.ie` → `support@revamo.ai`
+### Part A — Fix Nita (one-off, immediate)
 
-### 3. `src/pages/Privacy.tsx` (lines 32, 116, 158)
-All three `support@foreman.ie` → `support@revamo.ai`
+Trigger a password reset email for `nitabarimbing@gmail.com` via Supabase admin so she can sign in right now. No code change.
 
-### 4. `src/pages/SubscriptionConfirmed.tsx` (line 182)
-`contact support@foreman.ie` → `contact support@revamo.ai`
+### Part B — Existing-email detection on signup (option 1 from earlier)
 
-### 5. `src/hooks/useUpgradePrompts.ts`
-- `WEB_BILLING_URL`: `https://foreman.ie/settings?tab=team-billing` → `https://revamo.ai/settings?tab=team-billing`
-- Native CTA `"Manage on foreman.ie"` → `"Manage on revamo.ai"`
-- All 4 `"Visit foreman.ie..."` strings → `"Visit revamo.ai..."`
+**New edge function `check-email-exists`** (`verify_jwt = false`)
+- POST `{ email }` → `{ exists: boolean }`.
+- Uses service-role admin client to look up the email.
+- **Fails open** on any internal error (returns `{ exists: false, fallback: true }`) so a broken check never blocks signup.
+- Logs errors server-side only.
 
-### 6. `src/pages/SelectPlan.tsx` (lines 34, 40, 43)
-- Description: `Visit foreman.ie ...` → `Visit revamo.ai ...`
-- Button URL: `https://foreman.ie/...` → `https://revamo.ai/...`
-- Button label: `Open foreman.ie` → `Open revamo.ai`
+**`src/pages/Signup.tsx`** — pre-flight check in `handleSubmit`
+- Before `signUp`, invoke `check-email-exists`.
+- If `{ exists: true }` → toast "An account with this email already exists" and `navigate('/login?email=<encoded>&existing=1')`.
+- If the call throws/times out → swallow and continue with normal signup (fail open).
 
-### 7. `src/pages/Pricing.tsx` (lines 65, 67)
-- Button URL: `https://foreman.ie/settings` → `https://revamo.ai/settings`
-- Button label: `Open foreman.ie` → `Open revamo.ai`
+**`src/pages/Login.tsx`** — handle `?existing=1`
+- Pre-fill email from `?email=`.
+- Show an info banner: "An account with this email already exists. Sign in below, or reset your password if you've forgotten it."
+- Banner clears when the user types.
 
-### 8. `src/pages/AppStoreAssets.tsx` (lines 330, 334)
-`foreman.ie/privacy` → `revamo.ai/privacy`, `foreman.ie/terms` → `revamo.ai/terms`
+### Part C — Account sharing detection + admin alerts
 
-## Out of scope (intentionally left alone)
+**New table `auth_sessions`** — one row per active session
+- `user_id`, `session_token_hash`, `ip`, `user_agent`, `country` (from Cloudflare/IP header), `created_at`, `last_seen_at`, `revoked_at`.
+- RLS: users can read their own; service role writes.
 
-- `supabase/functions/_shared/email-config.ts` — `EMAIL_FALLBACK_*` constants pointing at `foreman.ie` and `notify.foreman.ie` are the safety net documented in memory (`mem://brand/rename-history`). They're not user-visible — they only fire if `notify.revamo.ai` sending breaks. Leaving them alone is correct.
-- `src/hooks/useUpgradePrompts.ts` references to `foreman` only in `WEB_BILLING_URL` and copy — already covered above.
-- iOS bundle ID and other non-visible foreman strings stay as-is per the rename-history memory.
+**New table `security_events`** — audit log of sketchy events
+- `event_type` (`concurrent_sessions` | `suspicious_signup` | `multi_company` | `forced_signout`), `user_id` (nullable), `email`, `details` (jsonb), `ip`, `created_at`.
+- Read-only to admins; service role writes.
 
-## Files
+**New edge function `track-session`** (called from client right after login)
+- Inserts/updates `auth_sessions` for the current user.
+- **Concurrent-session check**: if the same `user_id` has another non-revoked session with a different `ip`/`user_agent` active in the last 5 minutes → mark older sessions `revoked_at = now()`, insert a `concurrent_sessions` row in `security_events`, and call `send-transactional-email` to alert you.
+- Result: latest login wins; other devices get signed out on next auth refresh (client listens to `onAuthStateChange` and forces logout if `revoked_at` is set on its session row).
 
-**Edited (8)**
-- `src/pages/VerifyEmail.tsx`
-- `src/pages/Terms.tsx`
-- `src/pages/Privacy.tsx`
-- `src/pages/SubscriptionConfirmed.tsx`
-- `src/hooks/useUpgradePrompts.ts`
-- `src/pages/SelectPlan.tsx`
-- `src/pages/Pricing.tsx`
-- `src/pages/AppStoreAssets.tsx`
+**New edge function `check-suspicious-signup`** (called by Signup.tsx alongside `check-email-exists`)
+- Inputs: email, IP (from request headers).
+- Flags any of:
+  - 3+ signups from the same IP in the last 24h (different emails).
+  - Disposable email domain (small built-in deny-list: mailinator, tempmail, guerrillamail, 10minutemail, yopmail, etc.).
+  - Email matches an entry in `burned_accounts` (already exists in your project).
+- On flag: insert `suspicious_signup` into `security_events` and email you. **Does not block** the signup — just notifies. (Matches your "notify me + force re-login" enforcement choice; signups aren't auto-blocked, only flagged.)
+
+**One-email-multiple-companies detection**
+- Add a unique partial index — or a `BEFORE INSERT` trigger — on `team_members` that prevents the same `user_id` (or same lowercased auth email) from being added to a second active team. If attempted, the trigger raises an exception AND inserts a `multi_company` row in `security_events` and queues an email to you. The actor gets a clean error: "This email already belongs to another company. Use a different email or contact support."
+
+**New transactional email template `security-alert`**
+- One template, branded Revamo, takes `{ eventType, email, ip, country, userAgent, details, occurredAt }`.
+- Sent to `rorourke@revamo.ai`.
+- Triggered from `track-session` (concurrent sessions) and `check-suspicious-signup` (suspicious signup pattern). Per your selection, those are the two events that email you. Multi-company attempts are logged to `security_events` but only emailed if you also want — leaving emailing on by default since they're rare and high-signal; easy to mute later.
+
+**Client wiring**
+- `useAuth` calls `track-session` immediately after a successful login/session refresh.
+- `useAuth` subscribes to its own `auth_sessions` row via realtime; if `revoked_at` becomes non-null → sign out + toast: "You've been signed out because this account just signed in on another device."
+
+---
+
+## Files touched
+
+**New**
+- `supabase/functions/check-email-exists/index.ts`
+- `supabase/functions/check-suspicious-signup/index.ts`
+- `supabase/functions/track-session/index.ts`
+- `supabase/functions/_shared/transactional-email-templates/security-alert.tsx`
+
+**Edited**
+- `supabase/functions/_shared/transactional-email-templates/registry.ts` (register `security-alert`)
+- `supabase/config.toml` (`verify_jwt = false` for the three new public-ish functions where needed)
+- `src/pages/Signup.tsx` (pre-flight checks)
+- `src/pages/Login.tsx` (existing-email banner)
+- `src/hooks/useAuth.ts` (track session on login, listen for forced revoke)
+
+**DB migration**
+- New tables `auth_sessions`, `security_events` with RLS.
+- Trigger / unique index on `team_members` to enforce one-email-one-company.
+
+**One-off**
+- Send password reset to nitabarimbing@gmail.com.
+
+---
+
+## Tradeoffs you should know
+
+- **Anti-enumeration**: Part B intentionally lets attackers learn whether an email is registered. Standard practice for B2B SaaS. Mitigated later with per-IP rate limiting if needed.
+- **Concurrent-session false positives**: Same user on phone + laptop on different networks will trigger a forced re-login on the older device. That matches "latest login wins" — but legitimate dual-device users will feel it. We can later allow-list trusted device fingerprints if it gets noisy.
+- **Email volume to you**: Concurrent-session events can be chatty. The template includes the event type in the subject so you can filter; if it gets noisy we'll add a per-user cooldown (e.g. max 1 alert per user per hour).
+- **Multi-company block is hard**: existing users who are legitimately in two teams (if any) will need cleanup before the trigger goes live. We'll check for any current dupes in the migration and report them before enabling the constraint.
