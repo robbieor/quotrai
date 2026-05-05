@@ -177,17 +177,17 @@ const App = () => {
                     <Route path="/briefing" element={<RoleGuard><Briefing /></RoleGuard>} />
                     <Route path="/ask" element={<RoleGuard><SeatGuard requiredSeat="connect"><Ask /></SeatGuard></RoleGuard>} />
                     <Route path="/automations" element={<RoleGuard><SeatGuard requiredSeat="connect"><Automations /></SeatGuard></RoleGuard>} />
-                    <Route path="/jobs" element={<Jobs />} />
-                    <Route path="/calendar" element={<JobCalendar />} />
-                    <Route path="/customers" element={<RoleGuard><Customers /></RoleGuard>} />
+                    <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><JobCalendar /></ProtectedRoute>} />
+                    <Route path="/customers" element={<ProtectedRoute><RoleGuard><Customers /></RoleGuard></ProtectedRoute>} />
                     <Route path="/quotes" element={<RoleGuard><Quotes /></RoleGuard>} />
                     <Route path="/invoices" element={<RoleGuard><Invoices /></RoleGuard>} />
                     <Route path="/templates" element={<RoleGuard><Templates /></RoleGuard>} />
                     <Route path="/price-book" element={<RoleGuard><PriceBook /></RoleGuard>} />
                     <Route path="/price-book/:id" element={<RoleGuard><PricebookDetail /></RoleGuard>} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/time-tracking" element={<TimeTracking />} />
-                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                    <Route path="/time-tracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                     <Route path="/app-store-assets" element={<RoleGuard><AppStoreAssets /></RoleGuard>} />
 
                     {/* Connect+ seat required */}
