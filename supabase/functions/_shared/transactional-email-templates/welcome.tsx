@@ -46,7 +46,18 @@ const WelcomeEmail = ({
 
   return (
     <Html lang="en" dir="ltr">
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="light only" />
+        <meta name="supported-color-schemes" content="light only" />
+        <style>{`
+          :root { color-scheme: light only; supported-color-schemes: light only; }
+          html, body { background-color: #ffffff !important; color: #0f172a !important; }
+          [data-ogsc] body, [data-ogsb] body { background-color: #ffffff !important; }
+          @media (prefers-color-scheme: dark) {
+            html, body { background-color: #ffffff !important; color: #0f172a !important; }
+          }
+        `}</style>
+      </Head>
       <Preview>
         {isInvite
           ? `You've joined ${teamName || 'the team'} on revamo`
