@@ -1,52 +1,62 @@
-## The problem
+## Two issues, two fixes
 
-Your friend Nita signed up on revamo.ai and never saw the verification email. Two things are working against you:
+### Issue 1 — Why she didn't get an email
 
-1. **The "Check your inbox" page lies about the sender.** It tells people to look for an email from `support@foreman.ie`, but the verification email is actually sent from `revamo <noreply@notify.foreman.ie>`. Anyone searching their inbox for `support@foreman.ie` will find nothing and assume the email never arrived.
+`nitabarimbing@gmail.com` already has a verified revamo account from **2026-03-29** (over a month old). When an existing user submits the signup form again, Supabase Auth silently does nothing and does NOT resend a verification email — that's the platform's anti-enumeration behaviour. There is nothing wrong with the email infrastructure for this case.
 
-2. **Brand confusion.** The website says "revamo", but the email arrives from a `foreman.ie` address. Even when it lands in the inbox, it looks suspicious — easy to dismiss as spam or "not for me".
+The "Check your inbox" page makes this confusing because it implies an email was definitely sent. We'll add a clear note on that screen that points existing users to **Sign in** instead.
 
-The auth email *is* being sent (the `notify.foreman.ie` domain is verified and active). The problem is what it looks like and how we tell users to find it.
+### Issue 2 — Strip every remaining `foreman` reference
 
-## Fix — two parts
+Found 8 user-visible references to `foreman.ie` / `support@foreman.ie` / `noreply@notify.foreman.ie` across the app. All get replaced with revamo equivalents (`support@revamo.ai`, `revamo.ai`).
 
-### Part 1: Fix the "Check your inbox" page (immediate, no DNS needed)
+## Changes
 
-In `src/pages/VerifyEmail.tsx`:
-- Replace the misleading `support@foreman.ie` text with the actual sender display: **revamo** (`noreply@notify.foreman.ie`).
-- Soften the wording so it focuses on the sender *name* ("revamo") rather than a specific email address — that's what people actually scan for in their inbox.
-- Add a clearer "Didn't get it after a minute?" hint pointing to the resend button.
+### 1. `src/pages/VerifyEmail.tsx`
 
-New copy (roughly):
+- **Remove** the line `(sender: noreply@notify.foreman.ie)` from the spam-folder hint.
+- **Add** a second info box: *"Already have a revamo account with this email? Sign in instead — no new email is sent for existing accounts."* with a link to `/login`. This directly addresses what just happened with nitabarimbing.
 
-> Can't find it? Check your spam or junk folder. The email comes from **revamo** (noreply@notify.foreman.ie). It usually arrives within a minute.
+### 2. `src/pages/Terms.tsx` (line 123)
+`support@foreman.ie` → `support@revamo.ai`
 
-This single change will solve Nita's problem — she'll know what to search for.
+### 3. `src/pages/Privacy.tsx` (lines 32, 116, 158)
+All three `support@foreman.ie` → `support@revamo.ai`
 
-### Part 2 (recommended): Set up `revamo.ai` as a sending domain
+### 4. `src/pages/SubscriptionConfirmed.tsx` (line 182)
+`contact support@foreman.ie` → `contact support@revamo.ai`
 
-Right now every system email — verifications, password resets, magic links, payment receipts, customer quotes — goes out from `foreman.ie`. That's a long-term trust and brand problem, not just for signup.
+### 5. `src/hooks/useUpgradePrompts.ts`
+- `WEB_BILLING_URL`: `https://foreman.ie/settings?tab=team-billing` → `https://revamo.ai/settings?tab=team-billing`
+- Native CTA `"Manage on foreman.ie"` → `"Manage on revamo.ai"`
+- All 4 `"Visit foreman.ie..."` strings → `"Visit revamo.ai..."`
 
-I'll set up `notify.revamo.ai` as a verified sending domain. Once DNS verifies (usually under an hour), I'll flip a single constant in `supabase/functions/_shared/email-config.ts` plus the two hardcoded constants in `auth-email-hook/index.ts` and `send-transactional-email/index.ts`, redeploy, and every email going forward will come from `revamo.ai`. The "Check your inbox" copy will be updated to match.
+### 6. `src/pages/SelectPlan.tsx` (lines 34, 40, 43)
+- Description: `Visit foreman.ie ...` → `Visit revamo.ai ...`
+- Button URL: `https://foreman.ie/...` → `https://revamo.ai/...`
+- Button label: `Open foreman.ie` → `Open revamo.ai`
 
-This is the proper fix for the brand confusion you've already flagged in memory (`brand/rename-history`).
+### 7. `src/pages/Pricing.tsx` (lines 65, 67)
+- Button URL: `https://foreman.ie/settings` → `https://revamo.ai/settings`
+- Button label: `Open foreman.ie` → `Open revamo.ai`
 
-## Technical details
+### 8. `src/pages/AppStoreAssets.tsx` (lines 330, 334)
+`foreman.ie/privacy` → `revamo.ai/privacy`, `foreman.ie/terms` → `revamo.ai/terms`
 
-Files to edit in Part 1:
-- `src/pages/VerifyEmail.tsx` — update sender reference text (line 54 area).
+## Out of scope (intentionally left alone)
 
-Files to edit in Part 2 (after revamo.ai DNS verifies):
-- `supabase/functions/_shared/email-config.ts` — flip `EMAIL_FROM_DOMAIN` and `EMAIL_SENDER_DOMAIN` to `revamo.ai` / `notify.revamo.ai`.
-- `supabase/functions/auth-email-hook/index.ts` — replace hardcoded `SENDER_DOMAIN` and `FROM_DOMAIN` (lines 40, 42) with imports from `_shared/email-config.ts` so we never have to chase these constants again.
-- `supabase/functions/send-transactional-email/index.ts` — same: replace hardcoded constants (lines 12, 16) with the shared import.
-- Audit & update remaining `support@foreman.ie` references in `welcome.tsx`, `connect-webhooks/index.ts`, `check-churn/index.ts`, `send-document-email/index.ts` to use `SUPPORT_EMAIL` from the shared config.
-- Redeploy: `auth-email-hook`, `send-transactional-email`, `connect-webhooks`, `check-churn`, `send-document-email`.
+- `supabase/functions/_shared/email-config.ts` — `EMAIL_FALLBACK_*` constants pointing at `foreman.ie` and `notify.foreman.ie` are the safety net documented in memory (`mem://brand/rename-history`). They're not user-visible — they only fire if `notify.revamo.ai` sending breaks. Leaving them alone is correct.
+- `src/hooks/useUpgradePrompts.ts` references to `foreman` only in `WEB_BILLING_URL` and copy — already covered above.
+- iOS bundle ID and other non-visible foreman strings stay as-is per the rename-history memory.
 
-## What I need from you
+## Files
 
-Choose one:
-- **A. Just fix the page now** — ship Part 1 only. Emails keep coming from `foreman.ie` for now. Quickest unblock for Nita.
-- **B. Fix the page AND start the revamo.ai email domain setup** — Part 1 ships immediately; for Part 2 you'll see a "Set up email domain" dialog where you confirm `revamo.ai`, then DNS does its thing in the background and I flip the switch when it's verified.
-
-I'd recommend B — the brand mismatch will keep biting you on every signup, payment receipt and customer-facing email until it's fixed.
+**Edited (8)**
+- `src/pages/VerifyEmail.tsx`
+- `src/pages/Terms.tsx`
+- `src/pages/Privacy.tsx`
+- `src/pages/SubscriptionConfirmed.tsx`
+- `src/hooks/useUpgradePrompts.ts`
+- `src/pages/SelectPlan.tsx`
+- `src/pages/Pricing.tsx`
+- `src/pages/AppStoreAssets.tsx`

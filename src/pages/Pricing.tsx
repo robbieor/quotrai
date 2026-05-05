@@ -62,9 +62,9 @@ export default function Pricing() {
           <Button
             size="lg"
             className="w-full gap-2"
-            onClick={() => openExternalUrl("https://foreman.ie/settings")}
+            onClick={() => openExternalUrl("https://revamo.ai/settings")}
           >
-            Open foreman.ie
+            Open revamo.ai
             <ExternalLink className="h-4 w-4" />
           </Button>
           <Link to="/dashboard">

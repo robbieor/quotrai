@@ -29,7 +29,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Who We Are</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              revamo is operated by Revamo Ltd, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:support@foreman.ie" className="text-primary hover:underline">support@foreman.ie</a>.
+              revamo is operated by Revamo Ltd, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:support@revamo.ai" className="text-primary hover:underline">support@revamo.ai</a>.
             </p>
           </section>
 
@@ -113,7 +113,7 @@ export default function Privacy() {
               <li><strong className="text-foreground">Withdraw consent:</strong> Where processing is based on consent.</li>
             </ul>
             <p className="text-sm leading-relaxed text-muted-foreground mt-3">
-              To exercise these rights, email <a href="mailto:support@foreman.ie" className="text-primary hover:underline">support@foreman.ie</a>. We will respond within 30 days.
+              To exercise these rights, email <a href="mailto:support@revamo.ai" className="text-primary hover:underline">support@revamo.ai</a>. We will respond within 30 days.
             </p>
           </section>
 
@@ -155,7 +155,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">15. Contact</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              For any privacy-related questions or requests, contact us at <a href="mailto:support@foreman.ie" className="text-primary hover:underline">support@foreman.ie</a>.
+              For any privacy-related questions or requests, contact us at <a href="mailto:support@revamo.ai" className="text-primary hover:underline">support@revamo.ai</a>.
             </p>
           </section>
         </div>

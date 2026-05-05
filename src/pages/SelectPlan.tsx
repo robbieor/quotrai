@@ -31,16 +31,16 @@ export default function SelectPlan() {
             </div>
             <CardTitle>Manage Your Subscription</CardTitle>
             <CardDescription>
-              Subscription management is available on the web. Visit foreman.ie to choose a plan or manage billing.
+              Subscription management is available on the web. Visit revamo.ai to choose a plan or manage billing.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
               className="gap-2"
-              onClick={() => openExternalUrl("https://foreman.ie/settings?tab=team-billing")}
+              onClick={() => openExternalUrl("https://revamo.ai/settings?tab=team-billing")}
             >
               <ExternalLink className="h-4 w-4" />
-              Open foreman.ie
+              Open revamo.ai
             </Button>
           </CardContent>
         </Card>
