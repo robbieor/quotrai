@@ -18,7 +18,7 @@ import {
 
 import type { TemplateEntry } from './registry.ts'
 
-const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/foreman-logo.png'
+const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/revamo-logo.png'
 const APP_URL = 'https://revamo.ai'
 
 interface WelcomeEmailProps {
@@ -46,7 +46,18 @@ const WelcomeEmail = ({
 
   return (
     <Html lang="en" dir="ltr">
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="light only" />
+        <meta name="supported-color-schemes" content="light only" />
+        <style>{`
+          :root { color-scheme: light only; supported-color-schemes: light only; }
+          html, body { background-color: #ffffff !important; color: #0f172a !important; }
+          [data-ogsc] body, [data-ogsb] body { background-color: #ffffff !important; }
+          @media (prefers-color-scheme: dark) {
+            html, body { background-color: #ffffff !important; color: #0f172a !important; }
+          }
+        `}</style>
+      </Head>
       <Preview>
         {isInvite
           ? `You've joined ${teamName || 'the team'} on revamo`
@@ -109,8 +120,8 @@ const WelcomeEmail = ({
 
           <Text style={support}>
             Questions? Hit reply or email{' '}
-            <Link href="mailto:support@foreman.ie" style={link}>
-              support@foreman.ie
+            <Link href="mailto:support@revamo.ai" style={link}>
+              support@revamo.ai
             </Link>
             . We answer fast.
           </Text>
