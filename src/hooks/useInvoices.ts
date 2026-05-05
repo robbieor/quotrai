@@ -208,6 +208,8 @@ export function useCreateInvoiceFromQuote() {
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          tax_rate: (item as any).tax_rate ?? null,
+          line_group: (item as any).line_group ?? "Materials",
         }));
 
         const { error: itemsError } = await supabase
