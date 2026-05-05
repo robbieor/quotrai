@@ -248,8 +248,8 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
                     {selectedCustomer?.country_code && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Currency: <Badge variant="outline" className="ml-1 text-xs py-0">{selectedCurrency}</Badge>
-                        {vatInfo && (
-                          <span className="ml-2">VAT: <Badge variant="outline" className="ml-1 text-xs py-0">{vatInfo.label}</Badge></span>
+                        {showTax && (
+                          <span className="ml-2">{taxName}: <Badge variant="outline" className="ml-1 text-xs py-0">per line</Badge></span>
                         )}
                       </p>
                     )}
@@ -283,7 +283,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="issue_date"
@@ -349,27 +349,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="tax_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Rate (%)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
