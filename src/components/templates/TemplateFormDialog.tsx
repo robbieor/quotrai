@@ -492,13 +492,7 @@ export function TemplateFormDialog({ open, onOpenChange, template }: TemplateFor
             )}
           </div>
 
-          <div className="flex justify-between gap-3 pt-4 border-t">
-            {isSystemTemplate && (
-              <Button type="button" variant="outline" size="sm" disabled>
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Reset to Default
-              </Button>
-            )}
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <div className="flex-1" />
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

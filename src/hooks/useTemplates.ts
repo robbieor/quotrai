@@ -402,17 +402,4 @@ export function useSeedTemplates() {
   });
 }
 
-export function useResetToDefault() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (templateId: string) => {
-      // For now, just delete user edits on system templates
-      // In a full implementation, we'd restore from a master copy
-      toast.info("Reset functionality coming soon");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["templates"] });
-    },
-  });
-}
+// useResetToDefault removed pre-launch — feature was a no-op stub.

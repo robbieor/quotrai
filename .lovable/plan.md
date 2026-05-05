@@ -1,111 +1,97 @@
+# Launch Readiness Audit — Revamo
 
-## Goal
-
-Three things in one pass:
-
-1. **Fix Nita now** — send her a password reset so she can get in.
-2. **Existing-email detection on signup** — already-registered users get redirected to login with a clear message instead of being told a verification email was sent.
-3. **Account-sharing & sketchy-signup detection** — flag/notify on concurrent sessions, the same email being attached to multiple companies, and suspicious signup patterns. Force re-login on other devices when sharing is detected. Email you (rorourke@revamo.ai) when something sketchy happens.
+You're launching this week. I've audited the app top-to-bottom. Here's exactly what to fix, ranked by risk. **Nothing is broken-broken**, but there are 4 must-fix items, ~6 should-fix, and one big AI verification pass.
 
 ---
 
-## What's already in place
+## 🔴 MUST FIX BEFORE LAUNCH (4)
 
-- `profiles.team_id` ties each user to one company. A user can currently appear in `team_members` for multiple teams.
-- `email_send_log` + `send-transactional-email` infrastructure is live — we can send branded emails to you.
-- Signup flow: `src/pages/Signup.tsx` → `useAuth.signUp` → `supabase.auth.signUp`. No pre-flight email check.
-- No session tracking, no admin alerting, no concurrent-session detection today.
+### 1. `/jobs` and `/calendar` are unprotected routes (security)
+In `src/App.tsx`:
+```tsx
+<Route path="/jobs" element={<Jobs />} />              // ❌ no guard
+<Route path="/calendar" element={<JobCalendar />} />   // ❌ no guard
+```
+Every other operational page has `<RoleGuard>`. Logged-out users can hit these and either crash or see empty/error states. Same goes for `/notifications`, `/time-tracking`, `/settings` — they rely on `useAuth` internally but don't use the standard guard. **Fix:** wrap all six in `<RoleGuard>` like the rest.
 
----
+### 2. "Reset functionality coming soon" toast in production
+`src/hooks/useTemplates.ts:412` — `useResetToDefault` literally does nothing but show a "coming soon" toast. If this hook is wired to a button, users will click it and see a launch-killing message. **Fix:** either implement the reset (delete user-edited copy of system template) or hide the button that triggers it.
 
-## Plan
+### 3. Demo chat on landing page is fully scripted (loops same 4 responses)
+The session replay shows the same 4 canned answers repeated 6+ times. Real prospects will spot this in 30 seconds. The demo's value depends on it feeling alive. **Fix options:**
+- (a) Wire `DemoChat` to `george-chat` edge function with a 3-message anonymous quota (already partially set up — `MAX_DEMO_MESSAGES = 3`), OR
+- (b) Add 8-12 more scripted variations + a "Sign up for the real thing" hard stop after 3 messages so the loop never repeats visibly.
 
-### Part A — Fix Nita (one-off, immediate)
+I recommend (a) — it's what the AI marketing claim demands.
 
-Trigger a password reset email for `nitabarimbing@gmail.com` via Supabase admin so she can sign in right now. No code change.
-
-### Part B — Existing-email detection on signup (option 1 from earlier)
-
-**New edge function `check-email-exists`** (`verify_jwt = false`)
-- POST `{ email }` → `{ exists: boolean }`.
-- Uses service-role admin client to look up the email.
-- **Fails open** on any internal error (returns `{ exists: false, fallback: true }`) so a broken check never blocks signup.
-- Logs errors server-side only.
-
-**`src/pages/Signup.tsx`** — pre-flight check in `handleSubmit`
-- Before `signUp`, invoke `check-email-exists`.
-- If `{ exists: true }` → toast "An account with this email already exists" and `navigate('/login?email=<encoded>&existing=1')`.
-- If the call throws/times out → swallow and continue with normal signup (fail open).
-
-**`src/pages/Login.tsx`** — handle `?existing=1`
-- Pre-fill email from `?email=`.
-- Show an info banner: "An account with this email already exists. Sign in below, or reset your password if you've forgotten it."
-- Banner clears when the user types.
-
-### Part C — Account sharing detection + admin alerts
-
-**New table `auth_sessions`** — one row per active session
-- `user_id`, `session_token_hash`, `ip`, `user_agent`, `country` (from Cloudflare/IP header), `created_at`, `last_seen_at`, `revoked_at`.
-- RLS: users can read their own; service role writes.
-
-**New table `security_events`** — audit log of sketchy events
-- `event_type` (`concurrent_sessions` | `suspicious_signup` | `multi_company` | `forced_signout`), `user_id` (nullable), `email`, `details` (jsonb), `ip`, `created_at`.
-- Read-only to admins; service role writes.
-
-**New edge function `track-session`** (called from client right after login)
-- Inserts/updates `auth_sessions` for the current user.
-- **Concurrent-session check**: if the same `user_id` has another non-revoked session with a different `ip`/`user_agent` active in the last 5 minutes → mark older sessions `revoked_at = now()`, insert a `concurrent_sessions` row in `security_events`, and call `send-transactional-email` to alert you.
-- Result: latest login wins; other devices get signed out on next auth refresh (client listens to `onAuthStateChange` and forces logout if `revoked_at` is set on its session row).
-
-**New edge function `check-suspicious-signup`** (called by Signup.tsx alongside `check-email-exists`)
-- Inputs: email, IP (from request headers).
-- Flags any of:
-  - 3+ signups from the same IP in the last 24h (different emails).
-  - Disposable email domain (small built-in deny-list: mailinator, tempmail, guerrillamail, 10minutemail, yopmail, etc.).
-  - Email matches an entry in `burned_accounts` (already exists in your project).
-- On flag: insert `suspicious_signup` into `security_events` and email you. **Does not block** the signup — just notifies. (Matches your "notify me + force re-login" enforcement choice; signups aren't auto-blocked, only flagged.)
-
-**One-email-multiple-companies detection**
-- Add a unique partial index — or a `BEFORE INSERT` trigger — on `team_members` that prevents the same `user_id` (or same lowercased auth email) from being added to a second active team. If attempted, the trigger raises an exception AND inserts a `multi_company` row in `security_events` and queues an email to you. The actor gets a clean error: "This email already belongs to another company. Use a different email or contact support."
-
-**New transactional email template `security-alert`**
-- One template, branded Revamo, takes `{ eventType, email, ip, country, userAgent, details, occurredAt }`.
-- Sent to `rorourke@revamo.ai`.
-- Triggered from `track-session` (concurrent sessions) and `check-suspicious-signup` (suspicious signup pattern). Per your selection, those are the two events that email you. Multi-company attempts are logged to `security_events` but only emailed if you also want — leaving emailing on by default since they're rare and high-signal; easy to mute later.
-
-**Client wiring**
-- `useAuth` calls `track-session` immediately after a successful login/session refresh.
-- `useAuth` subscribes to its own `auth_sessions` row via realtime; if `revoked_at` becomes non-null → sign out + toast: "You've been signed out because this account just signed in on another device."
+### 4. `track-session` not firing — `auth_sessions` table is empty (0 rows)
+We deployed the security infra, but no sessions are being recorded for live users (5 profiles exist, 0 sessions tracked). The hook in `useAuth.ts:74` fires `.catch(console.warn)` and swallows the error silently. **Fix:** check edge function logs for `track-session` invocation errors and confirm the function deployed correctly. Without this, your concurrent-session detection is dead on arrival.
 
 ---
 
-## Files touched
+## 🟡 SHOULD FIX (6)
 
-**New**
-- `supabase/functions/check-email-exists/index.ts`
-- `supabase/functions/check-suspicious-signup/index.ts`
-- `supabase/functions/track-session/index.ts`
-- `supabase/functions/_shared/transactional-email-templates/security-alert.tsx`
-
-**Edited**
-- `supabase/functions/_shared/transactional-email-templates/registry.ts` (register `security-alert`)
-- `supabase/config.toml` (`verify_jwt = false` for the three new public-ish functions where needed)
-- `src/pages/Signup.tsx` (pre-flight checks)
-- `src/pages/Login.tsx` (existing-email banner)
-- `src/hooks/useAuth.ts` (track session on login, listen for forced revoke)
-
-**DB migration**
-- New tables `auth_sessions`, `security_events` with RLS.
-- Trigger / unique index on `team_members` to enforce one-email-one-company.
-
-**One-off**
-- Send password reset to nitabarimbing@gmail.com.
+5. **`ConnectProducts.tsx:136` TODO** — uses raw `accountId` in storefront URL instead of slug. Works but ugly for users sharing the link.
+6. **Demo chat unused state warnings** — React forwardRef warnings in `DemoChat` and `ExitIntentPopup` (console). Cosmetic but visible to anyone with devtools open.
+7. **`/notifications`, `/settings`, `/time-tracking` lack `<RoleGuard>`** — they auth internally but the inconsistency causes flicker on slow loads.
+8. **`/funnel` (FunnelAnalytics) has only `<RoleGuard>` not admin-only** — internal /funnel dashboard per your memory should be owner-only. Add a role check (admin/owner).
+9. **`SubscriptionConfirmed.tsx` and `BrandingSettings.tsx`** flagged for hardcoded examples (IBAN, AIB bank string as placeholder). Confirm placeholders aren't being saved as defaults.
+10. **`/onboarding` route now just redirects to `/dashboard`** — fine, but `OnboardingModal` triggers off profile state. Verify a brand new signup actually sees it (test with a fresh email end-to-end).
 
 ---
 
-## Tradeoffs you should know
+## 🟢 AI AGENT VERIFICATION (priority — you said 100%)
 
-- **Anti-enumeration**: Part B intentionally lets attackers learn whether an email is registered. Standard practice for B2B SaaS. Mitigated later with per-IP rate limiting if needed.
-- **Concurrent-session false positives**: Same user on phone + laptop on different networks will trigger a forced re-login on the older device. That matches "latest login wins" — but legitimate dual-device users will feel it. We can later allow-list trusted device fingerprints if it gets noisy.
-- **Email volume to you**: Concurrent-session events can be chatty. The template includes the event type in the subject so you can filter; if it gets noisy we'll add a per-user cooldown (e.g. max 1 alert per user per hour).
-- **Multi-company block is hard**: existing users who are legitimately in two teams (if any) will need cleanup before the trigger goes live. We'll check for any current dupes in the migration and report them before enabling the constraint.
+The agent surface area is large. Here's the systematic test pass I'll run:
+
+### Backend (82 edge functions deployed)
+- ✅ No 5xx errors in last edge logs window — clean
+- 🧪 **Smoke test these 8 critical endpoints** via curl: `george-chat`, `george-webhook`, `foreman-chat`, `foreman-rewrite`, `george-photo-quote`, `run-task`, `generate-briefing`, `elevenlabs-agent-token`
+- 🧪 Run `sync-agent-tools` once and confirm all 62 tools push to ElevenLabs agent (per your memory)
+- 🧪 Verify `LOVABLE_API_KEY`, `ELEVENLABS_API_KEY`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY` secrets all present
+
+### Frontend AI flows (test in preview browser)
+| Flow | Test |
+|---|---|
+| Cmd+K command bar | Type "create quote for Patterson 1300" → check preview gate → confirm |
+| `/ask` page | Ask "Top 5 customers by revenue" → response streams + Save as Insight works |
+| `/foreman-ai` chat | Multi-turn conversation, history persists on refresh |
+| Voice agent (ActiveCallBar) | Start call → speak → hangup → minutes deducted |
+| Photo-to-quote | Upload 2 photos → quote generated with line items |
+| Daily briefing (5 PM trigger) | Manually invoke `generate-briefing` and check email |
+| Proactive nudges | Invoke `generate-nudges` → cards appear on dashboard |
+
+### Workflows by page (button-by-button sweep)
+
+I'll click through every CTA on these pages in the preview using the browser tool: **Landing, Login, Signup, Dashboard, Jobs, Quotes, Invoices, Customers, Calendar, Time Tracking, Reports, Settings, Foreman AI, Briefing, Ask, Automations, Voice Usage, Templates, Documents, Certificates, Price Book, Expenses, Leads, Notifications, Customer Portal**.
+
+For each I check: navigation works, form submits succeed, dialogs open & close, empty states are sensible, mobile (402px) layout doesn't break, error states don't show raw stack traces.
+
+---
+
+## EXECUTION ORDER (when you approve)
+
+```text
+Phase 1 — Code fixes (15 min)
+  1. Wrap /jobs, /calendar, /notifications, /settings, /time-tracking in <RoleGuard>
+  2. Remove or implement useResetToDefault (and hide its button)
+  3. Add admin gate to /funnel
+  4. Fix DemoChat & ExitIntentPopup forwardRef warnings
+
+Phase 2 — Demo chat upgrade (20 min)
+  5. Wire DemoChat to george-chat with 3-message anon quota OR expand scripted variations to 12+
+
+Phase 3 — AI agent verification (30 min)
+  6. Smoke-test 8 critical edge functions via curl
+  7. Run sync-agent-tools and verify tool count
+  8. Test 7 frontend AI flows in browser
+  9. Investigate why auth_sessions is empty — fix track-session
+
+Phase 4 — Full button sweep (45 min)
+  10. Browser-test every page listed above at desktop + mobile viewport
+  11. Flag any broken/dead/stale UI in a final report
+```
+
+Total: ~2 hours of focused work. Everything reversible.
+
+**Approve this and I'll start with Phase 1, then report back after each phase before continuing.** If you want to skip the demo chat upgrade (keep scripted) or the full button sweep (just AI verification), say so and I'll trim the plan.
