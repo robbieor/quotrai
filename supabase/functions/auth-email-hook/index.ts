@@ -35,11 +35,16 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-// Configuration
+// Configuration — sender domain is sourced from the shared email-config so
+// every email-sending function flips together. Fallback constants exported
+// there enable an instant rollback to notify.foreman.ie if needed.
+import {
+  EMAIL_FROM_DOMAIN as FROM_DOMAIN,
+  EMAIL_SENDER_DOMAIN as SENDER_DOMAIN,
+} from "../_shared/email-config.ts"
+
 const SITE_NAME = "revamo"
-const SENDER_DOMAIN = "notify.foreman.ie"
 const ROOT_DOMAIN = "revamo.ai"
-const FROM_DOMAIN = "notify.foreman.ie" // Domain shown in From address (may be root or sender subdomain)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.

@@ -128,7 +128,7 @@ ${bodyHtml}
             to: email,
             subject: "Welcome aboard — your revamo subscription is active",
             html,
-            from: "revamo <support@foreman.ie>",
+            from: "revamo <noreply@notify.revamo.ai>",
             idempotency_key: `trial-ended-${subscription.stripe_subscription_id}`,
             purpose: "transactional",
           }),

@@ -44,7 +44,7 @@ async function sendBrandedEmail(supabase: any, to: string, subject: string, html
         to,
         subject,
         html,
-        from: "revamo <support@foreman.ie>",
+        from: "revamo <noreply@notify.revamo.ai>",
         idempotency_key: idempotencyKey,
         purpose: "transactional",
       }),
