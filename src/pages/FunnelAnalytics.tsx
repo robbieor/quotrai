@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart3, Users, FileText, Receipt, CreditCard, ArrowDown } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface FunnelStep {
   label: string;
@@ -13,6 +15,16 @@ interface FunnelStep {
 }
 
 export default function FunnelAnalytics() {
+  const { isOwner, isLoading: roleLoading } = useUserRole();
+
+  if (roleLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6"><Skeleton className="h-64 w-full" /></div>
+      </DashboardLayout>
+    );
+  }
+  if (!isOwner) return <Navigate to="/dashboard" replace />;
   const { data, isLoading } = useQuery({
     queryKey: ["funnel-analytics"],
     queryFn: async () => {
