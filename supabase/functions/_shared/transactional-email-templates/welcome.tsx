@@ -18,7 +18,7 @@ import {
 
 import type { TemplateEntry } from './registry.ts'
 
-const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/foreman-logo.png'
+const LOGO_URL = 'https://leojhjynyxhpfyrbcabf.supabase.co/storage/v1/object/public/email-assets/revamo-logo.png'
 const APP_URL = 'https://revamo.ai'
 
 interface WelcomeEmailProps {
