@@ -82,10 +82,16 @@ export function useCreateInvoice(onXeroSync?: (id: string) => void) {
       );
       if (numError) throw numError;
 
-      // Calculate totals
-      const subtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.unit_price || 0), 0);
-      const taxRate = invoice.tax_rate || 0;
-      const taxAmount = subtotal * (taxRate / 100);
+      // Calculate totals using per-line tax_rate when present, else doc rate.
+      const docTaxRate = Number(invoice.tax_rate) || 0;
+      let subtotal = 0;
+      let taxAmount = 0;
+      for (const item of items) {
+        const lineSub = (item.quantity || 1) * (item.unit_price || 0);
+        const rate = (item as any).tax_rate != null ? Number((item as any).tax_rate) : docTaxRate;
+        subtotal += lineSub;
+        taxAmount += lineSub * (rate / 100);
+      }
       const total = subtotal + taxAmount;
 
       // Get customer country for currency
@@ -237,10 +243,16 @@ export function useUpdateInvoice(onXeroSync?: (id: string) => void) {
       invoice: TablesUpdate<"invoices">;
       items: InvoiceItemInsert[];
     }) => {
-      // Calculate totals
-      const subtotal = items.reduce((sum, item) => sum + (item.quantity || 1) * (item.unit_price || 0), 0);
-      const taxRate = invoice.tax_rate || 0;
-      const taxAmount = subtotal * (taxRate / 100);
+      // Calculate totals using per-line tax_rate when present, else doc rate.
+      const docTaxRate = Number(invoice.tax_rate) || 0;
+      let subtotal = 0;
+      let taxAmount = 0;
+      for (const item of items) {
+        const lineSub = (item.quantity || 1) * (item.unit_price || 0);
+        const rate = (item as any).tax_rate != null ? Number((item as any).tax_rate) : docTaxRate;
+        subtotal += lineSub;
+        taxAmount += lineSub * (rate / 100);
+      }
       const total = subtotal + taxAmount;
 
       // Update invoice
