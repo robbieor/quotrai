@@ -45,7 +45,9 @@ import { TemplatePicker } from "./TemplatePicker";
 import { Constants } from "@/integrations/supabase/types";
 import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
-import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
+import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol } from "@/utils/currencyUtils";
+import { calculateTotals, getDefaultLineRate, getTaxName, hasVatConfig } from "@/utils/vatRates";
+import { useProfile } from "@/hooks/useProfile";
 import { safeFormatDate } from "@/lib/pdf/dateUtils";
 import { RewriteButton } from "@/components/ai/RewriteButton";
 
@@ -56,7 +58,6 @@ const quoteSchema = z.object({
   job_id: z.string().optional(),
   status: z.enum(quoteStatuses),
   valid_until: z.date().optional(),
-  tax_rate: z.number().min(0).max(100),
   notes: z.string().optional(),
 });
 
@@ -71,13 +72,26 @@ interface QuoteFormDialogProps {
 export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogProps) {
   const { data: customers } = useCustomers();
   const { data: jobs } = useJobs();
+  const { profile } = useProfile();
   const createQuote = useCreateQuote();
   const updateQuote = useUpdateQuote();
   const isEditing = !!quote;
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
 
+  const country = profile?.country ?? "IE";
+  const taxName = getTaxName(country);
+  const showTax = hasVatConfig(country);
+
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+    {
+      id: crypto.randomUUID(),
+      description: "",
+      quantity: 1,
+      unit_price: 0,
+      line_group: "Materials",
+      visible: true,
+      tax_rate: getDefaultLineRate(country, "Materials"),
+    },
   ]);
   const [displayMode, setDisplayMode] = useState<PricingDisplayMode>("detailed");
 
@@ -88,7 +102,6 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
       job_id: "",
       status: "draft",
       valid_until: addDays(new Date(), 30),
-      tax_rate: 0,
       notes: "",
     },
   });
@@ -107,19 +120,6 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
     return customers?.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // Get VAT info for display
-  const vatInfo = useMemo(() => {
-    return getCountryVatInfo(selectedCustomer?.country_code);
-  }, [selectedCustomer]);
-
-  // Auto-populate tax rate when customer changes (only for new quotes)
-  useEffect(() => {
-    if (!isEditing && selectedCustomer?.country_code) {
-      const vatRate = getVatRateFromCountry(selectedCustomer.country_code);
-      form.setValue("tax_rate", vatRate);
-    }
-  }, [selectedCustomer?.country_code, isEditing, form]);
-
   // Filter jobs by selected customer
   const filteredJobs = useMemo(() => {
     if (!jobs || !selectedCustomerId) return [];
@@ -133,7 +133,6 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
         job_id: quote.job_id || "",
         status: quote.status,
         valid_until: quote.valid_until ? new Date(quote.valid_until) : undefined,
-        tax_rate: Number(quote.tax_rate) || 0,
         notes: quote.notes || "",
       });
       setLineItems(
@@ -144,6 +143,10 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
           unit_price: Number(item.unit_price),
           line_group: (item as any).line_group || "Materials",
           visible: (item as any).visible !== false,
+          tax_rate:
+            (item as any).tax_rate !== null && (item as any).tax_rate !== undefined
+              ? Number((item as any).tax_rate)
+              : Number(quote.tax_rate) || getDefaultLineRate(country, (item as any).line_group),
         }))
       );
       setDisplayMode((quote as any).pricing_display_mode || "detailed");
@@ -153,23 +156,25 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
         job_id: "",
         status: "draft",
         valid_until: addDays(new Date(), 30),
-        tax_rate: 0,
         notes: "",
       });
       setLineItems([
-        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+        {
+          id: crypto.randomUUID(),
+          description: "",
+          quantity: 1,
+          unit_price: 0,
+          line_group: "Materials",
+          visible: true,
+          tax_rate: getDefaultLineRate(country, "Materials"),
+        },
       ]);
       setDisplayMode("detailed");
     }
-  }, [quote, form]);
+  }, [quote, form, country]);
 
-  const subtotal = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
-  const taxRate = form.watch("tax_rate") || 0;
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
+  const totals = useMemo(() => calculateTotals(lineItems), [lineItems]);
+  const { subtotal, taxAmount, total, breakdown, uniformRate } = totals;
 
   const formatCurrency = (value: number) => {
     return formatCurrencyValue(value, selectedCurrency);
@@ -177,18 +182,21 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
 
   const onSubmit = async (values: QuoteFormValues) => {
     const validItems = lineItems.filter((item) => item.description.trim() !== "");
-    
+
     if (validItems.length === 0) {
       form.setError("root", { message: "Please add at least one line item" });
       return;
     }
+
+    // Persist a document-level rate only when uniform (back-compat with PDFs/portals).
+    const docTaxRate = uniformRate ?? 0;
 
     const quoteData = {
       customer_id: values.customer_id,
       job_id: values.job_id && values.job_id !== "none" ? values.job_id : null,
       status: values.status,
       valid_until: values.valid_until ? format(values.valid_until, "yyyy-MM-dd") : null,
-      tax_rate: values.tax_rate,
+      tax_rate: docTaxRate,
       notes: values.notes || null,
       pricing_display_mode: displayMode,
     };
@@ -199,6 +207,7 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
       unit_price: item.unit_price,
       line_group: item.line_group || "Materials",
       visible: item.visible !== false,
+      tax_rate: item.tax_rate ?? getDefaultLineRate(country, item.line_group),
     }));
 
     if (isEditing) {
@@ -249,8 +258,8 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
                     {selectedCustomer?.country_code && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Currency: <Badge variant="outline" className="ml-1 text-xs py-0">{selectedCurrency}</Badge>
-                        {vatInfo && (
-                          <span className="ml-2">VAT: <Badge variant="outline" className="ml-1 text-xs py-0">{vatInfo.label}</Badge></span>
+                        {showTax && (
+                          <span className="ml-2">{taxName}: <Badge variant="outline" className="ml-1 text-xs py-0">per line</Badge></span>
                         )}
                       </p>
                     )}
@@ -314,68 +323,45 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="valid_until"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Valid Until</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="tax_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Rate (%)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+            <FormField
+              control={form.control}
+              name="valid_until"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Valid Until</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Separator />
 
@@ -394,22 +380,33 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
               </div>
               <PricingDisplayModeSelector value={displayMode} onChange={setDisplayMode} />
               <div className="mt-4">
-                <QuoteLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+                <QuoteLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} country={country} />
               </div>
             </div>
 
             <Separator />
 
             <div className="flex justify-end">
-              <div className="w-64 space-y-2">
+              <div className="w-72 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax ({taxRate}%)</span>
-                  <span>{formatCurrency(taxAmount)}</span>
-                </div>
+                {breakdown.filter((b) => b.rate > 0).length === 0 ? (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{taxName} (0%)</span>
+                    <span>{formatCurrency(0)}</span>
+                  </div>
+                ) : (
+                  breakdown
+                    .filter((b) => b.rate > 0)
+                    .map((b) => (
+                      <div key={b.rate} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{taxName} ({b.rate}%)</span>
+                        <span>{formatCurrency(b.tax)}</span>
+                      </div>
+                    ))
+                )}
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
@@ -468,6 +465,8 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
             const newItems = items.map((item) => ({
               id: crypto.randomUUID(),
               ...item,
+              visible: true,
+              tax_rate: getDefaultLineRate(country, item.line_group),
             }));
             setLineItems(newItems);
           }}

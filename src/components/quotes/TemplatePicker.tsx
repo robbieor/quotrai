@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Search, 
-  FileText, 
-  Star, 
+import {
+  Search,
+  FileText,
+  Star,
   Clock,
-  Wrench
+  Wrench,
+  Settings as SettingsIcon,
 } from "lucide-react";
-import { useTemplates, Template, getTradeCategoryLabel, TRADE_CATEGORIES, TradeCategory } from "@/hooks/useTemplates";
+import { useTemplates, Template, getTradeCategoryLabel } from "@/hooks/useTemplates";
 import { useUserTradeCategory } from "@/hooks/useUserTradeCategory";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -31,19 +33,11 @@ interface TemplatePickerProps {
 export function TemplatePicker({ open, onOpenChange, onSelect }: TemplatePickerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const userTradeCategory = useUserTradeCategory();
-  const [selectedCategory, setSelectedCategory] = useState<TradeCategory | "all">("all");
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
-  
-  // Set default category to user's trade when dialog opens
-  useEffect(() => {
-    if (open && userTradeCategory) {
-      setSelectedCategory(userTradeCategory);
-    }
-  }, [open, userTradeCategory]);
-  
-  const { data: templates, isLoading } = useTemplates(
-    selectedCategory === "all" ? undefined : selectedCategory
-  );
+
+  // Templates are locked to the user's trade type — no cross-trade browsing.
+  const { data: templates, isLoading } = useTemplates(userTradeCategory);
+  const tradeLabel = userTradeCategory ? getTradeCategoryLabel(userTradeCategory) : null;
 
   const filteredTemplates = templates?.filter((t) =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,33 +127,30 @@ export function TemplatePicker({ open, onOpenChange, onSelect }: TemplatePickerP
             />
           </div>
 
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-1.5">
-            <Button
-              variant={selectedCategory === "all" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setSelectedCategory("all")}
-            >
-              All
-            </Button>
-            {TRADE_CATEGORIES.map((cat) => (
-              <Button
-                key={cat}
-                variant={selectedCategory === cat ? "secondary" : "ghost"}
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setSelectedCategory(cat)}
-              >
-                <span className="mr-1">{getCategoryIcon(cat)}</span>
-                {getTradeCategoryLabel(cat)}
-              </Button>
-            ))}
-          </div>
+          {/* Trade lock indicator */}
+          {tradeLabel && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-xs">
+                <span className="mr-1">{getCategoryIcon(userTradeCategory!)}</span>
+                {tradeLabel}
+              </Badge>
+              <span>Showing templates for your trade only.</span>
+            </div>
+          )}
 
           {/* Template List */}
           <ScrollArea className="flex-1 -mx-6 px-6">
-            {isLoading ? (
+            {!userTradeCategory ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <SettingsIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Set your trade type to see relevant templates.</p>
+                <Button asChild variant="outline" size="sm" className="mt-3">
+                  <Link to="/settings" onClick={() => onOpenChange(false)}>
+                    Open Settings
+                  </Link>
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="space-y-3">
                 {[...Array(4)].map((_, i) => (
                   <Skeleton key={i} className="h-20 rounded-lg" />
@@ -168,8 +159,12 @@ export function TemplatePicker({ open, onOpenChange, onSelect }: TemplatePickerP
             ) : filteredTemplates?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Wrench className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No templates found</p>
-                <p className="text-sm">Try adjusting your search or category</p>
+                <p>No {tradeLabel} templates yet.</p>
+                <Button asChild variant="outline" size="sm" className="mt-3">
+                  <Link to="/templates" onClick={() => onOpenChange(false)}>
+                    Create one in Templates
+                  </Link>
+                </Button>
               </div>
             ) : (
               <div className="space-y-2">

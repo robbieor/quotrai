@@ -45,7 +45,9 @@ import { InvoiceLineItems, LineItem } from "./InvoiceLineItems";
 import { Constants } from "@/integrations/supabase/types";
 import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
-import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
+import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol } from "@/utils/currencyUtils";
+import { calculateTotals, getDefaultLineRate, getTaxName, hasVatConfig } from "@/utils/vatRates";
+import { useProfile } from "@/hooks/useProfile";
 
 const invoiceStatuses = Constants.public.Enums.invoice_status;
 
@@ -54,7 +56,6 @@ const invoiceSchema = z.object({
   status: z.enum(invoiceStatuses),
   issue_date: z.date(),
   due_date: z.date(),
-  tax_rate: z.number().min(0).max(100),
   notes: z.string().optional(),
 });
 
@@ -68,13 +69,26 @@ interface InvoiceFormDialogProps {
 
 export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDialogProps) {
   const { data: customers } = useCustomers();
+  const { profile } = useProfile();
   const { syncInvoice } = useXeroSync();
   const createInvoice = useCreateInvoice(syncInvoice);
   const updateInvoice = useUpdateInvoice(syncInvoice);
   const isEditing = !!invoice;
 
+  const country = profile?.country ?? "IE";
+  const taxName = getTaxName(country);
+  const showTax = hasVatConfig(country);
+
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+    {
+      id: crypto.randomUUID(),
+      description: "",
+      quantity: 1,
+      unit_price: 0,
+      line_group: "Materials",
+      visible: true,
+      tax_rate: getDefaultLineRate(country, "Materials"),
+    },
   ]);
   const [displayMode, setDisplayMode] = useState<PricingDisplayMode>("detailed");
 
@@ -85,7 +99,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
       status: "draft",
       issue_date: new Date(),
       due_date: addDays(new Date(), 14),
-      tax_rate: 0,
       notes: "",
     },
   });
@@ -104,19 +117,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
     return customers?.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // Get VAT info for display
-  const vatInfo = useMemo(() => {
-    return getCountryVatInfo(selectedCustomer?.country_code);
-  }, [selectedCustomer]);
-
-  // Auto-populate tax rate when customer changes (only for new invoices)
-  useEffect(() => {
-    if (!isEditing && selectedCustomer?.country_code) {
-      const vatRate = getVatRateFromCountry(selectedCustomer.country_code);
-      form.setValue("tax_rate", vatRate);
-    }
-  }, [selectedCustomer?.country_code, isEditing, form]);
-
   useEffect(() => {
     if (invoice) {
       form.reset({
@@ -124,7 +124,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
         status: invoice.status,
         issue_date: new Date(invoice.issue_date),
         due_date: new Date(invoice.due_date),
-        tax_rate: Number(invoice.tax_rate) || 0,
         notes: invoice.notes || "",
       });
       setLineItems(
@@ -135,6 +134,10 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
           unit_price: Number(item.unit_price),
           line_group: (item as any).line_group || "Materials",
           visible: (item as any).visible !== false,
+          tax_rate:
+            (item as any).tax_rate !== null && (item as any).tax_rate !== undefined
+              ? Number((item as any).tax_rate)
+              : Number(invoice.tax_rate) || getDefaultLineRate(country, (item as any).line_group),
         }))
       );
       setDisplayMode((invoice as any).pricing_display_mode || "detailed");
@@ -144,23 +147,25 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
         status: "draft",
         issue_date: new Date(),
         due_date: addDays(new Date(), 14),
-        tax_rate: 0,
         notes: "",
       });
       setLineItems([
-        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+        {
+          id: crypto.randomUUID(),
+          description: "",
+          quantity: 1,
+          unit_price: 0,
+          line_group: "Materials",
+          visible: true,
+          tax_rate: getDefaultLineRate(country, "Materials"),
+        },
       ]);
       setDisplayMode("detailed");
     }
-  }, [invoice, form]);
+  }, [invoice, form, country]);
 
-  const subtotal = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
-  const taxRate = form.watch("tax_rate") || 0;
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
+  const totals = useMemo(() => calculateTotals(lineItems), [lineItems]);
+  const { subtotal, taxAmount, total, breakdown, uniformRate } = totals;
 
   const formatCurrency = (value: number) => {
     return formatCurrencyValue(value, selectedCurrency);
@@ -168,18 +173,20 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
 
   const onSubmit = async (values: InvoiceFormValues) => {
     const validItems = lineItems.filter((item) => item.description.trim() !== "");
-    
+
     if (validItems.length === 0) {
       form.setError("root", { message: "Please add at least one line item" });
       return;
     }
+
+    const docTaxRate = uniformRate ?? 0;
 
     const invoiceData = {
       customer_id: values.customer_id,
       status: values.status,
       issue_date: format(values.issue_date, "yyyy-MM-dd"),
       due_date: format(values.due_date, "yyyy-MM-dd"),
-      tax_rate: values.tax_rate,
+      tax_rate: docTaxRate,
       notes: values.notes || null,
       pricing_display_mode: displayMode,
     };
@@ -190,6 +197,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
       unit_price: item.unit_price,
       line_group: item.line_group || "Materials",
       visible: item.visible !== false,
+      tax_rate: item.tax_rate ?? getDefaultLineRate(country, item.line_group),
     }));
 
     if (isEditing) {
@@ -240,8 +248,8 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
                     {selectedCustomer?.country_code && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Currency: <Badge variant="outline" className="ml-1 text-xs py-0">{selectedCurrency}</Badge>
-                        {vatInfo && (
-                          <span className="ml-2">VAT: <Badge variant="outline" className="ml-1 text-xs py-0">{vatInfo.label}</Badge></span>
+                        {showTax && (
+                          <span className="ml-2">{taxName}: <Badge variant="outline" className="ml-1 text-xs py-0">per line</Badge></span>
                         )}
                       </p>
                     )}
@@ -275,7 +283,7 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="issue_date"
@@ -345,27 +353,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="tax_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Rate (%)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             <Separator />
@@ -374,22 +361,33 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
               <h3 className="text-sm font-medium mb-4">Line Items</h3>
               <PricingDisplayModeSelector value={displayMode} onChange={setDisplayMode} />
               <div className="mt-4">
-                <InvoiceLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+                <InvoiceLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} country={country} />
               </div>
             </div>
 
             <Separator />
 
             <div className="flex justify-end">
-              <div className="w-64 space-y-2">
+              <div className="w-72 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax ({taxRate}%)</span>
-                  <span>{formatCurrency(taxAmount)}</span>
-                </div>
+                {breakdown.filter((b) => b.rate > 0).length === 0 ? (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{taxName} (0%)</span>
+                    <span>{formatCurrency(0)}</span>
+                  </div>
+                ) : (
+                  breakdown
+                    .filter((b) => b.rate > 0)
+                    .map((b) => (
+                      <div key={b.rate} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{taxName} ({b.rate}%)</span>
+                        <span>{formatCurrency(b.tax)}</span>
+                      </div>
+                    ))
+                )}
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>

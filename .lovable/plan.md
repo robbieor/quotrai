@@ -1,97 +1,145 @@
-# Launch Readiness Audit — Revamo
+## Goals
 
-You're launching this week. I've audited the app top-to-bottom. Here's exactly what to fix, ranked by risk. **Nothing is broken-broken**, but there are 4 must-fix items, ~6 should-fix, and one big AI verification pass.
-
----
-
-## 🔴 MUST FIX BEFORE LAUNCH (4)
-
-### 1. `/jobs` and `/calendar` are unprotected routes (security)
-In `src/App.tsx`:
-```tsx
-<Route path="/jobs" element={<Jobs />} />              // ❌ no guard
-<Route path="/calendar" element={<JobCalendar />} />   // ❌ no guard
-```
-Every other operational page has `<RoleGuard>`. Logged-out users can hit these and either crash or see empty/error states. Same goes for `/notifications`, `/time-tracking`, `/settings` — they rely on `useAuth` internally but don't use the standard guard. **Fix:** wrap all six in `<RoleGuard>` like the rest.
-
-### 2. "Reset functionality coming soon" toast in production
-`src/hooks/useTemplates.ts:412` — `useResetToDefault` literally does nothing but show a "coming soon" toast. If this hook is wired to a button, users will click it and see a launch-killing message. **Fix:** either implement the reset (delete user-edited copy of system template) or hide the button that triggers it.
-
-### 3. Demo chat on landing page is fully scripted (loops same 4 responses)
-The session replay shows the same 4 canned answers repeated 6+ times. Real prospects will spot this in 30 seconds. The demo's value depends on it feeling alive. **Fix options:**
-- (a) Wire `DemoChat` to `george-chat` edge function with a 3-message anonymous quota (already partially set up — `MAX_DEMO_MESSAGES = 3`), OR
-- (b) Add 8-12 more scripted variations + a "Sign up for the real thing" hard stop after 3 messages so the loop never repeats visibly.
-
-I recommend (a) — it's what the AI marketing claim demands.
-
-### 4. `track-session` not firing — `auth_sessions` table is empty (0 rows)
-We deployed the security infra, but no sessions are being recorded for live users (5 profiles exist, 0 sessions tracked). The hook in `useAuth.ts:74` fires `.catch(console.warn)` and swallows the error silently. **Fix:** check edge function logs for `track-session` invocation errors and confirm the function deployed correctly. Without this, your concurrent-session detection is dead on arrival.
+1. **Templates picker** must only show templates matching the user's `profile.trade_type`. No "All" or other-trade options.
+2. **Per-line VAT** on quote/invoice line items, with rates auto-suggested by line group (Materials vs Labour) for the user's country.
+3. Country VAT rate tables limited (initially) to **IE, GB, US, CA, AU, NZ**; selection driven by `profile.country`.
 
 ---
 
-## 🟡 SHOULD FIX (6)
+## Part 1 — Lock template picker to user's trade
 
-5. **`ConnectProducts.tsx:136` TODO** — uses raw `accountId` in storefront URL instead of slug. Works but ugly for users sharing the link.
-6. **Demo chat unused state warnings** — React forwardRef warnings in `DemoChat` and `ExitIntentPopup` (console). Cosmetic but visible to anyone with devtools open.
-7. **`/notifications`, `/settings`, `/time-tracking` lack `<RoleGuard>`** — they auth internally but the inconsistency causes flicker on slow loads.
-8. **`/funnel` (FunnelAnalytics) has only `<RoleGuard>` not admin-only** — internal /funnel dashboard per your memory should be owner-only. Add a role check (admin/owner).
-9. **`SubscriptionConfirmed.tsx` and `BrandingSettings.tsx`** flagged for hardcoded examples (IBAN, AIB bank string as placeholder). Confirm placeholders aren't being saved as defaults.
-10. **`/onboarding` route now just redirects to `/dashboard`** — fine, but `OnboardingModal` triggers off profile state. Verify a brand new signup actually sees it (test with a fresh email end-to-end).
+File: `src/components/quotes/TemplatePicker.tsx`
 
----
+- Remove the "All" + per-category filter row entirely.
+- Always pass `userTradeCategory` to `useTemplates(...)`.
+- If `userTradeCategory` is undefined (profile not set), show an empty-state CTA: *"Set your trade type in Settings to see relevant templates."*
+- Keep search box for filtering inside the trade.
+- Same dialog is used by both QuoteFormDialog and InvoiceFormDialog (already shared), so a single edit fixes both.
 
-## 🟢 AI AGENT VERIFICATION (priority — you said 100%)
-
-The agent surface area is large. Here's the systematic test pass I'll run:
-
-### Backend (82 edge functions deployed)
-- ✅ No 5xx errors in last edge logs window — clean
-- 🧪 **Smoke test these 8 critical endpoints** via curl: `george-chat`, `george-webhook`, `foreman-chat`, `foreman-rewrite`, `george-photo-quote`, `run-task`, `generate-briefing`, `elevenlabs-agent-token`
-- 🧪 Run `sync-agent-tools` once and confirm all 62 tools push to ElevenLabs agent (per your memory)
-- 🧪 Verify `LOVABLE_API_KEY`, `ELEVENLABS_API_KEY`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY` secrets all present
-
-### Frontend AI flows (test in preview browser)
-| Flow | Test |
-|---|---|
-| Cmd+K command bar | Type "create quote for Patterson 1300" → check preview gate → confirm |
-| `/ask` page | Ask "Top 5 customers by revenue" → response streams + Save as Insight works |
-| `/foreman-ai` chat | Multi-turn conversation, history persists on refresh |
-| Voice agent (ActiveCallBar) | Start call → speak → hangup → minutes deducted |
-| Photo-to-quote | Upload 2 photos → quote generated with line items |
-| Daily briefing (5 PM trigger) | Manually invoke `generate-briefing` and check email |
-| Proactive nudges | Invoke `generate-nudges` → cards appear on dashboard |
-
-### Workflows by page (button-by-button sweep)
-
-I'll click through every CTA on these pages in the preview using the browser tool: **Landing, Login, Signup, Dashboard, Jobs, Quotes, Invoices, Customers, Calendar, Time Tracking, Reports, Settings, Foreman AI, Briefing, Ask, Automations, Voice Usage, Templates, Documents, Certificates, Price Book, Expenses, Leads, Notifications, Customer Portal**.
-
-For each I check: navigation works, form submits succeed, dialogs open & close, empty states are sensible, mobile (402px) layout doesn't break, error states don't show raw stack traces.
+Empty-state copy (no matching templates): *"No {tradeLabel} templates yet — create one from Templates."*
 
 ---
 
-## EXECUTION ORDER (when you approve)
+## Part 2 — Country + line-group VAT table
 
-```text
-Phase 1 — Code fixes (15 min)
-  1. Wrap /jobs, /calendar, /notifications, /settings, /time-tracking in <RoleGuard>
-  2. Remove or implement useResetToDefault (and hide its button)
-  3. Add admin gate to /funnel
-  4. Fix DemoChat & ExitIntentPopup forwardRef warnings
+New file: `src/utils/vatRates.ts`
 
-Phase 2 — Demo chat upgrade (20 min)
-  5. Wire DemoChat to george-chat with 3-message anon quota OR expand scripted variations to 12+
+```ts
+// Tax rates per country, per line group, for launch markets only.
+// Materials vs Labour can differ (e.g. Ireland: materials 23%, labour 13.5% reduced).
+export type LineGroup = "Materials" | "Labour" | "Other";
 
-Phase 3 — AI agent verification (30 min)
-  6. Smoke-test 8 critical edge functions via curl
-  7. Run sync-agent-tools and verify tool count
-  8. Test 7 frontend AI flows in browser
-  9. Investigate why auth_sessions is empty — fix track-session
-
-Phase 4 — Full button sweep (45 min)
-  10. Browser-test every page listed above at desktop + mobile viewport
-  11. Flag any broken/dead/stale UI in a final report
+export interface CountryVatConfig {
+  code: string;            // 'IE','GB','US','CA','AU','NZ'
+  label: string;           // 'Ireland'
+  taxName: string;         // 'VAT' | 'GST' | 'Sales Tax'
+  currency: string;
+  rates: { Materials: number[]; Labour: number[]; Other: number[] };
+  defaults: { Materials: number; Labour: number; Other: number };
+}
 ```
 
-Total: ~2 hours of focused work. Everything reversible.
+Launch values:
 
-**Approve this and I'll start with Phase 1, then report back after each phase before continuing.** If you want to skip the demo chat upgrade (keep scripted) or the full button sweep (just AI verification), say so and I'll trim the plan.
+| Country | Tax | Materials defaults | Labour defaults | Notes |
+|---|---|---|---|---|
+| IE | VAT | 23, 13.5, 9, 0 (default 23) | 13.5, 23, 9, 0 (default 13.5) | Reduced rate for construction labour |
+| GB | VAT | 20, 5, 0 (default 20) | 20, 5, 0 (default 20) | Reduced for some installs |
+| US | Sales Tax | 0 (default 0) | 0 (default 0) | State-specific — user enters manually |
+| CA | GST/HST | 5, 13, 15, 0 (default 5) | 5, 13, 15, 0 (default 5) | Province-dependent |
+| AU | GST | 10, 0 (default 10) | 10, 0 (default 10) | |
+| NZ | GST | 15, 0 (default 15) | 15, 0 (default 15) | |
+
+Helpers:
+- `getVatConfig(country)` → config or `null`.
+- `getDefaultLineRate(country, lineGroup)` → number.
+- `getAllowedRates(country, lineGroup)` → number[] (for dropdown).
+- `getSupportedVatCountries()` → `[{code,label}]` for forms.
+
+Keep existing `currencyUtils.ts` `getVatRateFromCountry` working but mark it deprecated (single-rate fallback) and route through the new module.
+
+---
+
+## Part 3 — Per-line VAT in forms
+
+Files: `src/components/quotes/QuoteFormDialog.tsx`, `src/components/invoices/InvoiceFormDialog.tsx`
+
+- The DB columns `quote_items.tax_rate` / `invoice_items.tax_rate` already exist — wire them up.
+- Add `tax_rate: number` to each `LineItem` in local state.
+- When a line is added or its `line_group` changes, set `tax_rate` to `getDefaultLineRate(profile.country, line_group)`.
+- New per-row control: small VAT/Tax dropdown next to the line total, populated from `getAllowedRates(country, line_group)` + a "Custom…" option.
+- Hide the row VAT control entirely when the country tax config is `0`-only (e.g., US default) — show a single "+ Add tax" affordance per line if user wants to override.
+- Mobile: stack VAT below qty/price (we already have responsive line layout).
+
+Totals math change:
+- `subtotal = Σ qty × unit_price`
+- `taxAmount = Σ qty × unit_price × (line.tax_rate / 100)`
+- `total = subtotal + taxAmount`
+- Group totals in summary block by tax rate (e.g. *"VAT 23% — €230"*, *"VAT 13.5% — €54"*) when more than one rate is present; collapse to single line otherwise.
+
+Remove the document-level `tax_rate` form field. Persist a derived/effective rate to `quotes.tax_rate` only when all lines share one rate (else write `null` and rely on `tax_amount`).
+
+---
+
+## Part 4 — Hooks (totals + persistence)
+
+Files: `src/hooks/useQuotes.ts`, `src/hooks/useInvoices.ts`
+
+- `createQuote` / `updateQuote` (and invoice equivalents): compute `subtotal` and `tax_amount` from line items using each line's `tax_rate`; stop using the document-level `tax_rate` for math.
+- Persist `tax_rate` on each inserted `quote_items` / `invoice_items` row.
+- Quote → Invoice conversion (`useInvoices.ts:187`): copy each line's `tax_rate` instead of the parent rate.
+- Same for `recurring_invoice_items` (mirror logic in `useRecurringInvoices.ts`).
+
+---
+
+## Part 5 — Display: detail sheet, portals, PDFs
+
+Files: `QuoteDetailSheet.tsx`, `InvoiceDetailSheet.tsx` (if present), `QuotePortal.tsx`, `InvoicePortal.tsx`, `src/lib/pdf/quotePdf.ts`, `src/lib/pdf/invoicePdf.ts`.
+
+- Replace single `Tax (X%)` line with a tax breakdown:
+  - If single rate across all lines → `VAT 23% — €230`.
+  - If multiple → list each rate group. Use `taxName` from country config (VAT/GST/Sales Tax).
+- Show per-line VAT % in the detailed pricing display mode (existing `pricing_display_mode` "detailed" view) as a small column.
+
+---
+
+## Part 6 — Profile country gating
+
+- In Settings, expose only the 6 launch countries in the profile country selector (keep existing data for users already on others, but new selections limited to IE/GB/US/CA/AU/NZ). Other countries continue to work via fallback (rate 0, single-row VAT control).
+- `useProfile` already exposes `country`; no migration needed.
+
+---
+
+## Part 7 — Edge functions touching tax
+
+`supabase/functions/create-quote/index.ts`, `create-invoice/index.ts`, `process-recurring-invoices/index.ts`, `xero-sync/index.ts`:
+- Accept optional `tax_rate` per item.
+- Recompute totals from items' tax rates.
+- Xero sync: map per-line tax to Xero's `TaxType` (best-effort; default to existing fallback if mapping unknown — log and continue).
+
+---
+
+## Part 8 — Tests / smoke
+
+- Manually create a quote in IE with mixed lines (Materials 23%, Labour 13.5%) and verify subtotal, breakdown, total, and that the PDF + portal show the breakdown.
+- Convert that quote → invoice; verify per-line rates copied.
+- Switch profile country to GB; create new quote — defaults should be 20% Materials, 20% Labour.
+- US profile — VAT row hidden by default, "+ Add tax" works on a single line.
+- Open template picker as a plumber; only plumber templates appear, no category chips.
+
+---
+
+## Technical notes
+
+- DB schema is already sufficient (`tax_rate` on items, `tax_amount` on parents). No migration required.
+- We will keep `quotes.tax_rate` / `invoices.tax_rate` for backward compatibility (single-rate writes) but stop relying on it for math.
+- All currency display continues to flow through `formatCurrencyValue` + customer/profile country.
+- Sales-tax complexity in US/CA (state/province) is **out of scope** for launch — surfaced as a manual per-line override, with a roadmap note.
+
+---
+
+## Out of scope
+
+- Tax-inclusive pricing toggle (we always store ex-VAT and add tax).
+- VAT registration thresholds / Reverse charge / EU OSS — Phase 2.
+- Live tax-rate API integration (Avalara/TaxJar) — Phase 2.
