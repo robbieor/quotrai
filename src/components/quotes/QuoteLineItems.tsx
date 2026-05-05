@@ -16,12 +16,15 @@ export interface LineItem {
   unit_price: number;
   line_group?: string;
   visible?: boolean;
+  tax_rate?: number;
 }
 
 interface QuoteLineItemsProps {
   items: LineItem[];
   onChange: (items: LineItem[]) => void;
   currencyCode?: string;
+  /** ISO-2 country code used to drive the VAT/Tax dropdown options. */
+  country?: string | null;
 }
 
 function PriceBookAutocomplete({
