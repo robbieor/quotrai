@@ -45,6 +45,31 @@ export default function Signup() {
       localStorage.setItem("foreman_ref_code", refCode);
     }
 
+    // Pre-flight: redirect existing users to login instead of pretending to send
+    // a verification email. Fails open — any error continues the normal signup flow.
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: existsData } = await supabase.functions.invoke("check-email-exists", {
+        body: { email },
+      });
+      if (existsData?.exists === true) {
+        toast.info("An account with this email already exists. Sign in below.");
+        setSubmitting(false);
+        navigate(`/login?email=${encodeURIComponent(email)}&existing=1`);
+        return;
+      }
+    } catch {
+      // Fail open: proceed with signup if the check breaks
+    }
+
+    // Fire-and-forget abuse-pattern check (notify-only, never blocks)
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      supabase.functions.invoke("check-suspicious-signup", {
+        body: { email, fullName },
+      }).catch(() => {});
+    } catch {}
+
     const { error } = await signUp(email, password, fullName);
 
     if (error) {
