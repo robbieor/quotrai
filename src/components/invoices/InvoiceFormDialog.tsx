@@ -361,22 +361,33 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
               <h3 className="text-sm font-medium mb-4">Line Items</h3>
               <PricingDisplayModeSelector value={displayMode} onChange={setDisplayMode} />
               <div className="mt-4">
-                <InvoiceLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} />
+                <InvoiceLineItems items={lineItems} onChange={setLineItems} currencyCode={selectedCurrency} country={country} />
               </div>
             </div>
 
             <Separator />
 
             <div className="flex justify-end">
-              <div className="w-64 space-y-2">
+              <div className="w-72 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax ({taxRate}%)</span>
-                  <span>{formatCurrency(taxAmount)}</span>
-                </div>
+                {breakdown.filter((b) => b.rate > 0).length === 0 ? (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{taxName} (0%)</span>
+                    <span>{formatCurrency(0)}</span>
+                  </div>
+                ) : (
+                  breakdown
+                    .filter((b) => b.rate > 0)
+                    .map((b) => (
+                      <div key={b.rate} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{taxName} ({b.rate}%)</span>
+                        <span>{formatCurrency(b.tax)}</span>
+                      </div>
+                    ))
+                )}
                 <Separator />
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
