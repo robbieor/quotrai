@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Search, 
-  FileText, 
-  Star, 
+import {
+  Search,
+  FileText,
+  Star,
   Clock,
-  Wrench
+  Wrench,
+  Settings as SettingsIcon,
 } from "lucide-react";
-import { useTemplates, Template, getTradeCategoryLabel, TRADE_CATEGORIES, TradeCategory } from "@/hooks/useTemplates";
+import { useTemplates, Template, getTradeCategoryLabel } from "@/hooks/useTemplates";
 import { useUserTradeCategory } from "@/hooks/useUserTradeCategory";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -31,19 +33,11 @@ interface TemplatePickerProps {
 export function TemplatePicker({ open, onOpenChange, onSelect }: TemplatePickerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const userTradeCategory = useUserTradeCategory();
-  const [selectedCategory, setSelectedCategory] = useState<TradeCategory | "all">("all");
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
-  
-  // Set default category to user's trade when dialog opens
-  useEffect(() => {
-    if (open && userTradeCategory) {
-      setSelectedCategory(userTradeCategory);
-    }
-  }, [open, userTradeCategory]);
-  
-  const { data: templates, isLoading } = useTemplates(
-    selectedCategory === "all" ? undefined : selectedCategory
-  );
+
+  // Templates are locked to the user's trade type — no cross-trade browsing.
+  const { data: templates, isLoading } = useTemplates(userTradeCategory);
+  const tradeLabel = userTradeCategory ? getTradeCategoryLabel(userTradeCategory) : null;
 
   const filteredTemplates = templates?.filter((t) =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
