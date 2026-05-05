@@ -52,6 +52,31 @@ export default function Signup() {
       setSubmitting(false);
     } else {
       track("signup_completed", { method: "email" });
+
+      // Fire-and-forget admin notification (signup attempt — pre-verification)
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "signup-attempt-notification",
+            idempotencyKey: `signup-attempt-${email}-${Date.now()}`,
+            templateData: {
+              email,
+              fullName,
+              timestamp: new Date().toISOString(),
+              metadata: {
+                ref_code: refCode || null,
+                user_agent: navigator.userAgent,
+                referrer: document.referrer || null,
+                url: window.location.href,
+              },
+            },
+          },
+        }).catch(() => {});
+      } catch {
+        // never block signup on notification failure
+      }
+
       toast.success("Account created! Check your email to verify.");
       // Check for pending team invite
       const pendingToken = sessionStorage.getItem("pending_invite_token");
