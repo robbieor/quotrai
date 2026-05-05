@@ -120,7 +120,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">14. Contact</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              For questions about these Terms, contact us at <a href="mailto:support@foreman.ie" className="text-primary hover:underline">support@foreman.ie</a>.
+              For questions about these Terms, contact us at <a href="mailto:support@revamo.ai" className="text-primary hover:underline">support@revamo.ai</a>.
             </p>
           </section>
         </div>

@@ -179,7 +179,7 @@ export default function SubscriptionConfirmed() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                If your subscription doesn't activate within a few minutes, contact support@foreman.ie.
+                If your subscription doesn't activate within a few minutes, contact support@revamo.ai.
               </p>
             </>
           )}
