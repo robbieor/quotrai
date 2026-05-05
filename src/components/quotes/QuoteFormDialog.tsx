@@ -72,13 +72,26 @@ interface QuoteFormDialogProps {
 export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogProps) {
   const { data: customers } = useCustomers();
   const { data: jobs } = useJobs();
+  const { profile } = useProfile();
   const createQuote = useCreateQuote();
   const updateQuote = useUpdateQuote();
   const isEditing = !!quote;
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
 
+  const country = profile?.country ?? "IE";
+  const taxName = getTaxName(country);
+  const showTax = hasVatConfig(country);
+
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+    {
+      id: crypto.randomUUID(),
+      description: "",
+      quantity: 1,
+      unit_price: 0,
+      line_group: "Materials",
+      visible: true,
+      tax_rate: getDefaultLineRate(country, "Materials"),
+    },
   ]);
   const [displayMode, setDisplayMode] = useState<PricingDisplayMode>("detailed");
 
@@ -89,7 +102,6 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
       job_id: "",
       status: "draft",
       valid_until: addDays(new Date(), 30),
-      tax_rate: 0,
       notes: "",
     },
   });
