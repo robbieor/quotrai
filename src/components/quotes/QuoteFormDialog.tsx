@@ -45,7 +45,9 @@ import { TemplatePicker } from "./TemplatePicker";
 import { Constants } from "@/integrations/supabase/types";
 import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
-import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
+import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol } from "@/utils/currencyUtils";
+import { calculateTotals, getDefaultLineRate, getTaxName, hasVatConfig } from "@/utils/vatRates";
+import { useProfile } from "@/hooks/useProfile";
 import { safeFormatDate } from "@/lib/pdf/dateUtils";
 import { RewriteButton } from "@/components/ai/RewriteButton";
 
@@ -56,7 +58,6 @@ const quoteSchema = z.object({
   job_id: z.string().optional(),
   status: z.enum(quoteStatuses),
   valid_until: z.date().optional(),
-  tax_rate: z.number().min(0).max(100),
   notes: z.string().optional(),
 });
 
