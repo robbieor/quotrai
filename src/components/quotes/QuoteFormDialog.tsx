@@ -120,19 +120,6 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
     return customers?.find(c => c.id === selectedCustomerId);
   }, [customers, selectedCustomerId]);
 
-  // Get VAT info for display
-  const vatInfo = useMemo(() => {
-    return getCountryVatInfo(selectedCustomer?.country_code);
-  }, [selectedCustomer]);
-
-  // Auto-populate tax rate when customer changes (only for new quotes)
-  useEffect(() => {
-    if (!isEditing && selectedCustomer?.country_code) {
-      const vatRate = getVatRateFromCountry(selectedCustomer.country_code);
-      form.setValue("tax_rate", vatRate);
-    }
-  }, [selectedCustomer?.country_code, isEditing, form]);
-
   // Filter jobs by selected customer
   const filteredJobs = useMemo(() => {
     if (!jobs || !selectedCustomerId) return [];
@@ -146,7 +133,6 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
         job_id: quote.job_id || "",
         status: quote.status,
         valid_until: quote.valid_until ? new Date(quote.valid_until) : undefined,
-        tax_rate: Number(quote.tax_rate) || 0,
         notes: quote.notes || "",
       });
       setLineItems(
@@ -157,6 +143,10 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
           unit_price: Number(item.unit_price),
           line_group: (item as any).line_group || "Materials",
           visible: (item as any).visible !== false,
+          tax_rate:
+            (item as any).tax_rate !== null && (item as any).tax_rate !== undefined
+              ? Number((item as any).tax_rate)
+              : Number(quote.tax_rate) || getDefaultLineRate(country, (item as any).line_group),
         }))
       );
       setDisplayMode((quote as any).pricing_display_mode || "detailed");
@@ -166,23 +156,25 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
         job_id: "",
         status: "draft",
         valid_until: addDays(new Date(), 30),
-        tax_rate: 0,
         notes: "",
       });
       setLineItems([
-        { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+        {
+          id: crypto.randomUUID(),
+          description: "",
+          quantity: 1,
+          unit_price: 0,
+          line_group: "Materials",
+          visible: true,
+          tax_rate: getDefaultLineRate(country, "Materials"),
+        },
       ]);
       setDisplayMode("detailed");
     }
-  }, [quote, form]);
+  }, [quote, form, country]);
 
-  const subtotal = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
-  const taxRate = form.watch("tax_rate") || 0;
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
+  const totals = useMemo(() => calculateTotals(lineItems), [lineItems]);
+  const { subtotal, taxAmount, total, breakdown, uniformRate } = totals;
 
   const formatCurrency = (value: number) => {
     return formatCurrencyValue(value, selectedCurrency);
@@ -190,18 +182,21 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
 
   const onSubmit = async (values: QuoteFormValues) => {
     const validItems = lineItems.filter((item) => item.description.trim() !== "");
-    
+
     if (validItems.length === 0) {
       form.setError("root", { message: "Please add at least one line item" });
       return;
     }
+
+    // Persist a document-level rate only when uniform (back-compat with PDFs/portals).
+    const docTaxRate = uniformRate ?? 0;
 
     const quoteData = {
       customer_id: values.customer_id,
       job_id: values.job_id && values.job_id !== "none" ? values.job_id : null,
       status: values.status,
       valid_until: values.valid_until ? format(values.valid_until, "yyyy-MM-dd") : null,
-      tax_rate: values.tax_rate,
+      tax_rate: docTaxRate,
       notes: values.notes || null,
       pricing_display_mode: displayMode,
     };
@@ -212,6 +207,7 @@ export function QuoteFormDialog({ open, onOpenChange, quote }: QuoteFormDialogPr
       unit_price: item.unit_price,
       line_group: item.line_group || "Materials",
       visible: item.visible !== false,
+      tax_rate: item.tax_rate ?? getDefaultLineRate(country, item.line_group),
     }));
 
     if (isEditing) {
