@@ -1,72 +1,52 @@
-# Trial copy fix + read-only gating audit (revised)
+## The problem
 
-## Findings
+Your friend Nita signed up on revamo.ai and never saw the verification email. Two things are working against you:
 
-### 1. Trial length copy is wrong (says 30 days, should be 14)
+1. **The "Check your inbox" page lies about the sender.** It tells people to look for an email from `support@foreman.ie`, but the verification email is actually sent from `revamo <noreply@notify.foreman.ie>`. Anyone searching their inbox for `support@foreman.ie` will find nothing and assume the email never arrived.
 
-The actual trial is **14 days** (confirmed in `useReadOnly`, `Pricing.tsx`, `Signup.tsx`, `SelectPlan.tsx`, `TrialBanner`). But these files still say 30:
+2. **Brand confusion.** The website says "revamo", but the email arrives from a `foreman.ie` address. Even when it lands in the inbox, it looks suspicious — easy to dismiss as spam or "not for me".
 
-- **`index.html`** — meta description, OG description, Twitter description, JSON-LD schema. **This is the source of the WhatsApp link preview.**
-- **`src/components/landing/trade/TradeConfig.ts`** — 16 trade landing pages all say "Free 30-day trial."
-- **`src/components/settings/ReferralCard.tsx`** — "Give a mate 30 days free" + WhatsApp share text.
-- **`remotion/src/scenes/Scene7Closing.tsx`** — "Try revamo free for 30 days" (video closing card).
+The auth email *is* being sent (the `notify.foreman.ie` domain is verified and active). The problem is what it looks like and how we tell users to find it.
 
-### 2. Copy wording — "trade businesses" / "field service"
+## Fix — two parts
 
-The user wants the WhatsApp share copy to drop "trade" and use "field services" (plural). Current `index.html` description:
+### Part 1: Fix the "Check your inbox" page (immediate, no DNS needed)
 
-> "revamo runs your quotes, jobs, invoices, and payments — so you don't have to. The AI operating system built for **trade businesses**. 30-day free trial."
+In `src/pages/VerifyEmail.tsx`:
+- Replace the misleading `support@foreman.ie` text with the actual sender display: **revamo** (`noreply@notify.foreman.ie`).
+- Soften the wording so it focuses on the sender *name* ("revamo") rather than a specific email address — that's what people actually scan for in their inbox.
+- Add a clearer "Didn't get it after a minute?" hint pointing to the resend button.
 
-Two changes needed:
-- Drop "trade businesses" → use **"field services"** (plural, per user).
-- Fix 30 → 14 days.
+New copy (roughly):
 
-Note: the brand tagline in `src/config/brand.ts` and `SEOHead.tsx` already says **"The AI Operating System for Field Service"** (singular). The user is asking for **plural "field services"** in the share/meta copy specifically. I'll match what they said and only change the meta/share copy — not rewrite the existing tagline elsewhere unless they confirm.
+> Can't find it? Check your spam or junk folder. The email comes from **revamo** (noreply@notify.foreman.ie). It usually arrives within a minute.
 
-### 3. Read-only gating — IS in place
+This single change will solve Nita's problem — she'll know what to search for.
 
-- `useReadOnly` correctly returns `isReadOnly: true` for trial expired, unpaid past grace, canceled, incomplete_expired.
-- `<ReadOnlyBanner />` mounted globally in `DashboardLayout`.
-- `<ReadOnlyGuard>` wraps create/convert buttons on Dashboard, Customers, Invoices, Jobs, Quotes.
-- `TrialBanner` shows red "Trial ended — read-only" alert; `TrialCountdownPopup` warns ≤5 days.
+### Part 2 (recommended): Set up `revamo.ai` as a sending domain
 
-**Gaps (flag only, not fixing in this pass):**
-- Client-side only — no server/RLS enforcement, so API writes aren't physically blocked.
-- `ReadOnlyGuard` not applied on Leads, Time Tracking, Templates, Price Book, Certificates.
-- AI assistant tool calls (Foreman AI / voice) don't check read-only.
+Right now every system email — verifications, password resets, magic links, payment receipts, customer quotes — goes out from `foreman.ie`. That's a long-term trust and brand problem, not just for signup.
 
-## Plan
+I'll set up `notify.revamo.ai` as a verified sending domain. Once DNS verifies (usually under an hour), I'll flip a single constant in `supabase/functions/_shared/email-config.ts` plus the two hardcoded constants in `auth-email-hook/index.ts` and `send-transactional-email/index.ts`, redeploy, and every email going forward will come from `revamo.ai`. The "Check your inbox" copy will be updated to match.
 
-### Step 1 — Fix `index.html` meta + share copy
+This is the proper fix for the brand confusion you've already flagged in memory (`brand/rename-history`).
 
-Replace the description across all four spots (meta description, OG, Twitter, JSON-LD) with:
+## Technical details
 
-> "revamo runs your quotes, jobs, invoices, and payments — so you don't have to. The AI operating system built for field services. 14-day free trial."
+Files to edit in Part 1:
+- `src/pages/VerifyEmail.tsx` — update sender reference text (line 54 area).
 
-And the JSON-LD `description: "30-day free trial, no credit card required"` → `"14-day free trial, no credit card required"`.
+Files to edit in Part 2 (after revamo.ai DNS verifies):
+- `supabase/functions/_shared/email-config.ts` — flip `EMAIL_FROM_DOMAIN` and `EMAIL_SENDER_DOMAIN` to `revamo.ai` / `notify.revamo.ai`.
+- `supabase/functions/auth-email-hook/index.ts` — replace hardcoded `SENDER_DOMAIN` and `FROM_DOMAIN` (lines 40, 42) with imports from `_shared/email-config.ts` so we never have to chase these constants again.
+- `supabase/functions/send-transactional-email/index.ts` — same: replace hardcoded constants (lines 12, 16) with the shared import.
+- Audit & update remaining `support@foreman.ie` references in `welcome.tsx`, `connect-webhooks/index.ts`, `check-churn/index.ts`, `send-document-email/index.ts` to use `SUPPORT_EMAIL` from the shared config.
+- Redeploy: `auth-email-hook`, `send-transactional-email`, `connect-webhooks`, `check-churn`, `send-document-email`.
 
-### Step 2 — Fix remaining 30-day references
+## What I need from you
 
-- **`src/components/landing/trade/TradeConfig.ts`** — global replace "Free 30-day trial." → "Free 14-day trial." across all 16 trade entries. (Leaving "trade" wording on these pages alone — they are trade-specific landing pages by design; user only flagged the share copy.)
-- **`src/components/settings/ReferralCard.tsx`** — change "30 days free" → "14 days free" in heading and WhatsApp share text (2 spots).
-- **`remotion/src/scenes/Scene7Closing.tsx`** — "Try revamo free for 30 days" → "Try revamo free for 14 days".
+Choose one:
+- **A. Just fix the page now** — ship Part 1 only. Emails keep coming from `foreman.ie` for now. Quickest unblock for Nita.
+- **B. Fix the page AND start the revamo.ai email domain setup** — Part 1 ships immediately; for Part 2 you'll see a "Set up email domain" dialog where you confirm `revamo.ai`, then DNS does its thing in the background and I flip the switch when it's verified.
 
-### Step 3 — Memory
-
-Refresh `mem://billing/lifecycle-and-trial-spec` to reaffirm 14 days as the canonical trial length so future copy doesn't drift.
-
-### Step 4 — Reply to user about read-only gating
-
-Confirm gating is in place at the UI layer with the gaps listed above, so they can decide on follow-up work.
-
-## Files touched
-
-- `index.html`
-- `src/components/landing/trade/TradeConfig.ts`
-- `src/components/settings/ReferralCard.tsx`
-- `remotion/src/scenes/Scene7Closing.tsx`
-- `mem://billing/lifecycle-and-trial-spec`
-
-## Open question
-
-The brand tagline elsewhere uses singular **"Field Service"** (`brand.ts`, `SEOHead.tsx`). You said "field services" (plural). I'll use **plural "field services"** only in the WhatsApp/meta share copy as you requested. Want me to also flip every other "Field Service" → "Field Services" project-wide? If yes, say the word and I'll add it to this plan.
+I'd recommend B — the brand mismatch will keep biting you on every signup, payment receipt and customer-facing email until it's fixed.

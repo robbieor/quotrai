@@ -51,7 +51,7 @@ export default function VerifyEmail() {
           <div className="flex items-start gap-2 text-left bg-muted/50 rounded-lg p-3">
             <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground">
-              Can't find it? Check your spam or junk folder. The email comes from <strong>support@foreman.ie</strong>.
+              Can't find it? It usually arrives within a minute. Check your spam or junk folder and search your inbox for <strong>revamo</strong> (sender: <span className="whitespace-nowrap">noreply@notify.foreman.ie</span>).
             </p>
           </div>
 
