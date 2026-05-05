@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrencyValue, DEFAULT_CURRENCY } from "@/utils/currencyUtils";
+import { getAllowedRates, getDefaultLineRate, getTaxName, hasVatConfig } from "@/utils/vatRates";
 import { usePriceBook, type PriceBookItem } from "@/hooks/usePriceBook";
 import type { LineGroup } from "@/types/pricingDisplay";
 import { LINE_GROUPS } from "@/types/pricingDisplay";
+import { cn } from "@/lib/utils";
 
 export interface LineItem {
   id: string;
