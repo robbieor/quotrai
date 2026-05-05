@@ -120,8 +120,8 @@ const WelcomeEmail = ({
 
           <Text style={support}>
             Questions? Hit reply or email{' '}
-            <Link href="mailto:support@foreman.ie" style={link}>
-              support@foreman.ie
+            <Link href="mailto:support@revamo.ai" style={link}>
+              support@revamo.ai
             </Link>
             . We answer fast.
           </Text>
