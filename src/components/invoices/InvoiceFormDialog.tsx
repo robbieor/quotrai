@@ -45,7 +45,9 @@ import { InvoiceLineItems, LineItem } from "./InvoiceLineItems";
 import { Constants } from "@/integrations/supabase/types";
 import { PricingDisplayModeSelector } from "@/components/shared/PricingDisplayModeSelector";
 import type { PricingDisplayMode } from "@/types/pricingDisplay";
-import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol, getVatRateFromCountry, getCountryVatInfo } from "@/utils/currencyUtils";
+import { getCurrencyFromCountry, formatCurrencyValue, getCurrencySymbol } from "@/utils/currencyUtils";
+import { calculateTotals, getDefaultLineRate, getTaxName, hasVatConfig } from "@/utils/vatRates";
+import { useProfile } from "@/hooks/useProfile";
 
 const invoiceStatuses = Constants.public.Enums.invoice_status;
 
@@ -54,7 +56,6 @@ const invoiceSchema = z.object({
   status: z.enum(invoiceStatuses),
   issue_date: z.date(),
   due_date: z.date(),
-  tax_rate: z.number().min(0).max(100),
   notes: z.string().optional(),
 });
 
@@ -68,13 +69,26 @@ interface InvoiceFormDialogProps {
 
 export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDialogProps) {
   const { data: customers } = useCustomers();
+  const { profile } = useProfile();
   const { syncInvoice } = useXeroSync();
   const createInvoice = useCreateInvoice(syncInvoice);
   const updateInvoice = useUpdateInvoice(syncInvoice);
   const isEditing = !!invoice;
 
+  const country = profile?.country ?? "IE";
+  const taxName = getTaxName(country);
+  const showTax = hasVatConfig(country);
+
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: crypto.randomUUID(), description: "", quantity: 1, unit_price: 0, line_group: "Materials", visible: true },
+    {
+      id: crypto.randomUUID(),
+      description: "",
+      quantity: 1,
+      unit_price: 0,
+      line_group: "Materials",
+      visible: true,
+      tax_rate: getDefaultLineRate(country, "Materials"),
+    },
   ]);
   const [displayMode, setDisplayMode] = useState<PricingDisplayMode>("detailed");
 
@@ -85,7 +99,6 @@ export function InvoiceFormDialog({ open, onOpenChange, invoice }: InvoiceFormDi
       status: "draft",
       issue_date: new Date(),
       due_date: addDays(new Date(), 14),
-      tax_rate: 0,
       notes: "",
     },
   });
