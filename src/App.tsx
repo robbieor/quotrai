@@ -16,6 +16,7 @@ import { AgentNavigationBridge } from "@/components/agent/AgentNavigationBridge"
 import { AgentHighlightOverlay } from "@/components/agent/AgentHighlightOverlay";
 import { LiveAgentHUD } from "@/components/agent/LiveAgentHUD";
 import { RoleGuard } from "@/components/auth/RoleGuard";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SeatGuard } from "@/components/auth/SeatGuard";
 import { useIsNative } from "@/hooks/useIsNative";
 
