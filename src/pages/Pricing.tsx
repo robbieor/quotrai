@@ -83,7 +83,7 @@ export default function Pricing() {
   const coveragePercent = Math.min((platformEarnings / crewMonthlyEquiv) * 100, 100);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="aura-marketing min-h-screen bg-background">
       <SEOHead
         title="Pricing — Solo €29 · Crew €49 · Business €89 | revamo"
         description="Three simple plans for trade businesses. Crew (€49/mo) includes revamo AI text & voice. Business (€89/mo) gets unlimited AI voice, 3 seats, advanced reports & priority support. 14-day free trial."
