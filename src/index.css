@@ -391,3 +391,77 @@
 .leaflet-control-container {
   z-index: 2;
 }
+
+/* ============================================================
+   Aura Design System — typography utilities + marketing scope
+   Added 2026-05-06 (Option A + C)
+   ============================================================ */
+
+@layer utilities {
+  .text-display-lg {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: clamp(2.5rem, 6vw + 1rem, 4rem); /* 40 → 64px */
+    font-weight: 500;
+    line-height: 1.04;
+    letter-spacing: 0;
+  }
+  .text-display-md {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: clamp(2rem, 4vw + 0.5rem, 3rem); /* 32 → 48px */
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+  .label-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem; /* 12px */
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .section-y {
+    padding-top: 5rem;    /* 80px */
+    padding-bottom: 5rem;
+  }
+  @media (min-width: 768px) {
+    .section-y {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+    }
+  }
+}
+
+/* Aura marketing palette — scoped to public marketing pages only.
+   Auth app retains the locked Revamo identity. */
+.aura-marketing {
+  --background: 220 14% 91%;        /* #E5E7EB */
+  --foreground: 222 47% 11%;        /* #111827 */
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 172 76% 40%;           /* #14B8A6 Aura teal */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 220 13% 91%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 180 84% 10%;            /* #042F2E deep teal */
+  --accent-foreground: 0 0% 100%;
+  --border: 220 13% 86%;
+  --input: 220 13% 86%;
+  --ring: 172 76% 40%;
+  --surface-deep: 180 84% 10%;
+  --radius: 0.5rem;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.aura-marketing .surface-deep {
+  background-color: hsl(var(--surface-deep));
+  color: #ffffff;
+}
+.aura-marketing .surface-deep .text-muted-foreground {
+  color: hsl(220 13% 75%);
+}

@@ -13,7 +13,7 @@ const Industries = () => {
         title="Industries We Serve — revamo AI Office Manager"
         description="revamo serves 20+ field service industries including plumbing, electrical, HVAC, cleaning, pest control, landscaping, roofing, and more. AI-powered quoting, invoicing & job management."
       />
-      <div className="min-h-screen bg-background">
+      <div className="aura-marketing min-h-screen bg-background">
         {/* Header */}
         <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between h-14 px-4">

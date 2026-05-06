@@ -64,7 +64,7 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="aura-marketing min-h-screen bg-background overflow-hidden">
       <SEOHead
         title="revamo — The AI Operating System for Field Service Businesses"
         description="revamo runs your business in the background — chases payments, briefs you each morning, and learns your workflow. Hands-free voice, photo-to-quote, automations."
