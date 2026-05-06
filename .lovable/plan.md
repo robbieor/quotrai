@@ -1,145 +1,111 @@
-## Goals
+## Scope: Option A + Option C
 
-1. **Templates picker** must only show templates matching the user's `profile.trade_type`. No "All" or other-trade options.
-2. **Per-line VAT** on quote/invoice line items, with rates auto-suggested by line group (Materials vs Labour) for the user's country.
-3. Country VAT rate tables limited (initially) to **IE, GB, US, CA, AU, NZ**; selection driven by `profile.country`.
+Adopt Aura's type scale, mono labels, and section rhythm across the **whole app**, AND apply Aura's light palette to **marketing-only pages** (Landing, Pricing, Industries, TradeLanding). The authenticated app stays on the locked Revamo dark soft-slate + `#0D9488` teal identity.
 
----
-
-## Part 1 — Lock template picker to user's trade
-
-File: `src/components/quotes/TemplatePicker.tsx`
-
-- Remove the "All" + per-category filter row entirely.
-- Always pass `userTradeCategory` to `useTemplates(...)`.
-- If `userTradeCategory` is undefined (profile not set), show an empty-state CTA: *"Set your trade type in Settings to see relevant templates."*
-- Keep search box for filtering inside the trade.
-- Same dialog is used by both QuoteFormDialog and InvoiceFormDialog (already shared), so a single edit fixes both.
-
-Empty-state copy (no matching templates): *"No {tradeLabel} templates yet — create one from Templates."*
+Fully reversible via History tab — no destructive changes.
 
 ---
 
-## Part 2 — Country + line-group VAT table
+## Part A — Global typography + spacing (safe, app-wide)
 
-New file: `src/utils/vatRates.ts`
+### 1. Add JetBrains Mono font
+- `index.html`: add Google Fonts preconnect + `JetBrains Mono` (weights 400, 600) alongside existing Inter/Manrope.
 
-```ts
-// Tax rates per country, per line group, for launch markets only.
-// Materials vs Labour can differ (e.g. Ireland: materials 23%, labour 13.5% reduced).
-export type LineGroup = "Materials" | "Labour" | "Other";
+### 2. Tailwind font family token
+- `tailwind.config.ts`: add `mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']` to `fontFamily`.
 
-export interface CountryVatConfig {
-  code: string;            // 'IE','GB','US','CA','AU','NZ'
-  label: string;           // 'Ireland'
-  taxName: string;         // 'VAT' | 'GST' | 'Sales Tax'
-  currency: string;
-  rates: { Materials: number[]; Labour: number[]; Other: number[] };
-  defaults: { Materials: number; Labour: number; Other: number };
+### 3. Type utilities in `src/index.css`
+Add reusable classes:
+- `.text-display-lg` → 64px / weight 500 / line-height 1.04 / tracking 0 (responsive: clamp 40–64px)
+- `.text-display-md` → 48px / 500 / 1.08
+- `.label-mono` → JetBrains Mono / 12px / 600 / uppercase / tracking 0.05em
+- Body line-height nudged to 1.6 (currently ~1.5) on `body` only — verify no regressions in tight UI.
+
+### 4. Section rhythm helper
+- `.section-y` → `py-20` (80px) for marketing/landing sections (opt-in, not global).
+
+**No token color changes.** Primary stays `#0D9488`. Dark soft-slate stays. Manrope wordmark untouched.
+
+---
+
+## Part C — Light Aura palette on marketing pages only
+
+### Pages affected
+- `src/pages/Landing.tsx`
+- `src/pages/Pricing.tsx`
+- `src/pages/Industries.tsx`
+- `src/pages/TradeLanding.tsx`
+- Shared landing components in `src/components/landing/*` (scoped via wrapper class)
+
+### Approach: scoped CSS variable override
+Create a wrapper class `.aura-marketing` applied at the page root. Inside this scope only, override CSS variables:
+
+```css
+.aura-marketing {
+  --background: 220 14% 91%;       /* #E5E7EB */
+  --foreground: 222 47% 11%;       /* #111827 */
+  --surface-deep: 180 84% 10%;     /* #042F2E — for hero/CTA panels */
+  --primary: 172 80% 40%;          /* #14B8A6 — brighter Aura teal */
+  --primary-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --muted-foreground: 220 9% 46%;
+  --radius: 0.5rem;
+}
+.aura-marketing .surface-deep {
+  background: hsl(var(--surface-deep));
+  color: hsl(0 0% 100%);
 }
 ```
 
-Launch values:
+This means:
+- Landing/Pricing get the light Aura look (light grey bg, near-black text, brighter teal CTAs, deep teal hero/footer panels).
+- Authenticated app (Dashboard, Quotes, Invoices, etc.) is **completely untouched** — same dark soft-slate, same `#0D9488` teal.
 
-| Country | Tax | Materials defaults | Labour defaults | Notes |
-|---|---|---|---|---|
-| IE | VAT | 23, 13.5, 9, 0 (default 23) | 13.5, 23, 9, 0 (default 13.5) | Reduced rate for construction labour |
-| GB | VAT | 20, 5, 0 (default 20) | 20, 5, 0 (default 20) | Reduced for some installs |
-| US | Sales Tax | 0 (default 0) | 0 (default 0) | State-specific — user enters manually |
-| CA | GST/HST | 5, 13, 15, 0 (default 5) | 5, 13, 15, 0 (default 5) | Province-dependent |
-| AU | GST | 10, 0 (default 10) | 10, 0 (default 10) | |
-| NZ | GST | 15, 0 (default 15) | 15, 0 (default 15) | |
+### Page-level edits
+Each marketing page top-level `<div>` gets `className="aura-marketing ..."`. Hero sections and footer CTAs get a `surface-deep` utility for the deep-teal contrast block per Aura spec.
 
-Helpers:
-- `getVatConfig(country)` → config or `null`.
-- `getDefaultLineRate(country, lineGroup)` → number.
-- `getAllowedRates(country, lineGroup)` → number[] (for dropdown).
-- `getSupportedVatCountries()` → `[{code,label}]` for forms.
+### Wordmark
+Stays Manrope lowercase per Core memory. No change.
 
-Keep existing `currencyUtils.ts` `getVatRateFromCountry` working but mark it deprecated (single-rate fallback) and route through the new module.
+### Mono labels
+Apply `.label-mono` to: section eyebrows ("FEATURES", "PRICING", "TRUSTED BY"), pricing tier labels, badge chips on landing only.
 
 ---
 
-## Part 3 — Per-line VAT in forms
+## Files to be edited
 
-Files: `src/components/quotes/QuoteFormDialog.tsx`, `src/components/invoices/InvoiceFormDialog.tsx`
+```text
+index.html                       (add JetBrains Mono import)
+tailwind.config.ts               (add mono font family)
+src/index.css                    (utilities + .aura-marketing scope)
+src/pages/Landing.tsx            (wrap + apply utilities)
+src/pages/Pricing.tsx            (wrap + apply utilities)
+src/pages/Industries.tsx         (wrap + apply utilities)
+src/pages/TradeLanding.tsx       (wrap + apply utilities)
+src/components/landing/*.tsx     (label-mono on eyebrows, section-y rhythm — light touch)
+```
 
-- The DB columns `quote_items.tax_rate` / `invoice_items.tax_rate` already exist — wire them up.
-- Add `tax_rate: number` to each `LineItem` in local state.
-- When a line is added or its `line_group` changes, set `tax_rate` to `getDefaultLineRate(profile.country, line_group)`.
-- New per-row control: small VAT/Tax dropdown next to the line total, populated from `getAllowedRates(country, line_group)` + a "Custom…" option.
-- Hide the row VAT control entirely when the country tax config is `0`-only (e.g., US default) — show a single "+ Add tax" affordance per line if user wants to override.
-- Mobile: stack VAT below qty/price (we already have responsive line layout).
-
-Totals math change:
-- `subtotal = Σ qty × unit_price`
-- `taxAmount = Σ qty × unit_price × (line.tax_rate / 100)`
-- `total = subtotal + taxAmount`
-- Group totals in summary block by tax rate (e.g. *"VAT 23% — €230"*, *"VAT 13.5% — €54"*) when more than one rate is present; collapse to single line otherwise.
-
-Remove the document-level `tax_rate` form field. Persist a derived/effective rate to `quotes.tax_rate` only when all lines share one rate (else write `null` and rely on `tax_amount`).
+No DB changes. No edge function changes. No brand memory changes (auth app identity stays locked).
 
 ---
 
-## Part 4 — Hooks (totals + persistence)
+## What you'll see
 
-Files: `src/hooks/useQuotes.ts`, `src/hooks/useInvoices.ts`
+- **App (logged in):** identical to today. No visible change beyond slightly tighter mono labels if used.
+- **Landing/Pricing/Industries:** light grey background, brighter teal CTAs, large 64px display headlines, JetBrains Mono eyebrow labels, deep teal hero/footer blocks, 80px section spacing.
 
-- `createQuote` / `updateQuote` (and invoice equivalents): compute `subtotal` and `tax_amount` from line items using each line's `tax_rate`; stop using the document-level `tax_rate` for math.
-- Persist `tax_rate` on each inserted `quote_items` / `invoice_items` row.
-- Quote → Invoice conversion (`useInvoices.ts:187`): copy each line's `tax_rate` instead of the parent rate.
-- Same for `recurring_invoice_items` (mirror logic in `useRecurringInvoices.ts`).
+## Reversion
 
----
+Use History tab to roll back any single step. The whole change is additive (new utilities + a scoped class) — removing the `aura-marketing` className from each page restores current marketing look without touching tokens.
 
-## Part 5 — Display: detail sheet, portals, PDFs
-
-Files: `QuoteDetailSheet.tsx`, `InvoiceDetailSheet.tsx` (if present), `QuotePortal.tsx`, `InvoicePortal.tsx`, `src/lib/pdf/quotePdf.ts`, `src/lib/pdf/invoicePdf.ts`.
-
-- Replace single `Tax (X%)` line with a tax breakdown:
-  - If single rate across all lines → `VAT 23% — €230`.
-  - If multiple → list each rate group. Use `taxName` from country config (VAT/GST/Sales Tax).
-- Show per-line VAT % in the detailed pricing display mode (existing `pricing_display_mode` "detailed" view) as a small column.
-
----
-
-## Part 6 — Profile country gating
-
-- In Settings, expose only the 6 launch countries in the profile country selector (keep existing data for users already on others, but new selections limited to IE/GB/US/CA/AU/NZ). Other countries continue to work via fallback (rate 0, single-row VAT control).
-- `useProfile` already exposes `country`; no migration needed.
-
----
-
-## Part 7 — Edge functions touching tax
-
-`supabase/functions/create-quote/index.ts`, `create-invoice/index.ts`, `process-recurring-invoices/index.ts`, `xero-sync/index.ts`:
-- Accept optional `tax_rate` per item.
-- Recompute totals from items' tax rates.
-- Xero sync: map per-line tax to Xero's `TaxType` (best-effort; default to existing fallback if mapping unknown — log and continue).
-
----
-
-## Part 8 — Tests / smoke
-
-- Manually create a quote in IE with mixed lines (Materials 23%, Labour 13.5%) and verify subtotal, breakdown, total, and that the PDF + portal show the breakdown.
-- Convert that quote → invoice; verify per-line rates copied.
-- Switch profile country to GB; create new quote — defaults should be 20% Materials, 20% Labour.
-- US profile — VAT row hidden by default, "+ Add tax" works on a single line.
-- Open template picker as a plumber; only plumber templates appear, no category chips.
-
----
-
-## Technical notes
-
-- DB schema is already sufficient (`tax_rate` on items, `tax_amount` on parents). No migration required.
-- We will keep `quotes.tax_rate` / `invoices.tax_rate` for backward compatibility (single-rate writes) but stop relying on it for math.
-- All currency display continues to flow through `formatCurrencyValue` + customer/profile country.
-- Sales-tax complexity in US/CA (state/province) is **out of scope** for launch — surfaced as a manual per-line override, with a roadmap note.
-
----
+```text
+<lov-actions>
+  <lov-open-history>View History</lov-open-history>
+</lov-actions>
+```
 
 ## Out of scope
-
-- Tax-inclusive pricing toggle (we always store ex-VAT and add tax).
-- VAT registration thresholds / Reverse charge / EU OSS — Phase 2.
-- Live tax-rate API integration (Avalara/TaxJar) — Phase 2.
+- App-wide color changes (locked by brand memory)
+- Wordmark font swap
+- WebGL / particles / motion effects from Aura source
+- Mobile native shells (Capacitor)
