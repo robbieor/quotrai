@@ -5,6 +5,7 @@ import type { Invoice } from "@/hooks/useInvoices";
 import type { CompanyBranding } from "@/hooks/useCompanyBranding";
 import { getBrandingConfig, hexToRgb, addBrandingHeader, addBrandingFooter } from "./pdfBranding";
 import { safeFormatDate } from "./dateUtils";
+import { calculateTotals } from "@/utils/vatRates";
 
 export async function generateInvoicePdf(
   invoice: Invoice,
@@ -86,25 +87,53 @@ export async function generateInvoicePdf(
   doc.setTextColor(0, 0, 0);
   doc.text(`${currencySymbol}${Number(invoice.subtotal).toFixed(2)}`, pageWidth - 20, finalY, { align: "right" });
 
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Tax (${Number(invoice.tax_rate)}%):`, pageWidth - 70, finalY + 7);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`${currencySymbol}${Number(invoice.tax_amount).toFixed(2)}`, pageWidth - 20, finalY + 7, { align: "right" });
+  const hasPerLine = invoice.invoice_items.some((i: any) => i.tax_rate !== undefined && i.tax_rate !== null);
+  let cursorY = finalY + 7;
+  if (hasPerLine) {
+    const { breakdown, uniformRate, taxAmount } = calculateTotals(
+      invoice.invoice_items.map((i: any) => ({
+        quantity: Number(i.quantity),
+        unit_price: Number(i.unit_price),
+        tax_rate: i.tax_rate,
+      }))
+    );
+    if (uniformRate !== null) {
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Tax (${uniformRate}%):`, pageWidth - 70, cursorY);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${currencySymbol}${taxAmount.toFixed(2)}`, pageWidth - 20, cursorY, { align: "right" });
+    } else {
+      for (const b of breakdown.filter((x) => x.tax > 0 || x.rate > 0)) {
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Tax (${b.rate}%) on ${currencySymbol}${b.base.toFixed(2)}:`, pageWidth - 90, cursorY);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`${currencySymbol}${b.tax.toFixed(2)}`, pageWidth - 20, cursorY, { align: "right" });
+        cursorY += 5;
+      }
+      cursorY -= 5;
+    }
+  } else {
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Tax (${Number(invoice.tax_rate)}%):`, pageWidth - 70, cursorY);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`${currencySymbol}${Number(invoice.tax_amount).toFixed(2)}`, pageWidth - 20, cursorY, { align: "right" });
+  }
 
   doc.setDrawColor(...hexToRgb(config.accentColor));
   doc.setLineWidth(0.5);
-  doc.line(pageWidth - 80, finalY + 12, pageWidth - 20, finalY + 12);
+  doc.line(pageWidth - 80, cursorY + 5, pageWidth - 20, cursorY + 5);
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...hexToRgb(config.accentColor));
-  doc.text("Total:", pageWidth - 70, finalY + 20);
-  doc.text(`${currencySymbol}${Number(invoice.total).toFixed(2)}`, pageWidth - 20, finalY + 20, { align: "right" });
+  doc.text("Total:", pageWidth - 70, cursorY + 13);
+  doc.text(`${currencySymbol}${Number(invoice.total).toFixed(2)}`, pageWidth - 20, cursorY + 13, { align: "right" });
 
   // Notes
-  let notesEndY = finalY + 25;
+  const totalsBottom = cursorY + 18;
+  let notesEndY = totalsBottom;
   if (invoice.notes) {
-    notesEndY = finalY + 35;
+    notesEndY = totalsBottom + 10;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);

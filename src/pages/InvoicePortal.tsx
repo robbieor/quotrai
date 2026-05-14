@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { User, Calendar, AlertCircle, Clock, CreditCard, CheckCircle2, Phone, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { safeFormatDate } from "@/lib/pdf/dateUtils";
+import { TaxBreakdown } from "@/components/shared/TaxBreakdown";
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -260,10 +261,12 @@ export default function InvoicePortal() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(invoice.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax ({invoice.tax_rate}%)</span>
-                  <span>{formatCurrency(invoice.tax_amount)}</span>
-                </div>
+                <TaxBreakdown
+                  items={invoice.items}
+                  fallbackRate={invoice.tax_rate}
+                  fallbackTaxAmount={invoice.tax_amount}
+                  formatCurrency={formatCurrency}
+                />
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
