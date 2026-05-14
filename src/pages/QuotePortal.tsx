@@ -24,6 +24,7 @@ import {
 import { FileText, User, Calendar, AlertCircle, CheckCircle, Loader2, XCircle, PenTool, Eraser } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 import { safeFormatDate } from "@/lib/pdf/dateUtils";
+import { TaxBreakdown } from "@/components/shared/TaxBreakdown";
 
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -194,10 +195,13 @@ export default function QuotePortal() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(quote.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax ({quote.tax_rate}%)</span>
-                  <span>{formatCurrency(quote.tax_amount)}</span>
-                </div>
+                <TaxBreakdown
+                  items={quote.items}
+                  fallbackRate={quote.tax_rate}
+                  fallbackTaxAmount={quote.tax_amount}
+                  formatCurrency={formatCurrency}
+                />
+
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
