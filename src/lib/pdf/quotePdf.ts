@@ -136,9 +136,10 @@ export async function generateQuotePdf(
   doc.text(`${currencySymbol}${Number(quote.total).toFixed(2)}`, pageWidth - 20, cursorY + 13, { align: "right" });
 
   // Notes
-  let notesEndY = finalY + 25;
+  const totalsBottom = cursorY + 18;
+  let notesEndY = totalsBottom;
   if (quote.notes) {
-    notesEndY = finalY + 35;
+    notesEndY = totalsBottom + 10;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
