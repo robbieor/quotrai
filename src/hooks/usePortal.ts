@@ -75,6 +75,8 @@ export interface PortalInvoice {
     quantity: number;
     unit_price: number;
     total_price: number;
+    tax_rate?: number | null;
+    line_group?: string | null;
   }>;
 }
 
