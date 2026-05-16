@@ -29,7 +29,9 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Who We Are</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              revamo is operated by Revamo Ltd, registered in Ireland. We act as the data controller for personal data processed through the Service. Contact: <a href="mailto:support@revamo.ai" className="text-primary hover:underline">support@revamo.ai</a>.
+              revamo is operated by <strong className="text-foreground">Revamo Ltd</strong>, a company registered in Ireland (CRO [TODO], registered office: [TODO — Irish address]). We act as the data controller for personal data processed through the Service. For privacy questions or to exercise your GDPR rights, contact{" "}
+              <a href="mailto:privacy@revamo.ai" className="text-primary hover:underline">privacy@revamo.ai</a>{" "}
+              (general support: <a href="mailto:support@revamo.ai" className="text-primary hover:underline">support@revamo.ai</a>).
             </p>
           </section>
 
