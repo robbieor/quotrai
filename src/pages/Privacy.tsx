@@ -76,20 +76,45 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-foreground mb-3">6. Data Sharing</h2>
-            <p className="text-sm leading-relaxed text-muted-foreground mb-3">We share data only with:</p>
-            <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
-              <li><strong className="text-foreground">Service providers:</strong> Stripe (payments), Resend (email delivery), ElevenLabs (voice AI), and cloud infrastructure providers — all under GDPR-compliant data processing agreements.</li>
-              <li><strong className="text-foreground">Your team members:</strong> Data within your team account is visible to team members based on their role permissions.</li>
-              <li><strong className="text-foreground">Your customers:</strong> When you send quotes or invoices via the customer portal.</li>
-            </ul>
-            <p className="text-sm leading-relaxed text-muted-foreground mt-3">We never sell your personal data to third parties.</p>
+            <h2 className="text-xl font-bold text-foreground mb-3">6. Sub-processors & Data Sharing</h2>
+            <p className="text-sm leading-relaxed text-muted-foreground mb-3">We share data only with the following sub-processors, each under GDPR-compliant data processing agreements:</p>
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+              <table className="text-xs sm:text-sm w-full min-w-[480px]">
+                <thead className="text-foreground border-b border-border">
+                  <tr>
+                    <th className="text-left py-2 pr-3">Provider</th>
+                    <th className="text-left py-2 pr-3">Purpose</th>
+                    <th className="text-left py-2">Region</th>
+                  </tr>
+                </thead>
+                <tbody className="text-muted-foreground">
+                  <tr className="border-b border-border/40"><td className="py-2 pr-3">Supabase</td><td className="py-2 pr-3">Database, auth, file storage</td><td className="py-2">EU (Ireland)</td></tr>
+                  <tr className="border-b border-border/40"><td className="py-2 pr-3">Stripe</td><td className="py-2 pr-3">Payments & subscriptions</td><td className="py-2">EU / US</td></tr>
+                  <tr className="border-b border-border/40"><td className="py-2 pr-3">Resend</td><td className="py-2 pr-3">Transactional email delivery</td><td className="py-2">EU</td></tr>
+                  <tr className="border-b border-border/40"><td className="py-2 pr-3">Google (Gemini)</td><td className="py-2 pr-3">AI reasoning & vision</td><td className="py-2">US</td></tr>
+                  <tr className="border-b border-border/40"><td className="py-2 pr-3">OpenAI</td><td className="py-2 pr-3">AI fallback model</td><td className="py-2">US</td></tr>
+                  <tr><td className="py-2 pr-3">ElevenLabs</td><td className="py-2 pr-3">Voice agent (TTS / ASR)</td><td className="py-2">US</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground mt-3">
+              Your data is also visible to your own team members based on their role permissions, and to your customers when you send them quotes or invoices via the customer portal.
+              We never sell your personal data to third parties.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-foreground mb-3">6a. Data You Upload About Others (Customer Data)</h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              When you add your own clients, prospects or sub-contractors to revamo, you are the data controller for that personal data and revamo acts as your processor. Our processor obligations are set out in the{" "}
+              <a href="/dpa" className="text-primary hover:underline">Data Processing Addendum</a>, which is incorporated into your Terms of Service.
+            </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">7. Data Storage & Security</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Your data is stored in secure, EU-based data centres. We implement industry-standard security measures including encryption in transit (TLS) and at rest, row-level security policies, and regular security audits. Access to production data is restricted and logged.
+              Your data is stored in secure, EU-based data centres (Supabase, Ireland). We implement industry-standard security measures including encryption in transit (TLS 1.2+) and at rest, row-level security policies, AES-256-GCM encryption of integration tokens, and engineering access on a least-privilege basis with audit logging.
             </p>
           </section>
 
