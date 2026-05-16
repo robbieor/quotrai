@@ -6,6 +6,34 @@ import { initNativeChrome } from "./lib/native";
 
 console.log("[revamo] Starting app...");
 
+// Recover from stale-chunk errors after a fresh deploy: the cached index.html
+// references old JS hashes that no longer exist, so dynamic imports 404.
+// Force a single hard reload to fetch the new index.html + new hashes.
+const RELOAD_KEY = "__revamo_chunk_reloaded__";
+function isChunkLoadError(msg: unknown): boolean {
+  const s = String(msg || "");
+  return (
+    s.includes("Importing a module script failed") ||
+    s.includes("Failed to fetch dynamically imported module") ||
+    s.includes("error loading dynamically imported module") ||
+    /ChunkLoadError/i.test(s)
+  );
+}
+function handleChunkError(msg: unknown) {
+  if (!isChunkLoadError(msg)) return;
+  if (sessionStorage.getItem(RELOAD_KEY)) return;
+  sessionStorage.setItem(RELOAD_KEY, "1");
+  window.location.reload();
+}
+window.addEventListener("error", (e) => handleChunkError(e?.message));
+window.addEventListener("unhandledrejection", (e) =>
+  handleChunkError((e?.reason as Error)?.message ?? e?.reason)
+);
+// Clear the guard on a successful load so future stale-deploys can recover too.
+window.addEventListener("load", () => {
+  setTimeout(() => sessionStorage.removeItem(RELOAD_KEY), 5000);
+});
+
 // Native iOS/Android polish (no-op on web).
 initNativeChrome();
 
