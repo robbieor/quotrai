@@ -159,7 +159,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">12. International Transfers</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Some service providers may process data outside the EU/EEA. Where this occurs, we ensure appropriate safeguards are in place (e.g., Standard Contractual Clauses or adequacy decisions) in compliance with GDPR.
+              Several sub-processors (Stripe, OpenAI, Google, ElevenLabs) are located in the United States. Where personal data is transferred outside the EEA / UK, we rely on the European Commission's Standard Contractual Clauses (Decision (EU) 2021/914), the UK International Data Transfer Addendum, or — where the recipient is certified — the EU-US Data Privacy Framework. Copies of the relevant transfer mechanisms are available on request.
             </p>
           </section>
 
