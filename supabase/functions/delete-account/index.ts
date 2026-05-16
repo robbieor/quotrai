@@ -85,10 +85,8 @@ Deno.serve(async (req) => {
     }
 
     // Send confirmation email with cancel link (best-effort)
-    const origin = req.headers.get("origin") ||
-      "https://revamoai.lovable.app";
     const cancelUrl =
-      `${origin}/cancel-deletion?token=${encodeURIComponent(token)}`;
+      `${supabaseUrl}/functions/v1/cancel-account-deletion?token=${encodeURIComponent(token)}`;
 
     try {
       await admin.functions.invoke("send-transactional-email", {
