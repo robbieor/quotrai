@@ -84,6 +84,19 @@ export default function Signup() {
     } else {
       track("signup_completed", { method: "email" });
 
+      // Stamp consent timestamps on the profile (best-effort)
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const now = new Date().toISOString();
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user?.id) {
+          await supabase.from("profiles").update({
+            consented_terms_at: now,
+            consented_privacy_at: now,
+          }).eq("id", u.user.id);
+        }
+      } catch {}
+
       // Fire-and-forget admin notification (signup attempt — pre-verification)
       try {
         const { supabase } = await import("@/integrations/supabase/client");
