@@ -156,6 +156,8 @@ const App = () => {
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/dpa" element={<Dpa />} />
+                    <Route path="/cancel-deletion" element={<CancelDeletion />} />
                     <Route path="/request-access" element={<RequestAccess />} />
                     <Route path="/industries" element={<Industries />} />
                     <Route path="/accept-invite" element={<AcceptInvite />} />
