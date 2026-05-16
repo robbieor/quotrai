@@ -52,6 +52,8 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const AppStoreAssets = lazy(() => import("./pages/AppStoreAssets"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Dpa = lazy(() => import("./pages/Dpa"));
+const PrivacySettings = lazy(() => import("./pages/settings/Privacy"));
 const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
 const QuotePortal = lazy(() => import("./pages/QuotePortal"));
@@ -154,6 +156,7 @@ const App = () => {
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/dpa" element={<Dpa />} />
                     <Route path="/request-access" element={<RequestAccess />} />
                     <Route path="/industries" element={<Industries />} />
                     <Route path="/accept-invite" element={<AcceptInvite />} />
@@ -189,6 +192,7 @@ const App = () => {
                     <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                     <Route path="/time-tracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySettings /></ProtectedRoute>} />
                     <Route path="/app-store-assets" element={<RoleGuard><AppStoreAssets /></RoleGuard>} />
 
                     {/* Connect+ seat required */}

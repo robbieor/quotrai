@@ -29,7 +29,9 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">1. Agreement to Terms</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              By accessing or using revamo ("the Service"), operated by Revamo Ltd, a company registered in Ireland, you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
+              By accessing or using revamo ("the Service"), operated by Revamo Ltd, a company registered in Ireland (CRO [TODO]), you agree to be bound by these Terms of Service, our{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, and — to the extent you use the Service to process personal data about your own clients, prospects or employees — our{" "}
+              <Link to="/dpa" className="text-primary hover:underline">Data Processing Addendum (DPA)</Link>, which is incorporated by reference. If you do not agree, you may not use the Service.
             </p>
           </section>
 

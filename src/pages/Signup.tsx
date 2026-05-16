@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +24,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -38,6 +40,10 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreed) {
+      toast.error("Please agree to the Terms and Privacy Policy to continue.");
+      return;
+    }
     setSubmitting(true);
 
     // Store referral code in localStorage so onboarding can pick it up
@@ -77,6 +83,19 @@ export default function Signup() {
       setSubmitting(false);
     } else {
       track("signup_completed", { method: "email" });
+
+      // Stamp consent timestamps on the profile (best-effort)
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const now = new Date().toISOString();
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user?.id) {
+          await supabase.from("profiles").update({
+            consented_terms_at: now,
+            consented_privacy_at: now,
+          }).eq("id", u.user.id);
+        }
+      } catch {}
 
       // Fire-and-forget admin notification (signup attempt — pre-verification)
       try {
@@ -181,9 +200,26 @@ export default function Signup() {
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                 <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
               </div>
+
+              <div className="flex items-start gap-2.5 pt-1">
+                <Checkbox
+                  id="agreed"
+                  checked={agreed}
+                  onCheckedChange={(v) => setAgreed(v === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="agreed" className="text-xs text-muted-foreground leading-relaxed font-normal cursor-pointer">
+                  I agree to the{" "}
+                  <Link to="/terms" target="_blank" className="text-primary hover:underline">Terms of Service</Link>
+                  {" "}and{" "}
+                  <Link to="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</Link>,
+                  including the{" "}
+                  <Link to="/dpa" target="_blank" className="text-primary hover:underline">Data Processing Addendum</Link>.
+                </Label>
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={submitting || loading}>
+              <Button type="submit" className="w-full" disabled={submitting || loading || !agreed}>
                 {submitting ? "Creating account..." : "Start Free Trial"}
               </Button>
               <p className="text-sm text-muted-foreground text-center">

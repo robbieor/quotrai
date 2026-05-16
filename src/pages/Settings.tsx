@@ -358,6 +358,20 @@ export default function Settings() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>Privacy & data</CardTitle>
+                <CardDescription>
+                  Download your data, manage GPS use, or delete your account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline">
+                  <a href="/settings/privacy">Open privacy settings</a>
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* ReferralCard hidden until reward flow is built */}
           </TabsContent>
 
