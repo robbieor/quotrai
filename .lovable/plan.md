@@ -1,145 +1,107 @@
-## Goals
+# GDPR Launch-Blocker Sprint
 
-1. **Templates picker** must only show templates matching the user's `profile.trade_type`. No "All" or other-trade options.
-2. **Per-line VAT** on quote/invoice line items, with rates auto-suggested by line group (Materials vs Labour) for the user's country.
-3. Country VAT rate tables limited (initially) to **IE, GB, US, CA, AU, NZ**; selection driven by `profile.country`.
+Goal: clear the legal blockers so Revamo can launch to EU/UK/IE customers without an obvious compliance hole. No cookie banner needed — analytics is server-side only (confirmed).
 
----
+## What gets built
 
-## Part 1 — Lock template picker to user's trade
+### 1. Delete account flow (Art. 17 — Right to erasure)
+The biggest gap. Privacy policy promises this but the app doesn't deliver it.
 
-File: `src/components/quotes/TemplatePicker.tsx`
+- **UI:** Settings → "Danger Zone" card at the bottom with a "Delete my account" button. Confirmation dialog requires the user to type their email to enable the red confirm button.
+- **Edge function `delete-account`:**
+  - Soft-delete: sets `profiles.scheduled_deletion_at = now() + 30 days`, signs the user out, blocks login for that account during the window.
+  - Sends a confirmation email with a "Cancel deletion" magic link valid for 30 days.
+  - After 30 days, a daily cron job hard-deletes: cascades team data (if sole owner), cancels Stripe subscription, removes from Resend suppression list, deletes the auth user. If the user is a team member (not owner), only their seat + personal data is removed.
+- **Owner safeguard:** If the user owns a team with other members, force them to either transfer ownership or remove members first. Clear error message.
 
-- Remove the "All" + per-category filter row entirely.
-- Always pass `userTradeCategory` to `useTemplates(...)`.
-- If `userTradeCategory` is undefined (profile not set), show an empty-state CTA: *"Set your trade type in Settings to see relevant templates."*
-- Keep search box for filtering inside the trade.
-- Same dialog is used by both QuoteFormDialog and InvoiceFormDialog (already shared), so a single edit fixes both.
+### 2. Signup consent (Art. 6 — lawful basis)
+- Add a required checkbox to `Signup.tsx`: *"I agree to the [Terms of Service] and [Privacy Policy]"* with both links opening in new tabs.
+- Submit button disabled until checked.
+- Same checkbox on the Google OAuth path (shown before redirect, stored in `profiles.consented_at` after first sign-in).
 
-Empty-state copy (no matching templates): *"No {tradeLabel} templates yet — create one from Templates."*
+### 3. Privacy policy + Terms fill-in
+Fill placeholders in `docs/privacy-policy.md`, `docs/terms.md`, and the live `/privacy` + `/terms` pages.
 
----
+- Company name, CRO number, registered address → **left as `[TODO]` for now** (user to provide).
+- Add **International Transfers** section naming OpenAI, Google (Gemini), ElevenLabs, Stripe as US sub-processors covered by Standard Contractual Clauses + EU-US Data Privacy Framework where applicable.
+- Add a **Sub-processors** sub-section with provider, purpose, region, and link to each provider's DPA.
+- Add explicit **GPS / location data** section: purpose (time tracking + mileage), retention (90 days for raw pings, aggregated trip data kept until job deletion), how to revoke.
+- Add **Customer data (Article 28)** paragraph stating that data uploaded *about* your customers makes Revamo a processor on your behalf, governed by the DPA.
 
-## Part 2 — Country + line-group VAT table
+### 4. Data Processing Addendum (DPA)
+- New `docs/dpa.md` + `/dpa` page. Standard SCC-aligned DPA template covering: subject matter, duration, nature & purpose, types of personal data, categories of data subjects, processor obligations, sub-processor list, international transfers, security measures, breach notification (72h), audit rights, return/deletion on termination.
+- Link to it from Terms ("By using Revamo to process your customers' personal data, you agree to the DPA at /dpa").
+- No click-through required — incorporation by reference in Terms is sufficient for SaaS.
 
-New file: `src/utils/vatRates.ts`
+### 5. GPS permission prompt (transparency)
+- Before the first `geolocation.getCurrentPosition()` call, show a modal: *"Revamo uses your location to verify clock-ins at job sites and track business mileage. Raw GPS pings are deleted after 90 days. You can turn this off any time in Settings → Privacy."*
+- Persist consent in `localStorage` + `profiles.location_consent_at`. Time-tracking + mileage features check this flag before requesting OS-level permission.
+- Settings → Privacy adds a toggle to revoke (disables time tracking + mileage going forward; doesn't delete historical data — separate "Delete my location history" button does that).
 
-```ts
-// Tax rates per country, per line group, for launch markets only.
-// Materials vs Labour can differ (e.g. Ireland: materials 23%, labour 13.5% reduced).
-export type LineGroup = "Materials" | "Labour" | "Other";
+### 6. Privacy controls page
+New `/settings/privacy` page consolidating:
+- Download my data (already exists — Excel export)
+- Delete my account (new)
+- Delete my location history (new)
+- Marketing email opt-out toggle
+- Consent log (when they agreed to Terms, Privacy, GPS)
 
-export interface CountryVatConfig {
-  code: string;            // 'IE','GB','US','CA','AU','NZ'
-  label: string;           // 'Ireland'
-  taxName: string;         // 'VAT' | 'GST' | 'Sales Tax'
-  currency: string;
-  rates: { Materials: number[]; Labour: number[]; Other: number[] };
-  defaults: { Materials: number; Labour: number; Other: number };
-}
+## Technical details
+
+```text
+db changes:
+  profiles
+    + scheduled_deletion_at  timestamptz null
+    + deletion_cancel_token  text null
+    + consented_terms_at     timestamptz null
+    + consented_privacy_at   timestamptz null
+    + location_consent_at    timestamptz null
+    + marketing_opt_in       bool default false
+
+edge functions:
+  delete-account            (POST: schedule soft-delete + send cancel email)
+  cancel-account-deletion   (GET via magic link token)
+  hard-delete-scheduled     (cron, daily 03:00 UTC — purges expired soft-deletes)
+  delete-location-history   (POST: wipes gps_pings + mileage_trips for user)
+
+new pages:
+  src/pages/settings/Privacy.tsx
+  src/pages/Dpa.tsx
+
+modified pages:
+  src/pages/Signup.tsx                 — consent checkbox
+  src/pages/Privacy.tsx                — fill placeholders + new sections
+  src/pages/Terms.tsx                  — DPA reference + processor clauses
+  src/components/settings/*            — Danger Zone card + Privacy menu entry
+
+new components:
+  src/components/settings/DeleteAccountDialog.tsx
+  src/components/location/LocationConsentDialog.tsx
+
+guards:
+  src/hooks/useLocationConsent.ts      — wraps geolocation calls
 ```
 
-Launch values:
+Auth + Stripe cascade order in `hard-delete-scheduled`:
+1. Cancel Stripe subscription (best-effort, log failures, don't block)
+2. Cascade team data if sole owner (RLS-protected delete via service role)
+3. Add email to suppression list (prevents accidental re-marketing)
+4. `supabase.auth.admin.deleteUser(userId)` (cascades profiles via FK)
 
-| Country | Tax | Materials defaults | Labour defaults | Notes |
-|---|---|---|---|---|
-| IE | VAT | 23, 13.5, 9, 0 (default 23) | 13.5, 23, 9, 0 (default 13.5) | Reduced rate for construction labour |
-| GB | VAT | 20, 5, 0 (default 20) | 20, 5, 0 (default 20) | Reduced for some installs |
-| US | Sales Tax | 0 (default 0) | 0 (default 0) | State-specific — user enters manually |
-| CA | GST/HST | 5, 13, 15, 0 (default 5) | 5, 13, 15, 0 (default 5) | Province-dependent |
-| AU | GST | 10, 0 (default 10) | 10, 0 (default 10) | |
-| NZ | GST | 15, 0 (default 15) | 15, 0 (default 15) | |
+## Out of scope for this sprint
+- Cookie banner (not needed — server-side analytics only)
+- SAR self-service export covering AI logs (Article 15 — schedule for first 30 days post-launch)
+- RoPA internal document (operational, not user-facing)
+- Public sub-processors page (the privacy policy section covers it for launch)
+- EU AI Act Art. 22 explainability disclosures (post-launch)
 
-Helpers:
-- `getVatConfig(country)` → config or `null`.
-- `getDefaultLineRate(country, lineGroup)` → number.
-- `getAllowedRates(country, lineGroup)` → number[] (for dropdown).
-- `getSupportedVatCountries()` → `[{code,label}]` for forms.
+## What I need from you afterwards
+Once this is built and approved, you'll need to send me:
+1. Revamo Ltd CRO number
+2. Registered Irish address
+3. DPO contact email (or confirm "privacy@revamo.ai" works)
 
-Keep existing `currencyUtils.ts` `getVatRateFromCountry` working but mark it deprecated (single-rate fallback) and route through the new module.
+I'll drop those into the placeholders in one quick edit. Everything else ships without them — the `[TODO]` markers are fine for the build, just not for go-live.
 
----
-
-## Part 3 — Per-line VAT in forms
-
-Files: `src/components/quotes/QuoteFormDialog.tsx`, `src/components/invoices/InvoiceFormDialog.tsx`
-
-- The DB columns `quote_items.tax_rate` / `invoice_items.tax_rate` already exist — wire them up.
-- Add `tax_rate: number` to each `LineItem` in local state.
-- When a line is added or its `line_group` changes, set `tax_rate` to `getDefaultLineRate(profile.country, line_group)`.
-- New per-row control: small VAT/Tax dropdown next to the line total, populated from `getAllowedRates(country, line_group)` + a "Custom…" option.
-- Hide the row VAT control entirely when the country tax config is `0`-only (e.g., US default) — show a single "+ Add tax" affordance per line if user wants to override.
-- Mobile: stack VAT below qty/price (we already have responsive line layout).
-
-Totals math change:
-- `subtotal = Σ qty × unit_price`
-- `taxAmount = Σ qty × unit_price × (line.tax_rate / 100)`
-- `total = subtotal + taxAmount`
-- Group totals in summary block by tax rate (e.g. *"VAT 23% — €230"*, *"VAT 13.5% — €54"*) when more than one rate is present; collapse to single line otherwise.
-
-Remove the document-level `tax_rate` form field. Persist a derived/effective rate to `quotes.tax_rate` only when all lines share one rate (else write `null` and rely on `tax_amount`).
-
----
-
-## Part 4 — Hooks (totals + persistence)
-
-Files: `src/hooks/useQuotes.ts`, `src/hooks/useInvoices.ts`
-
-- `createQuote` / `updateQuote` (and invoice equivalents): compute `subtotal` and `tax_amount` from line items using each line's `tax_rate`; stop using the document-level `tax_rate` for math.
-- Persist `tax_rate` on each inserted `quote_items` / `invoice_items` row.
-- Quote → Invoice conversion (`useInvoices.ts:187`): copy each line's `tax_rate` instead of the parent rate.
-- Same for `recurring_invoice_items` (mirror logic in `useRecurringInvoices.ts`).
-
----
-
-## Part 5 — Display: detail sheet, portals, PDFs
-
-Files: `QuoteDetailSheet.tsx`, `InvoiceDetailSheet.tsx` (if present), `QuotePortal.tsx`, `InvoicePortal.tsx`, `src/lib/pdf/quotePdf.ts`, `src/lib/pdf/invoicePdf.ts`.
-
-- Replace single `Tax (X%)` line with a tax breakdown:
-  - If single rate across all lines → `VAT 23% — €230`.
-  - If multiple → list each rate group. Use `taxName` from country config (VAT/GST/Sales Tax).
-- Show per-line VAT % in the detailed pricing display mode (existing `pricing_display_mode` "detailed" view) as a small column.
-
----
-
-## Part 6 — Profile country gating
-
-- In Settings, expose only the 6 launch countries in the profile country selector (keep existing data for users already on others, but new selections limited to IE/GB/US/CA/AU/NZ). Other countries continue to work via fallback (rate 0, single-row VAT control).
-- `useProfile` already exposes `country`; no migration needed.
-
----
-
-## Part 7 — Edge functions touching tax
-
-`supabase/functions/create-quote/index.ts`, `create-invoice/index.ts`, `process-recurring-invoices/index.ts`, `xero-sync/index.ts`:
-- Accept optional `tax_rate` per item.
-- Recompute totals from items' tax rates.
-- Xero sync: map per-line tax to Xero's `TaxType` (best-effort; default to existing fallback if mapping unknown — log and continue).
-
----
-
-## Part 8 — Tests / smoke
-
-- Manually create a quote in IE with mixed lines (Materials 23%, Labour 13.5%) and verify subtotal, breakdown, total, and that the PDF + portal show the breakdown.
-- Convert that quote → invoice; verify per-line rates copied.
-- Switch profile country to GB; create new quote — defaults should be 20% Materials, 20% Labour.
-- US profile — VAT row hidden by default, "+ Add tax" works on a single line.
-- Open template picker as a plumber; only plumber templates appear, no category chips.
-
----
-
-## Technical notes
-
-- DB schema is already sufficient (`tax_rate` on items, `tax_amount` on parents). No migration required.
-- We will keep `quotes.tax_rate` / `invoices.tax_rate` for backward compatibility (single-rate writes) but stop relying on it for math.
-- All currency display continues to flow through `formatCurrencyValue` + customer/profile country.
-- Sales-tax complexity in US/CA (state/province) is **out of scope** for launch — surfaced as a manual per-line override, with a roadmap note.
-
----
-
-## Out of scope
-
-- Tax-inclusive pricing toggle (we always store ex-VAT and add tax).
-- VAT registration thresholds / Reverse charge / EU OSS — Phase 2.
-- Live tax-rate API integration (Avalara/TaxJar) — Phase 2.
+## Estimated effort
+~2-3 hours of build time. One migration, two new pages, four edge functions, signup tweak, GPS guard, privacy settings page.
