@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { Component, type ErrorInfo, type ReactNode, useEffect, lazy, Suspense } from "react";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { useAutoSyncTools } from "@/hooks/useAutoSyncTools";
 import { Toaster } from "@/components/ui/toaster";
@@ -88,6 +88,45 @@ const LoadingFallback = () => (
   </div>
 );
 
+const CHUNK_RELOAD_KEY = "__revamo_route_chunk_retry__";
+
+function isRouteChunkError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return (
+    message.includes("Importing a module script failed") ||
+    message.includes("Failed to fetch dynamically imported module") ||
+    message.includes("error loading dynamically imported module") ||
+    /ChunkLoadError/i.test(message)
+  );
+}
+
+class RouteChunkErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { failed: isRouteChunkError(error) };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    if (isRouteChunkError(error) && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+      window.location.reload();
+      return;
+    }
+
+    console.error("Route render failed:", error, info);
+  }
+
+  componentDidMount() {
+    window.setTimeout(() => sessionStorage.removeItem(CHUNK_RELOAD_KEY), 5000);
+  }
+
+  render() {
+    if (this.state.failed) return <LoadingFallback />;
+    return this.props.children;
+  }
+}
+
 // Invisible component that initializes offline sync inside QueryClientProvider
 function OfflineSyncInit() {
   useOfflineSync();
@@ -144,7 +183,8 @@ const App = () => {
                   <AgentNavigationBridge />
                   <AgentHighlightOverlay />
                   <LiveAgentHUD />
-                  <Suspense fallback={<LoadingFallback />}>
+                  <RouteChunkErrorBoundary>
+                    <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                     {/* Public pages */}
                     <Route path="/" element={<RootRedirect />} />
@@ -215,8 +255,9 @@ const App = () => {
                     <Route path="/storefront/:accountId" element={<Storefront />} />
 
                     <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
+                    </Routes>
+                  </Suspense>
+                </RouteChunkErrorBoundary>
                 </RolePreviewProvider>
               </BrowserRouter>
             </AgentTaskProvider>
