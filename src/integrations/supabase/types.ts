@@ -3717,9 +3717,12 @@ export type Database = {
           bio: string | null
           business_size: string | null
           company_name: string | null
+          consented_privacy_at: string | null
+          consented_terms_at: string | null
           country: string | null
           created_at: string
           currency: string
+          deletion_cancel_token: string | null
           drip_emails_scheduled: boolean
           email: string | null
           expense_forward_code: string
@@ -3738,10 +3741,13 @@ export type Database = {
           home_region: string | null
           hourly_rate: number | null
           id: string
+          location_consent_at: string | null
+          marketing_opt_in: boolean
           onboarding_completed: boolean
           onboarding_step: number | null
           phone: string | null
           referral_code: string | null
+          scheduled_deletion_at: string | null
           team_id: string | null
           timezone: string | null
           trade_type: string | null
@@ -3754,9 +3760,12 @@ export type Database = {
           bio?: string | null
           business_size?: string | null
           company_name?: string | null
+          consented_privacy_at?: string | null
+          consented_terms_at?: string | null
           country?: string | null
           created_at?: string
           currency?: string
+          deletion_cancel_token?: string | null
           drip_emails_scheduled?: boolean
           email?: string | null
           expense_forward_code?: string
@@ -3775,10 +3784,13 @@ export type Database = {
           home_region?: string | null
           hourly_rate?: number | null
           id: string
+          location_consent_at?: string | null
+          marketing_opt_in?: boolean
           onboarding_completed?: boolean
           onboarding_step?: number | null
           phone?: string | null
           referral_code?: string | null
+          scheduled_deletion_at?: string | null
           team_id?: string | null
           timezone?: string | null
           trade_type?: string | null
@@ -3791,9 +3803,12 @@ export type Database = {
           bio?: string | null
           business_size?: string | null
           company_name?: string | null
+          consented_privacy_at?: string | null
+          consented_terms_at?: string | null
           country?: string | null
           created_at?: string
           currency?: string
+          deletion_cancel_token?: string | null
           drip_emails_scheduled?: boolean
           email?: string | null
           expense_forward_code?: string
@@ -3812,10 +3827,13 @@ export type Database = {
           home_region?: string | null
           hourly_rate?: number | null
           id?: string
+          location_consent_at?: string | null
+          marketing_opt_in?: boolean
           onboarding_completed?: boolean
           onboarding_step?: number | null
           phone?: string | null
           referral_code?: string | null
+          scheduled_deletion_at?: string | null
           team_id?: string | null
           timezone?: string | null
           trade_type?: string | null
