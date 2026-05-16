@@ -121,7 +121,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-bold text-foreground mb-3">8. Data Retention</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              We retain your data for as long as your account is active. Upon account deletion, your data is permanently removed within 30 days. Some data may be retained longer where required by law (e.g., financial records for tax purposes). Location pings are automatically deleted after 90 days.
+              We retain your data for as long as your account is active. You can delete your account at any time from <strong className="text-foreground">Settings → Privacy → Danger Zone</strong>; this schedules permanent deletion in 30 days (you can cancel within that window from the email we send you). Some data may be retained longer where required by law (e.g., financial records for tax purposes). Raw GPS pings are automatically deleted after 90 days.
             </p>
           </section>
 
