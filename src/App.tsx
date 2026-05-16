@@ -52,6 +52,8 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const AppStoreAssets = lazy(() => import("./pages/AppStoreAssets"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Dpa = lazy(() => import("./pages/Dpa"));
+const PrivacySettings = lazy(() => import("./pages/settings/Privacy"));
 const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
 const QuotePortal = lazy(() => import("./pages/QuotePortal"));
