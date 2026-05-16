@@ -40,6 +40,10 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreed) {
+      toast.error("Please agree to the Terms and Privacy Policy to continue.");
+      return;
+    }
     setSubmitting(true);
 
     // Store referral code in localStorage so onboarding can pick it up
